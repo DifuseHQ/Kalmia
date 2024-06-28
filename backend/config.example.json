@@ -4,7 +4,8 @@
   "database_url": "postgres://postgres:<password>@127.0.0.1:5432/difuse-pbx?sslmode=disable",
   "log_level": "debug",
   "session_secret": "not-so-secret",
-  "admins": [
-    { "username": "admin", "email" : "admin@example.com", "password" : "admin"}
+  "users": [
+    { "username": "admin", "email" : "admin@example.com", "password" : "admin", "admin": true}
+    { "username": "admin", "email" : "admin@example.com", "password" : "admin", "admin": true}
   ]
 }

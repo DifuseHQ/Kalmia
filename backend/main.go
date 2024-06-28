@@ -2,6 +2,10 @@ package main
 
 import (
 	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+
 	"git.difuse.io/Difuse/kalmia/cmd"
 	"git.difuse.io/Difuse/kalmia/config"
 	"git.difuse.io/Difuse/kalmia/db"
@@ -10,9 +14,6 @@ import (
 	"git.difuse.io/Difuse/kalmia/middleware"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
-	"net/http"
-	"os"
-	"os/signal"
 )
 
 func main() {
@@ -73,7 +74,7 @@ func main() {
 	logger.Info("Starting server", zap.Int("port", cfg.Port))
 
 	http.Handle("/", r)
-	http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), nil)
+	http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), middleware.CorsMiddleware(r))
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
