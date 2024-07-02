@@ -11,6 +11,8 @@ import Test from "./components/Test";
 import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 import Table from "./components/table/Table";
+import PageGrouptable from "./components/pagegroup/PageGrouptable";
+import CreatePageGroup from "./components/createPageGroup/CreatePageGroup";
 
 export const ModalContext = createContext();
 
@@ -25,7 +27,7 @@ function App() {
             <ToastContainer />
             <Routes>
               <Route path="/" element={<h1>First Page</h1>} />
-              <Route path="/test" element={<Table />} />
+              <Route path="/test" element={<CreatePageGroup />} />
               <Route path="/login" element={<LoginPage />} />
 
               <Route path="/dashboard" element={<DashboardPage />}>
@@ -61,7 +63,7 @@ function App() {
                 />
                 <Route path="edit-documentation" element={<CreateDocModal />} />
                 <Route path={`documentation`} element={<Documentation />} />
-                <Route path={'table'} element={<Table />} />
+                <Route path={'documentation/pagegroup'} element={<PageGrouptable />} />
               </Route>
             </Routes>
           </ModalContext.Provider>

@@ -4,7 +4,7 @@ import axios from "../../api/axios";
 import { getTokenFromCookies } from "../../utlis/CookiesManagement";
 import { useNavigate } from "react-router-dom";
 import { ExchangeContext } from "../../Context/ExchangeContext";
-import { toastError, toastSuccess } from "../../utlis/toast";
+import { toastError, toastSuccess, toastWarning } from "../../utlis/toast";
 
 export default function CreateDocModal() {
   const { refreshData } = useContext(ExchangeContext);
@@ -30,6 +30,12 @@ export default function CreateDocModal() {
   };
 
   const handleCreateDocument = async () => {
+
+    if(formData.title === ""){
+      toastWarning('Title is required. Please enter a new Document Title.');
+      return;
+    }
+
     try {
       const { data, status } = await axios.post(
         "/docs/documentation/create",

@@ -1,6 +1,6 @@
 import { initFlowbite } from "flowbite";
 import React, { useContext, useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import axios from "../../api/axios";
 import { getTokenFromCookies } from "../../utlis/CookiesManagement";
 import ClipLoader from "react-spinners/ClipLoader";
@@ -8,11 +8,11 @@ import { MdDelete, MdEdit } from "react-icons/md";
 import EditDocumentModal from "../createDocumentModal/EditDocumentModal";
 import { ExchangeContext } from "../../Context/ExchangeContext";
 import DeleteModal from "../deleteModal/DeleteModal";
-import { toastError, toastSuccess } from "../../utlis/toast";
+import { toastError, toastSuccess, toastWarning } from "../../utlis/toast";
 import { FaFolderOpen, FaRegFileAlt } from "react-icons/fa";
+import CreatePageGroup from "../createPageGroup/CreatePageGroup";
 
 export default function Documentation() {
-
   const token = getTokenFromCookies();
   const { refresh, refreshData } = useContext(ExchangeContext);
   const [searchParam] = useSearchParams();
@@ -23,24 +23,26 @@ export default function Documentation() {
   const [documentData, setDocumentData] = useState([]);
   const [isEditModal, setIsEditModal] = useState(false);
   const [isDeleteModal, setDeleteModal] = useState(false);
-  
-  const [isEditpageGroup,setIsEditpageGroup] = useState(false);
-  const [isPageGroupsDeleteModal,setIsPageGroupsDeleteModal] = useState(false);
+
+  const [isEditpageGroup, setIsEditpageGroup] = useState(false);
+  const [isPageGroupsDeleteModal, setIsPageGroupsDeleteModal] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);
 
-  const [currentPage, setCurrentPage] = useState(1); 
+  const [openCreatePageGroup, setOpenCreatePageGroup] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
 
   const numPageGroups = documentData.pageGroups
     ? documentData.pageGroups.length
     : 0;
   const numPages = documentData.pages ? documentData.pages.length : 0;
 
-  const itemsPerPage = 8; 
-  const totalItems = numPageGroups + numPages; 
+  const itemsPerPage = 8;
+  const totalItems = numPageGroups + numPages;
   const startIdx = (currentPage - 1) * itemsPerPage;
   const endIdx = startIdx + itemsPerPage;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
-
+ 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
@@ -53,7 +55,7 @@ export default function Documentation() {
 
   useEffect(() => {
     const fetchdata = async () => {
-      setLoading(true)
+      setLoading(true);
       try {
         const { data, status } = await axios.post(
           `/docs/documentation`,
@@ -68,7 +70,7 @@ export default function Documentation() {
         console.log(data);
         if (status === 200) {
           setDocumentData(data);
-          setLoading(false)
+          setLoading(false);
         } else {
           console.error("Failed to fetch data:", status.statusText);
         }
@@ -78,7 +80,6 @@ export default function Documentation() {
     };
 
     fetchdata();
-  
   }, [doc_id, token, refresh]);
 
   const handleDeletemodalopen = () => {
@@ -91,7 +92,7 @@ export default function Documentation() {
 
   const handleDelete = async () => {
     try {
-      const {data, status } = await axios.post(
+      const { data, status } = await axios.post(
         "docs/documentation/delete",
         { id: Number(doc_id) },
         {
@@ -144,7 +145,6 @@ export default function Documentation() {
     }
   };
 
-
   const openDeletePageGroups = (item) => {
     setCurrentItem(item);
     setIsPageGroupsDeleteModal(true);
@@ -155,7 +155,7 @@ export default function Documentation() {
     setCurrentItem(null);
   };
 
-  const handleDeletePageGroup = async(id) => {
+  const handleDeletePageGroup = async (id) => {
     try {
       const { data, status } = await axios.post(
         "docs/page-group/delete",
@@ -175,8 +175,7 @@ export default function Documentation() {
     } catch (err) {
       toastError(err.response.data.message);
     }
-
-  }
+  };
 
   const openEditPageGroup = (item) => {
     setCurrentItem(item);
@@ -188,36 +187,125 @@ export default function Documentation() {
     setCurrentItem(null);
   };
 
-const handelPageGroupUpdate = async(editTitle,editDescription,id) => {
-  try {
-    const { data, status } = await axios.post(
-      "docs/page-group/edit",
-      {
-        id: Number(id),
-        name: editTitle,
-        documentationSiteId: Number(doc_id),
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+  const handelPageGroupUpdate = async (editTitle, editDescription, id) => {
+    try {
+      const { data, status } = await axios.post(
+        "docs/page-group/edit",
+        {
+          id: Number(id),
+          name: editTitle,
+          documentationSiteId: Number(doc_id),
         },
-      }
-    );
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-    if (status === 200) {
-      setIsEditpageGroup(false);
-      refreshData();
-      toastSuccess(data.message);
-    } else {
-      console.log("Error found :", data.error);
+      if (status === 200) {
+        setIsEditpageGroup(false);
+        refreshData();
+        toastSuccess(data.message);
+      } else {
+        console.log("Error found :", data.error);
+      }
+    } catch (err) {
+      toastError(err.response.data.message);
     }
-  } catch (err) {
-    toastError(err.response.data.message);
-  }
-}
+  };
+
+  const CreatePageGroupModalClose = () => {
+    setOpenCreatePageGroup(false);
+  };
+
+  const handleCreatePageGroup = async (title) => {
+    if (title === "") {
+      toastWarning("Title is required. Please Enter PageGroup title");
+      return;
+    }
+
+    try {
+      const { data, status } = await axios.post(
+        "docs/page-group/create",
+        {
+          name: title,
+          documentationSiteId: Number(doc_id),
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (status === 200) {
+        setOpenCreatePageGroup(false);
+        refreshData();
+        toastSuccess(data.message);
+      } else {
+        console.log("Error found :", data.error);
+      }
+    } catch (err) {
+      toastError(err.response.data.message);
+    }
+  };
+
   return (
     <section class="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5">
+      <nav class="flex" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+          <li class="inline-flex items-center">
+            <Link
+              to="/dashboard"
+              class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white"
+            >
+              <svg
+                class="w-3 h-3 me-2.5"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z" />
+              </svg>
+              Home
+            </Link>
+          </li>
+          <li aria-current="page">
+            <div class="flex items-center">
+              <svg
+                class="rtl:rotate-180 w-3 h-3 text-gray-400 mx-1"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 6 10"
+              >
+                <path
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="m1 9 4-4-4-4"
+                />
+              </svg>
+              <span class="ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400">
+                Documentation
+              </span>
+            </div>
+          </li>
+        </ol>
+      </nav>
+
+      {openCreatePageGroup && (
+        <CreatePageGroup
+          closeModal={CreatePageGroupModalClose}
+          handleCreate={handleCreatePageGroup}
+        />
+      )}
+
       {isEditModal && (
         <EditDocumentModal
           heading="Edit Documentation"
@@ -240,7 +328,6 @@ const handelPageGroupUpdate = async(editTitle,editDescription,id) => {
         />
       )}
 
-     
       <div class=" lg:mt-0 lg:col-span-5 flex justify-end mr-5 gap-3">
         {/* <button type="button" class="flex items-center justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800">Edit</button> */}
         <button onClick={() => setIsEditModal(!isEditModal)}>
@@ -306,6 +393,7 @@ const handelPageGroupUpdate = async(editTitle,editDescription,id) => {
             </div>
             <div class="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
               <button
+                onClick={() => setOpenCreatePageGroup(true)}
                 type="button"
                 class="flex items-center justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
               >
@@ -450,33 +538,25 @@ const handelPageGroupUpdate = async(editTitle,editDescription,id) => {
                   </tr>
                 ) : (
                   <>
-                    {documentData.pageGroups
+                    {documentData.pageGroups && documentData.pageGroups
                       .slice(startIdx, endIdx)
                       .map((obj, index) => (
-                      
-                  
                         <tr
                           className="border-b dark:border-gray-700"
                           key={index}
-                        >  
-                        
-                        {isPageGroupsDeleteModal && (
-                          <DeleteModal
-                            cancelModal={handleCancelPagegroupDelete}
-                            deleteDoc={()=>handleDeletePageGroup(obj.id)}
-                            id={obj.id}
-                            title={`Are you sure you want to delete this "${obj.name}"`}
-                            message={`By deleting this PageGroup associated pages will also be permanently deleted.`}
-                          />
-                        )}
-
-                          <th
-                            scope="row"
-                            className="flex items-center cursor-pointer gap-2 px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white"
+                        >
+                          <Link
+                            to={`/dashboard/documentation/pagegroup?id=${doc_id}&pagegroup_id=${obj.id}`}
                           >
-                            <FaFolderOpen color="#dbc039" size={20} />
-                            {obj.name}
-                          </th>
+                            <th
+                              scope="row"
+                              className="flex items-center cursor-pointer gap-2 px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white"
+                            >
+                              <FaFolderOpen color="#dbc039" size={20} />
+                              {obj.name}
+                            </th>
+                          </Link>
+
                           <td className="px-4 py-3">/{obj.name}</td>
                           <td className="px-4 py-3">Folder</td>
                           <td className="px-4 py-3 flex items-center">
@@ -500,7 +580,6 @@ const handelPageGroupUpdate = async(editTitle,editDescription,id) => {
                               id={`dropdown-${index}`}
                               className="hidden z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600"
                             >
-                              
                               <ul
                                 className="py-1 text-sm text-gray-700 dark:text-gray-200"
                                 aria-labelledby={`dropdown-button-${index}`}
@@ -515,7 +594,7 @@ const handelPageGroupUpdate = async(editTitle,editDescription,id) => {
                                 </li>
                                 <li>
                                   <p
-                                     onClick={() => openDeletePageGroups(obj)}
+                                    onClick={() => openDeletePageGroups(obj)}
                                     className="block py-2 px-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
                                   >
                                     Delete
@@ -525,10 +604,9 @@ const handelPageGroupUpdate = async(editTitle,editDescription,id) => {
                             </div>
                           </td>
                         </tr>
-                        
                       ))}
-                      
-                    {documentData.pages
+
+                    {documentData.pages && documentData.pages
                       .slice(startIdx - numPageGroups, endIdx - numPageGroups)
                       .map((page, index) => (
                         <tr
@@ -552,7 +630,8 @@ const handelPageGroupUpdate = async(editTitle,editDescription,id) => {
             </table>
           </div>
 
-          {!documentData.pageGroups || documentData.pageGroups.length <= 0 ? null : (
+          {!documentData.pageGroups ||
+          documentData.pageGroups.length <= 0 ? null : (
             <nav
               className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4"
               aria-label="Table navigation"
@@ -630,26 +709,25 @@ const handelPageGroupUpdate = async(editTitle,editDescription,id) => {
             </nav>
           )}
 
+          {isEditpageGroup && currentItem && (
+            <EditDocumentModal
+              heading="Rename Page Group"
+              title={currentItem.name}
+              id={currentItem.id}
+              closeModal={handleEditPageGroupClose}
+              updateData={handelPageGroupUpdate}
+            />
+          )}
 
-                      {isEditpageGroup && currentItem && (
-                          <EditDocumentModal
-                            heading="Rename Page Group"
-                            title={currentItem.name}
-                            id={currentItem.id}
-                            closeModal={handleEditPageGroupClose}
-                            updateData={handelPageGroupUpdate}
-                          />
-                        )}
-
-      {isPageGroupsDeleteModal && currentItem && (
-        <DeleteModal
-          cancelModal={handleCancelPagegroupDelete}
-          deleteDoc={handleDeletePageGroup}
-          id={currentItem.id}
-          title={`Are you sure you want to delete this "${currentItem.name}"`}
-          message={`By deleting this PageGroup associated pages will also be permanently deleted.`}
-        />
-      )}
+          {isPageGroupsDeleteModal && currentItem && (
+            <DeleteModal
+              cancelModal={handleCancelPagegroupDelete}
+              deleteDoc={() => handleDeletePageGroup(currentItem.id)}
+              id={currentItem.id}
+              title={`Are you sure you want to delete this "${currentItem.name}"`}
+              message={`By deleting this PageGroup associated pages will also be permanently deleted.`}
+            />
+          )}
         </div>
       </div>
     </section>
