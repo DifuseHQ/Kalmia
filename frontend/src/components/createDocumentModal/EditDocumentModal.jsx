@@ -5,6 +5,8 @@ export default function EditDocumentModal({
   description,
   closeModal,
   updateData,
+  heading,
+  id
 }) {
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
@@ -20,11 +22,13 @@ export default function EditDocumentModal({
         <div className="relative p-4 w-full max-w-xl">
           <div className="relative p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
             <div className="flex justify-between items-center mb-4 sm:mb-5 dark:border-gray-600">
-              <div className="flex-grow text-center">
-                <h3 className="text-lg  font-semibold text-gray-900 dark:text-white">
-                  Edit Documentation
-                </h3>
-              </div>
+              {heading && (
+                <div className="flex-grow text-center">
+                  <h3 className="text-lg  font-semibold text-gray-900 dark:text-white">
+                    {heading}
+                  </h3>
+                </div>
+              )}
               <button
                 onClick={() => closeModal()}
                 type="button"
@@ -47,8 +51,8 @@ export default function EditDocumentModal({
               </button>
             </div>
 
-            <form action="#">
-              <div className="grid gap-4 mb-4">
+            <div className="grid gap-4 mb-4">
+              {title && (
                 <div>
                   <label
                     htmlFor="title"
@@ -67,7 +71,9 @@ export default function EditDocumentModal({
                     required
                   />
                 </div>
+              )}
 
+              {description && (
                 <div>
                   <label
                     htmlFor="description"
@@ -88,15 +94,16 @@ export default function EditDocumentModal({
                     ></textarea>
                   </div>
                 </div>
-                <button
-                  onClick={() => updateData(editTitle, editDescription)}
-                  type="button"
-                  class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
-                >
-                  Update
-                </button>
-              </div>
-            </form>
+              )}
+
+              <button
+                onClick={() => updateData(editTitle, editDescription ,id)}
+                type="button"
+                class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+              >
+                Update
+              </button>
+            </div>
           </div>
         </div>
       </div>

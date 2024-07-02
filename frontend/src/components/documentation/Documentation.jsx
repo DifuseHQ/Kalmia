@@ -12,35 +12,48 @@ import { toastError, toastSuccess } from "../../utlis/toast";
 import { FaFolderOpen, FaRegFileAlt } from "react-icons/fa";
 
 export default function Documentation() {
+
   const token = getTokenFromCookies();
-  const [documentData, setDocumentData] = useState([]);
-  const [pageGroups,setPageGroups] =useState([]);
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [isEditModal, setIsEditModal] = useState(false);
-  const [isDeleteModal, setDeleteModal] = useState(false);
   const { refresh, refreshData } = useContext(ExchangeContext);
   const [searchParam] = useSearchParams();
   const doc_id = searchParam.get("id");
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-  const totalPages = Math.ceil(pageGroups.length / itemsPerPage);
+  const [loading, setLoading] = useState(true);
+
+  const [documentData, setDocumentData] = useState([]);
+  const [isEditModal, setIsEditModal] = useState(false);
+  const [isDeleteModal, setDeleteModal] = useState(false);
+  
+  const [isEditpageGroup,setIsEditpageGroup] = useState(false);
+  const [isPageGroupsDeleteModal,setIsPageGroupsDeleteModal] = useState(false);
+  const [currentItem, setCurrentItem] = useState(null);
+
+  const [currentPage, setCurrentPage] = useState(1); 
+
+  const numPageGroups = documentData.pageGroups
+    ? documentData.pageGroups.length
+    : 0;
+  const numPages = documentData.pages ? documentData.pages.length : 0;
+
+  const itemsPerPage = 8; 
+  const totalItems = numPageGroups + numPages; 
   const startIdx = (currentPage - 1) * itemsPerPage;
   const endIdx = startIdx + itemsPerPage;
-  const paginatedData = pageGroups.slice(startIdx, endIdx);
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
   };
 
-
-
   const navigate = useNavigate();
+
   useEffect(() => {
     initFlowbite();
+  }, [documentData, handlePageChange]);
 
+  useEffect(() => {
     const fetchdata = async () => {
+      setLoading(true)
       try {
         const { data, status } = await axios.post(
           `/docs/documentation`,
@@ -52,33 +65,10 @@ export default function Documentation() {
             },
           }
         );
-      console.log(data);
+        console.log(data);
         if (status === 200) {
           setDocumentData(data);
-          
-        } else {
-          console.error("Failed to fetch data:", status.statusText);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error.message);
-      }
-    };
-
-    const fetchPageGroups = async () => {
-      try {
-        setLoading(true);
-        const { data, status } = await axios.get(
-          `/docs/page-groups`,{
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        console.log('fetch data is : ' , data);
-        if (status === 200) {
-          setPageGroups(data);
-          setLoading(false);
+          setLoading(false)
         } else {
           console.error("Failed to fetch data:", status.statusText);
         }
@@ -88,9 +78,8 @@ export default function Documentation() {
     };
 
     fetchdata();
-    fetchPageGroups()
+  
   }, [doc_id, token, refresh]);
-
 
   const handleDeletemodalopen = () => {
     setDeleteModal(true);
@@ -102,7 +91,7 @@ export default function Documentation() {
 
   const handleDelete = async () => {
     try {
-      const { data, status } = await axios.post(
+      const {data, status } = await axios.post(
         "docs/documentation/delete",
         { id: Number(doc_id) },
         {
@@ -113,7 +102,7 @@ export default function Documentation() {
         }
       );
       if (status === 200) {
-        toastSuccess("Documentation Deleted Successfully");
+        toastSuccess(data.message);
         refreshData();
         navigate("/dashboard");
       }
@@ -155,10 +144,83 @@ export default function Documentation() {
     }
   };
 
+
+  const openDeletePageGroups = (item) => {
+    setCurrentItem(item);
+    setIsPageGroupsDeleteModal(true);
+  };
+
+  const handleCancelPagegroupDelete = () => {
+    setIsPageGroupsDeleteModal(false);
+    setCurrentItem(null);
+  };
+
+  const handleDeletePageGroup = async(id) => {
+    try {
+      const { data, status } = await axios.post(
+        "docs/page-group/delete",
+        { id: Number(id) },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (status === 200) {
+        toastSuccess(data.message);
+        setIsPageGroupsDeleteModal(false);
+        refreshData();
+      }
+    } catch (err) {
+      toastError(err.response.data.message);
+    }
+
+  }
+
+  const openEditPageGroup = (item) => {
+    setCurrentItem(item);
+    setIsEditpageGroup(true);
+  };
+
+  const handleEditPageGroupClose = () => {
+    setIsEditpageGroup(false);
+    setCurrentItem(null);
+  };
+
+const handelPageGroupUpdate = async(editTitle,editDescription,id) => {
+  try {
+    const { data, status } = await axios.post(
+      "docs/page-group/edit",
+      {
+        id: Number(id),
+        name: editTitle,
+        documentationSiteId: Number(doc_id),
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (status === 200) {
+      setIsEditpageGroup(false);
+      refreshData();
+      toastSuccess(data.message);
+    } else {
+      console.log("Error found :", data.error);
+    }
+  } catch (err) {
+    toastError(err.response.data.message);
+  }
+}
   return (
     <section class="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5">
       {isEditModal && (
         <EditDocumentModal
+          heading="Edit Documentation"
           value={documentData.id}
           doc_id={documentData.id}
           title={documentData.name}
@@ -172,16 +234,20 @@ export default function Documentation() {
         <DeleteModal
           cancelModal={handleCancel}
           deleteDoc={handleDelete}
-          id={data.id}
-          title={`${documentData.name} Documentation`}
-          message="documentation associated page groups and pages"
+          id={documentData.id}
+          title={`Are you sure you want to delete this ${documentData.name} Documentation`}
+          message="By deleting this documentation associated page groups and pages will also be permanently deleted."
         />
       )}
 
+     
       <div class=" lg:mt-0 lg:col-span-5 flex justify-end mr-5 gap-3">
         {/* <button type="button" class="flex items-center justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800">Edit</button> */}
         <button onClick={() => setIsEditModal(!isEditModal)}>
-          <MdEdit size={25} className="cursor-pointer hover:border dark:bg-gray-100 dark:rounded" />
+          <MdEdit
+            size={25}
+            className="cursor-pointer hover:border dark:bg-gray-100 dark:rounded"
+          />
         </button>
 
         <MdDelete
@@ -299,7 +365,7 @@ export default function Documentation() {
                     </a>
                   </div>
                 </div> */}
-                {/* <button id="filterDropdownButton" data-dropdown-toggle="filterDropdown" class="w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700" type="button">
+              {/* <button id="filterDropdownButton" data-dropdown-toggle="filterDropdown" class="w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700" type="button">
                             <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="h-4 w-4 mr-2 text-gray-400" viewbox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
                             </svg>
@@ -308,7 +374,7 @@ export default function Documentation() {
                                 <path clip-rule="evenodd" fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
                             </svg>
                         </button> */}
-                {/* <div id="filterDropdown" class="z-10 hidden w-48 p-3 bg-white rounded-lg shadow dark:bg-gray-700">
+              {/* <div id="filterDropdown" class="z-10 hidden w-48 p-3 bg-white rounded-lg shadow dark:bg-gray-700">
                             <h6 class="mb-3 text-sm font-medium text-gray-900 dark:text-white">Choose brand</h6>
                             <ul class="space-y-2 text-sm" aria-labelledby="filterDropdownButton">
                                 <li class="flex items-center">
@@ -338,15 +404,23 @@ export default function Documentation() {
           </div>
 
           <div class="overflow-x-auto">
-          <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                        <tr>
-                            <th scope="col" class="px-4 py-3">Title</th>
-                            <th scope="col" class="px-4 py-3">File Name</th>
-                            <th scope="col" class="px-4 py-3">Extension</th>
-                            <th scope="col" class="px-4 py-3">Actions</th>
-                        </tr>
-                    </thead>
+            <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+              <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                <tr>
+                  <th scope="col" class="px-4 py-3">
+                    Title
+                  </th>
+                  <th scope="col" class="px-4 py-3">
+                    Path
+                  </th>
+                  <th scope="col" class="px-4 py-3">
+                    Extension
+                  </th>
+                  <th scope="col" class="px-4 py-3">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
               <tbody>
                 {loading ? (
                   <tr className="border-b dark:border-gray-700">
@@ -365,7 +439,8 @@ export default function Documentation() {
                       </div>
                     </td>
                   </tr>
-                ) : !documentData.pageGroups || documentData.pageGroups.length <= 0 ? (
+                ) : !documentData.pageGroups ||
+                  documentData.pageGroups.length <= 0 ? (
                   <tr className="border-b dark:border-gray-700">
                     <td colSpan="4" className="text-center py-8">
                       <h1 className="text-center text-gray-600 sm:text-lg font-semibold">
@@ -374,161 +449,206 @@ export default function Documentation() {
                     </td>
                   </tr>
                 ) : (
-                  documentData.pageGroups.map((obj, index) => (
+                  <>
+                    {documentData.pageGroups
+                      .slice(startIdx, endIdx)
+                      .map((obj, index) => (
+                      
                   
-                      <tr class="border-b dark:border-gray-700" key={index}>
-                        <th
-                          scope="row"
-                          class="flex items-center cursor-pointer gap-2 px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white"
+                        <tr
+                          className="border-b dark:border-gray-700"
+                          key={index}
+                        >  
+                        
+                        {isPageGroupsDeleteModal && (
+                          <DeleteModal
+                            cancelModal={handleCancelPagegroupDelete}
+                            deleteDoc={()=>handleDeletePageGroup(obj.id)}
+                            id={obj.id}
+                            title={`Are you sure you want to delete this "${obj.name}"`}
+                            message={`By deleting this PageGroup associated pages will also be permanently deleted.`}
+                          />
+                        )}
+
+                          <th
+                            scope="row"
+                            className="flex items-center cursor-pointer gap-2 px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white"
+                          >
+                            <FaFolderOpen color="#dbc039" size={20} />
+                            {obj.name}
+                          </th>
+                          <td className="px-4 py-3">/{obj.name}</td>
+                          <td className="px-4 py-3">Folder</td>
+                          <td className="px-4 py-3 flex items-center">
+                            <button
+                              id={`dropdown-button-${index}`}
+                              data-dropdown-toggle={`dropdown-${index}`}
+                              className="inline-flex items-center p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
+                              type="button"
+                            >
+                              <svg
+                                className="w-5 h-5"
+                                aria-hidden="true"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
+                              </svg>
+                            </button>
+                            <div
+                              id={`dropdown-${index}`}
+                              className="hidden z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600"
+                            >
+                              
+                              <ul
+                                className="py-1 text-sm text-gray-700 dark:text-gray-200"
+                                aria-labelledby={`dropdown-button-${index}`}
+                              >
+                                <li>
+                                  <p
+                                    onClick={() => openEditPageGroup(obj)}
+                                    className="block py-2 px-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                                  >
+                                    Edit
+                                  </p>
+                                </li>
+                                <li>
+                                  <p
+                                     onClick={() => openDeletePageGroups(obj)}
+                                    className="block py-2 px-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                                  >
+                                    Delete
+                                  </p>
+                                </li>
+                              </ul>
+                            </div>
+                          </td>
+                        </tr>
+                        
+                      ))}
+                      
+                    {documentData.pages
+                      .slice(startIdx - numPageGroups, endIdx - numPageGroups)
+                      .map((page, index) => (
+                        <tr
+                          className="border-b dark:border-gray-700"
+                          key={index}
                         >
-                          <FaFolderOpen color="#dbc039" size={20}/>
-                          {obj.name}
-                        </th>
-                        <td class="px-4 py-3">300</td>
-                        <td class="px-4 py-3">$2999</td>
-                        <td class="px-4 py-3 flex items-center">
-                        <button id={obj.name} data-dropdown-toggle={obj.name} class="inline-flex items-center p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100" type="button">
-                                    <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
-                                    </svg>
-                                </button>
-                                <div id={obj.name} class="hidden z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600">
-                                    <ul class="py-1 text-sm text-gray-700 dark:text-gray-200" aria-labelledby={obj.name}>
-                                        <li>
-                                            <a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Show</a>
-                                        </li>
-                                        <li>
-                                            <a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Edit</a>
-                                        </li>
-                                    </ul>
-                                    <div class="py-1">
-                                        <a href="#" class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Delete</a>
-                                    </div>
-                              </div>
-                        </td>
-                      </tr>
-                 
-                  ))
+                          <th
+                            scope="row"
+                            className="flex items-center cursor-pointer gap-2 px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white"
+                          >
+                            <FaRegFileAlt color="#8A8888" size={20} />
+                            {page.title}
+                          </th>
+                          <td className="px-4 py-3">/{documentData.name}</td>
+                          <td className="px-4 py-3">.txt</td>
+                        </tr>
+                      ))}
+                  </>
                 )}
-
-        {documentData.pages &&
-          documentData.pages.map((page, index) => (
-            <tr class="border-b dark:border-gray-700" key={index}>
-            <th
-              scope="row"
-              class="flex items-center cursor-pointer gap-2 px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white"
-            >
-              <FaRegFileAlt  color="#808080" size={20}/>
-              {page.title}
-            </th>
-            <td class="px-4 py-3">300</td>
-            <td class="px-4 py-3">$2999</td>
-            <td class="px-4 py-3 flex items-center">
-            <button id={page.title} data-dropdown-toggle={page.title} class="inline-flex items-center p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100" type="button">
-                        <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
-                        </svg>
-                    </button>
-                    <div id={page.title} class="hidden z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600">
-                        <ul class="py-1 text-sm text-gray-700 dark:text-gray-200" aria-labelledby={page.title}>
-                            <li>
-                                <a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Show</a>
-                            </li>
-                            <li>
-                                <a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Edit</a>
-                            </li>
-                        </ul>
-                        <div class="py-1">
-                            <a href="#" class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Delete</a>
-                        </div>
-                  </div>
-            </td>
-          </tr>
-      ))}
-
               </tbody>
             </table>
           </div>
 
+          {!documentData.pageGroups || documentData.pageGroups.length <= 0 ? null : (
+            <nav
+              className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4"
+              aria-label="Table navigation"
+            >
+              <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
+                Showing
+                <span className="font-semibold text-gray-900 dark:text-white mx-1">
+                  {startIdx + 1}-{Math.min(endIdx, totalItems)}
+                </span>
+                of
+                <span className="font-semibold text-gray-900 dark:text-white mx-1">
+                  {totalItems}
+                </span>
+              </span>
+              <ul className="inline-flex items-stretch -space-x-px">
+                <li>
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="flex items-center justify-center h-full py-1.5 px-3 ml-0 text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+                  >
+                    <span className="sr-only">Previous</span>
+                    <svg
+                      className="w-5 h-5"
+                      aria-hidden="true"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                </li>
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <li key={i}>
+                    <button
+                      onClick={() => handlePageChange(i + 1)}
+                      className={`flex items-center justify-center text-sm py-2 px-3 leading-tight ${
+                        currentPage === i + 1
+                          ? "text-primary-600 bg-primary-50 border border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
+                          : "text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+                      }`}
+                    >
+                      {i + 1}
+                    </button>
+                  </li>
+                ))}
+                <li>
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="flex items-center justify-center h-full py-1.5 px-3 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+                  >
+                    <span className="sr-only">Next</span>
+                    <svg
+                      className="w-5 h-5"
+                      aria-hidden="true"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 111.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                </li>
+              </ul>
+            </nav>
+          )}
 
 
-          {!pageGroups || pageGroups.length <= 0 ? null : (
-        <nav
-          className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4"
-          aria-label="Table navigation"
-        >
-          <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
-            Showing
-            <span className="font-semibold text-gray-900 dark:text-white mx-1">
-              {startIdx + 1}-{Math.min(endIdx, pageGroups.length)}
-            </span>
-            of
-            <span className="font-semibold text-gray-900 dark:text-white mx-1">
-              {pageGroups.length}
-            </span>
-          </span>
-          <ul className="inline-flex items-stretch -space-x-px">
-            <li>
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="flex items-center justify-center h-full py-1.5 px-3 ml-0 text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-              >
-                <span className="sr-only">Previous</span>
-                <svg
-                  className="w-5 h-5"
-                  aria-hidden="true"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </button>
-            </li>
-            {Array.from({ length: totalPages }, (_, i) => (
-              <li key={i}>
-                <button
-                  onClick={() => handlePageChange(i + 1)}
-                  className={`flex items-center justify-center text-sm py-2 px-3 leading-tight ${
-                    currentPage === i + 1
-                      ? 'text-primary-600 bg-primary-50 border border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white'
-                      : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              </li>
-            ))}
-            <li>
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="flex items-center justify-center h-full py-1.5 px-3 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-              >
-               <span className="sr-only">Next</span>
-                <svg
-                  className="w-5 h-5"
-                  aria-hidden="true"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 111.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                      {isEditpageGroup && currentItem && (
+                          <EditDocumentModal
+                            heading="Rename Page Group"
+                            title={currentItem.name}
+                            id={currentItem.id}
+                            closeModal={handleEditPageGroupClose}
+                            updateData={handelPageGroupUpdate}
+                          />
+                        )}
 
-              </button>
-            </li>
-          </ul>
-        </nav>
+      {isPageGroupsDeleteModal && currentItem && (
+        <DeleteModal
+          cancelModal={handleCancelPagegroupDelete}
+          deleteDoc={handleDeletePageGroup}
+          id={currentItem.id}
+          title={`Are you sure you want to delete this "${currentItem.name}"`}
+          message={`By deleting this PageGroup associated pages will also be permanently deleted.`}
+        />
       )}
         </div>
       </div>
