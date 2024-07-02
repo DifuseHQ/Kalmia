@@ -77,12 +77,14 @@ func GetDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid request"})
 		return
 	}
-
+	
 	var documentation models.Documentation
 	if err := db.Preload("PageGroups", func(db *gorm.DB) *gorm.DB {
 		return db.Select("ID", "DocumentationID")
 	}).Preload("PageGroups.Pages", func(db *gorm.DB) *gorm.DB {
 		return db.Select("ID", "PageGroupID")
+	}).Preload("Pages", func(db *gorm.DB) *gorm.DB {
+		return db.Select("ID", "DocumentationID", "Title", "Slug").Where("page_group_id IS NULL")
 	}).First(&documentation, req.ID).Error; err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to fetch documentation"})
 		return
