@@ -49,6 +49,8 @@ func GetDocumentations(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		return db.Select("ID", "DocumentationID")
 	}).Preload("PageGroups.Pages", func(db *gorm.DB) *gorm.DB {
 		return db.Select("ID", "PageGroupID")
+	}).Preload("Pages", func(db *gorm.DB) *gorm.DB {
+		return db.Select("ID", "DocumentationID", "Title", "Slug").Where("page_group_id IS NULL")
 	}).Find(&documentations).Error; err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to fetch documentations"})
 		return
