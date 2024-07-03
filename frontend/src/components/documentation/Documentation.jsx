@@ -4,12 +4,10 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import axios from "../../api/axios";
 import { getTokenFromCookies } from "../../utlis/CookiesManagement";
 import ClipLoader from "react-spinners/ClipLoader";
-import { MdDelete, MdEdit } from "react-icons/md";
 import EditDocumentModal from "../createDocumentModal/EditDocumentModal";
 import { ExchangeContext } from "../../Context/ExchangeContext";
 import DeleteModal from "../deleteModal/DeleteModal";
 import { toastError, toastSuccess, toastWarning } from "../../utlis/toast";
-import { FaFolderOpen, FaRegFileAlt } from "react-icons/fa";
 import CreatePageGroup from "../createPageGroup/CreatePageGroup";
 
 export default function Documentation() {
@@ -331,18 +329,19 @@ export default function Documentation() {
       <div class=" lg:mt-0 lg:col-span-5 flex justify-end mr-5 gap-3">
         {/* <button type="button" class="flex items-center justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800">Edit</button> */}
         <button onClick={() => setIsEditModal(!isEditModal)}>
-          <MdEdit
-            size={25}
-            className="cursor-pointer hover:border dark:bg-gray-100 dark:rounded"
-          />
+          <svg class="w-6 h-6 cursor-pointer text-gray-800 hover:border dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m14.304 4.844 2.852 2.852M7 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-4.5m2.409-9.91a2.017 2.017 0 0 1 0 2.853l-6.844 6.844L8 14l.713-3.565 6.844-6.844a2.015 2.015 0 0 1 2.852 0Z"/>
+        </svg>
         </button>
+       
+      <button
+      onClick={handleDeletemodalopen}>
+        <svg class="w-6 h-6 cursor-pointer hover:border  text-red-700 dark:text-red-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"/>
+        </svg>
 
-        <MdDelete
-          onClick={handleDeletemodalopen}
-          size={25}
-          color="red"
-          className="cursor-pointer hover:border dark:bg-gray-100 dark:rounded"
-        />
+      </button>
+       
 
         {/* <button type="button" class="flex items-center justify-center text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800">Delete</button> */}
       </div>
@@ -399,12 +398,13 @@ export default function Documentation() {
               >
                 New Group
               </button>
-              <button
-                type="button"
+              <Link
+              to={`/dashboard/documentation/create-page?id=${doc_id}&dir=true`}
+      
                 class="flex items-center justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
               >
                 New page
-              </button>
+              </Link>
               {/* <div class="flex items-center space-x-3 w-full md:w-auto">
                 <button
                   id="actionsDropdownButton"
@@ -552,7 +552,9 @@ export default function Documentation() {
                               scope="row"
                               className="flex items-center cursor-pointer gap-2 px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white"
                             >
-                              <FaFolderOpen color="#dbc039" size={20} />
+                              <svg class="w-6 h-6 text-yellow-400 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                <path fill-rule="evenodd" d="M4 4a2 2 0 0 0-2 2v12a2 2 0 0 0 .087.586l2.977-7.937A1 1 0 0 1 6 10h12V9a2 2 0 0 0-2-2h-4.532l-1.9-2.28A2 2 0 0 0 8.032 4H4Zm2.693 8H6.5l-3 8H18l3-8H6.693Z" clip-rule="evenodd"/>
+                              </svg>
                               {obj.name}
                             </th>
                           </Link>
@@ -615,10 +617,17 @@ export default function Documentation() {
                         >
                           <th
                             scope="row"
-                            className="flex items-center cursor-pointer gap-2 px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white"
+                            className="  px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white"
                           >
-                            <FaRegFileAlt color="#8A8888" size={20} />
+                            <Link 
+                            to={`/dashboard/documentation/edit-page?id=${doc_id}&dir=true&page_id=${page.id}`}
+                            className="flex gap-2 items-center cursor-pointer">
+                            <svg class="w-6 h-6 text-gray-600 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 3v4a1 1 0 0 1-1 1H5m4 8h6m-6-4h6m4-8v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7.914a1 1 0 0 1 .293-.707l3.914-3.914A1 1 0 0 1 9.914 3H18a1 1 0 0 1 1 1Z"/>
+                            </svg>
                             {page.title}
+                            </Link>
+                         
                           </th>
                           <td className="px-4 py-3">/{documentData.name}</td>
                           <td className="px-4 py-3">.txt</td>

@@ -13,6 +13,8 @@ import "./App.css";
 import Table from "./components/table/Table";
 import PageGrouptable from "./components/pagegroup/PageGrouptable";
 import CreatePageGroup from "./components/createPageGroup/CreatePageGroup";
+import CreatepageModal from "./components/createPageModal/CreatepageModal";
+import EditPage from "./components/editPage/EditPage";
 
 export const ModalContext = createContext();
 
@@ -63,7 +65,11 @@ function App() {
                 />
                 <Route path="edit-documentation" element={<CreateDocModal />} />
                 <Route path={`documentation`} element={<Documentation />} />
+                
                 <Route path={'documentation/pagegroup'} element={<PageGrouptable />} />
+                <Route path="documentation/create-page" element={<CreatepageModal/>} />
+                <Route path="documentation/edit-page" element={<EditPage/>} />
+                
               </Route>
             </Routes>
           </ModalContext.Provider>

@@ -16,7 +16,7 @@ export default function PageGrouptable() {
 
   useEffect(() => {
     initFlowbite();
-  }, []);
+  }, [doc_id,pagegroup_id]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -76,7 +76,7 @@ export default function PageGrouptable() {
     (page) => page.pageGroupId === Number(pagegroup_id)
   );
 
-  console.log("filteredPages  : ", filteredPages);
+
   return (
     <section class="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5">
       <nav className="flex mb-5" aria-label="Breadcrumb">
@@ -198,12 +198,12 @@ export default function PageGrouptable() {
               >
                 New Group
               </button>
-              <button
-                type="button"
-                class="flex items-center justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
+              <Link 
+               to={`/dashboard/documentation/create-page?id=${doc_id}&dir=false&pagegroup_id=${pagegroup_id}`}
+               class="flex items-center justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
               >
                 New page
-              </button>
+              </Link>
             </div>
           </div>
 
@@ -242,14 +242,19 @@ export default function PageGrouptable() {
                       scope="row"
                       class=" flex items-center cursor-pointer px-4 py-3 gap-2 font-medium text-blue-500 hover:text-blue-700 whitespace-nowrap dark:text-white"
                     >
-                      <FaRegFileAlt color="#8A8888" size={20} />
+                      <Link className="flex"
+                      to={`/dashboard/documentation/edit-page?id=${doc_id}&dir=false&pagegroup_id=${pagegroup_id}&page_id=${obj.id}&group_name=${data.name}`}>
+                      <svg class="w-6 h-6 text-gray-600 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 3v4a1 1 0 0 1-1 1H5m4 8h6m-6-4h6m4-8v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7.914a1 1 0 0 1 .293-.707l3.914-3.914A1 1 0 0 1 9.914 3H18a1 1 0 0 1 1 1Z"/>
+                      </svg>
                       {obj.title}
+                      </Link>
                     </th>
                     <td class="px-4 py-3 ">/{obj.slug}</td>
                     <td class="px-4 py-3">.txt</td>
-                    <td class="px-4 py-3 flex items-center ">
+                    {/* <td class="px-4 py-3 flex items-center ">
                       <button
-                        id="apple-imac-27-dropdown-button"
+                        id={index}
                         data-dropdown-toggle={index}
                         class="inline-flex items-center p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
                         type="button"
@@ -270,7 +275,7 @@ export default function PageGrouptable() {
                       >
                         <ul
                           class="py-1 text-sm text-gray-700 dark:text-gray-200"
-                          aria-labelledby="apple-imac-27-dropdown-button"
+                          aria-labelledby={index}
                         >
                           <li>
                             <a
@@ -290,7 +295,7 @@ export default function PageGrouptable() {
                           </li>
                         </ul>
                       </div>
-                    </td>
+                    </td> */}
                   </tr>
                 ))}
               </tbody>
