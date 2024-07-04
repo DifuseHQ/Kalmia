@@ -17,7 +17,7 @@ export default function Documentation() {
   const doc_id = searchParam.get("id");
 
   const [loading, setLoading] = useState(true);
-
+console.log(token);
   const [documentData, setDocumentData] = useState([]);
   const [isEditModal, setIsEditModal] = useState(false);
   const [isDeleteModal, setDeleteModal] = useState(false);
@@ -54,10 +54,15 @@ export default function Documentation() {
   useEffect(() => {
     const fetchdata = async () => {
       setLoading(true);
+      
+      if(!doc_id){
+        setLoading(false)
+        return;
+      }
       try {
         const { data, status } = await axios.post(
           `/docs/documentation`,
-          { id: Number(doc_id) },
+          JSON.stringify({ id:Number(doc_id)}),
           {
             headers: {
               "Content-Type": "application/json",
@@ -72,8 +77,22 @@ export default function Documentation() {
         } else {
           console.error("Failed to fetch data:", status.statusText);
         }
-      } catch (error) {
-        console.error("Error fetching data:", error.message);
+      } catch (err) {
+        console.log(err);
+        console.log("starte");
+        if (!err?.response) {
+          toastError('No Server Response');
+      } else if (err.response?.status === 400) {
+        console.log(err.response.statusText);
+        toastError(err.response.data.error);
+      } else if (err.response?.status === 401) {
+
+        console.log(err.response.statusText);
+          toastError(err.response.data.error)
+      } else {
+        toastError('Login Failed');
+      }
+      // errRef.current.focus();  for screen reader
       }
     };
 
@@ -328,14 +347,18 @@ export default function Documentation() {
 
       <div class=" lg:mt-0 lg:col-span-5 flex justify-end mr-5 gap-3">
         {/* <button type="button" class="flex items-center justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800">Edit</button> */}
-        <button onClick={() => setIsEditModal(!isEditModal)}>
+        <button onClick={() => setIsEditModal(!isEditModal)}
+          title="Edit Documentation"
+          >
           <svg class="w-6 h-6 cursor-pointer text-gray-800 hover:border dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
           <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m14.304 4.844 2.852 2.852M7 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-4.5m2.409-9.91a2.017 2.017 0 0 1 0 2.853l-6.844 6.844L8 14l.713-3.565 6.844-6.844a2.015 2.015 0 0 1 2.852 0Z"/>
         </svg>
         </button>
        
       <button
-      onClick={handleDeletemodalopen}>
+      onClick={handleDeletemodalopen}
+      title="Delete Documentation"
+      >
         <svg class="w-6 h-6 cursor-pointer hover:border  text-red-700 dark:text-red-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
           <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"/>
         </svg>
@@ -396,14 +419,14 @@ export default function Documentation() {
                 type="button"
                 class="flex items-center justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
               >
-                New Group
+                Create Group
               </button>
               <Link
               to={`/dashboard/documentation/create-page?id=${doc_id}&dir=true`}
       
                 class="flex items-center justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
               >
-                New page
+                Create page
               </Link>
               {/* <div class="flex items-center space-x-3 w-full md:w-auto">
                 <button

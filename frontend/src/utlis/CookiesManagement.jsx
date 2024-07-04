@@ -1,22 +1,19 @@
 import Cookies from 'js-cookie';
 
 // Export the function with a named export
-export const CookiesDataSave = async(status, token) => {
+export const CookiesDataSave = async(data) => {
  await Cookies.set(
-    'CMS_user',
-    JSON.stringify({
-      status : status,
-      token : token,
-    }),
+    'accessToken',
+    JSON.stringify(data),
     {
-      expires: 1, // Expires in 30 days
-      secure: true, // Set the secure flag
+      expires: 1, 
+      secure: true, 
     }
   );
 };
 
 export const getTokenFromCookies = () => {
-    const cookieData = Cookies.get('CMS_user');
+    const cookieData = Cookies.get('accessToken');
     if (cookieData) {
         const { token } = JSON.parse(cookieData);
         return token;
@@ -27,13 +24,25 @@ export const getTokenFromCookies = () => {
 
 // Export the function with a named export
 export const checkUserLoginned = () => {
-  const userLoginCookie = Cookies.get('userDetails'); // Change 'userLogin' to 'userDetails'
-  const isLogin = userLoginCookie ? true : false;
-  console.log(isLogin);
-
-  if (isLogin) {
-    return false;
+  const cookieData = Cookies.get('accessToken');
+  if (cookieData) {
+      const { status } = JSON.parse(cookieData);
+      if(status === "success"){
+        return true;
+      }
   }
+  return false; 
+};
 
-  return true;
+export const getUser = () => {
+  const cookieData = Cookies.get('accessToken');
+  if (cookieData) {
+      const userData = JSON.parse(cookieData);
+      return userData
+  }
+  return false; 
+};
+
+export const removeCookies = () => {
+  Cookies.remove('accessToken');
 };

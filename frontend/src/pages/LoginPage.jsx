@@ -1,20 +1,56 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useLayoutEffect, useState } from "react";
 import { AuthContext } from "../Context/AuthContext";
+import {toastError, toastSuccess} from '../utlis/toast'
+import axios from "../api/axios";
+import { CookiesDataSave, checkUserLoginned } from "../utlis/CookiesManagement";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function LoginPage() {
   const [username, setUsername] = useState(null);
   const [password, setPassword] = useState(null);
 
-  const {login} = useContext(AuthContext);
+  const {login } = useContext(AuthContext);
+const navigate = useNavigate();
+const location = useLocation();
+const from = location.state?.from?.pathname || '/dashboard';
 
   const handleSubmit = async () => {
     try {
-      const response = await login(username, password);
+      const {data, status} = await axios.post(
+        "/auth/jwt/create",
+        {
+          username,
+          password,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log(data);
+      if (status === 200) {
+        // const status = data.status;
+        // const token = data.token;
+        CookiesDataSave(data);
+        toastSuccess("Login Succesfully");
+        navigate('/dashboard', { replace: true });
+      } 
 
-      console.log('Login successful:', response.status);
-    } catch (error) {
-      console.log("frontend error");
-      console.error('Login error:', error);
+    } catch (err) {
+      console.log(err);
+        if (!err?.response) {
+          toastError('No Server Response');
+      } else if (err.response?.status === 400) {
+        console.log("400");
+        console.log(err.response.statusText);
+           toastError(err.response.data.error);
+      } else if (err.response?.status === 401) {
+        console.log(err.response.data.message);
+           toastError(err.response.data.message)
+      } else {
+           toastError(err.response.data.message);
+      }
       
     }
     
@@ -30,12 +66,7 @@ export default function LoginPage() {
             href="#"
             className="flex items-center mb-6 text-2xl font-semibold text-gray-900 dark:text-white"
           >
-            <img
-              className="w-8 h-8 mr-2"
-              src="https://flowbite.s3.amazonaws.com/blocks/marketing-ui/logo.svg"
-              alt="logo"
-            />
-            Flowbite
+            
           </a>
           <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
             <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
@@ -55,7 +86,7 @@ export default function LoginPage() {
                     name="username"
                     id="email"
                     className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    placeholder="name@company.com"
+                    placeholder="username"
                     onChange={(e) => setUsername(e.target.value)}
                   />
                 </div>
@@ -70,12 +101,12 @@ export default function LoginPage() {
                     type="password"
                     name="password"
                     id="password"
-                    placeholder="••••••••"
+                    placeholder="password"
                     className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                     onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
-                <div className="flex items-center justify-between">
+                {/* <div className="flex items-center justify-between">
                   <div className="flex items-start">
                     <div className="flex items-center h-5">
                       <input
@@ -101,7 +132,7 @@ export default function LoginPage() {
                   >
                     Forgot password?
                   </a>
-                </div>
+                </div> */}
                 <button
                   onClick={handleSubmit}
                   type="submit"
@@ -109,7 +140,7 @@ export default function LoginPage() {
                 >
                   Sign in
                 </button>
-                <p className="text-sm font-light text-gray-500 dark:text-gray-400">
+                {/* <p className="text-sm font-light text-gray-500 dark:text-gray-400">
                   Don’t have an account yet?{" "}
                   <a
                     href="#"
@@ -117,7 +148,7 @@ export default function LoginPage() {
                   >
                     Sign up
                   </a>
-                </p>
+                </p> */}
               </div>
             </div>
           </div>

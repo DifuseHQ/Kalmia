@@ -1,15 +1,23 @@
 import React, { useEffect, useState } from "react";
 import { getTheme } from "../../utlis/getTheme";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import axios from "../../api/axios";
+import { getTokenFromCookies, removeCookies } from "../../utlis/CookiesManagement";
+import { toastError, toastSuccess } from "../../utlis/toast";
 
 export default function Navbar() {
   const themeMode = getTheme();
   const [isDarkMode, setIsDarkMode] = useState(false);
+
+  const navigate = useNavigate();
+
+
   useEffect(() => {
     getTheme();
     setIsDarkMode(themeMode === "dark");
   }, [themeMode]);
 
+  const token = getTokenFromCookies();
   const handleDarkModeToggle = () => {
     const newMode = isDarkMode ? "light" : "dark";
     setIsDarkMode(!isDarkMode);
@@ -17,6 +25,47 @@ export default function Navbar() {
     localStorage.setItem("theme", newMode);
     getTheme(newMode);
   };
+
+  const handleLogout = async() =>{
+
+    try {
+      const {data, status} = await axios.post(
+        "/auth/jwt/revoke",
+        {
+          token:token
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (status === 200) {
+        removeCookies();
+        toastSuccess(data.message); 
+        navigate('/');
+      } 
+
+    } catch (err) {
+      console.log(err);
+        if (!err?.response) {
+          toastError('No Server Response');
+      } else if (err.response?.status === 400) {
+        console.log("400");
+        console.log(err.response.statusText);
+           toastError(err.response.data.error);
+      } else if (err.response?.status === 401) {
+        console.log(err.response.data.message);
+           toastError(err.response.data.message)
+      } else {
+           toastError(err.response.data.message);
+      }
+      
+    }
+    
+
+  }
 
   return (
     <nav class="bg-white border-b border-gray-200 px-4 py-2.5 dark:bg-gray-800 dark:border-gray-700 fixed left-0 right-0 top-0 z-50">
@@ -112,10 +161,10 @@ export default function Navbar() {
           </button>
 
           <div
-            class="hidden z-50 my-4 w-56 text-base list-none bg-white divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600 rounded-xl"
+            class="hidden z-50 my-4 w-56 text-base list-none bg-white  divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600 rounded-xl"
             id="dropdown"
           >
-            <div class="py-3 px-4">
+            <div class="py-3 px-4 hover:bg-gray-300 cursor-pointer">
               <span class="block text-sm font-semibold text-gray-900 dark:text-white">
                 Neil Sims
               </span>
@@ -129,12 +178,12 @@ export default function Navbar() {
               aria-labelledby="dropdown"
             >
               <li>
-                <Link
-                  to="/"
-                  class="block py-2 px-4 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                <p
+                  onClick={handleLogout}
+                  class="block cursor-pointer py-2 px-4 text-sm hover:bg-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
                 >
                   Sign out
-                </Link>
+                </p>
               </li>
             </ul>
           </div>
