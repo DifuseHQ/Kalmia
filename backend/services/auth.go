@@ -7,23 +7,43 @@ import (
 )
 
 func VerifyTokenInDb(db *gorm.DB, token string, needAdmin bool) bool {
-	var user models.User
+	var tokenRecord models.Token
 
-	err := db.Where("jwt = ?", token).First(&user).Error
-
-	if err != nil {
+	query := db.Joins("JOIN users ON users.id = tokens.user_id").Where("tokens.token = ?", token).First(&tokenRecord)
+	if query.Error != nil {
 		return false
 	}
 
-	if needAdmin && !user.Admin {
-		return false
+	if needAdmin {
+		var user models.User
+		if err := db.Where("id = ?", tokenRecord.UserID).First(&user).Error; err != nil {
+			return false
+		}
+		if !user.Admin {
+			return false
+		}
 	}
 
-	_, err = utils.ValidateJWT(token)
-
+	_, err := utils.ValidateJWT(token)
 	if err != nil {
 		return false
 	}
 
 	return true
+}
+
+func IsTokenAdmin(db *gorm.DB, token string) bool {
+	var tokenRecord models.Token
+
+	query := db.Joins("JOIN users ON users.id = tokens.user_id").Where("tokens.token = ?", token).Select("users.admin").First(&tokenRecord)
+	if query.Error != nil {
+		return false
+	}
+
+	var user models.User
+	if err := db.Where("id = ?", tokenRecord.UserID).First(&user).Error; err != nil {
+		return false
+	}
+
+	return user.Admin
 }

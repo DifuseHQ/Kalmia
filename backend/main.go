@@ -42,6 +42,7 @@ func main() {
 
 	authRouter.HandleFunc("/users", func(w http.ResponseWriter, r *http.Request) { handlers.GetUsers(d, w, r) }).Methods("GET")
 	authRouter.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) { handlers.GetUser(d, w, r) }).Methods("POST")
+	authRouter.HandleFunc("/user/upload-photo", func(w http.ResponseWriter, r *http.Request) { handlers.UploadPhoto(d, w, r) }).Methods("POST")
 
 	authRouter.HandleFunc("/jwt/create", func(w http.ResponseWriter, r *http.Request) { handlers.CreateJWT(d, w, r) }).Methods("POST")
 	authRouter.HandleFunc("/jwt/refresh", func(w http.ResponseWriter, r *http.Request) { handlers.RefreshJWT(d, w, r) }).Methods("POST")
@@ -55,7 +56,6 @@ func main() {
 	docsRouter.HandleFunc("/documentation/create", func(w http.ResponseWriter, r *http.Request) { handlers.CreateDocumentation(d, w, r) }).Methods("POST")
 	docsRouter.HandleFunc("/documentation/edit", func(w http.ResponseWriter, r *http.Request) { handlers.EditDocumentation(d, w, r) }).Methods("POST")
 	docsRouter.HandleFunc("/documentation/delete", func(w http.ResponseWriter, r *http.Request) { handlers.DeleteDocumentation(d, w, r) }).Methods("POST")
-	//docsRouter.HandleFunc("/documentation/delete", func(w http.ResponseWriter, r *http.Request) { handlers.DeleteDocumentation(d, w, r) }).Methods("POST")
 
 	docsRouter.HandleFunc("/pages", func(w http.ResponseWriter, r *http.Request) { handlers.GetPages(d, w, r) }).Methods("GET")
 	docsRouter.HandleFunc("/page", func(w http.ResponseWriter, r *http.Request) { handlers.GetPage(d, w, r) }).Methods("POST")

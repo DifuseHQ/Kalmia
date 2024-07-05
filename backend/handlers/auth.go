@@ -3,11 +3,14 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"git.difuse.io/Difuse/kalmia/db/models"
 	"git.difuse.io/Difuse/kalmia/logger"
+	"git.difuse.io/Difuse/kalmia/services"
 	"git.difuse.io/Difuse/kalmia/utils"
 	"gorm.io/gorm"
 	"net/http"
+	"strings"
 )
 
 func CreateUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
@@ -61,16 +64,29 @@ func CreateUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 }
 
 func EditUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
+	token, err := GetTokenFromHeader(r)
+
+	if err != nil {
+		SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"status": "error", "message": "No token provided"})
+		return
+	}
+
+	if !services.VerifyTokenInDb(db, token, false) {
+		SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"status": "error", "message": "Invalid token"})
+		return
+	}
+
 	type Request struct {
 		Username string `json:"username" validate:"required,alpha"`
 		Email    string `json:"email" validate:"required,email"`
 		Password string `json:"password" validate:"required"`
-		Admin    bool   `json:"admin" validate:"required,boolean"`
+		Photo    string `json:"photo" validate:"optional,string"`
+		Admin    bool   `json:"admin" validate:"optional,boolean"`
 	}
 
 	var req Request
 
-	err := json.NewDecoder(r.Body).Decode(&req)
+	err = json.NewDecoder(r.Body).Decode(&req)
 
 	if err != nil {
 		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid request"})
@@ -102,7 +118,14 @@ func EditUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 
 	user.Email = req.Email
-	user.Admin = req.Admin
+
+	if req.Photo != "" {
+		user.Photo = req.Photo
+	}
+
+	if services.IsTokenAdmin(db, token) {
+		user.Admin = req.Admin
+	}
 
 	if err := db.Save(&user).Error; err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to edit user"})
@@ -185,6 +208,63 @@ func GetUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	SendJSONResponse(http.StatusOK, w, user)
 }
 
+func UploadPhoto(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
+	token, err := GetTokenFromHeader(r)
+
+	if err != nil {
+		SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"status": "error", "message": "No token provided"})
+		return
+	}
+
+	if !services.VerifyTokenInDb(db, token, false) {
+		SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"status": "error", "message": "Invalid token"})
+		return
+	}
+
+	err = r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Failed to parse form"})
+		return
+	}
+
+	file, header, err := r.FormFile("upload")
+	if err != nil {
+		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Failed to get file from form"})
+		return
+	}
+	defer file.Close()
+
+	if header.Size > 10<<20 {
+		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "File size too large"})
+		return
+	}
+
+	buffer := make([]byte, 512)
+	if _, err := file.Read(buffer); err != nil {
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to read file for MIME type check"})
+		return
+	}
+
+	contentType := http.DetectContentType(buffer)
+	if !strings.HasPrefix(contentType, "image/") {
+		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Unsupported file type"})
+		return
+	}
+
+	if _, err := file.Seek(0, 0); err != nil {
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to reset file pointer"})
+		return
+	}
+
+	imageURL, err := services.UploadImage(file)
+	if err != nil {
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": fmt.Sprintf("Failed to upload image: %v", err)})
+		return
+	}
+
+	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "Photo uploaded successfully", "photo": imageURL})
+}
+
 func CreateJWT(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	type Request struct {
 		Username string `json:"username"`
@@ -209,29 +289,38 @@ func CreateJWT(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := utils.GenerateJWTAccessToken(user.ID, user.Username, user.Email)
+	tokenString, expiry, err := utils.GenerateJWTAccessToken(user.ID, user.Username, user.Email, user.Photo)
 	if err != nil {
 		logger.Error(err.Error())
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to generate JWT"})
 		return
 	}
 
-	user.JWT = token
-
-	jwtExpiry, err := utils.GetJWTExpirationTime(token)
-
-	if err != nil {
-		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to get JWT expiry"})
-		return
+	newToken := models.Token{
+		UserID: user.ID,
+		Token:  tokenString,
+		Expiry: expiry,
 	}
 
-	user.JWTExpiry = jwtExpiry
-	if err := db.Save(&user).Error; err != nil {
+	if err := db.Create(&newToken).Error; err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "token": token})
+	claims, err := utils.ValidateJWT(tokenString)
+	if err != nil {
+		SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"status": "error", "message": "Invalid or expired JWT"})
+		return
+	}
+
+	SendJSONResponse(http.StatusOK, w, map[string]string{
+		"status":   "success",
+		"token":    tokenString,
+		"expiry":   claims.ExpiresAt.Time.String(),
+		"email":    claims.Email,
+		"username": claims.Username,
+		"photo":    claims.Photo,
+	})
 }
 
 func RefreshJWT(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
@@ -253,30 +342,31 @@ func RefreshJWT(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 
 	userId, err := utils.StringToUint(claims.UserId)
-
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to convert userId to uint"})
 		return
 	}
 
-	newToken, err := utils.GenerateJWTAccessToken(uint(userId), claims.Username, claims.Email)
+	newToken, expiry, err := utils.GenerateJWTAccessToken(userId, claims.Username, claims.Email, claims.Photo)
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to generate new JWT"})
 		return
 	}
 
-	db.Model(&models.User{}).Where("jwt = ?", req.Token).Update("jwt", newToken)
-
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "application/json")
-	response := struct {
-		Status string `json:"status"`
-		Token  string `json:"token"`
-	}{
-		Status: "success",
-		Token:  newToken,
+	var token models.Token
+	if err := db.Where("token = ?", req.Token).First(&token).Error; err != nil {
+		SendJSONResponse(http.StatusNotFound, w, map[string]string{"status": "error", "message": "Token not found"})
+		return
 	}
-	json.NewEncoder(w).Encode(response)
+
+	token.Token = newToken
+	token.Expiry = expiry
+	if err := db.Save(&token).Error; err != nil {
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to update token"})
+		return
+	}
+
+	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "token": newToken})
 }
 
 func ValidateJWT(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
@@ -291,13 +381,20 @@ func ValidateJWT(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var token models.Token
+
+	if err := db.Where("token = ?", req.Token).First(&token).Error; err != nil {
+		SendJSONResponse(http.StatusNotFound, w, map[string]string{"status": "error", "message": "Token not found"})
+		return
+	}
+
 	claims, err := utils.ValidateJWT(req.Token)
 	if err != nil {
 		SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"status": "error", "message": "Invalid or expired JWT"})
 		return
 	}
 
-	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "claims": claims.Username})
+	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "email": claims.Email, "username": claims.Username, "photo": claims.Photo, "expiry": claims.ExpiresAt.Time.String()})
 }
 
 func RevokeJWT(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
@@ -313,24 +410,21 @@ func RevokeJWT(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err = utils.ValidateJWT(req.Token)
-
 	if err != nil {
 		SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"status": "error", "message": "Invalid or expired JWT"})
 		return
 	}
 
-	var user models.User
-	if err := db.Where("jwt = ?", req.Token).First(&user).Error; errors.Is(err, gorm.ErrRecordNotFound) {
-		SendJSONResponse(http.StatusNotFound, w, map[string]string{"status": "error", "message": "User not found"})
+	result := db.Where("token = ?", req.Token).Delete(&models.Token{})
+	if result.Error != nil {
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to delete token"})
 		return
 	}
 
-	user.JWT = ""
-	user.JWTExpiry = 0
-	if err := db.Save(&user).Error; err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if result.RowsAffected == 0 {
+		SendJSONResponse(http.StatusNotFound, w, map[string]string{"status": "error", "message": "Token not found"})
 		return
 	}
 
-	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success"})
+	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "Token revoked successfully"})
 }

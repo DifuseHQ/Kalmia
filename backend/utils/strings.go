@@ -24,7 +24,6 @@ func GenerateSHA512(password, salt string) string {
 	cryptSalt := fmt.Sprintf("$6$%s$", salt)
 	hashedPassword, err := crypt.Crypt(password, cryptSalt)
 	if err != nil {
-		fmt.Println("Error hashing password:", err)
 		return ""
 	}
 	return hashedPassword
