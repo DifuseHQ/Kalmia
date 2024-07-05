@@ -5,6 +5,7 @@ import { getTokenFromCookies } from "../../utlis/CookiesManagement";
 import { Link, useNavigate } from "react-router-dom";
 import { ExchangeContext } from "../../Context/ExchangeContext";
 import EditDocumentModal from "../createDocumentModal/EditDocumentModal";
+import { AnimatePresence , motion } from "framer-motion";
 
 export default function Sidebar() {
   const [documentation, setDocumentation] = useState([]);
@@ -44,7 +45,11 @@ export default function Sidebar() {
   };
 
   return (
-    <aside
+    <AnimatePresence>
+    <motion.aside initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }} 
+          transition={{delay:0.1}} 
       class="fixed top-0 left-0 z-40 w-64 h-screen pt-14 transition-transform -translate-x-full bg-white border-r border-gray-200 md:translate-x-0 dark:bg-gray-800 dark:border-gray-700"
       aria-label="Sidenav"
       id="drawer-navigation"
@@ -80,9 +85,10 @@ export default function Sidebar() {
         </form>
         <ul class="space-y-2">
           <li>
-            <button
+            <motion.button
+            whileHover={{scale:1.05}}
               onClick={handleCreateDocument}
-              class="inline-flex cursor-pointer items-center justify-center w-full py-2 px-5 my-5 text-sm text-primary-700 font-medium  focus:outline-none bg-white rounded-lg border border-blue-300 hover:bg-gray-100 hover:text-primary-500 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
+              class="inline-flex cursor-pointer items-center justify-center w-full py-2 px-5 my-5 text-md text-white font-medium  focus:outline-none bg-blue-600 rounded-lg border border-blue-300 hover:bg-blue-600 hover:text-white focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
             >
               Create Document
               <svg
@@ -100,15 +106,17 @@ export default function Sidebar() {
                   d="M5 12h14m-7 7V5"
                 ></path>
               </svg>
-            </button>
+            </motion.button>
           </li>
-          {documentation.map((val, index) => (
-            <li>
+          {documentation && documentation.map((val, index) => (
+            <motion.li
+            whileHover={{scale:1.08, originx:0}}
+            >
               <Link to={`/dashboard/documentation?id=${val.id}`}>
                 <button
                   type="button"
                   onClick={() => toggleDropdown(index)}
-                  class="flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+                  class="flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-200 dark:text-white dark:hover:bg-gray-700"
                   aria-controls={`${val.name}`}
                   data-collapse-toggle={`${val.name}`}
                 >
@@ -213,8 +221,27 @@ export default function Sidebar() {
                     ))}
                 
                 </ul> */}
-            </li>
+            </motion.li>
           ))}
+
+        {documentation.length <= 0 &&
+            <li
+            whileHover={{scale:1.08, originx:0}}
+            >
+              
+                <p
+                  class="flex cursor-default items-center p-5 w-full text-base font-normal text-gray-600 rounded-lg transition duration-75 group "
+              
+                >
+                  <span class="flex-1 ml-3 text-left whitespace-nowrap">
+                 No documentations
+                  </span>
+                 
+                </p>
+              
+            </li>
+          }
+
         </ul>
         <ul class="pt-5 mt-5 space-y-2 border-t border-gray-200 dark:border-gray-700">
           <li>
@@ -237,6 +264,7 @@ export default function Sidebar() {
           </li>
         </ul>
       </div>
-    </aside>
+    </motion.aside>
+    </AnimatePresence>
   );
 }

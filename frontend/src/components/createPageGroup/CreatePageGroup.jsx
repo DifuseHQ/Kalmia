@@ -1,3 +1,4 @@
+import { AnimatePresence ,motion} from "framer-motion";
 import React, { useState } from "react";
 
 export default function CreatePageGroup({ closeModal, handleCreate }) {
@@ -9,8 +10,12 @@ export default function CreatePageGroup({ closeModal, handleCreate }) {
     }
   };
   return (
-    <div>
-      <div className="fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-50">
+    <AnimatePresence>
+      <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }} 
+      className="fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-50">
         <div className="relative p-4 w-full max-w-xl">
           <div className="relative p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
             <div className="flex justify-between items-center mb-4 sm:mb-5 dark:border-gray-600">
@@ -71,7 +76,7 @@ export default function CreatePageGroup({ closeModal, handleCreate }) {
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </AnimatePresence>
   );
 }

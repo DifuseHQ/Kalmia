@@ -5,6 +5,7 @@ import { getTokenFromCookies } from "../../utlis/CookiesManagement";
 import axios from "../../api/axios";
 import { toastError, toastSuccess, toastWarning } from "../../utlis/toast";
 import DeleteModal from "../deleteModal/DeleteModal";
+import { AnimatePresence , motion} from "framer-motion";
 
 export default function EditPage() {
   const [searchParams] = useSearchParams();
@@ -144,7 +145,7 @@ export default function EditPage() {
   };
 
   return (
-    <section>
+    <AnimatePresence>
       {isDelete && (
         <DeleteModal
           cancelModal={handleCloseDelete}
@@ -154,7 +155,12 @@ export default function EditPage() {
           message={`By deleting this file it will be permanently deleted.`}
         />
       )}
-      <nav className="flex mb-5" aria-label="Breadcrumb">
+      <motion.nav
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{delay:0.1}}
+      className="flex mb-5" aria-label="Breadcrumb">
         <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
           <li class="inline-flex items-center">
             <a class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
@@ -245,16 +251,22 @@ export default function EditPage() {
             </div>
           </li>
         </ol>
-      </nav>
+      </motion.nav>
 
-      <div class=" lg:mt-0 lg:col-span-5 flex justify-end mr-5 gap-3">
-        <button
+      <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{delay:0.1}}
+      class=" lg:mt-0 lg:col-span-5 flex justify-end mr-5 gap-3">
+        <motion.button
+        whileHover={{scale:1.1}}
           onClick={() => setIsDelete(!isDelete)}
           className="flex cursor-pointer items-center bg-red-600 rounded text-white px-2"
         >
           Delete
           <svg
-            class="w-5 h-5 cursor-pointer hover:border  text-white dark:text-red-400"
+            class="w-5 h-5 cursor-pointer  text-white dark:text-red-400"
             aria-hidden="true"
             xmlns="http://www.w3.org/2000/svg"
             width="24"
@@ -270,10 +282,14 @@ export default function EditPage() {
               d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"
             />
           </svg>
-        </button>
-      </div>
+        </motion.button>
+      </motion.div>
 
-      <div
+      <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{delay:0.1}}
         id="defaultModal"
         tabindex="-1"
         aria-hidden="true"
@@ -361,7 +377,7 @@ export default function EditPage() {
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </motion.div>
+    </AnimatePresence>
   );
 }

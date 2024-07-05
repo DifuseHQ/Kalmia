@@ -4,6 +4,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import axios from "../../api/axios";
 import { getTokenFromCookies, removeCookies } from "../../utlis/CookiesManagement";
 import { toastError, toastSuccess } from "../../utlis/toast";
+import {motion, AnimatePresence} from 'framer-motion'
 
 export default function Navbar() {
   const themeMode = getTheme();
@@ -68,7 +69,11 @@ export default function Navbar() {
   }
 
   return (
-    <nav class="bg-white border-b border-gray-200 px-4 py-2.5 dark:bg-gray-800 dark:border-gray-700 fixed left-0 right-0 top-0 z-50">
+    <AnimatePresence>
+    <motion.nav initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }} 
+           class="bg-white border-b border-gray-200 px-4 py-2.5 dark:bg-gray-800 dark:border-gray-700 fixed left-0 right-0 top-0 z-50">
       <div class="flex flex-wrap justify-between items-center">
         <div class="flex justify-start items-center">
           <NavLink to="/dashboard">
@@ -160,7 +165,10 @@ export default function Navbar() {
             />
           </button>
 
-          <div
+          <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }} 
             class="hidden z-50 my-4 w-56 text-base list-none bg-white  divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600 rounded-xl"
             id="dropdown"
           >
@@ -186,9 +194,10 @@ export default function Navbar() {
                 </p>
               </li>
             </ul>
-          </div>
+          </motion.div>
         </div>
       </div>
-    </nav>
+    </motion.nav>
+    </AnimatePresence>
   );
 }

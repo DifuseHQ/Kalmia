@@ -8,6 +8,7 @@ import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { toastError, toastSuccess, toastWarning } from "../../utlis/toast";
 import { getTokenFromCookies } from "../../utlis/CookiesManagement";
 import axios from "../../api/axios";
+import { AnimatePresence,motion } from "framer-motion";
 
 export default function CreatepageModal() {
   const [searchParam] = useSearchParams();
@@ -92,8 +93,11 @@ export default function CreatepageModal() {
   };
 
   return (
-    <section>
-      <nav className="flex mb-5" aria-label="Breadcrumb">
+    <AnimatePresence>
+      <motion.nav initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }} 
+          transition={{delay:0.1}} className="flex mb-5" aria-label="Breadcrumb">
         <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
           <li class="inline-flex items-center">
             <Link
@@ -187,9 +191,13 @@ export default function CreatepageModal() {
             </div>
           </li>
         </ol>
-      </nav>
+      </motion.nav>
 
-      <div
+      <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }} 
+      transition={{delay:0.1}}
         id="defaultModal"
         tabindex="-1"
         aria-hidden="true"
@@ -284,7 +292,7 @@ export default function CreatepageModal() {
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </motion.div>
+    </AnimatePresence>
   );
 }

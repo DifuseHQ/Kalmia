@@ -4,6 +4,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import axios from "../../api/axios";
 import { getTokenFromCookies } from "../../utlis/CookiesManagement";
 import { FaRegFileAlt } from "react-icons/fa";
+import { AnimatePresence , motion } from "framer-motion";
 
 export default function PageGrouptable() {
   const token = getTokenFromCookies();
@@ -78,8 +79,12 @@ export default function PageGrouptable() {
 
 
   return (
-    <section class="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5">
-      <nav className="flex mb-5" aria-label="Breadcrumb">
+    <AnimatePresence class="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5">
+      <motion.nav  initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }} 
+     
+       className="flex mb-5" aria-label="Breadcrumb">
         <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
           <li class="inline-flex items-center">
             <Link
@@ -146,18 +151,28 @@ export default function PageGrouptable() {
             </div>
           </li>
         </ol>
-      </nav>
+      </motion.nav>
 
-      <div class="grid max-w-screen-xl px-4 mx-auto lg:gap-8 xl:gap-0 lg:grid-cols-12">
+      <motion.div
+       initial={{ opacity: 0 }}
+       animate={{ opacity: 1 }}
+       exit={{ opacity: 0 }} 
+     
+      class="grid max-w-screen-xl px-4 mx-auto lg:gap-8 xl:gap-0 lg:grid-cols-12">
         <div class="mr-auto place-self-center lg:col-span-7">
           <h1 class="max-w-xl mb-4 text-4xl font-bold tracking-tight leading-none md:text-4xl xl:text-4xl dark:text-white">
             {data.name}
           </h1>
           <p class="max-w-2xl mb- font-light text-gray-700 lg:mb-8 md:text-lg lg:text-xl dark:text-gray-400"></p>
         </div>
-      </div>
+      </motion.div>
 
-      <div class="mx-auto max-w-screen-xl px-4 lg:px-12">
+      <motion.div
+       initial={{ opacity: 0 }}
+       animate={{ opacity: 1 }}
+       exit={{ opacity: 0 }} 
+       transition={{delay:0.1}}
+      class="mx-auto max-w-screen-xl px-4 lg:px-12">
         <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
           <div class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
             <div class="w-full md:w-1/3">
@@ -192,18 +207,21 @@ export default function PageGrouptable() {
               </form>
             </div>
             <div class="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
-              <button
+              <motion.button
+              whileHover={{scale:1.1}}
                 type="button"
-                class="flex items-center justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
+                class="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
               >
                 Create Group
-              </button>
+              </motion.button>
+              <motion.button whileHover={{scale:1.1}}>
               <Link 
                to={`/dashboard/documentation/create-page?id=${doc_id}&dir=false&pagegroup_id=${pagegroup_id}`}
-               class="flex items-center justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
+               class="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
               >
                 Create page
               </Link>
+              </motion.button>
             </div>
           </div>
 
@@ -237,7 +255,9 @@ export default function PageGrouptable() {
                 )}
 
                 {filteredPages.map((obj, index) => (
-                  <tr class="border-b dark:border-gray-700" key={index}>
+                  <tr 
+                  
+                  class="border-b dark:border-gray-700 hover:bg-gray-200" key={index} >
                     <th
                       scope="row"
                       class=" flex items-center cursor-pointer px-4 py-3 gap-2 font-medium text-blue-500 hover:text-blue-700 whitespace-nowrap dark:text-white"
@@ -302,7 +322,7 @@ export default function PageGrouptable() {
             </table>
           </div>
         </div>
-      </div>
-    </section>
+      </motion.div>
+    </AnimatePresence>
   );
 }

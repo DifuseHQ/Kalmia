@@ -12,6 +12,7 @@
     "dayjs": "^1.11.11",
     "flowbite": "^2.4.1",
     "flowbite-react": "^0.10.1",
+    "framer-motion": "^11.2.13",
     "js-cookie": "^3.0.5",
     "jwt-decode": "^4.0.0",
     "primeicons": "^7.0.0",
