@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"git.difuse.io/Difuse/kalmia/db/models"
 	"git.difuse.io/Difuse/kalmia/logger"
 	"gorm.io/gorm"
@@ -51,7 +50,7 @@ func GetDocumentations(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		return db.Select("ID", "PageGroupID")
 	}).Preload("Pages", func(db *gorm.DB) *gorm.DB {
 		return db.Select("ID", "DocumentationID", "Title", "Slug").Where("page_group_id IS NULL")
-	}).Find(&documentations).Error; err != nil {
+	}).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt").Find(&documentations).Error; err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to fetch documentations"})
 		return
 	}
@@ -77,7 +76,7 @@ func GetDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid request"})
 		return
 	}
-	
+
 	var documentation models.Documentation
 	if err := db.Preload("PageGroups", func(db *gorm.DB) *gorm.DB {
 		return db.Select("ID", "DocumentationID")
@@ -335,7 +334,6 @@ func ReorderPage(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := db.Save(&page).Error; err != nil {
-		fmt.Println(err)
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to update page"})
 		return
 	}
@@ -409,14 +407,52 @@ func GetPageGroups(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	var pageGroups []models.PageGroup
 
 	if err := db.Preload("Pages", func(db *gorm.DB) *gorm.DB {
-		return db.Select("ID", "PageGroupID")
+		return db.Select("ID", "Title", "Slug", "PageGroupID", "Order", "DocumentationID")
 	}).Select("ID", "Name", "DocumentationID", "ParentID", "Order").Find(&pageGroups).Error; err != nil {
-		fmt.Println(err)
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to fetch page groups"})
 		return
 	}
 
-	SendJSONResponse(http.StatusOK, w, pageGroups)
+	groupsByID := make(map[uint]map[string]interface{})
+	parentToChildren := make(map[uint][]map[string]interface{})
+
+	for _, group := range pageGroups {
+		simplifiedPages := make([]map[string]interface{}, 0, len(group.Pages))
+		for _, page := range group.Pages {
+			simplifiedPages = append(simplifiedPages, map[string]interface{}{
+				"id":              page.ID,
+				"title":           page.Title,
+				"slug":            page.Slug,
+				"pageGroupId":     page.PageGroupID,
+				"order":           page.Order,
+				"documentationId": page.DocumentationID,
+			})
+		}
+
+		groupMap := map[string]interface{}{
+			"id":              group.ID,
+			"documentationId": group.DocumentationID,
+			"name":            group.Name,
+			"parentId":        group.ParentID,
+			"order":           group.Order,
+			"pages":           simplifiedPages,
+		}
+
+		groupsByID[group.ID] = groupMap
+		if group.ParentID != nil {
+			parentToChildren[*group.ParentID] = append(parentToChildren[*group.ParentID], groupMap)
+		}
+	}
+
+	var finalPageGroups []interface{}
+	for _, groupMap := range groupsByID {
+		if children, exists := parentToChildren[groupMap["id"].(uint)]; exists {
+			groupMap["pageGroups"] = children
+		}
+		finalPageGroups = append(finalPageGroups, groupMap)
+	}
+
+	SendJSONResponse(http.StatusOK, w, finalPageGroups)
 }
 
 func GetPageGroup(db *gorm.DB, w http.ResponseWriter, r *http.Request) {

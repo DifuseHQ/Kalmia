@@ -12,15 +12,21 @@ type User struct {
 	Admin    bool   `json:"admin"`
 }
 
+type Cloudflare struct {
+	AccountID string `json:"account_id"`
+	APIKey    string `json:"api_key"`
+}
+
 type Config struct {
-	Environment   string `json:"environment"`
-	Port          int    `json:"port"`
-	DatabaseURL   string `json:"database_url"`
-	LogLevel      string `json:"log_level"`
-	SessionSecret string `json:"session_secret"`
-	Admins        []User `json:"users"`
-	DataPath      string `json:"data_path"`
-	AddDummyData  bool   `json:"addDummyData"`
+	Environment   string     `json:"environment"`
+	Port          int        `json:"port"`
+	DatabaseURL   string     `json:"database_url"`
+	LogLevel      string     `json:"log_level"`
+	SessionSecret string     `json:"session_secret"`
+	Admins        []User     `json:"users"`
+	DataPath      string     `json:"data_path"`
+	AddDummyData  bool       `json:"addDummyData"`
+	Cloudflare    Cloudflare `json:"cloudflare"`
 }
 
 var ParsedConfig *Config

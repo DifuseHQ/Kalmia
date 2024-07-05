@@ -12,9 +12,10 @@ type JWTData struct {
 	UserId       string            `json:"user_id"`
 	Username     string            `json:"username"`
 	Email        string            `json:"email"`
+	Photo        string            `json:"photo"`
 }
 
-func GenerateJWTAccessToken(dbUserId uint, userId string, email string) (string, error) {
+func GenerateJWTAccessToken(dbUserId uint, userId string, email string, photo string) (string, int64, error) {
 	claims := JWTData{
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
@@ -26,12 +27,15 @@ func GenerateJWTAccessToken(dbUserId uint, userId string, email string) (string,
 		UserId:   fmt.Sprintf("%d", dbUserId),
 		Username: userId,
 		Email:    email,
+		Photo:    photo,
 	}
 
 	tokenString := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	token, err := tokenString.SignedString(secretKey)
 
-	return token, err
+	expiry := claims.ExpiresAt.Time.Unix()
+
+	return token, expiry, err
 }
 
 func GetJWTExpirationTime(token string) (int64, error) {

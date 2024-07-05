@@ -37,6 +37,7 @@ func SetupDatabase(env string, dbURL string, dataPath string) *gorm.DB {
 	db.Exec("PRAGMA journal_mode = WAL")
 
 	err = db.AutoMigrate(
+		&models.Token{},
 		&models.User{},
 		&models.Page{},
 		&models.PageGroup{},
@@ -83,44 +84,73 @@ func SetupBasicData(db *gorm.DB, admins []config.User) {
 		return
 	}
 
-	docSite := models.Documentation{
+	var docSite models.Documentation
+
+	if err := db.Where("name = ?", "Dummy Documentation Site").First(&docSite).Error; err == nil {
+		logger.Info("Dummy data already exists, skipping creation")
+		return
+	}
+
+	docSite = models.Documentation{
 		Name:        "Dummy Documentation Site",
 		Description: "A sample documentation site for demonstration purposes.",
 	}
 
-	if err := db.FirstOrCreate(&docSite).Error; err != nil {
+	if err := db.FirstOrCreate(&docSite, models.Documentation{Name: docSite.Name}).Error; err != nil {
+		logger.Error("Failed to create documentation site", zap.Error(err))
 		return
 	}
+
+	uintPtr := func(i uint) *uint { return &i }
 
 	pageGroups := []struct {
 		Name     string
 		Pages    []models.Page
 		Children []struct {
-			Name  string
-			Pages []models.Page
+			Name     string
+			Pages    []models.Page
+			Children []struct {
+				Name  string
+				Pages []models.Page
+			}
 		}
 	}{
 		{
 			Name: "First Page Group",
 			Pages: []models.Page{
-				{Title: "Dummy Page 1", Content: "Lorem ipsum dolor sit amet.", Slug: "dummy-page-1", DocumentationID: docSite.ID, Order: &[]uint{1}[0]},
-				{Title: "Dummy Page 2", Content: "Consectetur adipiscing elit.", Slug: "dummy-page-2", DocumentationID: docSite.ID, Order: &[]uint{2}[0]},
+				{Title: "Dummy Page 1", Content: "Lorem ipsum dolor sit amet.", Slug: "dummy-page-1", DocumentationID: docSite.ID, Order: uintPtr(0)},
+				{Title: "Dummy Page 2", Content: "Consectetur adipiscing elit.", Slug: "dummy-page-2", DocumentationID: docSite.ID, Order: uintPtr(1)},
 			},
 		},
 		{
 			Name: "Second Page Group",
 			Pages: []models.Page{
-				{Title: "Dummy Page 3", Content: "Sed do eiusmod tempor incididunt.", Slug: "dummy-page-3", DocumentationID: docSite.ID, Order: &[]uint{1}[0]},
+				{Title: "Dummy Page 3", Content: "Sed do eiusmod tempor incididunt.", Slug: "dummy-page-3", DocumentationID: docSite.ID, Order: uintPtr(2)},
 			},
 			Children: []struct {
-				Name  string
-				Pages []models.Page
+				Name     string
+				Pages    []models.Page
+				Children []struct {
+					Name  string
+					Pages []models.Page
+				}
 			}{
 				{
 					Name: "Third Page Group",
 					Pages: []models.Page{
-						{Title: "Dummy Page 4", Content: "Ut labore et dolore magna aliqua.", Slug: "dummy-page-4", DocumentationID: docSite.ID, Order: &[]uint{1}[0]},
-						{Title: "Dummy Page 5", Content: "Ut enim ad minim veniam.", Slug: "dummy-page-5", DocumentationID: docSite.ID, Order: &[]uint{2}[0]},
+						{Title: "Dummy Page 4", Content: "Ut labore et dolore magna aliqua.", Slug: "dummy-page-4", DocumentationID: docSite.ID, Order: uintPtr(3)},
+						{Title: "Dummy Page 5", Content: "Ut enim ad minim veniam.", Slug: "dummy-page-5", DocumentationID: docSite.ID, Order: uintPtr(4)},
+					},
+					Children: []struct {
+						Name  string
+						Pages []models.Page
+					}{
+						{
+							Name: "Fourth Page Group",
+							Pages: []models.Page{
+								{Title: "Dummy Page 6", Content: "Exercitation ullamco laboris nisi.", Slug: "dummy-page-6", DocumentationID: docSite.ID, Order: uintPtr(5)},
+							},
+						},
 					},
 				},
 			},
@@ -128,8 +158,8 @@ func SetupBasicData(db *gorm.DB, admins []config.User) {
 	}
 
 	for _, group := range pageGroups {
-		newGroup := models.PageGroup{Name: group.Name, DocumentationID: docSite.ID}
-		result := db.FirstOrCreate(&newGroup)
+		var newGroup models.PageGroup
+		result := db.FirstOrCreate(&newGroup, models.PageGroup{Name: group.Name, DocumentationID: docSite.ID})
 		if result.Error != nil {
 			logger.Error("Failed to create page group", zap.String("name", group.Name), zap.Error(result.Error))
 			continue
@@ -141,11 +171,30 @@ func SetupBasicData(db *gorm.DB, admins []config.User) {
 		}
 
 		for _, child := range group.Children {
-			childGroup := models.PageGroup{Name: child.Name, ParentID: &newGroup.ID, DocumentationID: docSite.ID}
-			db.Create(&childGroup)
+			var childGroup models.PageGroup
+			result := db.FirstOrCreate(&childGroup, models.PageGroup{Name: child.Name, ParentID: &newGroup.ID, DocumentationID: docSite.ID})
+			if result.Error != nil {
+				logger.Error("Failed to create child page group", zap.String("name", child.Name), zap.Error(result.Error))
+				continue
+			}
+
 			for _, page := range child.Pages {
 				page.PageGroupID = &childGroup.ID
 				db.Create(&page)
+			}
+
+			for _, subChild := range child.Children {
+				var subChildGroup models.PageGroup
+				result := db.FirstOrCreate(&subChildGroup, models.PageGroup{Name: subChild.Name, ParentID: &childGroup.ID, DocumentationID: docSite.ID})
+				if result.Error != nil {
+					logger.Error("Failed to create sub-child page group", zap.String("name", subChild.Name), zap.Error(result.Error))
+					continue
+				}
+
+				for _, page := range subChild.Pages {
+					page.PageGroupID = &subChildGroup.ID
+					db.Create(&page)
+				}
 			}
 		}
 	}
