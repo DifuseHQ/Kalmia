@@ -10,9 +10,7 @@ import CreateDocModal from "./components/createDocumentModal/CreateDocModal";
 import Test from "./components/Test";
 import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
-import Table from "./components/table/Table";
 import PageGrouptable from "./components/pagegroup/PageGrouptable";
-import CreatePageGroup from "./components/createPageGroup/CreatePageGroup";
 import CreatepageModal from "./components/createPageModal/CreatepageModal";
 import EditPage from "./components/editPage/EditPage";
 import RequireAuth from "./components/RequireAuth";
@@ -33,7 +31,7 @@ function App() {
             <ToastContainer />
             <Routes>
               
-              <Route path="/test" element={<Error500 />} />
+              <Route path="/test" element={<Test />} />
 
             <Route element={<LoginAuth/>}>
                 <Route path="/" element={<LoginPage />} />

@@ -1,11 +1,11 @@
 import React, { useContext, useEffect, useState } from "react";
 import { ModalContext } from "../../App";
-import axios from "../../api/axios";
+import {privateAxios} from "../../api/axios";
 import { getTokenFromCookies } from "../../utlis/CookiesManagement";
 import { Link, useNavigate } from "react-router-dom";
 import { ExchangeContext } from "../../Context/ExchangeContext";
-import EditDocumentModal from "../createDocumentModal/EditDocumentModal";
 import { AnimatePresence , motion } from "framer-motion";
+import { toastError } from "../../utlis/toast";
 
 export default function Sidebar() {
   const [documentation, setDocumentation] = useState([]);
@@ -18,7 +18,8 @@ export default function Sidebar() {
 
   useEffect(() => {
     const fetchdata = async () => {
-      const res = await axios.get("/docs/documentations", {
+      try {
+      const res = await privateAxios.get("/docs/documentations", {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -29,9 +30,26 @@ export default function Sidebar() {
       } else {
         console.log("not get");
       }
+    } catch (err) {
+      
+      if (!err?.response) {
+        
+       navigate('/server-down');
+    } else if (err.response?.status === 400) {
+      console.log(err.response.statusText);
+      toastError(err.response.data.error);
+    } else if (err.response?.status === 401) {
+
+      console.log(err.response.statusText);
+        toastError(err.response.data.error)
+    } else {
+      toastError('Login Failed');
+    }
+    // errRef.current.focus();  for screen reader
+    }
     };
     fetchdata();
-  }, [token, refresh]);
+  }, [token, refresh,navigate]);
 
   const toggleDropdown = (index) => {
     const updatedDropdowns = [...openDropdowns];

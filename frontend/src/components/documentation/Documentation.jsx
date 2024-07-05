@@ -1,7 +1,7 @@
 import { initFlowbite } from "flowbite";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import axios,{privateAxios} from "../../api/axios";
+import {privateAxios} from "../../api/axios";
 import { getTokenFromCookies } from "../../utlis/CookiesManagement";
 import ClipLoader from "react-spinners/ClipLoader";
 import EditDocumentModal from "../createDocumentModal/EditDocumentModal";
@@ -42,9 +42,9 @@ console.log(token);
   const endIdx = startIdx + itemsPerPage;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
  
-  const handlePageChange = (pageNumber) => {
+  const handlePageChange = useCallback((pageNumber) => {
     setCurrentPage(pageNumber);
-  };
+  }, []);
 
   const navigate = useNavigate();
 
@@ -64,7 +64,6 @@ console.log(token);
         const { data, status } = await privateAxios.post(
           `/docs/documentation`,
           { id:Number(doc_id)});
-        console.log(data);
         if (status === 200) {
           setDocumentData(data);
           setLoading(false);
@@ -72,15 +71,12 @@ console.log(token);
           console.error("Failed to fetch data:", status.statusText);
         }
       } catch (err) {
-        
         if (!err?.response) {
          navigate('/server-down');
       } else if (err.response?.status === 400) {
         console.log(err.response.statusText);
         toastError(err.response.data.error);
       } else if (err.response?.status === 401) {
-
-        console.log(err.response.statusText);
           toastError(err.response.data.error)
       } else {
         toastError('Login Failed');
@@ -90,7 +86,7 @@ console.log(token);
     };
 
     fetchdata();
-  }, [doc_id, token, refresh]);
+  }, [doc_id, token, refresh , navigate]);
 
   const handleDeletemodalopen = () => {
     setDeleteModal(true);

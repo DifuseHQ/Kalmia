@@ -3,7 +3,7 @@ import { AuthContext } from "../Context/AuthContext";
 import {toastError, toastSuccess} from '../utlis/toast'
 import axios from "../api/axios";
 import { CookiesDataSave, checkUserLoginned } from "../utlis/CookiesManagement";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 export default function LoginPage() {
   const [username, setUsername] = useState(null);
@@ -15,41 +15,18 @@ const location = useLocation();
 const from = location.state?.from?.pathname || '/dashboard';
 
   const handleSubmit = async () => {
-    try {
-      const {data, status} = await axios.post(
-        "/auth/jwt/create",
-        {
-          username,
-          password,
-        });
-      if (status === 200) {
-        CookiesDataSave(data);
-        toastSuccess("Login Succesfully");
-        navigate('/dashboard', { replace: true });
-      } 
-
-    } catch (err) {
-      console.log(err);
-        if (!err?.response) {
-          toastError('No Server Response');
-      } else if (err.response?.status === 400) {
-        console.log("400");
-        console.log(err.response.statusText);
-           toastError(err.response.data.error);
-      } else if (err.response?.status === 401) {
-           toastError(err.response.data.message) //if password wrong
-      } else {
-           toastError(err.response.data.message);  //no user found if username false
-      }
-      
-    }
+   
     
+    const response =await login(username,password)
+    console.log("repsonse is : ", response);
 
   };
 
 
   return (
+
     <div>
+      <Link to="/test">test page</Link>
       <section className="bg-gray-50 dark:bg-gray-900">
         <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
           <a
