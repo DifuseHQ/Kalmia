@@ -18,6 +18,7 @@ import EditPage from "./components/editPage/EditPage";
 import RequireAuth from "./components/RequireAuth";
 import LoginAuth from "./components/LoginAuth";
 import Error from "./components/error/Error";
+import Error500 from "./components/error500/Error500";
 
 export const ModalContext = createContext();
 
@@ -32,7 +33,7 @@ function App() {
             <ToastContainer />
             <Routes>
               
-              <Route path="/test" element={<Test />} />
+              <Route path="/test" element={<Error500 />} />
 
             <Route element={<LoginAuth/>}>
                 <Route path="/" element={<LoginPage />} />
@@ -53,7 +54,7 @@ function App() {
               </Route>
 
             </Route>
-
+            <Route path="/server-down" element={<Error500 />} />
             <Route path="*" element={<Error/>} />
             </Routes>
           </ModalContext.Provider>

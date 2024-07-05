@@ -21,17 +21,8 @@ const from = location.state?.from?.pathname || '/dashboard';
         {
           username,
           password,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      console.log(data);
+        });
       if (status === 200) {
-        // const status = data.status;
-        // const token = data.token;
         CookiesDataSave(data);
         toastSuccess("Login Succesfully");
         navigate('/dashboard', { replace: true });
@@ -46,10 +37,9 @@ const from = location.state?.from?.pathname || '/dashboard';
         console.log(err.response.statusText);
            toastError(err.response.data.error);
       } else if (err.response?.status === 401) {
-        console.log(err.response.data.message);
-           toastError(err.response.data.message)
+           toastError(err.response.data.message) //if password wrong
       } else {
-           toastError(err.response.data.message);
+           toastError(err.response.data.message);  //no user found if username false
       }
       
     }

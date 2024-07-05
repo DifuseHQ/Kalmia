@@ -8,12 +8,15 @@ export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState({});
-  const [isAuthenticated,setIsAuthenticated] = useState(null)
+  const [token,setToken] = useState("")
   const [loading, setLoading] = useState(true);
   
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log("token getting ...");
+    let token = getTokenFromCookies()
+    setToken(token);
   },[]);
 
 
@@ -87,7 +90,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ loading ,user, setUser , isAuthenticated}}
+      value={{ loading ,user, setUser , token , setToken}}
     >
       {children}
     </AuthContext.Provider>

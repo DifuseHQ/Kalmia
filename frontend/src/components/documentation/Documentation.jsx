@@ -1,7 +1,7 @@
 import { initFlowbite } from "flowbite";
 import React, { useContext, useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import axios from "../../api/axios";
+import axios,{privateAxios} from "../../api/axios";
 import { getTokenFromCookies } from "../../utlis/CookiesManagement";
 import ClipLoader from "react-spinners/ClipLoader";
 import EditDocumentModal from "../createDocumentModal/EditDocumentModal";
@@ -61,16 +61,9 @@ console.log(token);
         return;
       }
       try {
-        const { data, status } = await axios.post(
+        const { data, status } = await privateAxios.post(
           `/docs/documentation`,
-          JSON.stringify({ id:Number(doc_id)}),
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+          { id:Number(doc_id)});
         console.log(data);
         if (status === 200) {
           setDocumentData(data);
@@ -79,10 +72,9 @@ console.log(token);
           console.error("Failed to fetch data:", status.statusText);
         }
       } catch (err) {
-        console.log(err);
-        console.log("starte");
+        
         if (!err?.response) {
-          toastError('No Server Response');
+         navigate('/server-down');
       } else if (err.response?.status === 400) {
         console.log(err.response.statusText);
         toastError(err.response.data.error);
@@ -110,16 +102,9 @@ console.log(token);
 
   const handleDelete = async () => {
     try {
-      const { data, status } = await axios.post(
+      const { data, status } = await privateAxios.post(
         "docs/documentation/delete",
-        { id: Number(doc_id) },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+        { id: Number(doc_id) });
       if (status === 200) {
         toastSuccess(data.message);
         refreshData();
@@ -136,20 +121,13 @@ console.log(token);
 
   const handelUpdate = async (editTitle, editDescription) => {
     try {
-      const { data, status } = await axios.post(
+      const { data, status } = await privateAxios.post(
         "docs/documentation/edit",
         {
           id: Number(doc_id),
           name: editTitle,
           description: editDescription,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+        });
 
       if (status === 200) {
         setIsEditModal(false);
@@ -175,16 +153,9 @@ console.log(token);
 
   const handleDeletePageGroup = async (id) => {
     try {
-      const { data, status } = await axios.post(
+      const { data, status } = await privateAxios.post(
         "docs/page-group/delete",
-        { id: Number(id) },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+        { id: Number(id) });
       if (status === 200) {
         toastSuccess(data.message);
         setIsPageGroupsDeleteModal(false);
@@ -207,20 +178,13 @@ console.log(token);
 
   const handelPageGroupUpdate = async (editTitle, editDescription, id) => {
     try {
-      const { data, status } = await axios.post(
+      const { data, status } = await privateAxios.post(
         "docs/page-group/edit",
         {
           id: Number(id),
           name: editTitle,
           documentationSiteId: Number(doc_id),
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+        });
 
       if (status === 200) {
         setIsEditpageGroup(false);
@@ -245,19 +209,12 @@ console.log(token);
     }
 
     try {
-      const { data, status } = await axios.post(
+      const { data, status } = await privateAxios.post(
         "docs/page-group/create",
         {
           name: title,
           documentationSiteId: Number(doc_id),
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+        });
 
       if (status === 200) {
         setOpenCreatePageGroup(false);
