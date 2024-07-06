@@ -4,10 +4,9 @@ import "primereact/resources/themes/lara-light-indigo/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
 import { Editor } from "primereact/editor";
-import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toastError, toastSuccess, toastWarning } from "../../utlis/toast";
-import { getTokenFromCookies } from "../../utlis/CookiesManagement";
-import axios from "../../api/axios";
+import {privateAxios} from "../../api/axios";
 import { AnimatePresence,motion } from "framer-motion";
 
 export default function CreatepageModal() {
@@ -18,7 +17,6 @@ export default function CreatepageModal() {
 
   const navigate = useNavigate();
   // console.log("doc id" , doc_id);
-  const token = getTokenFromCookies();
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [content, setContent] = useState("");
@@ -34,21 +32,14 @@ export default function CreatepageModal() {
 
     if (dir === "true") {
       try {
-        const { data, status } = await axios.post(
+        const { data, status } = await privateAxios.post(
           "docs/page/create",
           {
             title: title,
             slug: slug,
             content: content,
             documentationSiteId: Number(doc_id),
-          },
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+          });
 
         if (status === 200) {
           toastSuccess(data.message);
@@ -61,7 +52,7 @@ export default function CreatepageModal() {
       }
     } else if (dir === "false") {
       try {
-        const { data, status } = await axios.post(
+        const { data, status } = await privateAxios.post(
           "docs/page/create",
           {
             title: title,
@@ -69,14 +60,7 @@ export default function CreatepageModal() {
             content: content,
             documentationSiteId: Number(doc_id),
             pageGroupId: Number(pagegroup_id),
-          },
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+          });
 
         if (status === 200) {
           toastSuccess(data.message);

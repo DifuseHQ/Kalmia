@@ -1,12 +1,13 @@
-import React from "react";
-import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { checkUserLoginned } from "../utlis/CookiesManagement";
+import React, { useContext } from "react";
+import { Navigate, Outlet } from "react-router-dom";
+import { AuthContext } from "../Context/AuthContext";
+
+
 export default function LoginAuth() {
 
+  const {user} = useContext(AuthContext)
 
-  const token = checkUserLoginned()
-
-  return token ? (
+  return user ? (
     <Navigate to="/dashboard" />
   ) : (
     <Outlet />

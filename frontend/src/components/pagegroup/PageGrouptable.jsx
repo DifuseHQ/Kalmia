@@ -1,9 +1,8 @@
 import { initFlowbite } from "flowbite";
 import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import axios from "../../api/axios";
+import {privateAxios} from "../../api/axios";
 import { getTokenFromCookies } from "../../utlis/CookiesManagement";
-import { FaRegFileAlt } from "react-icons/fa";
 import { AnimatePresence , motion } from "framer-motion";
 
 export default function PageGrouptable() {
@@ -22,16 +21,9 @@ export default function PageGrouptable() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const pageGroupResponse = await axios.post(
+        const pageGroupResponse = await privateAxios.post(
           "docs/page-group",
-          { id: Number(pagegroup_id) },
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+          { id: Number(pagegroup_id) });
 
         if (pageGroupResponse.status === 200) {
           setData(pageGroupResponse.data);
@@ -47,12 +39,7 @@ export default function PageGrouptable() {
       }
 
       try {
-        const pagesResponse = await axios.get("/docs/pages", {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const pagesResponse = await privateAxios.get("/docs/pages");
 
         if (pagesResponse.status === 200) {
           setPages(pagesResponse.data);

@@ -1,7 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { ModalContext } from "../../App";
 import {privateAxios} from "../../api/axios";
-import { getTokenFromCookies } from "../../utlis/CookiesManagement";
 import { Link, useNavigate } from "react-router-dom";
 import { ExchangeContext } from "../../Context/ExchangeContext";
 import { AnimatePresence , motion } from "framer-motion";
@@ -14,17 +13,11 @@ export default function Sidebar() {
   const { refresh } = useContext(ExchangeContext);
   const navigate = useNavigate();
 
-  const token = getTokenFromCookies();
 
   useEffect(() => {
     const fetchdata = async () => {
       try {
-      const res = await privateAxios.get("/docs/documentations", {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await privateAxios.get("/docs/documentations");
       if (res.status === 200) {
         setDocumentation(res.data);
       } else {
@@ -49,7 +42,7 @@ export default function Sidebar() {
     }
     };
     fetchdata();
-  }, [token, refresh,navigate]);
+  }, [refresh,navigate]);
 
   const toggleDropdown = (index) => {
     const updatedDropdowns = [...openDropdowns];

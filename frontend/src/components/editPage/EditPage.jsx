@@ -2,7 +2,7 @@ import { Editor } from "primereact/editor";
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { getTokenFromCookies } from "../../utlis/CookiesManagement";
-import axios from "../../api/axios";
+import {privateAxios} from "../../api/axios";
 import { toastError, toastSuccess, toastWarning } from "../../utlis/toast";
 import DeleteModal from "../deleteModal/DeleteModal";
 import { AnimatePresence , motion} from "framer-motion";
@@ -42,16 +42,9 @@ export default function EditPage() {
   useEffect(() => {
     const fetchdata = async () => {
       try {
-        const { data, status } = await axios.post(
+        const { data, status } = await privateAxios.post(
           `docs/page`,
-          { id: Number(page_id) },
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+          { id: Number(page_id) });
         if (status === 200) {
           setPageData(data);
           setTempPageData(data);
@@ -64,7 +57,7 @@ export default function EditPage() {
     };
 
     fetchdata();
-  }, []);
+  }, [page_id, token]); 
 
   const handleEdit = async () => {
     if (
@@ -75,25 +68,18 @@ export default function EditPage() {
       toastWarning("Are you sure you want to edit");
     }
     try {
-      const { data, status } = await axios.post(
+      const { data, status } = await privateAxios.post(
         "/docs/page/edit",
         {
           title: pageData.title,
           slug: pageData.slug,
           content: pageData.content,
           id: Number(page_id),
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+        });
 
       if (status === 200) {
         toastSuccess(data.message);
-        if (dir == "true") {
+        if (dir === "true") {
           navigate(`/dashboard/documentation?id=${doc_id}`);
         } else {
           navigate(
@@ -114,22 +100,15 @@ export default function EditPage() {
 
   const handleDelete = async () => {
     try {
-      const { data, status } = await axios.post(
+      const { data, status } = await privateAxios.post(
         "docs/page/delete",
         {
           id: Number(page_id),
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+        });
 
       if (status === 200) {
         toastSuccess(data.message);
-        if (dir == "true") {
+        if (dir === "true") {
           navigate(`/dashboard/documentation?id=${doc_id}`);
         } else {
           navigate(
@@ -163,7 +142,7 @@ export default function EditPage() {
       className="flex mb-5" aria-label="Breadcrumb">
         <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
           <li class="inline-flex items-center">
-            <a class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
+            <p class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
               <svg
                 class="w-3 h-3 me-2.5"
                 aria-hidden="true"
@@ -174,7 +153,7 @@ export default function EditPage() {
                 <path d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z" />
               </svg>
               Home
-            </a>
+            </p>
           </li>
           <li>
             <div class="flex items-center">

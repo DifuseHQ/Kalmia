@@ -15,6 +15,7 @@
     "framer-motion": "^11.2.13",
     "js-cookie": "^3.0.5",
     "jwt-decode": "^4.0.0",
+    "node-fetch": "^3.3.2",
     "primeicons": "^7.0.0",
     "primereact": "^10.7.0",
     "quill": "^2.0.2",

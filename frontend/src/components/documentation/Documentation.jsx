@@ -2,23 +2,20 @@ import { initFlowbite } from "flowbite";
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {privateAxios} from "../../api/axios";
-import { getTokenFromCookies } from "../../utlis/CookiesManagement";
 import ClipLoader from "react-spinners/ClipLoader";
 import EditDocumentModal from "../createDocumentModal/EditDocumentModal";
 import { ExchangeContext } from "../../Context/ExchangeContext";
-import DeleteModal from "../deleteModal/DeleteModal";
+import DeleteModal from "../deleteModal/DeleteModal"; 
 import { toastError, toastSuccess, toastWarning } from "../../utlis/toast";
 import CreatePageGroup from "../createPageGroup/CreatePageGroup";
 import { AnimatePresence , motion } from "framer-motion";
 
 export default function Documentation() {
-  const token = getTokenFromCookies();
   const { refresh, refreshData } = useContext(ExchangeContext);
   const [searchParam] = useSearchParams();
   const doc_id = searchParam.get("id");
 
   const [loading, setLoading] = useState(true);
-console.log(token);
   const [documentData, setDocumentData] = useState([]);
   const [isEditModal, setIsEditModal] = useState(false);
   const [isDeleteModal, setDeleteModal] = useState(false);
@@ -86,7 +83,7 @@ console.log(token);
     };
 
     fetchdata();
-  }, [doc_id, token, refresh , navigate]);
+  }, [doc_id, refresh , navigate]);
 
   const handleDeletemodalopen = () => {
     setDeleteModal(true);

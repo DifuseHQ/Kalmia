@@ -1,72 +1,28 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { getTheme } from "../../utlis/getTheme";
-import { Link, NavLink, useNavigate } from "react-router-dom";
-import axios from "../../api/axios";
-import { getTokenFromCookies, removeCookies } from "../../utlis/CookiesManagement";
-import { toastError, toastSuccess } from "../../utlis/toast";
+import { Link, NavLink } from "react-router-dom";
 import {motion, AnimatePresence} from 'framer-motion'
+import {AuthContext} from '../../Context/AuthContext'
 
 export default function Navbar() {
-  const themeMode = getTheme();
-  const [isDarkMode, setIsDarkMode] = useState(false);
-
-  const navigate = useNavigate();
+  const [isDarkMode, setIsDarkMode] = useState(false); 
+  const {user , logout} = useContext(AuthContext)
+   console.log(user);
+  const [userData, setuserData] = useState(user); 
 
 
   useEffect(() => {
-    getTheme();
-    setIsDarkMode(themeMode === "dark");
-  }, [themeMode]);
+    const initialTheme = getTheme();
+    setIsDarkMode(initialTheme === "dark");
+  }, []);
 
-  const token = getTokenFromCookies();
   const handleDarkModeToggle = () => {
     const newMode = isDarkMode ? "light" : "dark";
     setIsDarkMode(!isDarkMode);
     document.documentElement.classList.toggle("dark", isDarkMode);
     localStorage.setItem("theme", newMode);
-    getTheme(newMode);
   };
 
-  const handleLogout = async() =>{
-
-    try {
-      const {data, status} = await axios.post(
-        "/auth/jwt/revoke",
-        {
-          token:token
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (status === 200) {
-        removeCookies();
-        toastSuccess(data.message); 
-        navigate('/');
-      } 
-
-    } catch (err) {
-      console.log(err);
-        if (!err?.response) {
-          toastError('No Server Response');
-      } else if (err.response?.status === 400) {
-        console.log("400");
-        console.log(err.response.statusText);
-           toastError(err.response.data.error);
-      } else if (err.response?.status === 401) {
-        console.log(err.response.data.message);
-           toastError(err.response.data.message)
-      } else {
-           toastError(err.response.data.message);
-      }
-      
-    }
-    
-
-  }
 
   return (
     <AnimatePresence>
@@ -149,52 +105,64 @@ export default function Navbar() {
               </button>
             )}
           </div>
+            {userData  ? (
+            <>
+             <button
+             type="button"
+             class="flex mx-3 text-sm bg-gray-800 rounded-full md:mr-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
+             id="user-menu-button"
+             aria-expanded="false"
+             data-dropdown-toggle="dropdown"
+           >
+             <span class="sr-only">Open user menu</span>
+             
+             <img
+               class="w-8 h-8 rounded-full"
+               src={userData?.userData?.photo || "/assets/noProfile.png"}
+               alt="user"
+             />
+           </button>
+ 
+           <motion.div
+           initial={{ opacity: 0 }}
+           animate={{ opacity: 1 }}
+           exit={{ opacity: 0 }} 
+             class="hidden z-50 my-4 w-56 text-base list-none bg-white  divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600 rounded-xl"
+             id="dropdown"
+           >
+             <div class="py-3 px-4 hover:bg-gray-300 cursor-pointer">
+               <span class="block text-sm font-semibold text-gray-900 dark:text-white">
+                {user.username}
+               </span>
+               <span class="block text-sm text-gray-900 truncate dark:text-white">
+               {user.email}
+               </span>
+             </div>
+ 
+             <ul
+               class="py-1 text-gray-700 dark:text-gray-300"
+               aria-labelledby="dropdown"
+             >
+               <li>
+                 <p
+                   onClick={()=>logout()}
+                   class="block cursor-pointer py-2 px-4 text-sm hover:bg-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
+                 >
+                   Sign out
+                 </p>
+               </li>
+             </ul>
+           </motion.div>
+           </>
+            ):(
+              <Link to="/login"
+                   class="block cursor-pointer rounded-md mx-3 font-bold border hover:text-white border-blue-400 py-2 px-4 text-sm hover:bg-blue-500 dark:hover:bg-gray-600 dark:hover:text-white"
+                 >
+                   Login
+                 </Link>
+            )}
 
-          <button
-            type="button"
-            class="flex mx-3 text-sm bg-gray-800 rounded-full md:mr-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
-            id="user-menu-button"
-            aria-expanded="false"
-            data-dropdown-toggle="dropdown"
-          >
-            <span class="sr-only">Open user menu</span>
-            <img
-              class="w-8 h-8 rounded-full"
-              src="https://flowbite.s3.amazonaws.com/blocks/marketing-ui/avatars/michael-gough.png"
-              alt="user"
-            />
-          </button>
-
-          <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }} 
-            class="hidden z-50 my-4 w-56 text-base list-none bg-white  divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600 rounded-xl"
-            id="dropdown"
-          >
-            <div class="py-3 px-4 hover:bg-gray-300 cursor-pointer">
-              <span class="block text-sm font-semibold text-gray-900 dark:text-white">
-                Neil Sims
-              </span>
-              <span class="block text-sm text-gray-900 truncate dark:text-white">
-                name@flowbite.com
-              </span>
-            </div>
-
-            <ul
-              class="py-1 text-gray-700 dark:text-gray-300"
-              aria-labelledby="dropdown"
-            >
-              <li>
-                <p
-                  onClick={handleLogout}
-                  class="block cursor-pointer py-2 px-4 text-sm hover:bg-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
-                >
-                  Sign out
-                </p>
-              </li>
-            </ul>
-          </motion.div>
+         
         </div>
       </div>
     </motion.nav>

@@ -1,7 +1,6 @@
 import React, { useContext, useState } from "react";
 import { ModalContext } from "../../App";
-import axios from "../../api/axios";
-import { getTokenFromCookies } from "../../utlis/CookiesManagement";
+import {privateAxios} from "../../api/axios";
 import { useNavigate } from "react-router-dom";
 import { ExchangeContext } from "../../Context/ExchangeContext";
 import { toastError, toastSuccess, toastWarning } from "../../utlis/toast";
@@ -10,7 +9,6 @@ import { AnimatePresence, motion } from "framer-motion";
 export default function CreateDocModal() {
   const { refreshData } = useContext(ExchangeContext);
   const navigate = useNavigate();
-  const token = getTokenFromCookies();
   const { isOpenModal, setIsOpenModal } = useContext(ModalContext);
   const [formData, setFormData] = useState({
     title: "",
@@ -37,19 +35,12 @@ export default function CreateDocModal() {
     }
 
     try {
-      const { data, status } = await axios.post(
+      const { data, status } = await privateAxios.post(
         "/docs/documentation/create",
         {
           name: formData.title,
           description: formData.description,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+        });
 
       if (status === 200) {
         setIsOpenModal(false);
