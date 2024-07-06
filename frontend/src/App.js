@@ -17,6 +17,7 @@ import RequireAuth from "./components/RequireAuth";
 import LoginAuth from "./components/LoginAuth";
 import Error from "./components/error/Error";
 import Error500 from "./components/error500/Error500";
+import IntroPage from "./components/IntroPage";
 
 export const ModalContext = createContext();
 
@@ -42,7 +43,7 @@ function App() {
            <Route element={<RequireAuth/>}>
 
               <Route path="/dashboard" element={<DashboardPage />}>
-                <Route index element={ <h1>Dashboard Fornt page</h1> }/>
+                <Route index element={ <IntroPage/> }/>
                 <Route path="create-documentation" element={<CreateDocModal />}/>
                 <Route path="edit-documentation" element={<CreateDocModal />} />
                 <Route path={`documentation`} element={<Documentation />} />

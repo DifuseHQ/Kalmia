@@ -1,14 +1,14 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { useLocation, Navigate , Outlet } from 'react-router-dom'
-import { checkUserLoginned } from '../utlis/CookiesManagement';
+import { AuthContext } from '../Context/AuthContext';
 
 export default function RequireAuth() {
 
     const location = useLocation();
-    const token= checkUserLoginned();
+    const {user} = useContext(AuthContext)
 
   return (
-    token?
+    user?
         <Outlet/>
         :<Navigate to="/login" state={{from:location}} replace />
   )

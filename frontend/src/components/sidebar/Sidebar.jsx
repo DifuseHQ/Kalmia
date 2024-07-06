@@ -2,15 +2,15 @@ import React, { useContext, useEffect, useState } from "react";
 import { ModalContext } from "../../App";
 import {privateAxios} from "../../api/axios";
 import { Link, useNavigate } from "react-router-dom";
-import { ExchangeContext } from "../../Context/ExchangeContext";
 import { AnimatePresence , motion } from "framer-motion";
 import { toastError } from "../../utlis/toast";
+import { AuthContext } from "../../Context/AuthContext";
 
 export default function Sidebar() {
   const [documentation, setDocumentation] = useState([]);
   const [openDropdowns, setOpenDropdowns] = useState([]);
   const { setIsOpenModal } = useContext(ModalContext);
-  const { refresh } = useContext(ExchangeContext);
+  const { refresh } = useContext(AuthContext);
   const navigate = useNavigate();
 
 
@@ -119,8 +119,8 @@ export default function Sidebar() {
               </svg>
             </motion.button>
           </li>
-          {documentation && documentation.map((val, index) => (
-            <motion.li
+          {documentation && documentation.map((val ,index) => (
+            <motion.li key={index}
             whileHover={{scale:1.08, originx:0}}
             >
               <Link to={`/dashboard/documentation?id=${val.id}`}>
@@ -129,7 +129,6 @@ export default function Sidebar() {
                   onClick={() => toggleDropdown(index)}
                   class="flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-200 dark:text-white dark:hover:bg-gray-700"
                   aria-controls={`${val.name}`}
-                  data-collapse-toggle={`${val.name}`}
                 >
                   <svg
                     aria-hidden="true"
@@ -270,7 +269,7 @@ export default function Sidebar() {
                   clip-rule="evenodd"
                 ></path>
               </svg>
-              <span class="ml-3">Help</span>
+              <span class="ml-3">User Management</span>
             </button>
           </li>
         </ul>

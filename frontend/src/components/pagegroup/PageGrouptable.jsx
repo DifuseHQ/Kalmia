@@ -10,10 +10,10 @@ export default function PageGrouptable() {
   const [searchParams] = useSearchParams();
   const doc_id = searchParams.get("id");
   const pagegroup_id = searchParams.get("pagegroup_id");
-
+console.log(token);
   const [data, setData] = useState([]);
   const [pages, setPages] = useState([]);
-
+  console.log("data is : " ,data);
   useEffect(() => {
     initFlowbite();
   }, [doc_id,pagegroup_id]);
@@ -173,7 +173,7 @@ export default function PageGrouptable() {
                       aria-hidden="true"
                       class="w-5 h-5 text-gray-500 dark:text-gray-400"
                       fill="currentColor"
-                      viewbox="0 0 20 20"
+                      viewBox="0 0 20 20"
                       xmlns="http://www.w3.org/2000/svg"
                     >
                       <path
@@ -241,10 +241,10 @@ export default function PageGrouptable() {
                   </tr>
                 )}
 
-                {filteredPages.map((obj, index) => (
+                {filteredPages.map((obj) => (
                   <tr 
                   
-                  class="border-b dark:border-gray-700 hover:bg-gray-200" key={index} >
+                  class="border-b dark:border-gray-700 hover:bg-gray-200" key={obj.id} >
                     <th
                       scope="row"
                       class=" flex items-center cursor-pointer px-4 py-3 gap-2 font-medium text-blue-500 hover:text-blue-700 whitespace-nowrap dark:text-white"

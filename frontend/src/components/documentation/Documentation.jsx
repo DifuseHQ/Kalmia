@@ -1,89 +1,109 @@
 import { initFlowbite } from "flowbite";
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import {privateAxios} from "../../api/axios";
+import { privateAxios } from "../../api/axios";
 import ClipLoader from "react-spinners/ClipLoader";
 import EditDocumentModal from "../createDocumentModal/EditDocumentModal";
-import { ExchangeContext } from "../../Context/ExchangeContext";
-import DeleteModal from "../deleteModal/DeleteModal"; 
+import DeleteModal from "../deleteModal/DeleteModal";
 import { toastError, toastSuccess, toastWarning } from "../../utlis/toast";
 import CreatePageGroup from "../createPageGroup/CreatePageGroup";
-import { AnimatePresence , motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { AuthContext } from "../../Context/AuthContext";
 
 export default function Documentation() {
-  const { refresh, refreshData } = useContext(ExchangeContext);
+  const { refresh, refreshData, user, documentationData } =
+    useContext(AuthContext);
+  const navigate = useNavigate();
+
   const [searchParam] = useSearchParams();
   const doc_id = searchParam.get("id");
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+
+  //Documentation CRUD
   const [documentData, setDocumentData] = useState([]);
   const [isEditModal, setIsEditModal] = useState(false);
   const [isDeleteModal, setDeleteModal] = useState(false);
 
+  //pageGroup CRUD
   const [isEditpageGroup, setIsEditpageGroup] = useState(false);
   const [isPageGroupsDeleteModal, setIsPageGroupsDeleteModal] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);
 
   const [openCreatePageGroup, setOpenCreatePageGroup] = useState(false);
 
+  //pagination
   const [currentPage, setCurrentPage] = useState(1);
-
-  const numPageGroups = documentData.pageGroups
-    ? documentData.pageGroups.length
-    : 0;
-  const numPages = documentData.pages ? documentData.pages.length : 0;
-
-  const itemsPerPage = 8;
-  const totalItems = numPageGroups + numPages;
+  const itemsPerPage = 7;
   const startIdx = (currentPage - 1) * itemsPerPage;
   const endIdx = startIdx + itemsPerPage;
+  const totalItems = documentationData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
- 
+
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
+    setCurrentPage(1); // Reset to the first page on search
+  };
+
+  
+  // Filter the items based on the search term
+  const filteredItems = documentationData.filter(
+    (obj) =>
+      obj.documentationId === Number(doc_id) &&
+      (obj.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+       obj.title?.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+    const paginatedItems = filteredItems.slice(startIdx, endIdx);
+
+  //pagination function
   const handlePageChange = useCallback((pageNumber) => {
     setCurrentPage(pageNumber);
   }, []);
 
-  const navigate = useNavigate();
-
+  //Flowbite js function
   useEffect(() => {
     initFlowbite();
-  }, [documentData, handlePageChange]);
+  }, [paginatedItems, handlePageChange]);
 
+  //Fetch document information
   useEffect(() => {
+    setLoading(true);
     const fetchdata = async () => {
       setLoading(true);
-      
-      if(!doc_id){
-        setLoading(false)
+
+      if (!doc_id) {
+        setLoading(false);
         return;
       }
+
       try {
         const { data, status } = await privateAxios.post(
           `/docs/documentation`,
-          { id:Number(doc_id)});
+          { id: Number(doc_id) }
+        );
+
         if (status === 200) {
           setDocumentData(data);
           setLoading(false);
-        } else {
-          console.error("Failed to fetch data:", status.statusText);
         }
       } catch (err) {
         if (!err?.response) {
-         navigate('/server-down');
-      } else if (err.response?.status === 400) {
-        console.log(err.response.statusText);
-        toastError(err.response.data.error);
-      } else if (err.response?.status === 401) {
-          toastError(err.response.data.error)
-      } else {
-        toastError('Login Failed');
-      }
-      // errRef.current.focus();  for screen reader
+          navigate("/server-down");
+        } else if (err.response?.status === 400) {
+          toastError(err.response.data.error);
+        } else if (err.response?.status === 401) {
+          toastError(err.response.data.error);
+        } else {
+          toastError("Login Failed");
+        }
       }
     };
 
     fetchdata();
-  }, [doc_id, refresh , navigate]);
+  }, [doc_id, refresh, navigate, user]);
 
   const handleDeletemodalopen = () => {
     setDeleteModal(true);
@@ -93,11 +113,13 @@ export default function Documentation() {
     setDeleteModal(false);
   };
 
+  //Documentation CRUD function
   const handleDelete = async () => {
     try {
       const { data, status } = await privateAxios.post(
         "docs/documentation/delete",
-        { id: Number(doc_id) });
+        { id: Number(doc_id) }
+      );
       if (status === 200) {
         toastSuccess(data.message);
         refreshData();
@@ -120,7 +142,8 @@ export default function Documentation() {
           id: Number(doc_id),
           name: editTitle,
           description: editDescription,
-        });
+        }
+      );
 
       if (status === 200) {
         setIsEditModal(false);
@@ -134,6 +157,7 @@ export default function Documentation() {
     }
   };
 
+  //PageGroup CRUD function
   const openDeletePageGroups = (item) => {
     setCurrentItem(item);
     setIsPageGroupsDeleteModal(true);
@@ -148,7 +172,8 @@ export default function Documentation() {
     try {
       const { data, status } = await privateAxios.post(
         "docs/page-group/delete",
-        { id: Number(id) });
+        { id: Number(id) }
+      );
       if (status === 200) {
         toastSuccess(data.message);
         setIsPageGroupsDeleteModal(false);
@@ -171,13 +196,11 @@ export default function Documentation() {
 
   const handelPageGroupUpdate = async (editTitle, editDescription, id) => {
     try {
-      const { data, status } = await privateAxios.post(
-        "docs/page-group/edit",
-        {
-          id: Number(id),
-          name: editTitle,
-          documentationSiteId: Number(doc_id),
-        });
+      const { data, status } = await privateAxios.post("docs/page-group/edit", {
+        id: Number(id),
+        name: editTitle,
+        documentationSiteId: Number(doc_id),
+      });
 
       if (status === 200) {
         setIsEditpageGroup(false);
@@ -207,7 +230,8 @@ export default function Documentation() {
         {
           name: title,
           documentationSiteId: Number(doc_id),
-        });
+        }
+      );
 
       if (status === 200) {
         setOpenCreatePageGroup(false);
@@ -222,13 +246,14 @@ export default function Documentation() {
   };
 
   return (
-
     <AnimatePresence class="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5">
       <motion.nav
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }} 
-      class="flex" aria-label="Breadcrumb">
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        class="flex"
+        aria-label="Breadcrumb"
+      >
         <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
           <li class="inline-flex items-center">
             <Link
@@ -272,6 +297,7 @@ export default function Documentation() {
         </ol>
       </motion.nav>
 
+      {/* Create pageGroup resusable component */}
       {openCreatePageGroup && (
         <CreatePageGroup
           closeModal={CreatePageGroupModalClose}
@@ -279,6 +305,7 @@ export default function Documentation() {
         />
       )}
 
+      {/* Edit Documentation component */}
       {isEditModal && (
         <EditDocumentModal
           heading="Edit Documentation"
@@ -291,6 +318,7 @@ export default function Documentation() {
         />
       )}
 
+      {/* Delete Documentation Component */}
       {isDeleteModal && (
         <DeleteModal
           cancelModal={handleCancel}
@@ -301,37 +329,67 @@ export default function Documentation() {
         />
       )}
 
-      <motion.div  initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }} 
-          class=" lg:mt-0 lg:col-span-5 flex justify-end mr-5 gap-3">
-        {/* <button type="button" class="flex items-center justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800">Edit</button> */}
-        <motion.button whileHover={{scale:1.3}} onClick={() => setIsEditModal(!isEditModal)}
-          title="Edit Documentation"
-          >
-          <svg class="w-6 h-6 cursor-pointer text-gray-800 hover:border dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m14.304 4.844 2.852 2.852M7 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-4.5m2.409-9.91a2.017 2.017 0 0 1 0 2.853l-6.844 6.844L8 14l.713-3.565 6.844-6.844a2.015 2.015 0 0 1 2.852 0Z"/>
-        </svg>
-        </motion.button>
-       
-      <motion.button
-      whileHover={{scale:1.3}}
-      onClick={handleDeletemodalopen}
-      title="Delete Documentation"
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        class=" lg:mt-0 lg:col-span-5 flex justify-end mr-5 gap-3"
       >
-        <svg class="w-6 h-6 cursor-pointer hover:border  text-red-700 dark:text-red-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"/>
-        </svg>
+        <motion.button
+          whileHover={{ scale: 1.3 }}
+          onClick={() => setIsEditModal(!isEditModal)}
+          title="Edit Documentation"
+        >
+          <svg
+            class="w-6 h-6 cursor-pointer text-gray-800 hover:border dark:text-white"
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="m14.304 4.844 2.852 2.852M7 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-4.5m2.409-9.91a2.017 2.017 0 0 1 0 2.853l-6.844 6.844L8 14l.713-3.565 6.844-6.844a2.015 2.015 0 0 1 2.852 0Z"
+            />
+          </svg>
+        </motion.button>
 
-      </motion.button>
-       
-
-        {/* <button type="button" class="flex items-center justify-center text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800">Delete</button> */}
+        <motion.button
+          whileHover={{ scale: 1.3 }}
+          onClick={handleDeletemodalopen}
+          title="Delete Documentation"
+        >
+          <svg
+            class="w-6 h-6 cursor-pointer hover:border  text-red-700 dark:text-red-400"
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"
+            />
+          </svg>
+        </motion.button>
       </motion.div>
-      <motion.div  initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }} 
-          class="grid max-w-screen-xl px-4 mx-auto lg:gap-8 xl:gap-0 lg:grid-cols-12">
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        class="grid max-w-screen-xl px-4 mx-auto lg:gap-8 xl:gap-0 lg:grid-cols-12"
+      >
         <div class="mr-auto place-self-center lg:col-span-7">
           <h1 class="max-w-xl mb-4 text-4xl font-bold tracking-tight leading-none md:text-4xl xl:text-4xl dark:text-white">
             {documentData.name}
@@ -342,16 +400,18 @@ export default function Documentation() {
         </div>
       </motion.div>
 
-      <motion.div  initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{delay:0.1}}
-          class="mx-auto max-w-screen-xl px-4 lg:px-12">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ delay: 0.1 }}
+        class="mx-auto max-w-screen-xl px-4 lg:px-12"
+      >
         <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
           <div class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
             <div class="w-full md:w-1/3">
-              <form class="flex items-center">
-                <label for="simple-search" class="sr-only">
+              <div class="flex items-center">
+                <label htmlFor="simple-search" class="sr-only">
                   Search
                 </label>
                 <div class="relative w-full">
@@ -373,16 +433,18 @@ export default function Documentation() {
                   <input
                     type="text"
                     id="simple-search"
+                    value={searchTerm}
+                    onChange={handleSearchChange}
                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     placeholder="Search"
-                    required=""
+                    
                   />
                 </div>
-              </form>
+              </div>
             </div>
             <div class="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
               <motion.button
-              whileHover={{scale:1.1}}
+                whileHover={{ scale: 1.1 }}
                 onClick={() => setOpenCreatePageGroup(true)}
                 type="button"
                 class="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
@@ -390,99 +452,14 @@ export default function Documentation() {
                 Create Group
               </motion.button>
 
-              <motion.button whileHover={{scale:1.1}}>
-              <Link
-              to={`/dashboard/documentation/create-page?id=${doc_id}&dir=true`}
-      
-                class="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
-              >
-                Create page
-              </Link>
+              <motion.button whileHover={{ scale: 1.1 }}>
+                <Link
+                  to={`/dashboard/documentation/create-page?id=${doc_id}&dir=true`}
+                  class="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
+                >
+                  Create page
+                </Link>
               </motion.button>
-              
-              {/* <div class="flex items-center space-x-3 w-full md:w-auto">
-                <button
-                  id="actionsDropdownButton"
-                  data-dropdown-toggle="actionsDropdown"
-                  class="w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
-                  type="button"
-                >
-                  <svg
-                    class="-ml-1 mr-1.5 w-5 h-5"
-                    fill="currentColor"
-                    viewbox="0 0 20 20"
-                    xmlns="http://www.w3.org/2000/svg"
-                    aria-hidden="true"
-                  >
-                    <path
-                      clip-rule="evenodd"
-                      fill-rule="evenodd"
-                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                    />
-                  </svg>
-                  Actions
-                </button>
-                <div
-                  id="actionsDropdown"
-                  class="hidden z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600"
-                >
-                  <ul
-                    class="py-1 text-sm text-gray-700 dark:text-gray-200"
-                    aria-labelledby="actionsDropdownButton"
-                  >
-                    <li>
-                      <a
-                        href="#"
-                        class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                      >
-                        Edit
-                      </a>
-                    </li>
-                  </ul>
-                  <div class="py-1">
-                    <a
-                      href="#"
-                      class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
-                    >
-                      Delete all
-                    </a>
-                  </div>
-                </div> */}
-              {/* <button id="filterDropdownButton" data-dropdown-toggle="filterDropdown" class="w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700" type="button">
-                            <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="h-4 w-4 mr-2 text-gray-400" viewbox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
-                            </svg>
-                            Filter
-                            <svg class="-mr-1 ml-1.5 w-5 h-5" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                <path clip-rule="evenodd" fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
-                            </svg>
-                        </button> */}
-              {/* <div id="filterDropdown" class="z-10 hidden w-48 p-3 bg-white rounded-lg shadow dark:bg-gray-700">
-                            <h6 class="mb-3 text-sm font-medium text-gray-900 dark:text-white">Choose brand</h6>
-                            <ul class="space-y-2 text-sm" aria-labelledby="filterDropdownButton">
-                                <li class="flex items-center">
-                                    <input id="apple" type="checkbox" value="" class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
-                                    <label for="apple" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100">Apple (56)</label>
-                                </li>
-                                <li class="flex items-center">
-                                    <input id="fitbit" type="checkbox" value="" class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
-                                    <label for="fitbit" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100">Microsoft (16)</label>
-                                </li>
-                                <li class="flex items-center">
-                                    <input id="razor" type="checkbox" value="" class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
-                                    <label for="razor" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100">Razor (49)</label>
-                                </li>
-                                <li class="flex items-center">
-                                    <input id="nikon" type="checkbox" value="" class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
-                                    <label for="nikon" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100">Nikon (12)</label>
-                                </li>
-                                <li class="flex items-center">
-                                    <input id="benq" type="checkbox" value="" class="w-4 h-4 bg-gray-100 border-gray-300 rounded text-primary-600 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
-                                    <label for="benq" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-100">BenQ (74)</label>
-                                </li>
-                            </ul>
-                        </div> */}
-              {/* </div> */}
             </div>
           </div>
 
@@ -522,13 +499,13 @@ export default function Documentation() {
                       </div>
                     </td>
                   </tr>
-                ) : !documentData.pageGroups ||
-                  documentData.pageGroups.length <= 0 ? (
+                ) : !paginatedItems || paginatedItems.length <= 0 ? (
                   <motion.tr
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="border-b dark:border-gray-700">
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="border-b dark:border-gray-700"
+                  >
                     <td colSpan="4" className="text-center py-8">
                       <h1 className="text-center text-gray-600 sm:text-lg font-semibold">
                         No Pages Found
@@ -537,99 +514,126 @@ export default function Documentation() {
                   </motion.tr>
                 ) : (
                   <>
-                    {documentData.pageGroups && documentData.pageGroups
-                      .slice(startIdx, endIdx)
-                      .map((obj, index) => (
-                        <tr className="border-b dark:border-gray-700 hover:bg-gray-200"
-                          key={index}
-                        >
-                          <Link
-                            to={`/dashboard/documentation/pagegroup?id=${doc_id}&pagegroup_id=${obj.id}`}
-                          >
-                            <th
-                              scope="row"
-                              className="flex items-center cursor-pointer gap-2 px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white"
-                            >
-                              <svg class="w-6 h-6 text-yellow-400 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                                <path fill-rule="evenodd" d="M4 4a2 2 0 0 0-2 2v12a2 2 0 0 0 .087.586l2.977-7.937A1 1 0 0 1 6 10h12V9a2 2 0 0 0-2-2h-4.532l-1.9-2.28A2 2 0 0 0 8.032 4H4Zm2.693 8H6.5l-3 8H18l3-8H6.693Z" clip-rule="evenodd"/>
-                              </svg>
-                              {obj.name}
-                            </th>
-                          </Link>
-
-                          <td className="px-4 py-3">/{obj.name}</td>
-                          <td className="px-4 py-3">Folder</td>
-                          <td className="px-4 py-3 flex items-center">
-                            <button
-                              id={`dropdown-button-${index}`}
-                              data-dropdown-toggle={`dropdown-${index}`}
-                              className="inline-flex items-center p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
-                              type="button"
-                            >
-                              <svg
-                                className="w-5 h-5"
-                                aria-hidden="true"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
-                              </svg>
-                            </button>
-                            <div
-                                
-                              id={`dropdown-${index}`}
-                              className="hidden z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600"
-                            >
-                              <ul
-                                className="py-1 text-sm text-gray-700 dark:text-gray-200"
-                                aria-labelledby={`dropdown-button-${index}`}
-                              >
-                                <li>
-                                  <p
-                                    onClick={() => openEditPageGroup(obj)}
-                                    className="block py-2 px-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                                  >
-                                    Edit
-                                  </p>
-                                </li>
-                                <li>
-                                  <p
-                                    onClick={() => openDeletePageGroups(obj)}
-                                    className="block py-2 px-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                                  >
-                                    Delete
-                                  </p>
-                                </li>
-                              </ul>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-
-                    {documentData.pages && documentData.pages
-                      .slice(startIdx - numPageGroups, endIdx - numPageGroups)
-                      .map((page, index) => (
+                    {paginatedItems &&
+                      paginatedItems.map((obj) => (
                         <tr
-                          className="border-b dark:border-gray-700 hover:bg-gray-200"
-                          key={index}
+                          className="border-b dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700"
+                          key={obj.id}
                         >
-                          <th
-                            scope="row"
-                            className="  px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white"
-                          >
-                            <Link 
-                            to={`/dashboard/documentation/edit-page?id=${doc_id}&dir=true&page_id=${page.id}`}
-                            className="flex gap-2 items-center cursor-pointer">
-                            <svg class="w-6 h-6 text-gray-600 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 3v4a1 1 0 0 1-1 1H5m4 8h6m-6-4h6m4-8v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7.914a1 1 0 0 1 .293-.707l3.914-3.914A1 1 0 0 1 9.914 3H18a1 1 0 0 1 1 1Z"/>
-                            </svg>
-                            {page.title}
+                          {obj.name ? (
+                            <Link
+                              to={`/dashboard/documentation/pagegroup?id=${doc_id}&pagegroup_id=${obj.id}`}
+                            >
+                              <th
+                                scope="row"
+                                className="flex items-center cursor-pointer gap-2 px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white"
+                              >
+                                <svg
+                                  class="w-6 h-6 text-yellow-400 dark:text-white"
+                                  aria-hidden="true"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="24"
+                                  height="24"
+                                  fill="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    fill-rule="evenodd"
+                                    d="M4 4a2 2 0 0 0-2 2v12a2 2 0 0 0 .087.586l2.977-7.937A1 1 0 0 1 6 10h12V9a2 2 0 0 0-2-2h-4.532l-1.9-2.28A2 2 0 0 0 8.032 4H4Zm2.693 8H6.5l-3 8H18l3-8H6.693Z"
+                                    clip-rule="evenodd"
+                                  />
+                                </svg>
+                                {obj.name || obj.title}
+                              </th>
                             </Link>
-                         
-                          </th>
-                          <td className="px-4 py-3">/{documentData.name}</td>
-                          <td className="px-4 py-3">.txt</td>
+                          ) : (
+                            <Link
+                              to={`/dashboard/documentation/edit-page?id=${doc_id}&dir=true&page_id=${obj.id}`}
+                            >
+                              <th
+                                scope="row"
+                                className="flex items-center cursor-pointer gap-2 px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white"
+                              >
+                                <svg
+                                  class="w-6 h-6 text-gray-600 dark:text-white"
+                                  aria-hidden="true"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="24"
+                                  height="24"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    stroke="currentColor"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M10 3v4a1 1 0 0 1-1 1H5m4 8h6m-6-4h6m4-8v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7.914a1 1 0 0 1 .293-.707l3.914-3.914A1 1 0 0 1 9.914 3H18a1 1 0 0 1 1 1Z"
+                                  />
+                                </svg>
+                                {obj.title}
+                              </th>
+                            </Link>
+                          )}
+
+                          {obj.name ? (
+                            <td className="px-4 py-3">/{obj.name}</td>
+                          ) : (
+                            <td className="px-4 py-3">/{obj.slug}</td>
+                          )}
+
+                          {obj.name ? (
+                            <td className="px-4 py-3">Folder</td>
+                          ) : (
+                            <td className="px-4 py-3">file</td>
+                          )}
+
+                          {obj.name && (
+                            <td className="px-4 py-3 flex items-center">
+                              <button
+                                id={`dropdown-button-${obj.id}`}
+                                data-dropdown-toggle={`dropdown-${obj.id}`}
+                                className="inline-flex items-center p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
+                                type="button"
+                              >
+                                <svg
+                                  className="w-5 h-5"
+                                  aria-hidden="true"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
+                                </svg>
+                              </button>
+                              <div
+                                id={`dropdown-${obj.id}`}
+                                className="hidden z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600"
+                              >
+                                <ul
+                                  className="py-1 text-sm text-gray-700 dark:text-gray-200"
+                                  aria-labelledby={`dropdown-button-${obj.id}`}
+                                >
+                                  <li>
+                                    <p
+                                      onClick={() => openEditPageGroup(obj)}
+                                      className="block py-2 px-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                                    >
+                                      Edit
+                                    </p>
+                                  </li>
+                                  <li>
+                                    <p
+                                      onClick={() => openDeletePageGroups(obj)}
+                                      className="block py-2 px-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                                    >
+                                      Delete
+                                    </p>
+                                  </li>
+                                </ul>
+                              </div>
+                            </td>
+                          )}
                         </tr>
                       ))}
                   </>
@@ -638,8 +642,9 @@ export default function Documentation() {
             </table>
           </div>
 
-          {!documentData.pageGroups ||
-          documentData.pageGroups.length <= 0 ? null : (
+          {/* pagination  */}
+
+          {!paginatedItems || paginatedItems.length <= 0 ? null : (
             <nav
               className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4"
               aria-label="Table navigation"
@@ -717,6 +722,7 @@ export default function Documentation() {
             </nav>
           )}
 
+          {/* PageGroup Edit Component */}
           {isEditpageGroup && currentItem && (
             <EditDocumentModal
               heading="Rename Page Group"
@@ -727,6 +733,7 @@ export default function Documentation() {
             />
           )}
 
+          {/* PageGroup delete Component */}
           {isPageGroupsDeleteModal && currentItem && (
             <DeleteModal
               cancelModal={handleCancelPagegroupDelete}
@@ -738,7 +745,6 @@ export default function Documentation() {
           )}
         </div>
       </motion.div>
-  
     </AnimatePresence>
   );
 }

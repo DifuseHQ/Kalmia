@@ -4,7 +4,7 @@ import "react-toastify/dist/ReactToastify.css";
 const toastSuccess = (message) => {
   toast.success(message, {
     position: "top-right", // You can specify the position
-    autoClose: 3000, // Time (in milliseconds) for the toast to auto-close
+    autoClose: 1000, // Time (in milliseconds) for the toast to auto-close
     hideProgressBar: false, // Set to true if you want to hide the progress bar
     closeOnClick: true, // Close the toast when clicked
     pauseOnHover: true, // Pause the autoClose timer on hover
@@ -16,7 +16,7 @@ const toastSuccess = (message) => {
 const toastError = (message) => {
   toast.error(message, {
     position: "top-right", // You can specify the position
-    autoClose: 5000, // Time (in milliseconds) for the toast to auto-close
+    autoClose: 1000, // Time (in milliseconds) for the toast to auto-close
     hideProgressBar: false, // Set to true if you want to hide the progress bar
     closeOnClick: true, // Close the toast when clicked
     pauseOnHover: true, // Pause the autoClose timer on hover
@@ -28,7 +28,7 @@ const toastError = (message) => {
 const toastWarning = (message) => {
   toast.warning(message, {
     position: "top-right", // You can specify the position
-    autoClose: 5000, // Time (in milliseconds) for the toast to auto-close
+    autoClose: 1000, // Time (in milliseconds) for the toast to auto-close
     hideProgressBar: false, // Set to true if you want to hide the progress bar
     closeOnClick: true, // Close the toast when clicked
     pauseOnHover: true, // Pause the autoClose timer on hover
