@@ -45,7 +45,7 @@ func GetDocumentations(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	var documentations []models.Documentation
 
 	if err := db.Preload("PageGroups", func(db *gorm.DB) *gorm.DB {
-		return db.Select("ID", "DocumentationID")
+		return db.Select("ID", "DocumentationID", "Name")
 	}).Preload("PageGroups.Pages", func(db *gorm.DB) *gorm.DB {
 		return db.Select("ID", "PageGroupID")
 	}).Preload("Pages", func(db *gorm.DB) *gorm.DB {
@@ -79,7 +79,7 @@ func GetDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 
 	var documentation models.Documentation
 	if err := db.Preload("PageGroups", func(db *gorm.DB) *gorm.DB {
-		return db.Select("ID", "DocumentationID")
+		return db.Select("ID", "DocumentationID", "Name")
 	}).Preload("PageGroups.Pages", func(db *gorm.DB) *gorm.DB {
 		return db.Select("ID", "PageGroupID")
 	}).Preload("Pages", func(db *gorm.DB) *gorm.DB {
@@ -403,52 +403,59 @@ func CreatePageGroup(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "Page group created successfully"})
 }
 
+func convertPageGroupToMap(group models.PageGroup) map[string]interface{} {
+	simplifiedPages := make([]map[string]interface{}, 0, len(group.Pages))
+	for _, page := range group.Pages {
+		simplifiedPages = append(simplifiedPages, map[string]interface{}{
+			"id":              page.ID,
+			"title":           page.Title,
+			"slug":            page.Slug,
+			"pageGroupId":     page.PageGroupID,
+			"order":           page.Order,
+			"documentationId": page.DocumentationID,
+		})
+	}
+
+	return map[string]interface{}{
+		"id":              group.ID,
+		"documentationId": group.DocumentationID,
+		"name":            group.Name,
+		"parentId":        group.ParentID,
+		"order":           group.Order,
+		"pages":           simplifiedPages,
+	}
+}
+
+func recursiveFetchPageGroups(db *gorm.DB, groupMap map[string]interface{}) {
+	var childrenPageGroups []models.PageGroup
+	db.Model(&models.PageGroup{}).Where("parent_id = ?", groupMap["id"]).Preload("Pages").Find(&childrenPageGroups)
+
+	childGroupMaps := make([]map[string]interface{}, 0, len(childrenPageGroups))
+	for _, childGroup := range childrenPageGroups {
+		childMap := convertPageGroupToMap(childGroup)
+		recursiveFetchPageGroups(db, childMap)
+		childGroupMaps = append(childGroupMaps, childMap)
+	}
+
+	if len(childGroupMaps) > 0 {
+		groupMap["pageGroups"] = childGroupMaps
+	}
+}
+
 func GetPageGroups(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	var pageGroups []models.PageGroup
 
 	if err := db.Preload("Pages", func(db *gorm.DB) *gorm.DB {
 		return db.Select("ID", "Title", "Slug", "PageGroupID", "Order", "DocumentationID")
-	}).Select("ID", "Name", "DocumentationID", "ParentID", "Order").Find(&pageGroups).Error; err != nil {
+	}).Select("ID", "Name", "DocumentationID", "ParentID", "Order").Where("parent_id IS NULL").Find(&pageGroups).Error; err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to fetch page groups"})
 		return
 	}
 
-	groupsByID := make(map[uint]map[string]interface{})
-	parentToChildren := make(map[uint][]map[string]interface{})
-
-	for _, group := range pageGroups {
-		simplifiedPages := make([]map[string]interface{}, 0, len(group.Pages))
-		for _, page := range group.Pages {
-			simplifiedPages = append(simplifiedPages, map[string]interface{}{
-				"id":              page.ID,
-				"title":           page.Title,
-				"slug":            page.Slug,
-				"pageGroupId":     page.PageGroupID,
-				"order":           page.Order,
-				"documentationId": page.DocumentationID,
-			})
-		}
-
-		groupMap := map[string]interface{}{
-			"id":              group.ID,
-			"documentationId": group.DocumentationID,
-			"name":            group.Name,
-			"parentId":        group.ParentID,
-			"order":           group.Order,
-			"pages":           simplifiedPages,
-		}
-
-		groupsByID[group.ID] = groupMap
-		if group.ParentID != nil {
-			parentToChildren[*group.ParentID] = append(parentToChildren[*group.ParentID], groupMap)
-		}
-	}
-
 	var finalPageGroups []interface{}
-	for _, groupMap := range groupsByID {
-		if children, exists := parentToChildren[groupMap["id"].(uint)]; exists {
-			groupMap["pageGroups"] = children
-		}
+	for _, group := range pageGroups {
+		groupMap := convertPageGroupToMap(group)
+		recursiveFetchPageGroups(db, groupMap)
 		finalPageGroups = append(finalPageGroups, groupMap)
 	}
 
@@ -467,7 +474,6 @@ func GetPageGroup(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 
 	err := validate.Struct(req)
-
 	if err != nil {
 		logger.Error(err.Error())
 		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid request"})
@@ -476,13 +482,16 @@ func GetPageGroup(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 
 	var pageGroup models.PageGroup
 	if err := db.Preload("Pages", func(db *gorm.DB) *gorm.DB {
-		return db.Select("ID", "PageGroupID")
+		return db.Select("ID", "Title", "Slug", "PageGroupID", "Order", "DocumentationID")
 	}).First(&pageGroup, req.ID).Error; err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to fetch page group"})
 		return
 	}
 
-	SendJSONResponse(http.StatusOK, w, pageGroup)
+	groupMap := convertPageGroupToMap(pageGroup)
+	recursiveFetchPageGroups(db, groupMap)
+
+	SendJSONResponse(http.StatusOK, w, groupMap)
 }
 
 func EditPageGroup(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
