@@ -78,11 +78,11 @@ func EditUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 
 	type Request struct {
 		ID       uint   `json:"id" validate:"required"`
-		Username string `json:"username" validate:"optional,alpha"`
-		Email    string `json:"email" validate:"optional,email"`
-		Password string `json:"password" validate:"optional,string"`
-		Photo    string `json:"photo" validate:"optional,string"`
-		Admin    bool   `json:"admin" validate:"optional,boolean"`
+		Username string `json:"username" validate:"alpha"`
+		Email    string `json:"email" validate:"email"`
+		Password string `json:"password" validate:"string"`
+		Photo    string `json:"photo" validate:"string"`
+		Admin    bool   `json:"admin" validate:"boolean"`
 	}
 
 	var req Request
