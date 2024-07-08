@@ -40,7 +40,7 @@ export default function CreateUser() {
     console.log(status);
     if(status === 200){
       toastSuccess("User Created Successfully");
-      navigate('/dashboard/user-list')
+      navigate('/dashboard/admin/user-list')
     }
   } catch (err) {
     if (!err?.response) {

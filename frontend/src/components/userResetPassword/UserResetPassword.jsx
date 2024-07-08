@@ -14,12 +14,18 @@ export default function UserResetPassword() {
    
     const handleChangePassword = async (e) => {
         e.preventDefault();
+        if(!password){
+            toastWarning("Enter new password")
+            return;
+        }
+
         if(password !== confirmPasswod){
             toastWarning("Password and Confirm password miss match")
             return;
         }
 
         const {data, status} = await privateAxios.post('/auth/user/edit',{
+            id:Number(user_id),
             password:password
         })
         console.log(data);
