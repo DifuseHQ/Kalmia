@@ -20,6 +20,20 @@ export const AuthProvider = ({ children }) => {
     return null;
   });
 
+  const [userDetails , setUserDetails] = useState({})
+
+    const fetchUserDetails = async(user) => {
+          try{
+      const {data, status} = await privateAxios.get('/auth/users')
+      if(status === 200){
+        const filterUser = data.find((obj) => obj.ID.toString() === user.user_id);
+        setUserDetails(filterUser)
+      }
+    }catch(err){
+      console.log(err);
+    }
+  }
+
   const navigate = useNavigate();
 
   const [refresh, setRefresh] = useState(false);
@@ -35,7 +49,8 @@ export const AuthProvider = ({ children }) => {
         password,
       });
       if (status === 200) {
-        setUser(jwtDecode(data.token));
+        const decodedUser = jwtDecode(data.token);
+        setUser(decodedUser);
         Cookies.set("accessToken", JSON.stringify(data), {
           expires: 1,
           secure: true,
@@ -55,6 +70,14 @@ export const AuthProvider = ({ children }) => {
       }
     }
   };
+
+  
+  useEffect(() => {
+    if (user) {
+      fetchUserDetails(user);
+    }
+  }, [user]);
+  
 
   const logout = async () => {
     let accessToken = JSON.parse(Cookies.get("accessToken"));
@@ -136,7 +159,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     combineData();
-  }, [fetchPageGroups, fetchPage]);
+  }, [fetchPageGroups, fetchPage, refresh]);
 
   return (
     <AuthContext.Provider
@@ -152,6 +175,8 @@ export const AuthProvider = ({ children }) => {
         refreshData,
         deleteModal,
         setDeleteModal,
+        userDetails ,
+        setUserDetails
       }}
     >
       {children}

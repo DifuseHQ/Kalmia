@@ -10,9 +10,8 @@ export default function Sidebar() {
   const [documentation, setDocumentation] = useState([]);
   const [openDropdowns, setOpenDropdowns] = useState([]);
   const { setIsOpenModal } = useContext(ModalContext);
-  const { refresh } = useContext(AuthContext);
+  const { refresh, userDetails  } = useContext(AuthContext);
   const navigate = useNavigate();
-
 
   useEffect(() => {
     const fetchdata = async () => {
@@ -253,26 +252,42 @@ export default function Sidebar() {
           }
 
         </ul>
+
+        {userDetails && userDetails.Admin &&
         <ul class="pt-5 mt-5 space-y-2 border-t border-gray-200 dark:border-gray-700">
-          <li>
-            <button class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg transition duration-75 hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white group">
-              <svg
-                aria-hidden="true"
-                class="flex-shrink-0 w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-                xmlns="http://www.w3.org/2000/svg"
+        <li>
+        <Link to={`/dashboard/admin/user-list`}>
+              <button
+                type="button"
+                
+                class="flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-200 dark:text-white dark:hover:bg-gray-700"
+                aria-controls={``}
               >
-                <path
-                  fill-rule="evenodd"
-                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-2 0c0 .993-.241 1.929-.668 2.754l-1.524-1.525a3.997 3.997 0 00.078-2.183l1.562-1.562C15.802 8.249 16 9.1 16 10zm-5.165 3.913l1.58 1.58A5.98 5.98 0 0110 16a5.976 5.976 0 01-2.516-.552l1.562-1.562a4.006 4.006 0 001.789.027zm-4.677-2.796a4.002 4.002 0 01-.041-2.08l-.08.08-1.53-1.533A5.98 5.98 0 004 10c0 .954.223 1.856.619 2.657l1.54-1.54zm1.088-6.45A5.974 5.974 0 0110 4c.954 0 1.856.223 2.657.619l-1.54 1.54a4.002 4.002 0 00-2.346.033L7.246 4.668zM12 10a2 2 0 11-4 0 2 2 0 014 0z"
-                  clip-rule="evenodd"
-                ></path>
-              </svg>
-              <span class="ml-3">User Management</span>
-            </button>
-          </li>
-        </ul>
+             <svg xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0 w-6 h-6 text-gray-400 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 512 283.4"><path d="M417.22 240.9c15.67-1.72 29.89-9.47 35.23-23.8 41.62 26.61 59.55 9.73 59.55 66.3h-90.99c0-18.11-1.26-31.84-3.79-42.5zm-305.11 42.5c5.89-76.2 19.74-48.02 85.11-88.92 20.19 42.13 102.24 45.19 119.07 0 56.41 36.07 83.6 12.25 83.6 88.92H112.11zm100.52-92.24c-.87-1.13 2.28-8.89 3.02-10.14-8.54-7.6-15.28-15.27-16.72-31.05l-.92.02c-2.11-.02-4.15-.51-6.06-1.6-3.06-1.74-5.21-4.73-6.66-8.09-3.08-7.07-13.21-30.52 2.22-28.67-8.62-16.11 10.91-43.64-22.78-53.82 27.64-35.01 85.95-88.98 128.68-34.84 46.77 4.53 61.36 60.12 29.87 90.56 1.84.07 3.58.5 5.12 1.32 5.86 3.14 6.05 9.94 4.51 15.65-1.52 4.77-3.46 8-5.28 12.65-2.22 6.28-5.46 7.45-11.72 6.77-.32 15.53-7.49 23.15-17.15 32.26l2.64 8.95c-12.94 27.46-66.72 28.57-88.77.03zM0 283.4c4.34-56.23 12.43-36.12 60.67-66.3 6.28 13.11 20.68 21.09 36.16 23.44-2.53 9.96-4.3 22.89-5.66 40.13-.11.89-.17 1.8-.17 2.73H0zm72.04-68.75c-.65-.83 1.68-6.56 2.23-7.48-6.3-5.61-11.28-11.27-12.34-22.91l-.68.01c-1.56-.02-3.07-.38-4.48-1.18-2.25-1.28-3.84-3.49-4.91-5.97-2.27-5.21-9.74-22.52 1.64-21.15-6.36-11.89 8.05-32.21-16.81-39.72 20.4-25.83 63.42-65.65 94.95-25.71 34.52 3.35 45.28 44.37 22.04 66.83 1.36.05 2.65.36 3.78.97 4.32 2.32 4.47 7.34 3.33 11.55-1.12 3.52-2.55 5.9-3.89 9.34-1.64 4.63-4.03 5.49-8.66 4.99-.1 5.32-1.3 9.38-3.27 12.87l-2.96 1.17c-21.79 8.53-34.18 13.39-41.66 31.45-10.92-1.42-21.61-6.38-28.31-15.06zm297.1-18.3c-1.67-3.25-2.84-7.13-3.29-12.09l-.68.01c-1.56-.02-3.07-.38-4.47-1.18-2.26-1.28-3.85-3.49-4.92-5.97-2.27-5.21-9.74-22.52 1.65-21.15-6.37-11.89 8.04-32.21-16.82-39.72 20.4-25.83 63.42-65.65 94.96-25.71 34.51 3.35 45.28 44.37 22.04 66.83 1.36.05 2.64.36 3.78.97 4.32 2.32 4.46 7.34 3.32 11.55-1.12 3.52-2.55 5.9-3.89 9.34-1.64 4.63-4.03 5.49-8.65 4.99-.24 11.46-5.53 17.08-12.66 23.81l1.95 6.6c-4.46 9.47-15.51 14.69-27.67 15.42-8.04-19.6-22.85-25.57-44.65-33.7z"/></svg>
+                <span class="flex-1 ml-3 text-left whitespace-nowrap">
+                 User Management
+                </span>
+                {/* {val.pageGroup && (
+                  <svg
+                    aria-hidden="true"
+                    class="w-6 h-6"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                      clip-rule="evenodd"
+                    ></path>
+                  </svg>
+                )} */}
+              </button>
+            </Link>
+        </li>
+      </ul>
+        }
+        
       </div>
     </motion.aside>
     </AnimatePresence>

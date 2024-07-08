@@ -1,5 +1,5 @@
 import { initFlowbite } from "flowbite";
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { privateAxios } from "../../api/axios";
 import ClipLoader from "react-spinners/ClipLoader";
@@ -18,7 +18,7 @@ export default function Documentation() {
   const [searchParam] = useSearchParams();
   const doc_id = searchParam.get("id");
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); 
 
   //Documentation CRUD
   const [documentData, setDocumentData] = useState([]);
@@ -97,7 +97,7 @@ export default function Documentation() {
         } else if (err.response?.status === 401) {
           toastError(err.response.data.error);
         } else {
-          toastError("Login Failed");
+          toastError(err.response.data.message);
         }
       }
     };
@@ -244,6 +244,9 @@ export default function Documentation() {
       toastError(err.response.data.message);
     }
   };
+
+
+
 
   return (
     <AnimatePresence class="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5">
@@ -467,6 +470,9 @@ export default function Documentation() {
             <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
               <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                 <tr>
+                  <th >
+
+                  </th>
                   <th scope="col" class="px-4 py-3">
                     Title
                   </th>
@@ -515,12 +521,22 @@ export default function Documentation() {
                 ) : (
                   <>
                     {paginatedItems &&
-                      paginatedItems.map((obj) => (
+                      paginatedItems.map((obj,index) => (
+                        
                         <tr
                           className="border-b dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700"
-                          key={obj.id}
+                          key={index}
                         >
+                          <th scope="row" className="items-center w-5 cursor-pointer gap-2 px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white"><svg
+                              class="w-6 h-6 cursor-move text-yellow-400 dark:text-white"
+                             xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="100" height="100" viewBox="0 0 50 50">
+                          <path d="M 3 9 A 1.0001 1.0001 0 1 0 3 11 L 47 11 A 1.0001 1.0001 0 1 0 47 9 L 3 9 z M 3 24 A 1.0001 1.0001 0 1 0 3 26 L 47 26 A 1.0001 1.0001 0 1 0 47 24 L 3 24 z M 3 39 A 1.0001 1.0001 0 1 0 3 41 L 47 41 A 1.0001 1.0001 0 1 0 47 39 L 3 39 z"></path>
+                          </svg></th>
+
                           {obj.name ? (
+                            <>
+                         
+
                             <Link
                               to={`/dashboard/documentation/pagegroup?id=${doc_id}&pagegroup_id=${obj.id}`}
                             >
@@ -546,7 +562,10 @@ export default function Documentation() {
                                 {obj.name || obj.title}
                               </th>
                             </Link>
+                            </>
                           ) : (
+
+                            <>
                             <Link
                               to={`/dashboard/documentation/edit-page?id=${doc_id}&dir=true&page_id=${obj.id}`}
                             >
@@ -574,6 +593,7 @@ export default function Documentation() {
                                 {obj.title}
                               </th>
                             </Link>
+                            </>
                           )}
 
                           {obj.name ? (

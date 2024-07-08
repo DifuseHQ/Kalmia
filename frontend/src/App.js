@@ -18,6 +18,11 @@ import LoginAuth from "./components/LoginAuth";
 import Error from "./components/error/Error";
 import Error500 from "./components/error500/Error500";
 import IntroPage from "./components/IntroPage";
+import UserList from "./components/userList/UserList";
+import CreateUser from "./components/createUser/CreateUser";
+import AdminAuth from "./components/AdminAuth";
+import UserProfile from "./components/userProfile/UserProfile";
+import UserResetPassword from "./components/userResetPassword/UserResetPassword";
 
 export const ModalContext = createContext();
 
@@ -49,7 +54,16 @@ function App() {
                 <Route path={`documentation`} element={<Documentation />} />
                 <Route path={'documentation/pagegroup'} element={<PageGrouptable />} />
                 <Route path="documentation/create-page" element={<CreatepageModal/>} />
+                
                 <Route path="documentation/edit-page" element={<EditPage/>} />
+                
+                <Route path="user-profile" element={<UserProfile/>} />
+                <Route path="user-changePassword" element={<UserResetPassword/>} />
+
+                  <Route element={<AdminAuth/>}>
+                      <Route  path="admin/user-list" element={<UserList/>}/>
+                      <Route  path="admin/create-user" element={<CreateUser/>}/>
+                  </Route>
               </Route>
 
             </Route>

@@ -128,7 +128,8 @@ export default function Navbar() {
                   class="hidden z-50 my-4 w-56 text-base list-none bg-white  divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600 rounded-xl"
                   id="dropdown"
                 >
-                  <div class="py-3 px-4 hover:bg-gray-300 cursor-pointer">
+                  <Link to="/dashboard/user-profile">
+                  <div class="py-3 px-4 hover:bg-gray-300 cursor-pointer" >
                     <span class="block text-sm font-semibold text-gray-900 dark:text-white">
                       {user.username}
                     </span>
@@ -136,7 +137,7 @@ export default function Navbar() {
                       {user.email}
                     </span>
                   </div>
-
+                  </Link>
                   <ul
                     class="py-1 text-gray-700 dark:text-gray-300"
                     aria-labelledby="dropdown"

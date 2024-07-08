@@ -25,7 +25,7 @@ export const privateAxios = axios.create({
   });
     
   privateAxios.interceptors.response.use(function (response) {
-    console.log("response is working :" ,response);
+    // console.log("response is working :" ,response);
    if(!response){
     console.log("sorry server off");
    }
