@@ -77,9 +77,10 @@ func EditUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 
 	type Request struct {
-		Username string `json:"username" validate:"required,alpha"`
-		Email    string `json:"email" validate:"required,email"`
-		Password string `json:"password" validate:"required"`
+		ID       uint   `json:"id" validate:"required"`
+		Username string `json:"username" validate:"optional,alpha"`
+		Email    string `json:"email" validate:"optional,email"`
+		Password string `json:"password" validate:"optional,string"`
 		Photo    string `json:"photo" validate:"optional,string"`
 		Admin    bool   `json:"admin" validate:"optional,boolean"`
 	}
@@ -101,7 +102,7 @@ func EditUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 
 	var user models.User
-	if err := db.Where("username = ?", req.Username).First(&user).Error; errors.Is(err, gorm.ErrRecordNotFound) {
+	if err := db.Where("id = ?", req.ID).First(&user).Error; errors.Is(err, gorm.ErrRecordNotFound) {
 		SendJSONResponse(http.StatusNotFound, w, map[string]string{"status": "error", "message": "User not found"})
 		return
 	}
@@ -117,7 +118,9 @@ func EditUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		user.Password = hashedPassword
 	}
 
-	user.Email = req.Email
+	if req.Email != "" {
+		user.Email = req.Email
+	}
 
 	if req.Photo != "" {
 		user.Photo = req.Photo
@@ -320,6 +323,7 @@ func CreateJWT(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		"email":    claims.Email,
 		"username": claims.Username,
 		"photo":    claims.Photo,
+		"userId":   claims.UserId,
 	})
 }
 

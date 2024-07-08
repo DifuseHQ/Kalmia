@@ -94,6 +94,7 @@ func SetupBasicData(db *gorm.DB, admins []config.User) {
 	docSite = models.Documentation{
 		Name:        "Dummy Documentation Site",
 		Description: "A sample documentation site for demonstration purposes.",
+		ID:          1,
 	}
 
 	if err := db.FirstOrCreate(&docSite, models.Documentation{Name: docSite.Name}).Error; err != nil {
@@ -102,6 +103,16 @@ func SetupBasicData(db *gorm.DB, admins []config.User) {
 	}
 
 	uintPtr := func(i uint) *uint { return &i }
+
+	strayPage := models.Page{
+		Title:           "Stray Page",
+		Content:         "This is a stray page without a parent group.",
+		Slug:            "stray-page",
+		DocumentationID: docSite.ID,
+		Order:           uintPtr(0),
+	}
+
+	db.Create(&strayPage)
 
 	pageGroups := []struct {
 		Name     string
