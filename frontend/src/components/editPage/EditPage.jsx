@@ -1,19 +1,21 @@
 import { Editor } from "primereact/editor";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { getTokenFromCookies } from "../../utlis/CookiesManagement";
 import {privateAxios} from "../../api/axios";
 import { toastError, toastSuccess, toastWarning } from "../../utlis/toast";
 import DeleteModal from "../deleteModal/DeleteModal";
 import { AnimatePresence , motion} from "framer-motion";
+import { AuthContext } from "../../Context/AuthContext";
 
 export default function EditPage() {
   const [searchParams] = useSearchParams();
   const doc_id = searchParams.get("id");
   const dir = searchParams.get("dir");
-  const page_id = searchParams.get("page_id");
+  const page_id = searchParams.get("page_id"); 
   const pagegroup_id = searchParams.get("pagegroup_id");
   const group_name = searchParams.get("group_name");
+  const { refreshData, } = useContext(AuthContext)
 
   const token = getTokenFromCookies();
 
@@ -60,13 +62,7 @@ export default function EditPage() {
   }, [page_id, token]); 
 
   const handleEdit = async () => {
-    if (
-      pageData.title !== tempPageData.title ||
-      pageData.slug !== tempPageData.slug ||
-      pageData.content !== tempPageData.content
-    ) {
-      toastWarning("Are you sure you want to edit");
-    }
+    
     try {
       const { data, status } = await privateAxios.post(
         "/docs/page/edit",
@@ -80,9 +76,11 @@ export default function EditPage() {
       if (status === 200) {
         toastSuccess(data.message);
         if (dir === "true") {
+          refreshData()
           navigate(`/dashboard/documentation?id=${doc_id}`);
         } else {
           navigate(
+            refreshData()
             `/dashboard/documentation/pagegroup?id=${doc_id}&pagegroup_id=${pagegroup_id}`
           );
         }
@@ -109,8 +107,10 @@ export default function EditPage() {
       if (status === 200) {
         toastSuccess(data.message);
         if (dir === "true") {
+          refreshData()
           navigate(`/dashboard/documentation?id=${doc_id}`);
         } else {
+          refreshData()
           navigate(
             `/dashboard/documentation/pagegroup?id=${doc_id}&pagegroup_id=${pagegroup_id}`
           );
@@ -123,8 +123,11 @@ export default function EditPage() {
     }
   };
 
+
+
   return (
     <AnimatePresence>
+
       {isDelete && (
         <DeleteModal
           cancelModal={handleCloseDelete}
@@ -357,6 +360,7 @@ export default function EditPage() {
           </div>
         </div>
       </motion.div>
+
     </AnimatePresence>
   );
 }

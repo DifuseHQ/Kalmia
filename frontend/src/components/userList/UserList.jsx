@@ -76,10 +76,11 @@ export default function UserList() {
         username: username,
       });
       if (status === 200) {
+        refreshData();
         toastSuccess("User deleted successfully");
         setIsDeleteModal(false);
-        navigate("/dashboard/user-list");
-        refreshData();
+        navigate("/dashboard/admin/user-list");
+        
       }
     } catch (err) {
       if (!err?.response) {

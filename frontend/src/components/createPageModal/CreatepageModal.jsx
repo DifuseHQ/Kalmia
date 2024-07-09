@@ -1,5 +1,5 @@
 import { initFlowbite } from "flowbite";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import "primereact/resources/themes/lara-light-indigo/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
@@ -8,12 +8,14 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toastError, toastSuccess, toastWarning } from "../../utlis/toast";
 import {privateAxios} from "../../api/axios";
 import { AnimatePresence,motion } from "framer-motion";
+import { AuthContext } from "../../Context/AuthContext";
 
 export default function CreatepageModal() {
   const [searchParam] = useSearchParams();
   const doc_id = searchParam.get("id");
   const dir = searchParam.get("dir");
   const pagegroup_id = searchParam.get("pagegroup_id");
+  const { refreshData, } = useContext(AuthContext)
 
   const navigate = useNavigate();
   // console.log("doc id" , doc_id);
@@ -42,6 +44,7 @@ export default function CreatepageModal() {
           });
 
         if (status === 200) {
+          refreshData() 
           toastSuccess(data.message);
           navigate(`/dashboard/documentation?id=${doc_id}`);
         } else {
@@ -63,6 +66,7 @@ export default function CreatepageModal() {
           });
 
         if (status === 200) {
+          refreshData();
           toastSuccess(data.message);
           navigate(
             `/dashboard/documentation/pagegroup?id=${doc_id}&pagegroup_id=${pagegroup_id}`
