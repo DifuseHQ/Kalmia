@@ -2,20 +2,20 @@ import { Editor } from "primereact/editor";
 import React, { useContext, useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { getTokenFromCookies } from "../../utlis/CookiesManagement";
-import { toastError, toastSuccess, toastWarning } from "../../utlis/toast";
+import { toastError, toastSuccess } from "../../utlis/toast";
 import DeleteModal from "../deleteModal/DeleteModal";
-import { AnimatePresence , motion} from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { AuthContext } from "../../Context/AuthContext";
-import instance from "../../Context/AxiosInstance";
+import instance from "../../api/AxiosInstance";
 
 export default function EditPage() {
   const [searchParams] = useSearchParams();
   const doc_id = searchParams.get("id");
   const dir = searchParams.get("dir");
-  const page_id = searchParams.get("page_id"); 
+  const page_id = searchParams.get("page_id");
   const pagegroup_id = searchParams.get("pagegroup_id");
   const group_name = searchParams.get("group_name");
-  const { refreshData, } = useContext(AuthContext)
+  const { refreshData } = useContext(AuthContext);
 
   const token = getTokenFromCookies();
 
@@ -44,49 +44,45 @@ export default function EditPage() {
   useEffect(() => {
     const fetchdata = async () => {
       try {
-        const { data, status } = await instance.post(
-          `docs/page`,
-          { id: Number(page_id) });
-        if (status === 200) {
-          setPageData(data);
-          setTempPageData(data);
-        } 
+        const response = await instance.post(`docs/page`, {
+          id: Number(page_id),
+        });
+        if (response?.status === 200) {
+          setPageData(response?.data);
+          setTempPageData(response?.data);
+        }
       } catch (err) {
         console.error(err);
-        toastError(err.response.data.message)
+        toastError(err?.response?.data?.message);
       }
     };
 
     fetchdata();
-  }, [page_id, token]); 
+  }, [page_id, token]);
 
   const handleEdit = async () => {
-    
     try {
-      const { data, status } = await instance.post(
-        "/docs/page/edit",
-        {
-          title: pageData.title,
-          slug: pageData.slug,
-          content: pageData.content,
-          id: Number(page_id),
-        });
+      const response = await instance.post("/docs/page/edit", {
+        title: pageData?.title,
+        slug: pageData?.slug,
+        content: pageData?.content,
+        id: Number(page_id),
+      });
 
-      if (status === 200) {
-        toastSuccess(data.message);
+      if (response?.status === 200) {
+        toastSuccess(response?.data.message);
         if (dir === "true") {
-          refreshData()
+          refreshData();
           navigate(`/dashboard/documentation?id=${doc_id}`);
         } else {
-          navigate(
-            refreshData()
-            `/dashboard/documentation/pagegroup?id=${doc_id}&pagegroup_id=${pagegroup_id}`
+          refreshData()
+          navigate(`/dashboard/documentation/pagegroup?id=${doc_id}&pagegroup_id=${pagegroup_id}`
           );
         }
       }
     } catch (err) {
       console.error(err);
-      toastError(err.response.data.message)
+      toastError(err?.response?.data?.message);
     }
   };
 
@@ -96,36 +92,30 @@ export default function EditPage() {
 
   const handleDelete = async () => {
     try {
-      const { data, status } = await instance.post(
-        "docs/page/delete",
-        {
-          id: Number(page_id),
-        });
-
-      if (status === 200) {
-        toastSuccess(data.message);
+      const response = await instance.post("docs/page/delete", {
+        id: Number(page_id),
+      });
+console.log("ok");
+      if (response?.status === 200) {
+        toastSuccess(response?.data?.message);
         if (dir === "true") {
-          refreshData()
+          refreshData();
           navigate(`/dashboard/documentation?id=${doc_id}`);
         } else {
-          refreshData()
+          refreshData();
+          console.log("correct");
           navigate(
             `/dashboard/documentation/pagegroup?id=${doc_id}&pagegroup_id=${pagegroup_id}`
           );
         }
-      } else {
-        console.log("Error found :", data.error);
       }
     } catch (err) {
-      toastError(err.response.data.message);
+      toastError(err?.response?.data?.message);
     }
   };
 
-
-
   return (
     <AnimatePresence>
-
       {isDelete && (
         <DeleteModal
           cancelModal={handleCloseDelete}
@@ -136,11 +126,13 @@ export default function EditPage() {
         />
       )}
       <motion.nav
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{delay:0.1}}
-      className="flex mb-5" aria-label="Breadcrumb">
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ delay: 0.1 }}
+        className="flex mb-5"
+        aria-label="Breadcrumb"
+      >
         <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
           <li class="inline-flex items-center">
             <p class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
@@ -234,13 +226,14 @@ export default function EditPage() {
       </motion.nav>
 
       <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{delay:0.1}}
-      class=" lg:mt-0 lg:col-span-5 flex justify-end mr-5 gap-3">
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ delay: 0.1 }}
+        class=" lg:mt-0 lg:col-span-5 flex justify-end mr-5 gap-3"
+      >
         <motion.button
-        whileHover={{scale:1.1}}
+          whileHover={{ scale: 1.1 }}
           onClick={() => setIsDelete(!isDelete)}
           className="flex cursor-pointer items-center bg-red-600 rounded text-white px-2"
         >
@@ -266,10 +259,10 @@ export default function EditPage() {
       </motion.div>
 
       <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{delay:0.1}}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ delay: 0.1 }}
         id="defaultModal"
         tabindex="-1"
         aria-hidden="true"
@@ -358,7 +351,6 @@ export default function EditPage() {
           </div>
         </div>
       </motion.div>
-
     </AnimatePresence>
   );
 }

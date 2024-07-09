@@ -6,16 +6,16 @@ import "primeicons/primeicons.css";
 import { Editor } from "primereact/editor";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toastError, toastSuccess, toastWarning } from "../../utlis/toast";
-import { AnimatePresence,motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { AuthContext } from "../../Context/AuthContext";
-import instance from "../../Context/AxiosInstance";
+import instance from "../../api/AxiosInstance";
 
 export default function CreatepageModal() {
   const [searchParam] = useSearchParams();
   const doc_id = searchParam.get("id");
   const dir = searchParam.get("dir");
   const pagegroup_id = searchParam.get("pagegroup_id");
-  const { refreshData, } = useContext(AuthContext)
+  const { refreshData } = useContext(AuthContext);
 
   const navigate = useNavigate();
   // console.log("doc id" , doc_id);
@@ -34,60 +34,56 @@ export default function CreatepageModal() {
 
     if (dir === "true") {
       try {
-        const { data, status } = await instance.post(
-          "docs/page/create",
-          {
-            title: title,
-            slug: slug,
-            content: content,
-            documentationSiteId: Number(doc_id),
-          });
+        const response = await instance.post("docs/page/create", {
+          title: title,
+          slug: slug,
+          content: content,
+          documentationSiteId: Number(doc_id),
+        });
 
-        if (status === 200) {
-          refreshData() 
-          toastSuccess(data.message);
+        if (response?.status === 200) {
+          refreshData();
+          toastSuccess(response?.data?.message);
           navigate(`/dashboard/documentation?id=${doc_id}`);
-        } else {
-          console.log("Error found :", data.error);
         }
       } catch (err) {
         console.error(err);
-        toastError(err.response.data.message)
+        toastError(err?.response?.data?.message);
       }
     } else if (dir === "false") {
       try {
-        const { data, status } = await instance.post(
-          "docs/page/create",
-          {
-            title: title,
-            slug: slug,
-            content: content,
-            documentationSiteId: Number(doc_id),
-            pageGroupId: Number(pagegroup_id),
-          });
+        const response = await instance.post("docs/page/create", {
+          title: title,
+          slug: slug,
+          content: content,
+          documentationSiteId: Number(doc_id),
+          pageGroupId: Number(pagegroup_id),
+        });
 
-        if (status === 200) {
+        if (response?.status === 200) {
           refreshData();
-          toastSuccess(data.message);
+          toastSuccess(response?.data?.message);
           navigate(
             `/dashboard/documentation/pagegroup?id=${doc_id}&pagegroup_id=${pagegroup_id}`
           );
-        } else {
-          console.log("Error found :", data.error);
         }
       } catch (err) {
         console.error(err);
-       toastError(err.response.data.message)
+        toastError(err?.response?.data?.message);
       }
     }
   };
 
   return (
     <AnimatePresence>
-      <motion.nav initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }} 
-          transition={{delay:0.1}} className="flex mb-5" aria-label="Breadcrumb">
+      <motion.nav
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ delay: 0.1 }}
+        className="flex mb-5"
+        aria-label="Breadcrumb"
+      >
         <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
           <li class="inline-flex items-center">
             <Link
@@ -184,10 +180,10 @@ export default function CreatepageModal() {
       </motion.nav>
 
       <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }} 
-      transition={{delay:0.1}}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ delay: 0.1 }}
         id="defaultModal"
         tabindex="-1"
         aria-hidden="true"

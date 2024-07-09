@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import React, { useState } from "react";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 const initialData = [
-  { id: '1', name: 'Row 1', title: 'Title 1', slug: 'slug1' },
-  { id: '2', name: 'Row 2', title: 'Title 2', slug: 'slug2' },
-  { id: '3', name: 'Row 3', title: 'Title 3', slug: 'slug3' },
-  { id: '4', name: 'Row 4', title: 'Title 4', slug: 'slug4' },
+  { id: "1", name: "Row 1", title: "Title 1", slug: "slug1" },
+  { id: "2", name: "Row 2", title: "Title 2", slug: "slug2" },
+  { id: "3", name: "Row 3", title: "Title 3", slug: "slug3" },
+  { id: "4", name: "Row 4", title: "Title 4", slug: "slug4" },
 ];
 
 export default function TableWithDragAndDrop() {
@@ -50,7 +50,9 @@ export default function TableWithDragAndDrop() {
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
-                        className={`border ${snapshot.isDragging ? 'bg-gray-800' : 'bg-white'}`}
+                        className={`border ${
+                          snapshot.isDragging ? "bg-gray-800" : "bg-white"
+                        }`}
                       >
                         <td className="px-4 py-2">{obj.id}</td>
                         <td className="px-4 py-2">{obj.title}</td>

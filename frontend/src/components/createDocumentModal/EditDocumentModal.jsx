@@ -1,4 +1,4 @@
-import { AnimatePresence , motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import React, { useEffect, useState } from "react";
 
 export default function EditDocumentModal({
@@ -7,7 +7,7 @@ export default function EditDocumentModal({
   closeModal,
   updateData,
   heading,
-  id
+  id,
 }) {
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
@@ -20,10 +20,11 @@ export default function EditDocumentModal({
   return (
     <AnimatePresence>
       <motion.div
-       initial={{ opacity: 0 }}
-       animate={{ opacity: 1 }}
-       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-50">
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-50"
+      >
         <div className="relative p-4 w-full max-w-xl">
           <div className="relative p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
             <div className="flex justify-between items-center mb-4 sm:mb-5 dark:border-gray-600">
@@ -102,7 +103,7 @@ export default function EditDocumentModal({
               )}
 
               <button
-                onClick={() => updateData(editTitle, editDescription ,id)}
+                onClick={() => updateData(editTitle, editDescription, id)}
                 type="button"
                 class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
               >

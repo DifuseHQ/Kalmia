@@ -24,60 +24,59 @@ import UserProfile from "./components/userProfile/UserProfile";
 import UserResetPassword from "./components/userResetPassword/UserResetPassword";
 export const ModalContext = createContext();
 
-
 function App() {
-
-
   const [isOpenModal, setIsOpenModal] = useState(false);
 
   return (
     <Router>
-     
       <AuthProvider>
+        <ModalContext.Provider value={{ isOpenModal, setIsOpenModal }}>
+          <ToastContainer />
+          <Routes>
+            <Route path="/test" element={<Test />} />
 
- 
-          <ModalContext.Provider value={{ isOpenModal, setIsOpenModal }}>
-            <ToastContainer />
-            <Routes>
-              
-              <Route path="/test" element={<Test />} />
-
-            <Route element={<LoginAuth/>}>
-                <Route path="/" element={<LoginPage />} />
-                <Route path="/login" element={<LoginPage />} />
+            <Route element={<LoginAuth />}>
+              <Route path="/" element={<LoginPage />} />
+              <Route path="/login" element={<LoginPage />} />
             </Route>
 
-
-           <Route element={<RequireAuth/>}>
-
+            <Route element={<RequireAuth />}>
               <Route path="/dashboard" element={<DashboardPage />}>
-                <Route index element={ <IntroPage/> }/>
-                <Route path="create-documentation" element={<CreateDocModal />}/>
+                <Route index element={<IntroPage />} />
+                <Route
+                  path="create-documentation"
+                  element={<CreateDocModal />}
+                />
                 <Route path="edit-documentation" element={<CreateDocModal />} />
                 <Route path={`documentation`} element={<Documentation />} />
-                <Route path={'documentation/pagegroup'} element={<PageGrouptable />} />
-                <Route path="documentation/create-page" element={<CreatepageModal/>} />
-                
-                <Route path="documentation/edit-page" element={<EditPage/>} />
-                
-                <Route path="user-profile" element={<UserProfile/>} />
-                <Route path="user-changePassword" element={<UserResetPassword/>} />
+                <Route
+                  path={"documentation/pagegroup"}
+                  element={<PageGrouptable />}
+                />
+                <Route
+                  path="documentation/create-page"
+                  element={<CreatepageModal />}
+                />
 
-                  <Route element={<AdminAuth/>}>
-                      <Route  path="admin/user-list" element={<UserList/>}/>
-                      <Route  path="admin/create-user" element={<CreateUser/>}/>
-                  </Route>
+                <Route path="documentation/edit-page" element={<EditPage />} />
+
+                <Route path="user-profile" element={<UserProfile />} />
+                <Route
+                  path="user-changePassword"
+                  element={<UserResetPassword />}
+                />
+
+                <Route element={<AdminAuth />}>
+                  <Route path="admin/user-list" element={<UserList />} />
+                  <Route path="admin/create-user" element={<CreateUser />} />
+                </Route>
               </Route>
-
             </Route>
             <Route path="/server-down" element={<Error500 />} />
-            <Route path="*" element={<Error/>} />
-            </Routes>
-          </ModalContext.Provider>
-  
- 
+            <Route path="*" element={<Error />} />
+          </Routes>
+        </ModalContext.Provider>
       </AuthProvider>
-   
     </Router>
   );
 }

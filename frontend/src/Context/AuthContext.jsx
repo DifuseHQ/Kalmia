@@ -1,18 +1,15 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
-import axios, { privateAxios } from "../api/axios";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toastError, toastSuccess } from "../utlis/toast";
 import { jwtDecode } from "jwt-decode";
 import Cookies from "js-cookie";
 import { removeCookies } from "../utlis/CookiesManagement";
-import instance from "./AxiosInstance";
+import instance from "../api/AxiosInstance";
 
 export const AuthContext = createContext();
 
-
-
 export const AuthProvider = ({ children }) => {
-  
   const [user, setUser] = useState(() => {
     if (Cookies.get("accessToken")) {
       let tokenData = JSON.parse(Cookies.get("accessToken"));
@@ -22,20 +19,7 @@ export const AuthProvider = ({ children }) => {
     return null;
   });
 
-  const [userDetails , setUserDetails] = useState({})
-
-    const fetchUserDetails = async(user) => {
-          try{
-      const {data, status} = await instance.get('/auth/users')
-      if(status === 200){
-        const filterUser = data.find((obj) => obj.ID.toString() === user.user_id);
-        setUserDetails(filterUser)
-      }
-    }catch(err){
-      console.error(err);
-       toastError(err.response.data.message)
-    }
-  }
+  const [userDetails, setUserDetails] = useState({});
 
   const navigate = useNavigate();
 
@@ -47,14 +31,14 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      const { data, status } = await axios.post("/auth/jwt/create", {
+      const response = await axios.post("http://[::1]:2727/auth/jwt/create", {
         username,
         password,
       });
-      if (status === 200) {
-        const decodedUser = jwtDecode(data.token);
+      if (response?.status === 200) {
+        const decodedUser = jwtDecode(response?.data?.token);
         setUser(decodedUser);
-        Cookies.set("accessToken", JSON.stringify(data), {
+        Cookies.set("accessToken", JSON.stringify(response?.data), {
           expires: 1,
           secure: true,
         });
@@ -62,26 +46,43 @@ export const AuthProvider = ({ children }) => {
         navigate("/dashboard", { replace: true });
       }
     } catch (err) {
-      console.error(err)
-      toastError(err.response.data.message) 
+      console.error(err);
+      toastError(err?.response?.data?.message);
     }
   };
 
-  
   useEffect(() => {
+    const fetchUserDetails = async (user) => {
+      try {
+        const response = await instance.get("/auth/users");
+        if (response?.status === 200) {
+          const filterUser = response?.data.find(
+            (obj) => obj?.ID.toString() === user?.user_id
+          );
+          setUserDetails(filterUser);
+        }
+      } catch (err) {
+        if (!err.response) {
+          navigate("/server-down");
+          return;
+        }
+        console.error(err);
+        toastError(err?.response?.data?.message);
+      }
+    };
+
     if (user) {
       fetchUserDetails(user);
     }
-  }, [user]);
-  
+  }, [user, navigate]);
 
   const logout = async () => {
     let accessToken = JSON.parse(Cookies.get("accessToken"));
     try {
-      const { data, status } = await instance.post("/auth/jwt/revoke", {
+      const response = await instance.post("/auth/jwt/revoke", {
         token: accessToken.token,
       });
-      if (status === 200) {
+      if (response?.status === 200) {
         removeCookies();
         toastSuccess("Logout Succesfully");
         setUser(null);
@@ -98,7 +99,7 @@ export const AuthProvider = ({ children }) => {
       //   toastError(err.response.data.message);
       // }
       console.error(err);
-      toastError(err.response.data.message)
+      toastError(err?.response?.data?.message);
     }
   };
 
@@ -112,18 +113,22 @@ export const AuthProvider = ({ children }) => {
         if (!user) return;
 
         const responsePageGroups = await instance.get("/docs/page-groups");
-        setFetchPageGroup(responsePageGroups.data);
+        setFetchPageGroup(responsePageGroups?.data);
 
         const responsePages = await instance.get("/docs/pages");
-        setFetchPage(responsePages.data);
+        setFetchPage(responsePages?.data);
       } catch (err) {
+        if (!err.response) {
+          navigate("/server-down");
+          return;
+        }
         console.error(err);
-        toastError(err.response.data.message)
+        toastError(err?.response?.data?.message);
       }
     };
 
     fetchData();
-  }, [user, refresh]);
+  }, [user, refresh, navigate]);
 
   useEffect(() => {
     const combineData = () => {
@@ -160,58 +165,60 @@ export const AuthProvider = ({ children }) => {
     combineData();
   }, [fetchPageGroups, fetchPage, refresh]);
 
-  const validateToken = async() => {
-    try{
+  const validateToken = async () => {
+    try {
       let accessToken = JSON.parse(Cookies.get("accessToken"));
-      const {data, status } = await instance.post('/auth/jwt/validate',{
-        token:accessToken.token
-      })
-
-      if(status === 200){
-        console.log(data);
-      }
-    }catch(err){
-      console.error(err);
-      toastError(err.response.data.message)
-    }
-  }
-
-  const refreshToken = async() =>{
-    try{
-    let accessToken = JSON.parse(Cookies.get("accessToken"));
-   const token =accessToken.token;
-    const { data, status } = await axios.post('/auth/jwt/refresh', {
-      token: token
-    },{
-      headers:{
-        "Content-Type":"application/json",
-        Authorization:`Bearer ${accessToken.token}`
-      }
-    });
-
-    if (status === 200) {
-      console.log('Token refersh success');
-      console.log('Token refreshed:', data);
-      Cookies.set("accessToken", JSON.stringify(data), {
-        expires: 1,
-        secure: true,
+      const response = await instance.post("/auth/jwt/validate", {
+        token: accessToken.token,
       });
-      // Update the accessToken in cookies or state
-      // Example assuming data contains accessToken and refreshToken
-     
-    } 
-  }catch(err){
-    console.error(err);
-    toastError(err.response.data.message)
-  }
-  }
- 
+
+      if (response?.status === 200) {
+        console.log(response?.data);
+      }
+    } catch (err) {
+      console.error(err);
+      toastError(err?.response?.data?.message);
+    }
+  };
+
+  const refreshToken = async () => {
+    try {
+      let accessToken = JSON.parse(Cookies.get("accessToken"));
+      const token = accessToken?.token;
+      const response = await axios.post(
+        "/auth/jwt/refresh",
+        {
+          token: token,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken.token}`,
+          },
+        }
+      );
+
+      if (response?.status === 200) {
+        console.log("Token refersh success");
+        console.log("Token refreshed:", response?.data);
+        Cookies.set("accessToken", JSON.stringify(response?.data), {
+          expires: 1,
+          secure: true,
+        });
+        // Update the accessToken in cookies or state
+        // Example assuming data contains accessToken and refreshToken
+      }
+    } catch (err) {
+      console.error(err);
+      toastError(err?.response?.data?.message);
+    }
+  };
+
   useEffect(() => {
     const interval = setInterval(() => {
       const validateToken = async () => {
         // try {
         //   let accessToken = Cookies.get("accessToken");
-
         //   if (!accessToken) {
         //     Cookies.remove('accessToken');
         //     console.log("from auth side");
@@ -220,22 +227,17 @@ export const AuthProvider = ({ children }) => {
         //     clearInterval(interval); // Stop the interval
         //     return;
         //   }
-
         //   accessToken = JSON.parse(accessToken);
         //   const { data, status } = await privateAxios.post('/auth/jwt/validate', {
         //     token: accessToken.token,
         //   });
-
         //   if (status === 200) {
         //     const expiryDateString = data.expiry.replace(/(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}).*/, '$1');
         //     const expiryDate = new Date(expiryDateString);
         //     const currentTime = new Date();
-
         //     const timeDifference = expiryDate.getTime() - currentTime.getTime();
         //     const oneHourInMilliseconds = 4 * 60 * 1000;
-
         //     const isExpiryWithinOneHour = timeDifference < oneHourInMilliseconds;
-      
         //     if (isExpiryWithinOneHour) {
         //       refreshToken();
         //     }
@@ -252,8 +254,6 @@ export const AuthProvider = ({ children }) => {
     return () => clearInterval(interval);
   }, [navigate]);
 
-
-
   return (
     <AuthContext.Provider
       value={{
@@ -268,21 +268,13 @@ export const AuthProvider = ({ children }) => {
         refreshData,
         deleteModal,
         setDeleteModal,
-        userDetails ,
+        userDetails,
         setUserDetails,
         validateToken,
-        refreshToken
+        refreshToken,
       }}
     >
       {children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 };

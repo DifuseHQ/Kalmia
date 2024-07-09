@@ -1,33 +1,31 @@
-import React, {  useEffect, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import CreatePageGroup from "../createPageGroup/CreatePageGroup";
 import { toastError, toastSuccess, toastWarning } from "../../utlis/toast";
 import EditDocumentModal from "../createDocumentModal/EditDocumentModal";
 import DeleteModal from "../deleteModal/DeleteModal";
 import { v4 as uuidv4 } from "uuid";
-import instance from "../../Context/AxiosInstance";
+import instance from "../../api/AxiosInstance";
 
 export default function PageGrouptable() {
-
   const [pageRefresh, setPageRefresh] = useState(false);
   const [searchParams] = useSearchParams();
   const doc_id = searchParams.get("id");
   const pagegroup_id = searchParams.get("pagegroup_id");
-
+  const [groupDetail, setGroupDetail] = useState([]);
   const [data, setData] = useState([]);
-  const navigate = useNavigate();
-  console.log("id is : ", uuidv4());
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const { data, status } = await instance.post("docs/page-group", {
+        const response = await instance.post("docs/page-group", {
           id: Number(pagegroup_id),
         });
-        if (status === 200) {
-          const groupData = data.pageGroups ?? [];
-          const pages = data.pages ?? [];
+        if (response?.status === 200) {
+          setGroupDetail(response?.data);
+          const groupData = response?.data?.pageGroups ?? [];
+          const pages = response?.data?.pages ?? [];
           if (Array.isArray(groupData) && Array.isArray(pages)) {
             setData([...groupData, ...pages]);
             setPageRefresh();
@@ -37,7 +35,7 @@ export default function PageGrouptable() {
         }
       } catch (err) {
         console.error(err);
-        toastError(err.response.data.message)
+        toastError(err?.response?.data?.message);
       }
     };
 
@@ -61,23 +59,20 @@ export default function PageGrouptable() {
     }
 
     try {
-      const { data, status } = await instance.post(
-        "docs/page-group/create",
-        {
-          name: title,
-          documentationSiteId: Number(doc_id),
-          parentId: Number(pagegroup_id),
-        }
-      );
+      const response = await instance.post("docs/page-group/create", {
+        name: title,
+        documentationSiteId: Number(doc_id),
+        parentId: Number(pagegroup_id),
+      });
 
-      if (status === 200) {
+      if (response?.status === 200) {
         setOpenCreatePageGroup(false);
         refreshPage();
-        toastSuccess(data.message);
+        toastSuccess(response?.data?.message);
       }
     } catch (err) {
       console.error(err);
-      toastError(err.response.data.message)
+      toastError(err?.response?.data?.message);
     }
   };
 
@@ -103,18 +98,17 @@ export default function PageGrouptable() {
 
   const handleDeletePageGroup = async (id) => {
     try {
-      const { data, status } = await instance.post(
-        "docs/page-group/delete",
-        { id: Number(id) }
-      );
-      if (status === 200) {
-        toastSuccess(data.message);
+      const response = await instance.post("docs/page-group/delete", {
+        id: Number(id),
+      });
+      if (response?.status === 200) {
+        toastSuccess(response?.data?.message);
         setIsPageGroupsDeleteModal(false);
         refreshPage();
       }
     } catch (err) {
       console.error(err);
-      toastError(err.response.data.message)
+      toastError(err?.response?.data?.message);
     }
   };
 
@@ -130,20 +124,20 @@ export default function PageGrouptable() {
 
   const handelPageGroupUpdate = async (editTitle, editDescription, id) => {
     try {
-      const { data, status } = await instance.post("docs/page-group/edit", {
+      const response = await instance.post("docs/page-group/edit", {
         id: Number(id),
         name: editTitle,
         documentationSiteId: Number(doc_id),
       });
 
-      if (status === 200) {
+      if (response?.status === 200) {
         setIsEditpageGroup(false);
         refreshPage();
-        toastSuccess(data.message);
+        toastSuccess(response?.data?.message);
       }
     } catch (err) {
       console.error(err);
-      toastError(err.response.data.message)
+      toastError(err?.response?.data?.message);
     }
   };
 
@@ -237,8 +231,9 @@ export default function PageGrouptable() {
         className="grid max-w-screen-xl px-4 mx-auto lg:gap-8 xl:gap-0 lg:grid-cols-12"
       >
         <div className="mr-auto place-self-center lg:col-span-7">
-          <h1 className="max-w-xl mb-4 text-4xl font-bold tracking-tight leading-none md:text-4xl xl:text-4xl dark:text-white"></h1>
-          <p className="max-w-2xl mb- font-light text-gray-700 lg:mb-8 md:text-lg lg:text-xl dark:text-gray-400"></p>
+          <h1 className="max-w-xl mb-4 text-4xl font-bold tracking-tight leading-none md:text-4xl xl:text-4xl dark:text-white">
+            {groupDetail.name}
+          </h1>
         </div>
       </motion.div>
 
@@ -302,7 +297,7 @@ export default function PageGrouptable() {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto min-h-72">
             <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
               <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                 <tr>

@@ -5,10 +5,9 @@ import { Link, useNavigate } from "react-router-dom";
 import DeleteModal from "../deleteModal/DeleteModal";
 import { toastError, toastSuccess } from "../../utlis/toast";
 import { AuthContext } from "../../Context/AuthContext";
-import instance from "../../Context/AxiosInstance";
+import instance from "../../api/AxiosInstance";
 
 export default function UserList() {
-  
   const [userList, setUserList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -25,16 +24,15 @@ export default function UserList() {
     setLoading(true);
     const fetchData = async () => {
       try {
-        const { data, status } = await instance.get("/auth/users");
-        if (status === 200) {
-          setUserList(data);
+        const response = await instance.get("/auth/users");
+        if (response?.status === 200) {
+          setUserList(response?.data);
           setLoading(false);
         }
       } catch (err) {
         setLoading(false);
         console.error(err);
-       toastError(err.response.data.message)
-       
+        toastError(err?.response?.data?.message);
       }
     };
     fetchData();
@@ -75,26 +73,18 @@ export default function UserList() {
     }
 
     try {
-      const { status } = await instance.post("/auth/user/delete", {
+      const response = await instance.post("/auth/user/delete", {
         username: username,
       });
-      if (status === 200) {
+      if (response?.status === 200) {
         refreshData();
         toastSuccess("User deleted successfully");
         setIsDeleteModal(false);
         navigate("/dashboard/admin/user-list");
-        
       }
     } catch (err) {
-      if (!err?.response) {
-        navigate("/server-down");
-      } else if (err.response?.status === 400) {
-        toastError(err.response.data.error);
-      } else if (err.response?.status === 401) {
-        toastError(err.response.data.error);
-      } else {
-        toastError(err.response.data.message);
-      }
+      console.error(err);
+      toastError(err?.response?.data?.message);
     }
   };
 

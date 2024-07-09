@@ -9,12 +9,10 @@ import CreatePageGroup from "../createPageGroup/CreatePageGroup";
 import { AnimatePresence, motion } from "framer-motion";
 import { AuthContext } from "../../Context/AuthContext";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import { getTokenFromCookies } from "../../utlis/CookiesManagement";
-import { v4 as uuidv4 } from 'uuid';
-import instance from "../../Context/AxiosInstance";
+import { v4 as uuidv4 } from "uuid";
+import instance from "../../api/AxiosInstance";
 
 export default function Documentation() {
-
   const { refresh, refreshData, user, documentationData } =
     useContext(AuthContext);
   const navigate = useNavigate();
@@ -44,8 +42,6 @@ export default function Documentation() {
   const totalItems = documentationData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-  const token = getTokenFromCookies()
-  console.log(token);
   const [searchTerm, setSearchTerm] = useState("");
 
   const handleSearchChange = (event) => {
@@ -66,8 +62,8 @@ export default function Documentation() {
   //pagination function
   const handlePageChange = useCallback((pageNumber) => {
     setCurrentPage(pageNumber);
-  }, [refresh]);
-  
+  }, []);
+
   //Flowbite js function
   useEffect(() => {
     initFlowbite();
@@ -85,18 +81,17 @@ export default function Documentation() {
       }
 
       try {
-        const { data, status } = await instance.post(
-          `/docs/documentation`,
-          { id: Number(doc_id) }
-        );
+        const response = await instance.post(`/docs/documentation`, {
+          id: Number(doc_id),
+        });
 
-        if (status === 200) {
-          setDocumentData(data);
+        if (response?.status === 200) {
+          setDocumentData(response?.data);
           setLoading(false);
         }
       } catch (err) {
-       console.error(err);
-       toastError(err.response.data.message)
+        console.error(err);
+        toastError(err?.response?.data?.message);
       }
     };
 
@@ -114,18 +109,17 @@ export default function Documentation() {
   //Documentation CRUD function
   const handleDelete = async () => {
     try {
-      const { data, status } = await instance.post(
-        "docs/documentation/delete",
-        { id: Number(doc_id) }
-      );
-      if (status === 200) {
-        toastSuccess(data.message);
+      const response = await instance.post("docs/documentation/delete", {
+        id: Number(doc_id),
+      });
+      if (response?.status === 200) {
+        toastSuccess(response?.data.message);
         refreshData();
         navigate("/dashboard");
       }
     } catch (err) {
       console.error(err);
-       toastError(err.response.data.message)
+      toastError(err?.response?.data?.message);
     }
   };
 
@@ -135,23 +129,20 @@ export default function Documentation() {
 
   const handelUpdate = async (editTitle, editDescription) => {
     try {
-      const { data, status } = await instance.post(
-        "docs/documentation/edit",
-        {
-          id: Number(doc_id),
-          name: editTitle,
-          description: editDescription,
-        }
-      );
+      const response = await instance.post("docs/documentation/edit", {
+        id: Number(doc_id),
+        name: editTitle,
+        description: editDescription,
+      });
 
-      if (status === 200) {
+      if (response?.status === 200) {
         setIsEditModal(false);
         refreshData();
-        toastSuccess(data.message);
+        toastSuccess(response?.data.message);
       }
     } catch (err) {
       console.error(err);
-      toastError(err.response.data.message)
+      toastError(err?.response?.data?.message);
     }
   };
 
@@ -168,18 +159,17 @@ export default function Documentation() {
 
   const handleDeletePageGroup = async (id) => {
     try {
-      const { data, status } = await instance.post(
-        "docs/page-group/delete",
-        { id: Number(id) }
-      );
-      if (status === 200) {
+      const response = await instance.post("docs/page-group/delete", {
+        id: Number(id),
+      });
+      if (response?.status === 200) {
         refreshData();
         setIsPageGroupsDeleteModal(false);
-        toastSuccess(data.message);
+        toastSuccess(response?.data.message);
       }
     } catch (err) {
       console.error(err);
-      toastError(err.response.data.message)
+      toastError(err?.response?.data?.message);
     }
   };
 
@@ -195,20 +185,20 @@ export default function Documentation() {
 
   const handelPageGroupUpdate = async (editTitle, editDescription, id) => {
     try {
-      const { data, status } = await instance.post("docs/page-group/edit", {
+      const response = await instance.post("docs/page-group/edit", {
         id: Number(id),
         name: editTitle,
         documentationSiteId: Number(doc_id),
       });
 
-      if (status === 200) {
+      if (response?.status === 200) {
         setIsEditpageGroup(false);
         refreshData();
-        toastSuccess(data.message);
-      } 
+        toastSuccess(response?.data.message);
+      }
     } catch (err) {
       console.error(err);
-      toastError(err.response.data.message)
+      toastError(err?.response?.data?.message);
     }
   };
 
@@ -223,22 +213,19 @@ export default function Documentation() {
     }
 
     try {
-      const { data, status } = await instance.post(
-        "docs/page-group/create",
-        {
-          name: title,
-          documentationSiteId: Number(doc_id),
-        }
-      );
+      const response = await instance.post("docs/page-group/create", {
+        name: title,
+        documentationSiteId: Number(doc_id),
+      });
 
-      if (status === 200) {
+      if (response?.status === 200) {
         setOpenCreatePageGroup(false);
         refreshData();
-        toastSuccess(data.message);
-      } 
+        toastSuccess(response?.data.message);
+      }
     } catch (err) {
       console.error(err);
-      toastError(err.response.data.message)
+      toastError(err?.response?.data?.message);
     }
   };
 
@@ -256,25 +243,24 @@ export default function Documentation() {
 
     setDocumentData(reorderedItems);
 
-    
     const payload = reorderedItems.map((item, index) => ({
       id: item.id,
       order: index + 1,
     }));
-  
+
     const newOrder = payload.find((obj) => obj.id === reorderedItem.id);
-   
+
     try {
-      const { data, status } = await instance.post("docs/page/reorder", {
-        id: Number(newOrder.id),
-        order: Number(newOrder.order),
+      const response = await instance.post("docs/page/reorder", {
+        id: Number(newOrder?.id),
+        order: Number(newOrder?.order),
       });
-      if (status === 200) {
+      if (response?.status === 200) {
         refreshData();
       }
     } catch (err) {
       console.error(err);
-      toastError(err.response.data.message)
+      toastError(err?.response?.data?.message);
     }
   };
 
@@ -540,7 +526,7 @@ export default function Documentation() {
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
-                          className="border-b dark:border-gray-700"
+                          className="border-b dark:bg-gray-700"
                         >
                           <td colSpan="4" className="text-center py-8">
                             <h1 className="text-center text-gray-600 sm:text-lg font-semibold">
@@ -551,9 +537,9 @@ export default function Documentation() {
                       ) : (
                         paginatedItems.map((obj, index) => (
                           <Draggable
-                          key={uuidv4()}
-                          draggableId={`${obj.id}-${uuidv4()}`}
-                          index={index}
+                            key={uuidv4()}
+                            draggableId={`${obj.id}-${uuidv4()}`}
+                            index={index}
                           >
                             {(provided, snapshot) => (
                               <tr
@@ -564,15 +550,15 @@ export default function Documentation() {
                                   snapshot.isDragging
                                     ? "bg-gray-400"
                                     : "bg-white"
-                                }`}
+                                }dark:bg-gray-700`}
                                 key={uuidv4()}
                               >
                                 <th
                                   scope="row"
-                                  className="items-center w-5 cursor-pointer gap-2 px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white"
+                                  className="items-center w-5 cursor-pointer gap-2 px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white "
                                 >
                                   <svg
-                                    className="w-6 h-6 cursor-move text-yellow-400 dark:text-white"
+                                    className="w-6 h-6 cursor-move text-yellow-400 dark:border-gray-700 dark:text-white"
                                     xmlns="http://www.w3.org/2000/svg"
                                     x="0px"
                                     y="0px"

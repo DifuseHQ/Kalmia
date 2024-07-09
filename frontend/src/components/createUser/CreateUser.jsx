@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { toastError, toastSuccess } from "../../utlis/toast";
-import instance from "../../Context/AxiosInstance";
+import instance from "../../api/AxiosInstance";
 
 export default function CreateUser() {
   const [formData, setFormData] = useState({
@@ -22,31 +22,29 @@ export default function CreateUser() {
     }));
   };
 
-  const  handleSubmit = async(e) => {
-    e.preventDefault(); 
-    if(formData.password !== formData.rePassword){
-      toastError('Password and Confirm Password do not match')
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (formData.password !== formData.rePassword) {
+      toastError("Password and Confirm Password do not match");
       return;
     }
     console.log(formData);
 
-    try{
-    const {data,status} = await instance.post('/auth/user/create',{
-      username:formData.username,
-      password:formData.password,
-      email:formData.email
-    }) 
-    console.log(data);
-    console.log(status);
-    if(status === 200){
-      toastSuccess("User Created Successfully");
-      navigate('/dashboard/admin/user-list')
+    try {
+      const response = await instance.post("/auth/user/create", {
+        username: formData.username,
+        password: formData.password,
+        email: formData.email,
+      });
+      if (response?.status === 200) {
+        toastSuccess("User Created Successfully");
+        navigate("/dashboard/admin/user-list");
+      }
+    } catch (err) {
+      console.error(err);
+      toastError(err?.response?.data?.message);
     }
-  } catch (err) {
-    console.error(err);
-    toastError(err.response.data.message)
-  }
-  }; 
+  };
 
   return (
     <AnimatePresence>
@@ -132,7 +130,7 @@ export default function CreateUser() {
                               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                               placeholder="Enter password"
                               required
-                               autoComplete="new-password"
+                              autoComplete="new-password"
                             />
                           </div>
 
@@ -152,7 +150,7 @@ export default function CreateUser() {
                               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                               placeholder="Re-enter password"
                               required
-                               autoComplete="new-password"
+                              autoComplete="new-password"
                             />
                           </div>
                         </div>

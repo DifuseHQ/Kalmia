@@ -4,8 +4,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { toastError } from "../../utlis/toast";
 import { AuthContext } from "../../Context/AuthContext";
-import { v4 as uuidv4 } from 'uuid';
-import instance from "../../Context/AxiosInstance";
+import { v4 as uuidv4 } from "uuid";
+import instance from "../../api/AxiosInstance";
 
 export default function Sidebar() {
   const [documentation, setDocumentation] = useState([]);
@@ -17,13 +17,13 @@ export default function Sidebar() {
   useEffect(() => {
     const fetchdata = async () => {
       try {
-        const res = await instance.get("/docs/documentations");
-        if (res.status === 200) {
-          setDocumentation(res.data);
+        const response = await instance.get("/docs/documentations");
+        if (response?.status === 200) {
+          setDocumentation(response?.data);
         }
       } catch (err) {
         console.error(err);
-        toastError(err.response.data.message)
+        toastError(err?.response?.data?.message);
       }
     };
     fetchdata();

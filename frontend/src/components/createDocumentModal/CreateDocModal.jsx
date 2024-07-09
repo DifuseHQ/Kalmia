@@ -1,11 +1,10 @@
 import React, { useContext, useState } from "react";
 import { ModalContext } from "../../App";
-import {privateAxios} from "../../api/axios";
 import { useNavigate } from "react-router-dom";
 import { toastError, toastSuccess, toastWarning } from "../../utlis/toast";
 import { AnimatePresence, motion } from "framer-motion";
 import { AuthContext } from "../../Context/AuthContext";
-import instance from "../../Context/AxiosInstance";
+import instance from "../../api/AxiosInstance";
 
 export default function CreateDocModal() {
   const { refreshData } = useContext(AuthContext);
@@ -13,7 +12,7 @@ export default function CreateDocModal() {
   const { isOpenModal, setIsOpenModal } = useContext(ModalContext);
   const [formData, setFormData] = useState({
     title: "",
-    description: "",  
+    description: "",
   });
 
   const handleChange = (e) => {
@@ -36,24 +35,22 @@ export default function CreateDocModal() {
     }
 
     try {
-      const { data, status } = await instance.post(
-        "/docs/documentation/create",
-        {
-          name: formData.title,
-          description: formData.description,
-        });
+      const response = await instance.post("/docs/documentation/create", {
+        name: formData.title,
+        description: formData.description,
+      });
 
-      if (status === 200) {
+      if (response?.status === 200) {
         setIsOpenModal(false);
         refreshData();
         navigate("/dashboard");
-        toastSuccess(data.message);
+        toastSuccess(response?.data?.message);
       } else {
         console.log("error not added");
       }
     } catch (err) {
       console.error(err);
-      toastError(err.response.data.message)
+      toastError(err?.response?.data?.message);
     }
   };
 
