@@ -2,11 +2,11 @@ import { Editor } from "primereact/editor";
 import React, { useContext, useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { getTokenFromCookies } from "../../utlis/CookiesManagement";
-import {privateAxios} from "../../api/axios";
 import { toastError, toastSuccess, toastWarning } from "../../utlis/toast";
 import DeleteModal from "../deleteModal/DeleteModal";
 import { AnimatePresence , motion} from "framer-motion";
 import { AuthContext } from "../../Context/AuthContext";
+import instance from "../../Context/AxiosInstance";
 
 export default function EditPage() {
   const [searchParams] = useSearchParams();
@@ -44,17 +44,16 @@ export default function EditPage() {
   useEffect(() => {
     const fetchdata = async () => {
       try {
-        const { data, status } = await privateAxios.post(
+        const { data, status } = await instance.post(
           `docs/page`,
           { id: Number(page_id) });
         if (status === 200) {
           setPageData(data);
           setTempPageData(data);
-        } else {
-          console.error("Failed to fetch data:", status.statusText);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error.message);
+        } 
+      } catch (err) {
+        console.error(err);
+        toastError(err.response.data.message)
       }
     };
 
@@ -64,7 +63,7 @@ export default function EditPage() {
   const handleEdit = async () => {
     
     try {
-      const { data, status } = await privateAxios.post(
+      const { data, status } = await instance.post(
         "/docs/page/edit",
         {
           title: pageData.title,
@@ -84,11 +83,10 @@ export default function EditPage() {
             `/dashboard/documentation/pagegroup?id=${doc_id}&pagegroup_id=${pagegroup_id}`
           );
         }
-      } else {
-        console.log("Error found :", data.error);
       }
     } catch (err) {
-      toastError(err.response.data.message);
+      console.error(err);
+      toastError(err.response.data.message)
     }
   };
 
@@ -98,7 +96,7 @@ export default function EditPage() {
 
   const handleDelete = async () => {
     try {
-      const { data, status } = await privateAxios.post(
+      const { data, status } = await instance.post(
         "docs/page/delete",
         {
           id: Number(page_id),

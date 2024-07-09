@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { toastError, toastSuccess, toastWarning } from "../../utlis/toast";
 import { AnimatePresence, motion } from "framer-motion";
 import { AuthContext } from "../../Context/AuthContext";
+import instance from "../../Context/AxiosInstance";
 
 export default function CreateDocModal() {
   const { refreshData } = useContext(AuthContext);
@@ -12,7 +13,7 @@ export default function CreateDocModal() {
   const { isOpenModal, setIsOpenModal } = useContext(ModalContext);
   const [formData, setFormData] = useState({
     title: "",
-    description: "",
+    description: "",  
   });
 
   const handleChange = (e) => {
@@ -35,7 +36,7 @@ export default function CreateDocModal() {
     }
 
     try {
-      const { data, status } = await privateAxios.post(
+      const { data, status } = await instance.post(
         "/docs/documentation/create",
         {
           name: formData.title,
@@ -51,7 +52,8 @@ export default function CreateDocModal() {
         console.log("error not added");
       }
     } catch (err) {
-      toastError(err.response.data.message);
+      console.error(err);
+      toastError(err.response.data.message)
     }
   };
 

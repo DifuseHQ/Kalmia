@@ -1,10 +1,11 @@
 import React, { useContext, useEffect, useState } from "react";
 import { ModalContext } from "../../App";
-import { privateAxios } from "../../api/axios";
 import { Link, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { toastError } from "../../utlis/toast";
 import { AuthContext } from "../../Context/AuthContext";
+import { v4 as uuidv4 } from 'uuid';
+import instance from "../../Context/AxiosInstance";
 
 export default function Sidebar() {
   const [documentation, setDocumentation] = useState([]);
@@ -16,23 +17,13 @@ export default function Sidebar() {
   useEffect(() => {
     const fetchdata = async () => {
       try {
-        const res = await privateAxios.get("/docs/documentations");
+        const res = await instance.get("/docs/documentations");
         if (res.status === 200) {
           setDocumentation(res.data);
         }
       } catch (err) {
-        if (!err?.response) {
-          navigate("/server-down");
-        } else if (err.response?.status === 400) {
-      
-          toastError(err.response.data.error);
-        } else if (err.response?.status === 401) {
-        
-          toastError(err.response.data.error);
-        } else {
-          toastError("Login Failed");
-        }
-        // errRef.current.focus();  for screen reader
+        console.error(err);
+        toastError(err.response.data.message)
       }
     };
     fetchdata();
@@ -92,7 +83,7 @@ export default function Sidebar() {
           <ul className="space-y-2">
             <li>
               <motion.button
-                whileHover={{ scale: 1.05 }}
+                whilehover={{ scale: 1.05 }}
                 onClick={handleCreateDocument}
                 className="inline-flex cursor-pointer items-center justify-center w-full py-2 px-5 my-5 text-md text-white font-medium  focus:outline-none bg-blue-600 rounded-lg border border-blue-300 hover:bg-blue-600 hover:text-white focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
               >
@@ -117,8 +108,8 @@ export default function Sidebar() {
             {documentation &&
               documentation.map((val, index) => (
                 <motion.li
-                  key={val.id}
-                  whileHover={{ scale: 1.08, originx: 0 }}
+                  key={uuidv4()}
+                  whilehover={{ scale: 1.08, originx: 0 }}
                 >
                   <Link to={`/dashboard/documentation?id=${val.id}`}>
                     <button
@@ -149,7 +140,7 @@ export default function Sidebar() {
               ))}
 
             {documentation.length <= 0 && (
-              <li whileHover={{ scale: 1.08, originx: 0 }}>
+              <li whilehover={{ scale: 1.08, originx: 0 }}>
                 <p className="flex cursor-default items-center p-5 w-full text-base font-normal text-gray-600 rounded-lg transition duration-75 group ">
                   <span className="flex-1 ml-3 text-left whitespace-nowrap">
                     No documentations

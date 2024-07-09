@@ -1,7 +1,6 @@
 import { initFlowbite } from "flowbite";
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { privateAxios } from "../../api/axios";
 import ClipLoader from "react-spinners/ClipLoader";
 import EditDocumentModal from "../createDocumentModal/EditDocumentModal";
 import DeleteModal from "../deleteModal/DeleteModal";
@@ -10,8 +9,12 @@ import CreatePageGroup from "../createPageGroup/CreatePageGroup";
 import { AnimatePresence, motion } from "framer-motion";
 import { AuthContext } from "../../Context/AuthContext";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { getTokenFromCookies } from "../../utlis/CookiesManagement";
+import { v4 as uuidv4 } from 'uuid';
+import instance from "../../Context/AxiosInstance";
 
 export default function Documentation() {
+
   const { refresh, refreshData, user, documentationData } =
     useContext(AuthContext);
   const navigate = useNavigate();
@@ -41,6 +44,8 @@ export default function Documentation() {
   const totalItems = documentationData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
+  const token = getTokenFromCookies()
+  console.log(token);
   const [searchTerm, setSearchTerm] = useState("");
 
   const handleSearchChange = (event) => {
@@ -80,7 +85,7 @@ export default function Documentation() {
       }
 
       try {
-        const { data, status } = await privateAxios.post(
+        const { data, status } = await instance.post(
           `/docs/documentation`,
           { id: Number(doc_id) }
         );
@@ -90,15 +95,8 @@ export default function Documentation() {
           setLoading(false);
         }
       } catch (err) {
-        if (!err?.response) {
-          navigate("/server-down");
-        } else if (err.response?.status === 400) {
-          toastError(err.response.data.error);
-        } else if (err.response?.status === 401) {
-          toastError(err.response.data.error);
-        } else {
-          toastError(err.response.data.message);
-        }
+       console.error(err);
+       toastError(err.response.data.message)
       }
     };
 
@@ -116,7 +114,7 @@ export default function Documentation() {
   //Documentation CRUD function
   const handleDelete = async () => {
     try {
-      const { data, status } = await privateAxios.post(
+      const { data, status } = await instance.post(
         "docs/documentation/delete",
         { id: Number(doc_id) }
       );
@@ -126,15 +124,8 @@ export default function Documentation() {
         navigate("/dashboard");
       }
     } catch (err) {
-      if (!err?.response) {
-        navigate("/server-down");
-      } else if (err.response?.status === 400) {
-        toastError(err.response.data.error);
-      } else if (err.response?.status === 401) {
-        toastError(err.response.data.error);
-      } else {
-        toastError(err.response.data.message);
-      }
+      console.error(err);
+       toastError(err.response.data.message)
     }
   };
 
@@ -144,7 +135,7 @@ export default function Documentation() {
 
   const handelUpdate = async (editTitle, editDescription) => {
     try {
-      const { data, status } = await privateAxios.post(
+      const { data, status } = await instance.post(
         "docs/documentation/edit",
         {
           id: Number(doc_id),
@@ -159,15 +150,8 @@ export default function Documentation() {
         toastSuccess(data.message);
       }
     } catch (err) {
-      if (!err?.response) {
-        navigate("/server-down");
-      } else if (err.response?.status === 400) {
-        toastError(err.response.data.error);
-      } else if (err.response?.status === 401) {
-        toastError(err.response.data.error);
-      } else {
-        toastError(err.response.data.message);
-      }
+      console.error(err);
+      toastError(err.response.data.message)
     }
   };
 
@@ -184,7 +168,7 @@ export default function Documentation() {
 
   const handleDeletePageGroup = async (id) => {
     try {
-      const { data, status } = await privateAxios.post(
+      const { data, status } = await instance.post(
         "docs/page-group/delete",
         { id: Number(id) }
       );
@@ -194,7 +178,8 @@ export default function Documentation() {
         toastSuccess(data.message);
       }
     } catch (err) {
-      toastError(err.response.data.message);
+      console.error(err);
+      toastError(err.response.data.message)
     }
   };
 
@@ -210,7 +195,7 @@ export default function Documentation() {
 
   const handelPageGroupUpdate = async (editTitle, editDescription, id) => {
     try {
-      const { data, status } = await privateAxios.post("docs/page-group/edit", {
+      const { data, status } = await instance.post("docs/page-group/edit", {
         id: Number(id),
         name: editTitle,
         documentationSiteId: Number(doc_id),
@@ -222,15 +207,8 @@ export default function Documentation() {
         toastSuccess(data.message);
       } 
     } catch (err) {
-      if (!err?.response) {
-        navigate("/server-down");
-      } else if (err.response?.status === 400) {
-        toastError(err.response.data.error);
-      } else if (err.response?.status === 401) {
-        toastError(err.response.data.error);
-      } else {
-        toastError(err.response.data.message);
-      }
+      console.error(err);
+      toastError(err.response.data.message)
     }
   };
 
@@ -245,7 +223,7 @@ export default function Documentation() {
     }
 
     try {
-      const { data, status } = await privateAxios.post(
+      const { data, status } = await instance.post(
         "docs/page-group/create",
         {
           name: title,
@@ -259,15 +237,8 @@ export default function Documentation() {
         toastSuccess(data.message);
       } 
     } catch (err) {
-      if (!err?.response) {
-        navigate("/server-down");
-      } else if (err.response?.status === 400) {
-        toastError(err.response.data.error);
-      } else if (err.response?.status === 401) {
-        toastError(err.response.data.error);
-      } else {
-        toastError(err.response.data.message);
-      }
+      console.error(err);
+      toastError(err.response.data.message)
     }
   };
 
@@ -294,7 +265,7 @@ export default function Documentation() {
     const newOrder = payload.find((obj) => obj.id === reorderedItem.id);
    
     try {
-      const { data, status } = await privateAxios.post("docs/page/reorder", {
+      const { data, status } = await instance.post("docs/page/reorder", {
         id: Number(newOrder.id),
         order: Number(newOrder.order),
       });
@@ -302,15 +273,8 @@ export default function Documentation() {
         refreshData();
       }
     } catch (err) {
-      if (!err?.response) {
-        navigate("/server-down");
-      } else if (err.response?.status === 400) {
-        toastError(err.response.data.error);
-      } else if (err.response?.status === 401) {
-        toastError(err.response.data.error);
-      } else {
-        toastError(err.response.data.message);
-      }
+      console.error(err);
+      toastError(err.response.data.message)
     }
   };
 
@@ -405,7 +369,7 @@ export default function Documentation() {
         className=" lg:mt-0 lg:col-span-5 flex justify-end mr-5 gap-3"
       >
         <motion.button
-          whileHover={{ scale: 1.3 }}
+          whilehover={{ scale: 1.3 }}
           onClick={() => setIsEditModal(!isEditModal)}
           title="Edit Documentation"
         >
@@ -429,7 +393,7 @@ export default function Documentation() {
         </motion.button>
 
         <motion.button
-          whileHover={{ scale: 1.3 }}
+          whilehover={{ scale: 1.3 }}
           onClick={handleDeletemodalopen}
           title="Delete Documentation"
         >
@@ -512,7 +476,7 @@ export default function Documentation() {
             </div>
             <div className="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
               <motion.button
-                whileHover={{ scale: 1.1 }}
+                whilehover={{ scale: 1.1 }}
                 onClick={() => setOpenCreatePageGroup(true)}
                 type="button"
                 className="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
@@ -520,7 +484,7 @@ export default function Documentation() {
                 Create Group
               </motion.button>
 
-              <motion.button whileHover={{ scale: 1.1 }}>
+              <motion.button whilehover={{ scale: 1.1 }}>
                 <Link
                   to={`/dashboard/documentation/create-page?id=${doc_id}&dir=true`}
                   className="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
@@ -587,9 +551,9 @@ export default function Documentation() {
                       ) : (
                         paginatedItems.map((obj, index) => (
                           <Draggable
-                            key={index.toString()}
-                            draggableId={index.toString()}
-                            index={index}
+                          key={uuidv4()}
+                          draggableId={`${obj.id}-${uuidv4()}`}
+                          index={index}
                           >
                             {(provided, snapshot) => (
                               <tr
@@ -601,7 +565,7 @@ export default function Documentation() {
                                     ? "bg-gray-400"
                                     : "bg-white"
                                 }`}
-                                key={index + obj.id}
+                                key={uuidv4()}
                               >
                                 <th
                                   scope="row"
@@ -684,7 +648,7 @@ export default function Documentation() {
                                   <td className="px-4 py-3 cursor-pointer">
                                     <button
                                       id={`dropdown-button-${obj.id}`}
-                                      data-dropdown-toggle={`dropdown-${obj.id}`}
+                                      data-dropdown-toggle={`dropdown123-${obj.id}`}
                                       className="inline-flex items-center p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
                                       type="button"
                                     >
@@ -699,12 +663,12 @@ export default function Documentation() {
                                       </svg>
                                     </button>
                                     <div
-                                      id={`dropdown-${obj.id}`}
+                                      id={`dropdown123-${obj.id}`}
                                       className="hidden z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600"
                                     >
                                       <ul
                                         className="py-1 text-sm text-gray-700 dark:text-gray-200"
-                                        aria-labelledby={`dropdown-button-${obj.id}`}
+                                        aria-labelledby={`dropdown123-button-${obj.id}`}
                                       >
                                         <li>
                                           <p

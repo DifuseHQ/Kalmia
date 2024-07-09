@@ -1,13 +1,14 @@
 import React, { useCallback, useContext, useEffect, useState } from "react";
-import { privateAxios } from "../../api/axios";
 import { AnimatePresence, motion } from "framer-motion";
 import ClipLoader from "react-spinners/ClipLoader";
 import { Link, useNavigate } from "react-router-dom";
 import DeleteModal from "../deleteModal/DeleteModal";
 import { toastError, toastSuccess } from "../../utlis/toast";
 import { AuthContext } from "../../Context/AuthContext";
+import instance from "../../Context/AxiosInstance";
 
 export default function UserList() {
+  
   const [userList, setUserList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -24,14 +25,16 @@ export default function UserList() {
     setLoading(true);
     const fetchData = async () => {
       try {
-        const { data, status } = await privateAxios.get("/auth/users");
+        const { data, status } = await instance.get("/auth/users");
         if (status === 200) {
           setUserList(data);
           setLoading(false);
         }
-      } catch (error) {
-        console.error("Error fetching users:", error);
+      } catch (err) {
         setLoading(false);
+        console.error(err);
+       toastError(err.response.data.message)
+       
       }
     };
     fetchData();
@@ -72,7 +75,7 @@ export default function UserList() {
     }
 
     try {
-      const { status } = await privateAxios.post("/auth/user/delete", {
+      const { status } = await instance.post("/auth/user/delete", {
         username: username,
       });
       if (status === 200) {

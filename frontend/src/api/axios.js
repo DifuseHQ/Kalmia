@@ -1,5 +1,8 @@
 import axios from "axios";
 import Cookies from 'js-cookie';
+import { toastError } from "../utlis/toast";
+import { useNavigate } from "react-router-dom";
+
 
 const baseURL = 'http://[::1]:2727'
 
@@ -24,40 +27,37 @@ export const privateAxios = axios.create({
     return config;
   });
     
-  privateAxios.interceptors.response.use(function (response) {
-    // console.log("response is working :" ,response);
-   if(!response){
-    console.log("sorry server off");
-   }
-    return response;
-  }, async (error) => {
-    if (error.message === 'Network Error') {
-      console.error('Network error: unable to reach the server');
+  privateAxios.interceptors.response.use(
+    (response) => {
+      // Handle the response here
+      return response;
+    },
+    async (error) => {
+      if (error.message === 'Network Error') {
+        console.error('Network error: unable to reach the server');
+        toastError('Network error: unable to reach the server');
+      }
+  
+      const originalRequest = error.config;
+  
+      if (error.response) {
+        const { status } = error.response;
+  
+        if (status === 401 && !originalRequest._retry) {
+          originalRequest._retry = true;
+          // console.log("from axios side");
+          // toastError('Unauthorized. Please log in again.');
+          // // Clear token or any relevant data here if needed
+          // Cookies.remove('accessToken'); // Adjust the cookie name accordingly
+          // const navigate = useNavigate();
+          // navigate('/login');
+        } else if (status === 402) {
+          toastError('Payment Required. Please check your subscription status.');
+        }
+      } else {
+        console.error('An unexpected error occurred:', error);
+      }
+  
+      return Promise.reject(error);
     }
-  
-    // const originalRequest = error.config;
-  
-    // if (error.response && error.response.status === 401 && !originalRequest._retry) {
-    //   originalRequest._retry = true;
-  
-    //   try {
-    //     const refreshToken = Cookies.get('refreshToken');
-    //     const response = await axios.post(`${baseURL}/refresh-token`, { token: refreshToken });
-  
-    //     const { accessToken } = response.data;
-    //     Cookies.set('accessToken', JSON.stringify(accessToken), { secure: true, sameSite: 'Strict' });
-  
-    //     originalRequest.headers["Authorization"] = `Bearer ${accessToken.token}`;
-  
-    //     // Log the response when refreshing the token
-    //     console.log("Token refreshed: ", response);
-  
-    //     return privateAxios(originalRequest);
-    //   } catch (err) {
-    //     console.error('Token refresh failed', err);
-    //     // Optional: Redirect to login page or log out the user
-    //   }
-    
-  
-    return Promise.reject(error);
-  });
+  );

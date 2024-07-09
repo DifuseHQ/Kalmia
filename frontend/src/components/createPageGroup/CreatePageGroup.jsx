@@ -10,7 +10,7 @@ export default function CreatePageGroup({ closeModal, handleCreate }) {
     }
   };
   return (
-    <AnimatePresence>
+    <AnimatePresence> 
       <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}

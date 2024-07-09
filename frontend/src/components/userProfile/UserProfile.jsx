@@ -1,6 +1,5 @@
 import React, { useContext, useState } from "react";
 import { AuthContext } from "../../Context/AuthContext";
-import { privateAxios } from "../../api/axios";
 import axios from "axios"; // Ensure Axios is imported
 import { getTokenFromCookies } from "../../utlis/CookiesManagement";
 import { Link } from "react-router-dom";
@@ -46,12 +45,10 @@ export default function UserProfile() {
         console.log(response.data.photo);
         setProfileImage(response.data.photo); 
         toastSuccess(response.data.message)
-      } else {
-        toastError(response.data.message)
-      }
-    } catch (error) {
-      console.error("Error uploading file:", error);
-      toastError(error.data.message)
+      } 
+    } catch (err) {
+      console.error(err);
+       toastError(err.response.data.message)
     }
   }
   };

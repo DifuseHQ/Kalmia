@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { toastError, toastSuccess } from "../../utlis/toast";
-import { privateAxios } from "../../api/axios";
+import instance from "../../Context/AxiosInstance";
 
 export default function CreateUser() {
   const [formData, setFormData] = useState({
@@ -31,7 +31,7 @@ export default function CreateUser() {
     console.log(formData);
 
     try{
-    const {data,status} = await privateAxios.post('/auth/user/create',{
+    const {data,status} = await instance.post('/auth/user/create',{
       username:formData.username,
       password:formData.password,
       email:formData.email
@@ -43,17 +43,8 @@ export default function CreateUser() {
       navigate('/dashboard/admin/user-list')
     }
   } catch (err) {
-    if (!err?.response) {
-      navigate("/server-down");
-    } else if (err.response?.status === 400) {
-      console.log(err.response.data.error);
-      toastError(err.response.data.error);
-    } else if (err.response?.status === 401) {
-      console.log(err.response.data.error);
-      toastError(err.response.data.error);
-    } else {
-      toastError("Username or Email Already exists, Try another");
-    }
+    console.error(err);
+    toastError(err.response.data.message)
   }
   }; 
 

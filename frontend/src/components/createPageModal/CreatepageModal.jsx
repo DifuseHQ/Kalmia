@@ -6,9 +6,9 @@ import "primeicons/primeicons.css";
 import { Editor } from "primereact/editor";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toastError, toastSuccess, toastWarning } from "../../utlis/toast";
-import {privateAxios} from "../../api/axios";
 import { AnimatePresence,motion } from "framer-motion";
 import { AuthContext } from "../../Context/AuthContext";
+import instance from "../../Context/AxiosInstance";
 
 export default function CreatepageModal() {
   const [searchParam] = useSearchParams();
@@ -34,7 +34,7 @@ export default function CreatepageModal() {
 
     if (dir === "true") {
       try {
-        const { data, status } = await privateAxios.post(
+        const { data, status } = await instance.post(
           "docs/page/create",
           {
             title: title,
@@ -51,11 +51,12 @@ export default function CreatepageModal() {
           console.log("Error found :", data.error);
         }
       } catch (err) {
-        toastError(err.response.data.message);
+        console.error(err);
+        toastError(err.response.data.message)
       }
     } else if (dir === "false") {
       try {
-        const { data, status } = await privateAxios.post(
+        const { data, status } = await instance.post(
           "docs/page/create",
           {
             title: title,
@@ -75,7 +76,8 @@ export default function CreatepageModal() {
           console.log("Error found :", data.error);
         }
       } catch (err) {
-        toastError(err.response.data.message);
+        console.error(err);
+       toastError(err.response.data.message)
       }
     }
   };

@@ -1,31 +1,28 @@
-import { initFlowbite } from "flowbite";
-import React, { useContext, useEffect, useState } from "react";
+import React, {  useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { privateAxios } from "../../api/axios";
 import { AnimatePresence, motion } from "framer-motion";
 import CreatePageGroup from "../createPageGroup/CreatePageGroup";
 import { toastError, toastSuccess, toastWarning } from "../../utlis/toast";
-import { AuthContext } from "../../Context/AuthContext";
 import EditDocumentModal from "../createDocumentModal/EditDocumentModal";
 import DeleteModal from "../deleteModal/DeleteModal";
+import { v4 as uuidv4 } from "uuid";
+import instance from "../../Context/AxiosInstance";
 
 export default function PageGrouptable() {
-  const {refresh ,refreshData} = useContext(AuthContext);
+
+  const [pageRefresh, setPageRefresh] = useState(false);
   const [searchParams] = useSearchParams();
-  const doc_id = searchParams.get("id"); 
+  const doc_id = searchParams.get("id");
   const pagegroup_id = searchParams.get("pagegroup_id");
 
   const [data, setData] = useState([]);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    initFlowbite();
-  },[pagegroup_id,refresh]); 
+  console.log("id is : ", uuidv4());
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const { data, status } = await privateAxios.post("docs/page-group", {
+        const { data, status } = await instance.post("docs/page-group", {
           id: Number(pagegroup_id),
         });
         if (status === 200) {
@@ -33,18 +30,23 @@ export default function PageGrouptable() {
           const pages = data.pages ?? [];
           if (Array.isArray(groupData) && Array.isArray(pages)) {
             setData([...groupData, ...pages]);
-            refreshData()
+            setPageRefresh();
           } else {
             console.error("Unexpected data structure", { groupData, pages });
           }
         }
-      } catch (error) {
-        console.error("Error fetching page group data:", error.message);
+      } catch (err) {
+        console.error(err);
+        toastError(err.response.data.message)
       }
     };
 
     fetchData();
-  }, [doc_id, pagegroup_id ,refresh]);
+  }, [pagegroup_id, pageRefresh]);
+
+  const refreshPage = () => {
+    setPageRefresh(!refreshPage);
+  };
 
   const [openCreatePageGroup, setOpenCreatePageGroup] = useState(false);
 
@@ -59,35 +61,27 @@ export default function PageGrouptable() {
     }
 
     try {
-      const { data, status } = await privateAxios.post(
+      const { data, status } = await instance.post(
         "docs/page-group/create",
         {
           name: title,
           documentationSiteId: Number(doc_id),
-          parentId: Number(pagegroup_id)
+          parentId: Number(pagegroup_id),
         }
       );
 
       if (status === 200) {
         setOpenCreatePageGroup(false);
-        refreshData();
+        refreshPage();
         toastSuccess(data.message);
-      } 
-    } catch (err) { 
-      if (!err?.response) {
-        navigate("/server-down");
-      } else if (err.response?.status === 400) {
-        toastError(err.response.data.error);
-      } else if (err.response?.status === 401) {
-        toastError(err.response.data.error);
-      } else {
-        toastError(err.response.data.message);
       }
+    } catch (err) {
+      console.error(err);
+      toastError(err.response.data.message)
     }
   };
 
   const [openDropdownId, setOpenDropdownId] = useState(null);
-
 
   const toggleDropdown = (id) => {
     setOpenDropdownId((prevId) => (prevId === id ? null : id));
@@ -109,17 +103,18 @@ export default function PageGrouptable() {
 
   const handleDeletePageGroup = async (id) => {
     try {
-      const { data, status } = await privateAxios.post(
+      const { data, status } = await instance.post(
         "docs/page-group/delete",
         { id: Number(id) }
       );
       if (status === 200) {
         toastSuccess(data.message);
         setIsPageGroupsDeleteModal(false);
-        refreshData();
+        refreshPage();
       }
     } catch (err) {
-      toastError(err.response.data.message);
+      console.error(err);
+      toastError(err.response.data.message)
     }
   };
 
@@ -135,7 +130,7 @@ export default function PageGrouptable() {
 
   const handelPageGroupUpdate = async (editTitle, editDescription, id) => {
     try {
-      const { data, status } = await privateAxios.post("docs/page-group/edit", {
+      const { data, status } = await instance.post("docs/page-group/edit", {
         id: Number(id),
         name: editTitle,
         documentationSiteId: Number(doc_id),
@@ -143,22 +138,14 @@ export default function PageGrouptable() {
 
       if (status === 200) {
         setIsEditpageGroup(false);
-        refreshData();
+        refreshPage();
         toastSuccess(data.message);
-      } 
-    } catch (err) {
-      if (!err?.response) {
-        navigate("/server-down");
-      } else if (err.response?.status === 400) {
-        toastError(err.response.data.error);
-      } else if (err.response?.status === 401) {
-        toastError(err.response.data.error);
-      } else {
-        toastError(err.response.data.message);
       }
+    } catch (err) {
+      console.error(err);
+      toastError(err.response.data.message)
     }
   };
-
 
   return (
     <AnimatePresence className="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5">
@@ -169,7 +156,6 @@ export default function PageGrouptable() {
         className="flex mb-5"
         aria-label="Breadcrumb"
       >
-        
         <ol className="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
           <li className="inline-flex items-center">
             <Link
@@ -298,7 +284,7 @@ export default function PageGrouptable() {
             </div>
             <div className="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
               <motion.button
-              onClick={() => setOpenCreatePageGroup(true)}
+                onClick={() => setOpenCreatePageGroup(true)}
                 whileHover={{ scale: 1.1 }}
                 type="button"
                 className="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
@@ -349,7 +335,7 @@ export default function PageGrouptable() {
                 {data.map((obj, index) => (
                   <tr
                     className="border-b dark:border-gray-700 hover:bg-gray-200"
-                    key={`${obj.id}-${index}`}
+                    key={uuidv4()}
                   >
                     <th
                       scope="row"
@@ -381,7 +367,7 @@ export default function PageGrouptable() {
                         }
                       >
                         {obj.name ? (
-                          <svg 
+                          <svg
                             className="w-6 h-6 text-yellow-400 dark:text-white"
                             aria-hidden="true"
                             xmlns="http://www.w3.org/2000/svg"
@@ -423,63 +409,59 @@ export default function PageGrouptable() {
                     <td className="px-4 py-3">/{obj.name || obj.slug}</td>
 
                     <td className="px-4 py-3">
-                      {obj.name ? "Folder" : "file"} 
+                      {obj.name ? "Folder" : "file"}
                     </td>
                     {obj.name && (
-  <td className="px-4 py-3 cursor-pointer relative">
-    <button
-      onClick={() => toggleDropdown(index)}
-      id={`dropdown-button-${index}`}
-      data-dropdown-toggle={`dropdown-${index}`}
-      className="inline-flex items-center p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
-      type="button"
-    >
-      <svg
-        className="w-5 h-5"
-        aria-hidden="true"
-        fill="currentColor"
-        viewBox="0 0 20 20"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
-      </svg>
-    </button>
-    <div
-      id={`dropdown-${obj.id}`}
-      className={`absolute z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600 ${
-        openDropdownId === index ? "block" : "hidden"
-      }`}
-      style={{ top: '100%', right: 0 }}
-    >
-      <ul
-        className="py-1 text-sm text-gray-700 dark:text-gray-200"
-        aria-labelledby={`dropdown-button-${obj.id}`}
-      >
-        <li>
-          <p
-            onClick={() =>
-              openEditPageGroup(obj)
-            }
-            className="block py-2 px-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-          >
-            Edit
-          </p>
-        </li>
-        <li>
-          <p
-             onClick={() =>
-              openDeletePageGroups(obj)
-            }
-            className="block py-2 px-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-          >
-            Delete
-          </p>
-        </li>
-      </ul>
-    </div>
-  </td>
-)}
-
+                      <td className="px-4 py-3 cursor-pointer relative">
+                        <button
+                          onClick={() => toggleDropdown(index)}
+                          id={`dropdown-button-${obj.id}`}
+                          data-dropdown-toggle={`dropdown-${obj.id}`}
+                          className="inline-flex items-center p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
+                          type="button"
+                        >
+                          <svg
+                            className="w-5 h-5"
+                            aria-hidden="true"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
+                          </svg>
+                        </button>
+                        <div
+                          id={`dropdown-${obj.id}`}
+                          className={`absolute z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600 ${
+                            openDropdownId === index ? "block" : "hidden"
+                          }`}
+                          style={{ top: "100%", right: 0 }}
+                        >
+                          <ul
+                            className="py-1 text-sm text-gray-700 dark:text-gray-200"
+                            aria-labelledby={`dropdown-button-${obj.id}-${index}`}
+                            key={uuidv4()}
+                          >
+                            <li>
+                              <p
+                                onClick={() => openEditPageGroup(obj)}
+                                className="block py-2 px-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                              >
+                                Edit
+                              </p>
+                            </li>
+                            <li>
+                              <p
+                                onClick={() => openDeletePageGroups(obj)}
+                                className="block py-2 px-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                              >
+                                Delete
+                              </p>
+                            </li>
+                          </ul>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -488,27 +470,25 @@ export default function PageGrouptable() {
         </div>
       </motion.div>
 
-      
       {isEditpageGroup && currentItem && (
-            <EditDocumentModal
-              heading="Rename Page Group"
-              title={currentItem.name}
-              id={currentItem.id}
-              closeModal={handleEditPageGroupClose}
-              updateData={handelPageGroupUpdate}
-            />
-          )}
-          {/* PageGroup delete Component */}
-          {isPageGroupsDeleteModal && currentItem && (
-            <DeleteModal
-              cancelModal={handleCancelPagegroupDelete}
-              deleteDoc={() => handleDeletePageGroup(currentItem.id)}
-              id={currentItem.id}
-              title={`Are you sure you want to delete this "${currentItem.name}"`}
-              message={`By deleting this PageGroup associated pages will also be permanently deleted.`}
-            />
-          )}
-
+        <EditDocumentModal
+          heading="Rename Page Group"
+          title={currentItem.name}
+          id={currentItem.id}
+          closeModal={handleEditPageGroupClose}
+          updateData={handelPageGroupUpdate}
+        />
+      )}
+      {/* PageGroup delete Component */}
+      {isPageGroupsDeleteModal && currentItem && (
+        <DeleteModal
+          cancelModal={handleCancelPagegroupDelete}
+          deleteDoc={() => handleDeletePageGroup(currentItem.id)}
+          id={currentItem.id}
+          title={`Are you sure you want to delete this "${currentItem.name}"`}
+          message={`By deleting this PageGroup associated pages will also be permanently deleted.`}
+        />
+      )}
     </AnimatePresence>
   );
 }

@@ -1,7 +1,6 @@
-import { createContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./Context/AuthContext";
-import { ExchangeProvider } from "./Context/ExchangeContext";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import { ToastContainer } from "react-toastify";
@@ -23,16 +22,20 @@ import CreateUser from "./components/createUser/CreateUser";
 import AdminAuth from "./components/AdminAuth";
 import UserProfile from "./components/userProfile/UserProfile";
 import UserResetPassword from "./components/userResetPassword/UserResetPassword";
-
 export const ModalContext = createContext();
 
+
 function App() {
+
+
   const [isOpenModal, setIsOpenModal] = useState(false);
 
   return (
     <Router>
+     
       <AuthProvider>
-        <ExchangeProvider>
+
+ 
           <ModalContext.Provider value={{ isOpenModal, setIsOpenModal }}>
             <ToastContainer />
             <Routes>
@@ -71,8 +74,10 @@ function App() {
             <Route path="*" element={<Error/>} />
             </Routes>
           </ModalContext.Provider>
-        </ExchangeProvider>
+  
+ 
       </AuthProvider>
+   
     </Router>
   );
 }

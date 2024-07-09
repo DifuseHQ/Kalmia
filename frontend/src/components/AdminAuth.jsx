@@ -3,14 +3,15 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { AuthContext } from '../Context/AuthContext';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
-import { privateAxios } from '../api/axios';
 import { toastError } from '../utlis/toast';
+import instance from '../Context/AxiosInstance';
 
 export default function AdminAuth() {
   const location = useLocation();
   const { userDetails } = useContext(AuthContext);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true); // Track loading state
+
 
   useEffect(() => {
     fetchData();
@@ -24,7 +25,7 @@ export default function AdminAuth() {
       user = accessToken;
     }
     try {
-      const { data, status } = await privateAxios.get('/auth/users');
+      const { data, status } = await instance.get('/auth/users');
       if (status === 200) {
         const foundUser = data.find((obj) => obj.ID.toString() === user.user_id);
         if (foundUser && foundUser.Admin === true) {
@@ -32,8 +33,8 @@ export default function AdminAuth() {
         }
       }
     } catch (err) {
-      console.log('Error fetching user data:', err);
-      toastError(err.data.message)
+      console.error(err);
+       toastError(err.response.data.message)
     } finally {
       setIsLoading(false); 
     }
