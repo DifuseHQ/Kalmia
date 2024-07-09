@@ -78,11 +78,11 @@ func EditUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 
 	type Request struct {
 		ID       uint   `json:"id" validate:"required"`
-		Username string `json:"username" validate:"alpha"`
-		Email    string `json:"email" validate:"email"`
-		Password string `json:"password" validate:"string"`
-		Photo    string `json:"photo" validate:"string"`
-		Admin    bool   `json:"admin" validate:"boolean"`
+		Username string `json:"username" validate:"omitempty,alpha"`
+		Email    string `json:"email" validate:"omitempty,email"`
+		Password string `validate:"omitempty,min=8,max=32"`
+		Photo    string `json:"photo" validate:"omitempty,http_url"`
+		Admin    bool   `json:"admin" validate:"omitempty,boolean"`
 	}
 
 	var req Request
@@ -97,6 +97,7 @@ func EditUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	err = validate.Struct(req)
 
 	if err != nil {
+		fmt.Println(err)
 		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid request"})
 		return
 	}
@@ -175,7 +176,7 @@ func DeleteUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 
 func GetUsers(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	var users []models.User
-	if err := db.Find(&users).Error; err != nil {
+	if err := db.Preload("Tokens").Find(&users).Error; err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to get users"})
 		return
 	}
@@ -184,18 +185,18 @@ func GetUsers(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 }
 
 func GetUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
-	var Request struct {
-		Username string `json:"username" validate:"required,alpha"`
+	var request struct {
+		Id uint `json:"id" validate:"required"`
 	}
 
-	err := json.NewDecoder(r.Body).Decode(&Request)
+	err := json.NewDecoder(r.Body).Decode(&request)
 
 	if err != nil {
 		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid request"})
 		return
 	}
 
-	err = validate.Struct(Request)
+	err = validate.Struct(request)
 
 	if err != nil {
 		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid request"})
@@ -203,7 +204,7 @@ func GetUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 
 	var user models.User
-	if err := db.Where("username = ?", Request.Username).First(&user).Error; errors.Is(err, gorm.ErrRecordNotFound) {
+	if err := db.Preload("Tokens").Where("id = ?", request.Id).First(&user).Error; errors.Is(err, gorm.ErrRecordNotFound) {
 		SendJSONResponse(http.StatusNotFound, w, map[string]string{"status": "error", "message": "User not found"})
 		return
 	}
