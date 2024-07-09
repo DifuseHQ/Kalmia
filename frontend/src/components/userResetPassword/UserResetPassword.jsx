@@ -23,13 +23,13 @@ export default function UserResetPassword() {
       return;
     }
     try {
-      const { data, status } = await instance.post("/auth/user/dit", {
+      const { data, status } = await instance.post("/auth/user/edit", {
         id: Number(user_id),
         password: password.toString(),
       });
       if (status === 200) {
-        toastSuccess("password change successfullt");
-        navigate("/user-profile");
+        toastSuccess("password change successfully");
+        navigate("/dashboard/user-profile");
       }
     } catch (err) {
       console.error(err);

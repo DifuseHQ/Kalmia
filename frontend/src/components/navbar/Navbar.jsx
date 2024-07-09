@@ -6,8 +6,8 @@ import { AuthContext } from "../../Context/AuthContext";
 
 export default function Navbar() {
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const { user, logout } = useContext(AuthContext);
-
+  const { userDetails, logout } = useContext(AuthContext);
+console.log(userDetails); 
   useEffect(() => {
     const initialTheme = getTheme();
     setIsDarkMode(initialTheme === "dark");
@@ -101,9 +101,9 @@ export default function Navbar() {
                     <path d="M10 15a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0-11a1 1 0 0 0 1-1V1a1 1 0 0 0-2 0v2a1 1 0 0 0 1 1Zm0 12a1 1 0 0 0-1 1v2a1 1 0 1 0 2 0v-2a1 1 0 0 0-1-1ZM4.343 5.757a1 1 0 0 0 1.414-1.414L4.343 2.929a1 1 0 0 0-1.414 1.414l1.414 1.414Zm11.314 8.486a1 1 0 0 0-1.414 1.414l1.414 1.414a1 1 0 0 0 1.414-1.414l-1.414-1.414ZM4 10a1 1 0 0 0-1-1H1a1 1 0 0 0 0 2h2a1 1 0 0 0 1-1Zm15-1h-2a1 1 0 1 0 0 2h2a1 1 0 0 0 0-2ZM4.343 14.243l-1.414 1.414a1 1 0 1 0 1.414 1.414l1.414-1.414a1 1 0 0 0-1.414-1.414ZM14.95 6.05a1 1 0 0 0 .707-.293l1.414-1.414a1 1 0 1 0-1.414-1.414l-1.414 1.414a1 1 0 0 0 .707 1.707Z"></path>
                   </svg>
                 </button>
-              )}
+              )} 
             </div>
-            {user ? (
+            {userDetails ? (
               <>
                 <button
                   type="button"
@@ -115,8 +115,8 @@ export default function Navbar() {
                   <span className="sr-only">Open user menu</span>
 
                   <img
-                    className="w-8 h-8 rounded-full"
-                    src={user?.user?.photo || "/assets/noProfile.png"}
+                    className="w-8 h-8 rounded-full object-cover"
+                    src={userDetails?.Photo || "/assets/noProfile.png"}
                     alt="user"
                   />
                 </button>
@@ -131,10 +131,10 @@ export default function Navbar() {
                   <Link to="/dashboard/user-profile">
                   <div className="py-3 px-4 hover:bg-gray-300 cursor-pointer" >
                     <span className="block text-sm font-semibold text-gray-900 dark:text-white">
-                      {user.username}
+                      {userDetails.Username}
                     </span>
                     <span className="block text-sm text-gray-900 truncate dark:text-white">
-                      {user.email}
+                      {userDetails.Email}
                     </span>
                   </div>
                   </Link>

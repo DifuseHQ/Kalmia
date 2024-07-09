@@ -17,7 +17,6 @@ instance.interceptors.response.use(
         if (error?.response?.status === 500) {
             window.location.href = '/server-down'; // Redirect to server down page for 500 errors
         }else if (error?.response?.status === 400) {
-            toastError(error?.response?.data.message) 
             throw error
         }else if (error?.response?.status === 401) {
             toastError(error?.response?.data?.error) 
