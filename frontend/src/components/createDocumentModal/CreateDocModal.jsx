@@ -49,7 +49,10 @@ export default function CreateDocModal() {
         console.log("error not added");
       }
     } catch (err) {
-      console.error(err);
+      if(!err.response){
+        toastError(err?.message);
+        navigate('/server-down')
+      }
       toastError(err?.response?.data?.message);
     }
   };

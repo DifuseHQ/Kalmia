@@ -47,7 +47,10 @@ export default function CreatepageModal() {
           navigate(`/dashboard/documentation?id=${doc_id}`);
         }
       } catch (err) {
-        console.error(err);
+        if(!err.response){
+          toastError(err?.message);
+          navigate('/server-down')
+        }
         toastError(err?.response?.data?.message);
       }
     } else if (dir === "false") {
@@ -68,7 +71,10 @@ export default function CreatepageModal() {
           );
         }
       } catch (err) {
-        console.error(err);
+        if(!err.response){
+          toastError(err?.message);
+          navigate('/server-down')
+        }
         toastError(err?.response?.data?.message);
       }
     }

@@ -90,7 +90,11 @@ export default function Documentation() {
           setLoading(false);
         }
       } catch (err) {
-        console.error(err);
+        if(!err.response){
+          toastError(err?.message);
+          navigate('/server-down')
+          return;
+        }
         toastError(err?.response?.data?.message);
       }
     };
@@ -118,7 +122,11 @@ export default function Documentation() {
         navigate("/dashboard");
       }
     } catch (err) {
-      console.error(err);
+      if(!err.response){
+        toastError(err?.message);
+        navigate('/server-down')
+        return
+      }
       toastError(err?.response?.data?.message);
     }
   };
@@ -141,7 +149,11 @@ export default function Documentation() {
         toastSuccess(response?.data.message);
       }
     } catch (err) {
-      console.error(err);
+      if(!err.response){
+        toastError(err?.message);
+        navigate('/server-down')
+        return
+      }
       toastError(err?.response?.data?.message);
     }
   };
@@ -168,7 +180,11 @@ export default function Documentation() {
         toastSuccess(response?.data.message);
       }
     } catch (err) {
-      console.error(err);
+      if(!err.response){
+        toastError(err?.message);
+        navigate('/server-down')
+        return
+      }
       toastError(err?.response?.data?.message);
     }
   };
@@ -197,7 +213,11 @@ export default function Documentation() {
         toastSuccess(response?.data.message);
       }
     } catch (err) {
-      console.error(err);
+      if(!err.response){
+        toastError(err?.message);
+        navigate('/server-down')
+        return
+      }
       toastError(err?.response?.data?.message);
     }
   };
@@ -224,7 +244,11 @@ export default function Documentation() {
         toastSuccess(response?.data.message);
       }
     } catch (err) {
-      console.error(err);
+      if(!err.response){
+        toastError(err?.message);
+        navigate('/server-down')
+        return
+      }
       toastError(err?.response?.data?.message);
     }
   };
@@ -259,7 +283,11 @@ export default function Documentation() {
         refreshData();
       }
     } catch (err) {
-      console.error(err);
+      if(!err.response){
+        toastError(err?.message);
+        navigate('/server-down')
+        return
+      }
       toastError(err?.response?.data?.message);
     }
   };

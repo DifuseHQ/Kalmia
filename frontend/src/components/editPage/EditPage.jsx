@@ -52,13 +52,16 @@ export default function EditPage() {
           setTempPageData(response?.data);
         }
       } catch (err) {
-        console.error(err);
+        if(!err.response){
+          toastError(err?.message);
+          navigate('/server-down')
+        }
         toastError(err?.response?.data?.message);
       }
     };
 
     fetchdata();
-  }, [page_id, token]);
+  }, [page_id, token , navigate]);
 
   const handleEdit = async () => {
     try {
@@ -81,7 +84,10 @@ export default function EditPage() {
         }
       }
     } catch (err) {
-      console.error(err);
+      if(!err.response){
+        toastError(err?.message);
+        navigate('/server-down')
+      }
       toastError(err?.response?.data?.message);
     }
   };
@@ -95,7 +101,6 @@ export default function EditPage() {
       const response = await instance.post("docs/page/delete", {
         id: Number(page_id),
       });
-console.log("ok");
       if (response?.status === 200) {
         toastSuccess(response?.data?.message);
         if (dir === "true") {
@@ -110,6 +115,10 @@ console.log("ok");
         }
       }
     } catch (err) {
+      if(!err.response){
+        toastError(err?.message);
+        navigate('/server-down')
+      }
       toastError(err?.response?.data?.message);
     }
   };

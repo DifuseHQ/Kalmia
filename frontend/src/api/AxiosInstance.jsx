@@ -1,7 +1,6 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { toastError } from '../utlis/toast';
-;
 
 
 const instance = axios.create({
@@ -17,7 +16,6 @@ instance.interceptors.response.use(
         console.log(error);
         if (!error?.response) {
             throw error
-            // window.location.href = '/server-down'; // Redirect to server down page for 500 errors
         }else if (error?.response?.status === 400) {
             throw error
         }else if (error?.response?.status === 401) {
@@ -25,9 +23,7 @@ instance.interceptors.response.use(
             Cookies.remove('accessToken'); 
             window.location.href = '/'; 
         } else if (error?.message === 'Network Error') {
-            console.log("here");
             toastError(`${error?.message}, please Try agian later'`); 
-        //    throw error
         } else if (error?.response?.data) {
             toastError(error?.message)
             throw error
@@ -45,7 +41,7 @@ instance.interceptors.request.use(
 
         if (accessToken) {
             const parsedToken = JSON.parse(accessToken);
-            config.headers.Authorization = `Bearer ${parsedToken.token}`;
+            config.headers.Authorization = `Bearer ${parsedToken?.token}`;
         }
 
         return config;

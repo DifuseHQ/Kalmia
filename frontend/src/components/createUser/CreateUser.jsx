@@ -41,7 +41,10 @@ export default function CreateUser() {
         navigate("/dashboard/admin/user-list");
       }
     } catch (err) {
-      console.error(err);
+      if(!err.response){
+        toastError(err?.message);
+        navigate('/server-down')
+      }
       toastError(err?.response?.data?.message);
     }
   };

@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../../Context/AuthContext";
 import axios from "axios"; // Ensure Axios is imported
 import { getTokenFromCookies } from "../../utlis/CookiesManagement";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toastError, toastSuccess } from "../../utlis/toast";
 import instance from "../../api/AxiosInstance";
 import Cookies from "js-cookie";
@@ -12,7 +12,7 @@ import { AnimatePresence, motion } from "framer-motion";
 export default function UserProfile() {
   const { refresh, refreshData } = useContext(AuthContext);
   const [isEdit, setIsEdit] = useState(false);
-
+  const navigate = useNavigate();
   const [userData, setUserData] = useState([]);
 
   const [profileImage, setProfileImage] = useState("/assets/noProfile.png");
@@ -37,12 +37,15 @@ export default function UserProfile() {
           setProfileImage(filterUser.Photo || "/assets/noProfile.png");
         }
       } catch (err) {
-        console.error(err);
-        toastError(err.response.data.message);
+        if(!err.response){
+          toastError(err?.message);
+          navigate('/server-down')
+        }
+        toastError(err?.response?.data?.message);
       }
     };
     fetchData();
-  }, [refresh]);
+  }, [refresh,navigate]);
 
   const handleUpload = async (e) => {
     const file = e.target.files[0];
@@ -69,7 +72,10 @@ export default function UserProfile() {
           }
         }
       } catch (err) {
-        console.error(err);
+        if(!err.response){
+          toastError(err?.message);
+          navigate('/server-down')
+        }
         toastError(err?.response?.data?.message);
       }
     }
@@ -86,7 +92,10 @@ export default function UserProfile() {
         refreshData();
       }
     } catch (err) {
-      console.error(err);
+      if(!err.response){
+        toastError(err?.message);
+        navigate('/server-down')
+      }
       toastError(err?.response?.data?.message);
     }
   };
@@ -105,7 +114,10 @@ export default function UserProfile() {
         refreshData();
       }
     } catch (err) {
-      console.error(err);
+      if(!err.response){
+        toastError(err?.message);
+        navigate('/server-down')
+      }
       toastError(err?.response?.data?.message);
     }
   };

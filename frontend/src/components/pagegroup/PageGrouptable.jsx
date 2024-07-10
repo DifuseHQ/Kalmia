@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import CreatePageGroup from "../createPageGroup/CreatePageGroup";
 import { toastError, toastSuccess, toastWarning } from "../../utlis/toast";
@@ -15,6 +15,7 @@ export default function PageGrouptable() {
   const pagegroup_id = searchParams.get("pagegroup_id");
   const [groupDetail, setGroupDetail] = useState([]);
   const [data, setData] = useState([]);
+  const navigate = useNavigate()
 
   useEffect(() => {
     const fetchData = async () => {
@@ -34,13 +35,17 @@ export default function PageGrouptable() {
           }
         }
       } catch (err) {
-        console.error(err);
+        if(!err.response){
+          toastError(err?.message);
+          navigate('/server-down')
+          return
+        }
         toastError(err?.response?.data?.message);
       }
     };
-
+ 
     fetchData();
-  }, [pagegroup_id, pageRefresh]);
+  }, [pagegroup_id, pageRefresh, navigate]);
 
   const refreshPage = () => {
     setPageRefresh(!refreshPage);
@@ -71,7 +76,11 @@ export default function PageGrouptable() {
         toastSuccess(response?.data?.message);
       }
     } catch (err) {
-      console.error(err);
+      if(!err.response){
+        toastError(err?.message);
+        navigate('/server-down')
+        return
+      }
       toastError(err?.response?.data?.message);
     }
   };
@@ -107,7 +116,11 @@ export default function PageGrouptable() {
         refreshPage();
       }
     } catch (err) {
-      console.error(err);
+      if(!err.response){
+        toastError(err?.message);
+        navigate('/server-down')
+        return
+      }
       toastError(err?.response?.data?.message);
     }
   };
@@ -136,7 +149,11 @@ export default function PageGrouptable() {
         toastSuccess(response?.data?.message);
       }
     } catch (err) {
-      console.error(err);
+      if(!err.response){
+        toastError(err?.message);
+        navigate('/server-down')
+        return
+      }
       toastError(err?.response?.data?.message);
     }
   };

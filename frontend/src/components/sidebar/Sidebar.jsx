@@ -22,7 +22,11 @@ export default function Sidebar() {
           setDocumentation(response?.data);
         }
       } catch (err) {
-        console.error(err);
+        if(!err.response){
+          toastError(err?.message);
+          navigate('/server-down')
+          return
+        }
         toastError(err?.response?.data?.message);
       }
     };

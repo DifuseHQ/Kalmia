@@ -33,7 +33,10 @@ export default function UserResetPassword() {
         navigate("/dashboard/user-profile");
       }
     } catch (err) {
-      console.error(err);
+      if(!err.response){
+        toastError(err?.message);
+        navigate('/server-down')
+      }
       toastError(err?.response?.data?.message);
     }
   };

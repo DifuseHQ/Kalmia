@@ -31,12 +31,15 @@ export default function UserList() {
         }
       } catch (err) {
         setLoading(false);
-        console.error(err);
+        if(!err.response){
+          toastError(err?.message);
+          navigate('/server-down')
+        }
         toastError(err?.response?.data?.message);
       }
     };
     fetchData();
-  }, [refresh]);
+  }, [refresh,navigate]); 
 
   // Filtered user list based on search term
   const filterUser = userList.filter(
@@ -83,7 +86,10 @@ export default function UserList() {
         navigate("/dashboard/admin/user-list");
       }
     } catch (err) {
-      console.error(err);
+      if(!err.response){
+        toastError(err?.message);
+        navigate('/server-down')
+      }
       toastError(err?.response?.data?.message);
     }
   };
