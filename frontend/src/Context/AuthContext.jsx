@@ -250,6 +250,7 @@ export const AuthProvider = ({ children }) => {
         fetchPageGroups,
         fetchPage,
         documentationData,
+        setDocumentationData,
         refresh,
         refreshData,
         deleteModal,

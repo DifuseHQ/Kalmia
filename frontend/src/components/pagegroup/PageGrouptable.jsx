@@ -17,6 +17,17 @@ export default function PageGrouptable() {
   const [data, setData] = useState([]);
   const navigate = useNavigate()
 
+  data.sort((a, b) => {
+  const orderA = a.order !== null ? a.order : Infinity;
+  const orderB = b.order !== null ? b.order : Infinity;
+
+  if (orderA !== orderB) {
+    return orderA - orderB;
+  } else {
+    return data.indexOf(a) - data.indexOf(b);
+  } 
+});
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -50,6 +61,22 @@ export default function PageGrouptable() {
   const refreshPage = () => {
     setPageRefresh(!refreshPage);
   };
+
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
+    // setCurrentPage(1); // Reset to the first page on search
+  };
+
+
+  const filteredItems = data.filter(
+    (obj) =>
+      (obj.parentId  === Number(pagegroup_id) || obj.pageGroupId  === Number(pagegroup_id)) && 
+      (obj.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        obj.title?.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
 
   const [openCreatePageGroup, setOpenCreatePageGroup] = useState(false);
 
@@ -156,6 +183,56 @@ export default function PageGrouptable() {
       }
       toastError(err?.response?.data?.message);
     }
+  };
+
+  const [draggedItem, setDraggedItem] = useState(null);
+
+  const handleDragStart = (index) => {
+    setDraggedItem(index);
+  };
+
+  const handleDragEnter = async(index) => {
+    if (draggedItem === index) return;
+
+    const newItems = [...data];
+    const draggedItemContent = newItems[draggedItem];
+    newItems.splice(draggedItem, 1);
+    newItems.splice(index, 0, draggedItemContent);
+
+    setDraggedItem(index);
+    setData(newItems);
+  
+
+    console.log(newItems);
+
+    // // Define an async function to use await inside forEach
+    const updateOrder = async (item, index) => {
+        try {
+            if(item?.name){
+              await instance.post('/docs/page-group/reorder', {
+                "id": item.id,
+                "documentationId":Number(doc_id),
+                "parentId":Number(pagegroup_id),
+                "order": index
+            });
+            }else{
+              await instance.post('/docs/page/reorder', {
+                "id": item.id,
+                "documentationId":Number(doc_id),
+                "pageGroupId":Number(pagegroup_id),
+                "order": index
+            });
+            }
+            
+            console.log(`Order updated ${item?.name ? 'page Group ID' : 'page ID'}: ${index} = ${item.id}`);
+        } catch (error) {
+            console.error('Error updating order:', error);
+        }
+    };
+
+    // // Use map instead of forEach to iterate asynchronously
+    await Promise.all(newItems.map((item, index) => updateOrder(item, index)));
+    refreshPage()
   };
 
   return (
@@ -287,6 +364,8 @@ export default function PageGrouptable() {
                   <input
                     type="text"
                     id="simple-search"
+                    value={searchTerm}
+                    onChange={handleSearchChange}
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     placeholder="Search"
                     required=""
@@ -334,7 +413,7 @@ export default function PageGrouptable() {
                 </tr>
               </thead>
               <tbody>
-                {data.length <= 0 && (
+                {filteredItems.length <= 0 && (
                   <tr className="border-b dark:border-gray-700">
                     <td colSpan="4" className="text-center py-8">
                       <h1 className="text-center text-gray-600 sm:text-lg font-semibold">
@@ -344,8 +423,11 @@ export default function PageGrouptable() {
                   </tr>
                 )}
 
-                {data.map((obj, index) => (
+                {filteredItems.map((obj, index) => (
                   <tr
+                    draggable
+                    onDragStart={() => handleDragStart(index)}
+                    onDragEnter={() => handleDragEnter(index)}
                     className="border-b dark:border-gray-700 hover:bg-gray-200"
                     key={uuidv4()}
                   >

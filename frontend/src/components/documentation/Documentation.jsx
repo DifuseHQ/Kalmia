@@ -1,27 +1,24 @@
 import { initFlowbite } from "flowbite";
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import ClipLoader from "react-spinners/ClipLoader";
+import ClipLoader from "react-spinners/ClipLoader"; 
 import EditDocumentModal from "../createDocumentModal/EditDocumentModal";
 import DeleteModal from "../deleteModal/DeleteModal";
 import { toastError, toastSuccess, toastWarning } from "../../utlis/toast";
 import CreatePageGroup from "../createPageGroup/CreatePageGroup";
 import { AnimatePresence, motion } from "framer-motion";
 import { AuthContext } from "../../Context/AuthContext";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { v4 as uuidv4 } from "uuid";
 import instance from "../../api/AxiosInstance";
 
 export default function Documentation() {
-  const { refresh, refreshData, user, documentationData } =
+  const { refresh, refreshData, user, documentationData ,setDocumentationData} =
     useContext(AuthContext);
   const navigate = useNavigate();
-
   const [searchParam] = useSearchParams();
   const doc_id = searchParam.get("id");
 
   const [loading, setLoading] = useState(false);
-
   //Documentation CRUD
   const [documentData, setDocumentData] = useState([]);
   const [isEditModal, setIsEditModal] = useState(false);
@@ -35,18 +32,18 @@ export default function Documentation() {
   const [openCreatePageGroup, setOpenCreatePageGroup] = useState(false);
 
   //pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 7;
-  const startIdx = (currentPage - 1) * itemsPerPage;
-  const endIdx = startIdx + itemsPerPage;
-  const totalItems = documentationData.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  // const [currentPage, setCurrentPage] = useState(1);
+  // const itemsPerPage = 7;
+  // const startIdx = (currentPage - 1) * itemsPerPage;
+  // const endIdx = startIdx + itemsPerPage;
+  // const totalItems = documentationData.length;
+  // const totalPages = Math.ceil(totalItems / itemsPerPage);
 
   const [searchTerm, setSearchTerm] = useState("");
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
-    setCurrentPage(1); // Reset to the first page on search
+    // setCurrentPage(1); // Reset to the first page on search
   };
 
   // Filter the items based on the search term
@@ -57,17 +54,15 @@ export default function Documentation() {
         obj.title?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const paginatedItems = filteredItems.slice(startIdx, endIdx);
+  // const paginatedItems = filteredItems.slice(startIdx, endIdx);
 
   //pagination function
-  const handlePageChange = useCallback((pageNumber) => {
-    setCurrentPage(pageNumber);
-  }, []);
+  // const handlePageChange = useCallback((pageNumber) => {
+  //   setCurrentPage(pageNumber);
+  // }, []);
 
   //Flowbite js function
-  useEffect(() => {
-    initFlowbite();
-  }, [paginatedItems, handlePageChange]);
+ 
 
   //Fetch document information
   useEffect(() => {
@@ -252,45 +247,49 @@ export default function Documentation() {
       toastError(err?.response?.data?.message);
     }
   };
+ useEffect(() => {
+    initFlowbite();
+  }, [documentationData,isEditModal,isEditpageGroup,isDeleteModal,isPageGroupsDeleteModal]); 
+  const [draggedItem, setDraggedItem] = useState(null);
 
-  const [items, setItems] = useState(paginatedItems);
-
-  // Function to handle drag and drop
-  const handleDragEnd = async (result) => {
-    if (!result.destination) return; // Drop outside the list
-
-    const reorderedItems = [...paginatedItems];
-
-    const [reorderedItem] = reorderedItems.splice(result.source.index, 1);
-
-    reorderedItems.splice(result.destination.index, 0, reorderedItem);
-
-    setDocumentData(reorderedItems);
-
-    const payload = reorderedItems.map((item, index) => ({
-      id: item.id,
-      order: index + 1,
-    }));
-
-    const newOrder = payload.find((obj) => obj.id === reorderedItem.id);
-
-    try {
-      const response = await instance.post("docs/page/reorder", {
-        id: Number(newOrder?.id),
-        order: Number(newOrder?.order),
-      });
-      if (response?.status === 200) {
-        refreshData();
-      }
-    } catch (err) {
-      if(!err.response){
-        toastError(err?.message);
-        navigate('/server-down')
-        return
-      }
-      toastError(err?.response?.data?.message);
-    }
+  const handleDragStart = (index) => {
+    setDraggedItem(index);
   };
+
+  const handleDragEnter = async(index) => {
+    if (draggedItem === index) return;
+
+    const newItems = [...documentationData];
+    const draggedItemContent = newItems[draggedItem];
+    newItems.splice(draggedItem, 1);
+    newItems.splice(index, 0, draggedItemContent);
+
+    setDraggedItem(index);
+    setDocumentationData(newItems);
+
+    console.log(newItems);
+
+
+    const updateOrder = async (item, index) => {
+        try {
+            const endpoint = item?.name ? '/docs/page-group/reorder' : '/docs/page/reorder';
+            await instance.post(endpoint, {
+                "id": item.id,
+                "documentationId": doc_id,
+                "order": index
+            });
+            console.log(`Order updated ${item?.name ? 'page Group ID' : 'page ID'}: ${index} = ${item.id}`);
+        } catch (error) {
+            console.error('Error updating order:', error);
+        }
+    };
+
+    // Use map instead of forEach to iterate asynchronously
+    await Promise.all(newItems.map((item, index) => updateOrder(item, index)));
+          
+  };
+
+
 
   return (
     <AnimatePresence className="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5">
@@ -528,10 +527,8 @@ export default function Documentation() {
                   </th>
                 </tr>
               </thead>
-              <DragDropContext onDragEnd={handleDragEnd}>
-                <Droppable droppableId="tableRows">
-                  {(provided) => (
-                    <tbody ref={provided.innerRef} {...provided.droppableProps}>
+              
+                    <tbody > 
                       {loading ? (
                         <tr className="border-b dark:border-gray-700">
                           <td colSpan="4" className="py-8">
@@ -549,7 +546,7 @@ export default function Documentation() {
                             </div>
                           </td>
                         </tr>
-                      ) : !paginatedItems || paginatedItems.length <= 0 ? (
+                      ) : !filteredItems || filteredItems.length <= 0 ? (
                         <motion.tr
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
@@ -563,25 +560,15 @@ export default function Documentation() {
                           </td>
                         </motion.tr>
                       ) : (
-                        paginatedItems.map((obj, index) => (
-                          <Draggable
-                            key={uuidv4()}
-                            draggableId={`${obj.id}-${uuidv4()}`}
-                            index={index}
-                          >
-                            {(provided, snapshot) => (
+                        filteredItems.map((obj, index) => (
                               <tr
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                ref={provided.innerRef}
-                                className={`border h-16 ${
-                                  snapshot.isDragging
-                                    ? "bg-gray-400"
-                                    : "bg-white"
-                                }dark:bg-gray-700`}
+                              draggable
+                              onDragStart={() => handleDragStart(index)}
+                              onDragEnter={() => handleDragEnter(index)}
+                                className={`border dark:border-gray-700 h-16 dark:bg-gray-700`}
                                 key={uuidv4()}
                               >
-                                <th
+                                <th 
                                   scope="row"
                                   className="items-center w-5 cursor-pointer gap-2 px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white "
                                 >
@@ -709,20 +696,17 @@ export default function Documentation() {
                                   </td>
                                 )}
                               </tr>
-                            )}
-                          </Draggable>
+                        
                         ))
                       )}
                     </tbody>
-                  )}
-                </Droppable>
-              </DragDropContext>
+                  
             </table>
           </div>
 
           {/* pagination  */}
 
-          {!paginatedItems || paginatedItems.length <= 0 ? null : (
+          {/* {!filteredItems || filteredItems.length <= 0 ? null : (
             <nav
               className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4"
               aria-label="Table navigation"
@@ -798,7 +782,7 @@ export default function Documentation() {
                 </li>
               </ul>
             </nav>
-          )}
+          )} */}
 
           {/* PageGroup Edit Component */}
           {isEditpageGroup && currentItem && (

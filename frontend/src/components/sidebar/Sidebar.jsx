@@ -119,7 +119,7 @@ export default function Sidebar() {
                     <button
                       type="button"
                       onClick={() => toggleDropdown(index)}
-                      className="flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-200 dark:text-white dark:hover:bg-gray-700"
+                      className="flex items-center p-1 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-200 dark:text-white dark:hover:bg-gray-700"
                       aria-controls={`${val.name}`}
                     >
                       <svg
