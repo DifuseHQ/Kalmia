@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"git.difuse.io/Difuse/kalmia/config"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"strings"
 	"time"
+
+	"git.difuse.io/Difuse/kalmia/config"
 )
 
 func UploadImage(file io.Reader) (string, error) {
@@ -59,6 +60,7 @@ func UploadImage(file io.Reader) (string, error) {
 	}
 
 	err = json.NewDecoder(resp.Body).Decode(&result)
+
 	if err != nil {
 		return "", err
 	}

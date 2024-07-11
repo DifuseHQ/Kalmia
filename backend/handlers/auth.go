@@ -120,6 +120,10 @@ func EditUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		user.Password = hashedPassword
 	}
 
+	if req.Username != "" {
+		user.Username = req.Username
+	}
+
 	if req.Email != "" {
 		user.Email = req.Email
 	}
