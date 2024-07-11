@@ -105,7 +105,9 @@ export default function EditPage() {
         toastSuccess(response?.data?.message);
         if (dir === "true") {
           refreshData();
+          console.log("inside dir true correct");
           navigate(`/dashboard/documentation?id=${doc_id}`);
+        
         } else {
           refreshData();
           console.log("correct");

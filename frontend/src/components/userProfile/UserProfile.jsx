@@ -103,6 +103,7 @@ export default function UserProfile() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      console.log(username);
       const response = await instance.post("/auth/user/edit", {
         id: Number(userData.ID),
         username: username,

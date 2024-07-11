@@ -20,6 +20,7 @@ export const AuthProvider = ({ children }) => {
   });
 
   const [userDetails, setUserDetails] = useState({});
+  const [isOpenModal, setIsOpenModal] = useState(false);
 
   const navigate = useNavigate();
 
@@ -111,69 +112,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const [fetchPageGroups, setFetchPageGroup] = useState([]);
-  const [fetchPage, setFetchPage] = useState([]);
-  const [documentationData, setDocumentationData] = useState([]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        if (!user) return;
-
-        const responsePageGroups = await instance.get("/docs/page-groups");
-        setFetchPageGroup(responsePageGroups?.data);
-
-        const responsePages = await instance.get("/docs/pages");
-        setFetchPage(responsePages?.data);
-      } catch (err) {
-        if (!err.response) {
-          navigate("/server-down");
-          return;
-        }
-        console.error(err);
-        toastError(err?.response?.data?.message);
-      }
-    };
-
-    fetchData();
-  }, [user, refresh, navigate]);
-
-  useEffect(() => {
-    const combineData = () => {
-      let filteredGroups = [];
-      let filteredPages = [];
-
-      if (fetchPageGroups.length > 0 && fetchPage.length > 0) {
-        filteredGroups = fetchPageGroups.filter((obj) => !obj.parentId);
-        filteredPages = fetchPage.filter((obj) => !obj.pageGroupId);
-      } else if (fetchPageGroups.length > 0) {
-        filteredGroups = fetchPageGroups.filter((obj) => !obj.parentId);
-      } else if (fetchPage.length > 0) {
-        filteredPages = fetchPage.filter((obj) => !obj.pageGroupId);
-      } else {
-        return [];
-      }
-
-      const combinedPages = [...filteredGroups, ...filteredPages];
-
-      combinedPages.sort((a, b) => {
-        const orderA = a.order !== null ? a.order : Infinity;
-        const orderB = b.order !== null ? b.order : Infinity;
-
-        if (orderA !== orderB) {
-          return orderA - orderB;
-        } else {
-          return combinedPages.indexOf(a) - combinedPages.indexOf(b);
-        }
-      });
-
-      setDocumentationData(combinedPages);
-    };
-
-    combineData();
-  }, [fetchPageGroups, fetchPage, refresh]);
-
-
   const refreshToken = useCallback(async () => {
     try {
       let accessToken = JSON.parse(Cookies.get("accessToken"));
@@ -247,10 +185,10 @@ export const AuthProvider = ({ children }) => {
         user,
         setUser,
         logout,
-        fetchPageGroups,
-        fetchPage,
-        documentationData,
-        setDocumentationData,
+        // fetchPageGroups,
+        // fetchPage,
+        // documentationData,
+        // setDocumentationData,
         refresh,
         refreshData,
         deleteModal,
@@ -258,6 +196,8 @@ export const AuthProvider = ({ children }) => {
         userDetails,
         setUserDetails,
         refreshToken,
+        isOpenModal, 
+        setIsOpenModal
       }}
     >
       {children}

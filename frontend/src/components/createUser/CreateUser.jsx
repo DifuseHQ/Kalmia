@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { toastError, toastSuccess } from "../../utlis/toast";
+import { toastError, toastSuccess, toastWarning } from "../../utlis/toast";
 import instance from "../../api/AxiosInstance";
 
 export default function CreateUser() {
@@ -24,11 +24,16 @@ export default function CreateUser() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.password !== formData.rePassword) {
-      toastError("Password and Confirm Password do not match");
+
+    if(formData.password.length < 8){
+      toastWarning("Password must be 8 characters");
       return;
     }
-    console.log(formData);
+
+    if (formData.password !== formData.rePassword) {
+      toastWarning("Password and Confirm Password do not match");
+      return;
+    }
 
     try {
       const response = await instance.post("/auth/user/create", {

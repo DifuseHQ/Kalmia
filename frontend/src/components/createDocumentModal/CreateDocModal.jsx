@@ -1,5 +1,4 @@
 import React, { useContext, useState } from "react";
-import { ModalContext } from "../../App";
 import { useNavigate } from "react-router-dom";
 import { toastError, toastSuccess, toastWarning } from "../../utlis/toast";
 import { AnimatePresence, motion } from "framer-motion";
@@ -7,9 +6,8 @@ import { AuthContext } from "../../Context/AuthContext";
 import instance from "../../api/AxiosInstance";
 
 export default function CreateDocModal() {
-  const { refreshData } = useContext(AuthContext);
+  const { refreshData , isOpenModal, setIsOpenModal  } = useContext(AuthContext);
   const navigate = useNavigate();
-  const { isOpenModal, setIsOpenModal } = useContext(ModalContext);
   const [formData, setFormData] = useState({
     title: "",
     description: "",

@@ -26,7 +26,7 @@ export default function UserList() {
       try {
         const response = await instance.get("/auth/users");
         if (response?.status === 200) {
-          setUserList(response?.data);
+          setUserList(response?.data || []);
           setLoading(false);
         }
       } catch (err) {

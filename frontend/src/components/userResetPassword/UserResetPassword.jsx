@@ -19,6 +19,11 @@ export default function UserResetPassword() {
       return;
     }
 
+    if(password.length < 8){
+      toastWarning("Password must be 8 characters");
+      return;
+    }
+
     if (password !== confirmPasswod) {
       toastWarning("Password and Confirm password miss match");
       return;

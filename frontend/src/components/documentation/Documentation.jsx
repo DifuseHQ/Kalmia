@@ -12,13 +12,14 @@ import { v4 as uuidv4 } from "uuid";
 import instance from "../../api/AxiosInstance";
 
 export default function Documentation() {
-  const { refresh, refreshData, user, documentationData ,setDocumentationData} =
+  const { refresh, refreshData, user} =
     useContext(AuthContext);
   const navigate = useNavigate();
   const [searchParam] = useSearchParams();
   const doc_id = searchParam.get("id");
 
   const [loading, setLoading] = useState(false);
+
   //Documentation CRUD
   const [documentData, setDocumentData] = useState([]);
   const [isEditModal, setIsEditModal] = useState(false);
@@ -31,20 +32,71 @@ export default function Documentation() {
 
   const [openCreatePageGroup, setOpenCreatePageGroup] = useState(false);
 
-  //pagination
-  // const [currentPage, setCurrentPage] = useState(1);
-  // const itemsPerPage = 7;
-  // const startIdx = (currentPage - 1) * itemsPerPage;
-  // const endIdx = startIdx + itemsPerPage;
-  // const totalItems = documentationData.length;
-  // const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const [fetchPageGroups, setFetchPageGroup] = useState([]);
+  const [fetchPage, setFetchPage] = useState([]);
+  const [documentationData, setDocumentationData] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const responsePageGroups = await instance.get("/docs/page-groups");
+        setFetchPageGroup(responsePageGroups?.data || []);
+        const responsePages = await instance.get("/docs/pages");
+        setFetchPage(responsePages?.data || []);
+      } catch (err) {
+        if (!err.response) {
+          navigate("/server-down");
+          return;
+        }
+        console.error(err);
+        toastError(err?.response?.data?.message);
+      }
+    };
+
+    fetchData();
+  }, [user, refresh, navigate]);
+
+  useEffect(() => {
+    const combineData = () => {
+      let filteredGroups = [];
+      let filteredPages = [];
+
+      if (fetchPageGroups.length > 0 && fetchPage.length > 0) {
+        filteredGroups = fetchPageGroups.filter((obj) => !obj.parentId);
+        filteredPages = fetchPage.filter((obj) => !obj.pageGroupId);
+      } else if (fetchPageGroups.length > 0) {
+        filteredGroups = fetchPageGroups.filter((obj) => !obj.parentId);
+      } else if (fetchPage.length > 0) {
+        filteredPages = fetchPage.filter((obj) => !obj.pageGroupId);
+      } else {
+        return [];
+      }
+
+      const combinedPages = [...filteredGroups, ...filteredPages];
+
+      combinedPages.sort((a, b) => {
+        const orderA = a.order !== null ? a.order : Infinity;
+        const orderB = b.order !== null ? b.order : Infinity;
+
+        if (orderA !== orderB) {
+          return orderA - orderB;
+        } else {
+          return combinedPages.indexOf(a) - combinedPages.indexOf(b);
+        }
+      });
+
+      setDocumentationData(combinedPages);
+    };
+
+    combineData();
+  }, [fetchPageGroups, fetchPage, refresh]);
 
   const [searchTerm, setSearchTerm] = useState("");
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
-    // setCurrentPage(1); // Reset to the first page on search
   };
+
 
   // Filter the items based on the search term
   const filteredItems = documentationData.filter(
@@ -53,16 +105,6 @@ export default function Documentation() {
       (obj.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         obj.title?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
-
-  // const paginatedItems = filteredItems.slice(startIdx, endIdx);
-
-  //pagination function
-  // const handlePageChange = useCallback((pageNumber) => {
-  //   setCurrentPage(pageNumber);
-  // }, []);
-
-  //Flowbite js function
- 
 
   //Fetch document information
   useEffect(() => {
@@ -95,7 +137,7 @@ export default function Documentation() {
     };
 
     fetchdata();
-  }, [doc_id, refresh, navigate, user]);
+  }, [doc_id, refresh, navigate, user ]);
 
   const handleDeletemodalopen = () => {
     setDeleteModal(true);
@@ -165,13 +207,14 @@ export default function Documentation() {
   };
 
   const handleDeletePageGroup = async (id) => {
+    console.log("handle delete");
     try {
       const response = await instance.post("docs/page-group/delete", {
         id: Number(id),
       });
       if (response?.status === 200) {
-        refreshData();
         setIsPageGroupsDeleteModal(false);
+        refreshData();
         toastSuccess(response?.data.message);
       }
     } catch (err) {
@@ -446,6 +489,7 @@ export default function Documentation() {
         </div>
       </motion.div>
 
+{filteredItems ? (
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -507,7 +551,7 @@ export default function Documentation() {
               </motion.button>
             </div>
           </div>
-
+        {filteredItems &&
           <div className="overflow-x-auto sm:overflow-visible">
             <table className="w-full  text-sm text-left text-gray-500 dark:text-gray-400">
               <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
@@ -546,7 +590,7 @@ export default function Documentation() {
                             </div>
                           </td>
                         </tr>
-                      ) : !filteredItems || filteredItems.length <= 0 ? (
+                      ) : !filteredItems === null|| filteredItems.length <= 0 ? (
                         <motion.tr
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
@@ -703,86 +747,7 @@ export default function Documentation() {
                   
             </table>
           </div>
-
-          {/* pagination  */}
-
-          {/* {!filteredItems || filteredItems.length <= 0 ? null : (
-            <nav
-              className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4"
-              aria-label="Table navigation"
-            >
-              <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
-                Showing
-                <span className="font-semibold text-gray-900 dark:text-white mx-1">
-                  {startIdx + 1}-{Math.min(endIdx, totalItems)}
-                </span>
-                of
-                <span className="font-semibold text-gray-900 dark:text-white mx-1">
-                  {totalItems}
-                </span>
-              </span>
-              <ul className="inline-flex items-stretch -space-x-px">
-                <li>
-                  <button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="flex items-center justify-center h-full py-1.5 px-3 ml-0 text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                  >
-                    <span className="sr-only">Previous</span>
-                    <svg
-                      className="w-5 h-5"
-                      aria-hidden="true"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </button>
-                </li>
-                {Array.from({ length: totalPages }, (_, i) => (
-                  <li key={i}>
-                    <button
-                      onClick={() => handlePageChange(i + 1)}
-                      className={`flex items-center justify-center text-sm py-2 px-3 leading-tight ${
-                        currentPage === i + 1
-                          ? "text-primary-600 bg-primary-50 border border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
-                          : "text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                      }`}
-                    >
-                      {i + 1}
-                    </button>
-                  </li>
-                ))}
-                <li>
-                  <button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="flex items-center justify-center h-full py-1.5 px-3 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-                  >
-                    <span className="sr-only">Next</span>
-                    <svg
-                      className="w-5 h-5"
-                      aria-hidden="true"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 111.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </button>
-                </li>
-              </ul>
-            </nav>
-          )} */}
+}
 
           {/* PageGroup Edit Component */}
           {isEditpageGroup && currentItem && (
@@ -807,6 +772,15 @@ export default function Documentation() {
           )}
         </div>
       </motion.div>
+
+):(
+<div className="flex justify-center min-h-52 items-center">
+            <p className="text-2xl font-bold text-gray-500">
+              No documenations Found
+            </p>
+          </div>
+
+)}
     </AnimatePresence>
   );
 }
