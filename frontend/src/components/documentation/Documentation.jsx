@@ -1,19 +1,17 @@
-import { initFlowbite } from "flowbite";
 import React, { useContext, useEffect, useState } from "react";
+import { AuthContext } from "../../Context/AuthContext";
+import instance from "../../api/AxiosInstance";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import ClipLoader from "react-spinners/ClipLoader"; 
+import ClipLoader from "react-spinners/ClipLoader";
 import EditDocumentModal from "../createDocumentModal/EditDocumentModal";
 import DeleteModal from "../deleteModal/DeleteModal";
 import { toastError, toastSuccess, toastWarning } from "../../utlis/toast";
 import CreatePageGroup from "../createPageGroup/CreatePageGroup";
 import { AnimatePresence, motion } from "framer-motion";
-import { AuthContext } from "../../Context/AuthContext";
-import { v4 as uuidv4 } from "uuid";
-import instance from "../../api/AxiosInstance";
 
 export default function Documentation() {
-  const { refresh, refreshData, user} =
-    useContext(AuthContext);
+  const { refresh, refreshData, user } = useContext(AuthContext);
   const navigate = useNavigate();
   const [searchParam] = useSearchParams();
   const doc_id = searchParam.get("id");
@@ -35,6 +33,11 @@ export default function Documentation() {
   const [fetchPageGroups, setFetchPageGroup] = useState([]);
   const [fetchPage, setFetchPage] = useState([]);
   const [documentationData, setDocumentationData] = useState([]);
+  const [refreshPage, setRefreshpage] = useState(false);
+
+  const handleRefresh = () => {
+    setRefreshpage(!refreshPage);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -54,7 +57,7 @@ export default function Documentation() {
     };
 
     fetchData();
-  }, [user, refresh, navigate]);
+  }, [user, refreshPage, refresh, navigate, refreshPage]);
 
   useEffect(() => {
     const combineData = () => {
@@ -97,7 +100,6 @@ export default function Documentation() {
     setSearchTerm(event.target.value);
   };
 
-
   // Filter the items based on the search term
   const filteredItems = documentationData.filter(
     (obj) =>
@@ -127,9 +129,9 @@ export default function Documentation() {
           setLoading(false);
         }
       } catch (err) {
-        if(!err.response){
+        if (!err.response) {
           toastError(err?.message);
-          navigate('/server-down')
+          navigate("/server-down");
           return;
         }
         toastError(err?.response?.data?.message);
@@ -137,7 +139,15 @@ export default function Documentation() {
     };
 
     fetchdata();
-  }, [doc_id, refresh, navigate, user ]);
+  }, [doc_id, refresh, navigate, user]);
+
+  const [openDropdownId, setOpenDropdownId] = useState(null);
+
+  const toggleDropdown = (currentIndex) => {
+    setOpenDropdownId((prevId) =>
+      prevId === currentIndex ? null : currentIndex
+    );
+  };
 
   const handleDeletemodalopen = () => {
     setDeleteModal(true);
@@ -159,10 +169,10 @@ export default function Documentation() {
         navigate("/dashboard");
       }
     } catch (err) {
-      if(!err.response){
+      if (!err.response) {
         toastError(err?.message);
-        navigate('/server-down')
-        return
+        navigate("/server-down");
+        return;
       }
       toastError(err?.response?.data?.message);
     }
@@ -186,10 +196,10 @@ export default function Documentation() {
         toastSuccess(response?.data.message);
       }
     } catch (err) {
-      if(!err.response){
+      if (!err.response) {
         toastError(err?.message);
-        navigate('/server-down')
-        return
+        navigate("/server-down");
+        return;
       }
       toastError(err?.response?.data?.message);
     }
@@ -207,26 +217,31 @@ export default function Documentation() {
   };
 
   const handleDeletePageGroup = async (id) => {
-    console.log("handle delete");
     try {
       const response = await instance.post("docs/page-group/delete", {
         id: Number(id),
       });
       if (response?.status === 200) {
+        console.log("deleted");
         setIsPageGroupsDeleteModal(false);
-        refreshData();
         toastSuccess(response?.data.message);
+        if (filteredItems.length > 1) {
+          navigate(`/dashboard/documentation?id=${doc_id}`);
+          handleRefresh();
+        } else {
+          window.location.reload();
+        }
       }
     } catch (err) {
-      if(!err.response){
+      if (!err.response) {
         toastError(err?.message);
-        navigate('/server-down')
-        return
+        navigate("/server-down");
+        return;
       }
       toastError(err?.response?.data?.message);
     }
   };
-
+  console.log(filteredItems.length);
   const openEditPageGroup = (item) => {
     setCurrentItem(item);
     setIsEditpageGroup(true);
@@ -251,10 +266,10 @@ export default function Documentation() {
         toastSuccess(response?.data.message);
       }
     } catch (err) {
-      if(!err.response){
+      if (!err.response) {
         toastError(err?.message);
-        navigate('/server-down')
-        return
+        navigate("/server-down");
+        return;
       }
       toastError(err?.response?.data?.message);
     }
@@ -282,57 +297,49 @@ export default function Documentation() {
         toastSuccess(response?.data.message);
       }
     } catch (err) {
-      if(!err.response){
+      if (!err.response) {
         toastError(err?.message);
-        navigate('/server-down')
-        return
+        navigate("/server-down");
+        return;
       }
       toastError(err?.response?.data?.message);
     }
   };
- useEffect(() => {
-    initFlowbite();
-  }, [documentationData,isEditModal,isEditpageGroup,isDeleteModal,isPageGroupsDeleteModal]); 
-  const [draggedItem, setDraggedItem] = useState(null);
 
-  const handleDragStart = (index) => {
-    setDraggedItem(index);
-  };
+  const handleDragEnd = async (result) => {
+    if (!result.destination) {
+      return;
+    }
 
-  const handleDragEnter = async(index) => {
-    if (draggedItem === index) return;
+    const newItems = Array.from(documentationData);
+    const [reorderedItem] = newItems.splice(result.source.index, 1);
+    newItems.splice(result.destination.index, 0, reorderedItem);
 
-    const newItems = [...documentationData];
-    const draggedItemContent = newItems[draggedItem];
-    newItems.splice(draggedItem, 1);
-    newItems.splice(index, 0, draggedItemContent);
-
-    setDraggedItem(index);
     setDocumentationData(newItems);
 
-    console.log(newItems);
-
-
     const updateOrder = async (item, index) => {
-        try {
-            const endpoint = item?.name ? '/docs/page-group/reorder' : '/docs/page/reorder';
-            await instance.post(endpoint, {
-                "id": item.id,
-                "documentationId": doc_id,
-                "order": index
-            });
-            console.log(`Order updated ${item?.name ? 'page Group ID' : 'page ID'}: ${index} = ${item.id}`);
-        } catch (error) {
-            console.error('Error updating order:', error);
+      try {
+        const endpoint = item?.name
+          ? "/docs/page-group/reorder"
+          : "/docs/page/reorder";
+        await instance.post(endpoint, {
+          id: item.id,
+          documentationId: doc_id,
+          order: index,
+        });
+      } catch (err) {
+        if (!err.response) {
+          toastError(err?.message);
+          navigate("/server-down");
+          return;
         }
+        toastError(err?.response?.data?.message);
+      }
     };
 
     // Use map instead of forEach to iterate asynchronously
     await Promise.all(newItems.map((item, index) => updateOrder(item, index)));
-          
   };
-
-
 
   return (
     <AnimatePresence className="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5">
@@ -489,298 +496,330 @@ export default function Documentation() {
         </div>
       </motion.div>
 
-{filteredItems ? (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ delay: 0.1 }}
-        className="mx-auto max-w-screen-xl px-4 lg:px-12"
-      >
-        <div className="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
-          <div className="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
-            <div className="w-full md:w-1/3">
-              <div className="flex items-center">
-                <label htmlFor="simple-search" className="sr-only">
-                  Search
-                </label>
-                <div className="relative w-full">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <svg
-                      aria-hidden="true"
-                      className="w-5 h-5 text-gray-500 dark:text-gray-400"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
+      {filteredItems ? (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mx-auto max-w-screen-xl px-4 lg:px-12"
+        >
+          <div className="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
+            <div className="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
+              <div className="w-full md:w-1/3">
+                <div className="flex items-center">
+                  <label htmlFor="simple-search" className="sr-only">
+                    Search
+                  </label>
+                  <div className="relative w-full">
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                      <svg
+                        aria-hidden="true"
+                        className="w-5 h-5 text-gray-500 dark:text-gray-400"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                    <input
+                      type="text"
+                      id="simple-search"
+                      value={searchTerm}
+                      onChange={handleSearchChange}
+                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                      placeholder="Search"
+                    />
                   </div>
-                  <input
-                    type="text"
-                    id="simple-search"
-                    value={searchTerm}
-                    onChange={handleSearchChange}
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                    placeholder="Search"
-                  />
                 </div>
               </div>
-            </div>
-            <div className="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
-              <motion.button
-                whilehover={{ scale: 1.1 }}
-                onClick={() => setOpenCreatePageGroup(true)}
-                type="button"
-                className="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
-              >
-                Create Group
-              </motion.button>
-
-              <motion.button whilehover={{ scale: 1.1 }}>
-                <Link
-                  to={`/dashboard/documentation/create-page?id=${doc_id}&dir=true`}
+              <div className="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
+                <motion.button
+                  whilehover={{ scale: 1.1 }}
+                  onClick={() => setOpenCreatePageGroup(true)}
+                  type="button"
                   className="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
                 >
-                  Create page
-                </Link>
-              </motion.button>
+                  Create Group
+                </motion.button>
+
+                <motion.button whilehover={{ scale: 1.1 }}>
+                  <Link
+                    to={`/dashboard/documentation/create-page?id=${doc_id}&dir=true`}
+                    className="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
+                  >
+                    Create page
+                  </Link>
+                </motion.button>
+              </div>
             </div>
-          </div>
-        {filteredItems &&
-          <div className="overflow-x-auto sm:overflow-visible">
-            <table className="w-full  text-sm text-left text-gray-500 dark:text-gray-400">
-              <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                <tr>
-                  <th></th>
-                  <th scope="col" className="px-4 py-3">
-                    Title
-                  </th>
-                  <th scope="col" className="px-4 py-3">
-                    Path
-                  </th>
-                  <th scope="col" className="px-4 py-3">
-                    Extension
-                  </th>
-                  <th scope="col" className="px-4 py-3">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              
-                    <tbody > 
-                      {loading ? (
-                        <tr className="border-b dark:border-gray-700">
-                          <td colSpan="4" className="py-8">
-                            <div className="flex flex-col items-center justify-center">
-                              <ClipLoader
-                                color="#666161"
-                                loading={loading}
-                                size={100}
-                                aria-label="Loading Spinner"
-                                data-testid="loader"
-                              />
-                              <h1 className="text-xl font-bold text-center text-gray-500 mt-4">
-                                Loading....
-                              </h1>
-                            </div>
-                          </td>
-                        </tr>
-                      ) : !filteredItems === null|| filteredItems.length <= 0 ? (
-                        <motion.tr
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className="border-b dark:bg-gray-700"
+            {filteredItems && (
+              <div className="overflow-x-auto sm:overflow-visible min-h-[70vh]">
+                <DragDropContext onDragEnd={handleDragEnd}>
+                  <Droppable droppableId="table" type="TABLE">
+                    {(provided) => (
+                      <table className="w-full  text-sm text-left text-gray-500 dark:text-gray-400">
+                        <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                          <tr>
+                            <th></th>
+                            <th scope="col" className="px-4 py-3">
+                              Title
+                            </th>
+                            <th scope="col" className="px-4 py-3">
+                              Path
+                            </th>
+                            <th scope="col" className="px-4 py-3">
+                              Extension
+                            </th>
+                            <th scope="col" className="px-4 py-3">
+                              Actions
+                            </th>
+                          </tr>
+                        </thead>
+
+                        <tbody
+                          {...provided.droppableProps}
+                          ref={provided.innerRef}
                         >
-                          <td colSpan="4" className="text-center py-8">
-                            <h1 className="text-center text-gray-600 sm:text-lg font-semibold">
-                              No Pages Found
-                            </h1>
-                          </td>
-                        </motion.tr>
-                      ) : (
-                        filteredItems.map((obj, index) => (
-                              <tr
-                              draggable
-                              onDragStart={() => handleDragStart(index)}
-                              onDragEnter={() => handleDragEnter(index)}
-                                className={`border dark:border-gray-700 h-16 dark:bg-gray-700`}
-                                key={uuidv4()}
+                          {loading ? (
+                            <tr className="border-b dark:border-gray-700">
+                              <td colSpan="4" className="py-8">
+                                <div className="flex flex-col items-center justify-center">
+                                  <ClipLoader
+                                    color="#666161"
+                                    loading={loading}
+                                    size={100}
+                                    aria-label="Loading Spinner"
+                                    data-testid="loader"
+                                  />
+                                  <h1 className="text-xl font-bold text-center text-gray-500 mt-4">
+                                    Loading....
+                                  </h1>
+                                </div>
+                              </td>
+                            </tr>
+                          ) : !filteredItems === null ||
+                            filteredItems.length <= 0 ? (
+                            <motion.tr
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              className="border-b dark:bg-gray-700"
+                            >
+                              <td colSpan="4" className="text-center py-8">
+                                <h1 className="text-center text-gray-600 sm:text-lg font-semibold">
+                                  No Pages Found
+                                </h1>
+                              </td>
+                            </motion.tr>
+                          ) : (
+                            filteredItems.map((obj, index) => (
+                              <Draggable
+                                key={`dragagable-${obj.id}-${index}`}
+                                draggableId={`${obj.id.toString()}-${
+                                  obj.name || obj.title
+                                }`}
+                                index={index}
                               >
-                                <th 
-                                  scope="row"
-                                  className="items-center w-5 cursor-pointer gap-2 px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white "
-                                >
-                                  <svg
-                                    className="w-6 h-6 cursor-move text-yellow-400 dark:border-gray-700 dark:text-white"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    x="0px"
-                                    y="0px"
-                                    width="100"
-                                    height="100"
-                                    viewBox="0 0 50 50"
+                                {(provided, snapshot) => (
+                                  <tr
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    className={`${
+                                      snapshot.isDragging
+                                        ? "opacity-80 bg-gray-200 border shadow-md shadow-black text-black"
+                                        : ""
+                                    } border dark:border-gray-700 h-16 dark:bg-gray-700`}
+                                    key={`${obj.id}-${index}`}
                                   >
-                                    <path d="M 3 9 A 1.0001 1.0001 0 1 0 3 11 L 47 11 A 1.0001 1.0001 0 1 0 47 9 L 3 9 z M 3 24 A 1.0001 1.0001 0 1 0 3 26 L 47 26 A 1.0001 1.0001 0 1 0 47 24 L 3 24 z M 3 39 A 1.0001 1.0001 0 1 0 3 41 L 47 41 A 1.0001 1.0001 0 1 0 47 39 L 3 39 z"></path>
-                                  </svg>
-                                </th>
+                                    <th
+                                      scope="row"
+                                      className="items-center w-5 cursor-pointer gap-2 px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white "
+                                    >
+                                      <svg
+                                        fill="#000000"
+                                        className="w-6 h-6"
+                                        viewBox="0 0 256 256"
+                                        id="Flat"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                      >
+                                        <path d="M104,60.0001a12,12,0,1,1-12-12A12,12,0,0,1,104,60.0001Zm60,12a12,12,0,1,0-12-12A12,12,0,0,0,164,72.0001Zm-72,44a12,12,0,1,0,12,12A12,12,0,0,0,92,116.0001Zm72,0a12,12,0,1,0,12,12A12,12,0,0,0,164,116.0001Zm-72,68a12,12,0,1,0,12,12A12,12,0,0,0,92,184.0001Zm72,0a12,12,0,1,0,12,12A12,12,0,0,0,164,184.0001Z"></path>
+                                      </svg>
+                                    </th>
 
-                                <th
-                                  scope="row"
-                                  className="  cursor-pointer gap-2 px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white"
-                                >
-                                  <Link
-                                    className="flex"
-                                    to={
-                                      obj.name
-                                        ? `/dashboard/documentation/pagegroup?id=${doc_id}&pagegroup_id=${obj.id}`
-                                        : `/dashboard/documentation/edit-page?id=${doc_id}&dir=true&page_id=${obj.id}`
-                                    }
-                                  >
-                                    {obj.name ? (
-                                      <svg
-                                        className="w-6 h-6 text-yellow-400 dark:text-white"
-                                        aria-hidden="true"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="24"
-                                        height="24"
-                                        fill="currentColor"
-                                        viewBox="0 0 24 24"
+                                    <th
+                                      scope="row"
+                                      className={`${
+                                        snapshot.isDragging
+                                          ? "text-black"
+                                          : "text-blue-600"
+                                      }  cursor-pointer gap-2 px-4 py-3 font-medium  hover:text-blue-800 whitespace-nowrap dark:text-white`}
+                                    >
+                                      <Link
+                                        className="flex"
+                                        to={
+                                          obj.name
+                                            ? `/dashboard/documentation/pagegroup?id=${doc_id}&pagegroup_id=${obj.id}`
+                                            : `/dashboard/documentation/edit-page?id=${doc_id}&dir=true&page_id=${obj.id}`
+                                        }
                                       >
-                                        <path
-                                          fillRule="evenodd"
-                                          d="M4 4a2 2 0 0 0-2 2v12a2 2 0 0 0 .087.586l2.977-7.937A1 1 0 0 1 6 10h12V9a2 2 0 0 0-2-2h-4.532l-1.9-2.28A2 2 0 0 0 8.032 4H4Zm2.693 8H6.5l-3 8H18l3-8H6.693Z"
-                                          clipRule="evenodd"
-                                        />
-                                      </svg>
-                                    ) : (
-                                      <svg
-                                        className="w-6 h-6 text-gray-600 dark:text-white"
-                                        aria-hidden="true"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="24"
-                                        height="24"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                      >
-                                        <path
-                                          stroke="currentColor"
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          strokeWidth="2"
-                                          d="M10 3v4a1 1 0 0 1-1 1H5m4 8h6m-6-4h6m4-8v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7.914a1 1 0 0 1 .293-.707l3.914-3.914A1 1 0 0 1 9.914 3H18a1 1 0 0 1 1 1Z"
-                                        />
-                                      </svg>
+                                        {obj.name ? (
+                                          <svg
+                                            className="w-6 h-6 text-yellow-400 dark:text-white"
+                                            aria-hidden="true"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            width="24"
+                                            height="24"
+                                            fill="currentColor"
+                                            viewBox="0 0 24 24"
+                                          >
+                                            <path
+                                              fillRule="evenodd"
+                                              d="M4 4a2 2 0 0 0-2 2v12a2 2 0 0 0 .087.586l2.977-7.937A1 1 0 0 1 6 10h12V9a2 2 0 0 0-2-2h-4.532l-1.9-2.28A2 2 0 0 0 8.032 4H4Zm2.693 8H6.5l-3 8H18l3-8H6.693Z"
+                                              clipRule="evenodd"
+                                            />
+                                          </svg>
+                                        ) : (
+                                          <svg
+                                            className="w-6 h-6 text-gray-600 dark:text-white"
+                                            aria-hidden="true"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            width="24"
+                                            height="24"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                          >
+                                            <path
+                                              stroke="currentColor"
+                                              strokeLinecap="round"
+                                              strokeLinejoin="round"
+                                              strokeWidth="2"
+                                              d="M10 3v4a1 1 0 0 1-1 1H5m4 8h6m-6-4h6m4-8v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7.914a1 1 0 0 1 .293-.707l3.914-3.914A1 1 0 0 1 9.914 3H18a1 1 0 0 1 1 1Z"
+                                            />
+                                          </svg>
+                                        )}
+
+                                        {obj.name || obj.title}
+                                      </Link>
+                                    </th>
+
+                                    <td className="px-4 py-3 cursor-text">
+                                      /{obj.name || obj.slug}
+                                    </td>
+
+                                    <td className="px-4 py-3 cursor-text">
+                                      {obj.name ? "Folder" : "file"}
+                                    </td>
+
+                                    {obj.name && (
+                                      <td className="px-4 py-3 cursor-pointer relative">
+                                        <button
+                                          onClick={() => toggleDropdown(index)}
+                                          id={`dropdown-button-${obj.id}`}
+                                          data-dropdown-toggle={`dropdown123-${obj.id}`}
+                                          className="inline-flex items-center p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
+                                          type="button"
+                                        >
+                                          <svg
+                                            className="w-5 h-5"
+                                            aria-hidden="true"
+                                            fill="currentColor"
+                                            viewBox="0 0 20 20"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                          >
+                                            <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
+                                          </svg>
+                                        </button>
+                                        <div
+                                          id={`dropdown123-${obj.id}`}
+                                          className={`absolute z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600 ${
+                                            openDropdownId === index
+                                              ? "block"
+                                              : "hidden"
+                                          }`}
+                                          style={{ top: "100%", right: 0 }}
+                                        >
+                                          <ul
+                                            className="py-1 text-sm text-gray-700 dark:text-gray-200"
+                                            aria-labelledby={`dropdown123-button-${obj.id}`}
+                                          >
+                                            <li
+                                              key={`dropDown12-${obj.id}-${index}`}
+                                            >
+                                              <p
+                                                onClick={() => {
+                                                  setOpenDropdownId(null);
+                                                  openEditPageGroup(obj);
+                                                }}
+                                                className="block py-2 px-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                                              >
+                                                Edit
+                                              </p>
+                                            </li>
+                                            <li>
+                                              <p
+                                                onClick={() => {
+                                                  setOpenDropdownId(null);
+                                                  openDeletePageGroups(obj);
+                                                }}
+                                                className="block py-2 px-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
+                                              >
+                                                Delete
+                                              </p>
+                                            </li>
+                                          </ul>
+                                        </div>
+                                      </td>
                                     )}
-
-                                    {obj.name || obj.title}
-                                  </Link>
-                                </th>
-
-                                <td className="px-4 py-3 cursor-text">
-                                  /{obj.name || obj.slug}
-                                </td>
-
-                                <td className="px-4 py-3 cursor-text">
-                                  {obj.name ? "Folder" : "file"}
-                                </td>
-
-                                {obj.name && (
-                                  <td className="px-4 py-3 cursor-pointer">
-                                    <button
-                                      id={`dropdown-button-${obj.id}`}
-                                      data-dropdown-toggle={`dropdown123-${obj.id}`}
-                                      className="inline-flex items-center p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
-                                      type="button"
-                                    >
-                                      <svg
-                                        className="w-5 h-5"
-                                        aria-hidden="true"
-                                        fill="currentColor"
-                                        viewBox="0 0 20 20"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                      >
-                                        <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
-                                      </svg>
-                                    </button>
-                                    <div
-                                      id={`dropdown123-${obj.id}`}
-                                      className="hidden z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600"
-                                    >
-                                      <ul
-                                        className="py-1 text-sm text-gray-700 dark:text-gray-200"
-                                        aria-labelledby={`dropdown123-button-${obj.id}`}
-                                      >
-                                        <li>
-                                          <p
-                                            onClick={() =>
-                                              openEditPageGroup(obj)
-                                            }
-                                            className="block py-2 px-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                                          >
-                                            Edit
-                                          </p>
-                                        </li>
-                                        <li>
-                                          <p
-                                            onClick={() =>
-                                              openDeletePageGroups(obj)
-                                            }
-                                            className="block py-2 px-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                                          >
-                                            Delete
-                                          </p>
-                                        </li>
-                                      </ul>
-                                    </div>
-                                  </td>
+                                  </tr>
                                 )}
-                              </tr>
-                        
-                        ))
-                      )}
-                    </tbody>
-                  
-            </table>
+                              </Draggable>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    )}
+                  </Droppable>
+                </DragDropContext>
+              </div>
+            )}
+
+            {/* PageGroup Edit Component */}
+            {isEditpageGroup && currentItem && (
+              <EditDocumentModal
+                heading="Rename Page Group"
+                title={currentItem.name}
+                id={currentItem.id}
+                closeModal={handleEditPageGroupClose}
+                updateData={handelPageGroupUpdate}
+              />
+            )}
+
+            {/* PageGroup delete Component */}
+            {isPageGroupsDeleteModal && currentItem && (
+              <DeleteModal
+                cancelModal={handleCancelPagegroupDelete}
+                deleteDoc={() => handleDeletePageGroup(currentItem.id)}
+                id={currentItem.id}
+                title={`Are you sure you want to delete this "${currentItem.name}"`}
+                message={`By deleting this PageGroup associated pages will also be permanently deleted.`}
+              />
+            )}
           </div>
-}
-
-          {/* PageGroup Edit Component */}
-          {isEditpageGroup && currentItem && (
-            <EditDocumentModal
-              heading="Rename Page Group"
-              title={currentItem.name}
-              id={currentItem.id}
-              closeModal={handleEditPageGroupClose}
-              updateData={handelPageGroupUpdate}
-            />
-          )}
-
-          {/* PageGroup delete Component */}
-          {isPageGroupsDeleteModal && currentItem && (
-            <DeleteModal
-              cancelModal={handleCancelPagegroupDelete}
-              deleteDoc={() => handleDeletePageGroup(currentItem.id)}
-              id={currentItem.id}
-              title={`Are you sure you want to delete this "${currentItem.name}"`}
-              message={`By deleting this PageGroup associated pages will also be permanently deleted.`}
-            />
-          )}
+        </motion.div>
+      ) : (
+        <div className="flex justify-center min-h-52 items-center">
+          <p className="text-2xl font-bold text-gray-500">
+            No documentations Found
+          </p>
         </div>
-      </motion.div>
-
-):(
-<div className="flex justify-center min-h-52 items-center">
-            <p className="text-2xl font-bold text-gray-500">
-              No documenations Found
-            </p>
-          </div>
-
-)}
+      )}
     </AnimatePresence>
   );
 }

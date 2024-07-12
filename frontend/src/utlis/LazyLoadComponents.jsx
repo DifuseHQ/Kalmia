@@ -4,7 +4,7 @@ export const LoginPage = React.lazy(() => import("../pages/LoginPage"));
 
 export const DashboardPage = React.lazy(() => import("../pages/DashboardPage"));
 
-export const IntroPage = React.lazy(() => import("../components/IntroPage"));
+export const IntroPage = React.lazy(() => import("../components/introduction/IntroPage"));
 
 export const CreateDocModal = React.lazy(() => import("../components/createDocumentModal/CreateDocModal"));
 

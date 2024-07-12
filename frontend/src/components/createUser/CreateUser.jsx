@@ -1,8 +1,9 @@
 import React, { useState } from "react";
+import instance from "../../api/AxiosInstance";
 import { Link, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { toastError, toastSuccess, toastWarning } from "../../utlis/toast";
-import instance from "../../api/AxiosInstance";
+
 
 export default function CreateUser() {
   const [formData, setFormData] = useState({
@@ -25,7 +26,7 @@ export default function CreateUser() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if(formData.password.length < 8){
+    if (formData.password.length < 8) {
       toastWarning("Password must be 8 characters");
       return;
     }
@@ -46,9 +47,9 @@ export default function CreateUser() {
         navigate("/dashboard/admin/user-list");
       }
     } catch (err) {
-      if(!err.response){
+      if (!err.response) {
         toastError(err?.message);
-        navigate('/server-down')
+        navigate("/server-down");
       }
       toastError(err?.response?.data?.message);
     }

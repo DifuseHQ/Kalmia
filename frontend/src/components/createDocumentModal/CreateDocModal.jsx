@@ -1,12 +1,12 @@
 import React, { useContext, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { toastError, toastSuccess, toastWarning } from "../../utlis/toast";
-import { AnimatePresence, motion } from "framer-motion";
 import { AuthContext } from "../../Context/AuthContext";
 import instance from "../../api/AxiosInstance";
+import { toastError, toastSuccess, toastWarning } from "../../utlis/toast";
+import { AnimatePresence, motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 export default function CreateDocModal() {
-  const { refreshData , isOpenModal, setIsOpenModal  } = useContext(AuthContext);
+  const { refreshData, isOpenModal, setIsOpenModal } = useContext(AuthContext);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: "",
@@ -43,13 +43,11 @@ export default function CreateDocModal() {
         refreshData();
         navigate("/dashboard");
         toastSuccess(response?.data?.message);
-      } else {
-        console.log("error not added");
       }
     } catch (err) {
-      if(!err.response){
+      if (!err.response) {
         toastError(err?.message);
-        navigate('/server-down')
+        navigate("/server-down");
       }
       toastError(err?.response?.data?.message);
     }

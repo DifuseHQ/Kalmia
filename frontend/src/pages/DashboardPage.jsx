@@ -11,10 +11,10 @@ export default function DashboardPage() {
   }, []);
 
   return (
-    <div class="antialiased bg-gray-50 dark:bg-gray-900">
+    <div className="antialiased bg-gray-50 dark:bg-gray-900">
       <Navbar />
       <Sidebar />
-      <main class="p-4 md:ml-64 min-h-screen pt-20">
+      <main className="p-4 md:ml-64 min-h-screen pt-20">
         <CreateDocModal />
         <Outlet />
       </main>

@@ -1,6 +1,7 @@
 import React, { useContext } from "react";
-import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../Context/AuthContext";
+import { useNavigate } from "react-router-dom";
+
 
 export default function Error500() {
   const { refreshData } = useContext(AuthContext);
@@ -13,7 +14,7 @@ export default function Error500() {
   return (
     <section
       style={{
-        backgroundImage: `url('/assets/na_january_16.jpg')`,
+        backgroundImage: `url('/assets/server_down.jpg')`,
         backgroundPosition: "center center",
         backgroundsSize: "cover",
       }}
@@ -29,7 +30,7 @@ export default function Error500() {
           </p>
           <button
             onClick={handleReload}
-            class="inline-flex gap-2 items-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-semibold rounded-lg text-md px-5 py-2.5 text-center dark:focus:ring-primary-900 my-4"
+            className="inline-flex gap-2 items-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-semibold rounded-lg text-md px-5 py-2.5 text-center dark:focus:ring-primary-900 my-4"
           >
             <svg
               fill="#ffffff"

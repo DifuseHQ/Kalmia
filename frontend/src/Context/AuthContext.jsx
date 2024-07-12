@@ -47,10 +47,10 @@ export const AuthProvider = ({ children }) => {
         navigate("/dashboard", { replace: true });
       }
     } catch (err) {
-      if(!err.response){
+      if (!err.response) {
         toastError(err?.message);
-        navigate('/server-down')
-        return
+        navigate("/server-down");
+        return;
       }
       toastError(err?.response?.data?.message);
     }
@@ -103,10 +103,10 @@ export const AuthProvider = ({ children }) => {
       // } else {
       //   toastError(err.response.data.message);
       // }
-      if(!err.response){
+      if (!err.response) {
         toastError(err?.message);
-        navigate('/server-down')
-        return
+        navigate("/server-down");
+        return;
       }
       toastError(err?.response?.data?.message);
     }
@@ -127,7 +127,7 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       if (!err.response) {
         toastError(err?.message);
-        navigate('/server-down');
+        navigate("/server-down");
         return;
       }
       toastError(err?.response?.data?.message);
@@ -140,32 +140,36 @@ export const AuthProvider = ({ children }) => {
         try {
           let accessToken = Cookies.get("accessToken");
           if (!accessToken) {
-            Cookies.remove('accessToken');
+            Cookies.remove("accessToken");
             setUser(null);
-            navigate('/');
-            clearInterval(interval); 
+            navigate("/");
+            clearInterval(interval);
             return;
           }
           accessToken = JSON.parse(accessToken);
-          const { data, status } = await instance.post('/auth/jwt/validate', {
+          const { data, status } = await instance.post("/auth/jwt/validate", {
             token: accessToken?.token,
           });
           if (status === 200) {
-            const expiryDateString = data.expiry.replace(/(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}).*/, '$1');
+            const expiryDateString = data.expiry.replace(
+              /(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}).*/,
+              "$1"
+            );
             const expiryDate = new Date(expiryDateString);
             const currentTime = new Date();
             const timeDifference = expiryDate.getTime() - currentTime.getTime();
             const oneHourInMilliseconds = 60 * 60 * 1000;
-            const isExpiryWithinOneHour = timeDifference < oneHourInMilliseconds;
+            const isExpiryWithinOneHour =
+              timeDifference < oneHourInMilliseconds;
             if (isExpiryWithinOneHour) {
               refreshToken();
             }
           }
         } catch (err) {
-          if(!err.response){
+          if (!err.response) {
             toastError(err?.message);
-            navigate('/server-down')
-            return
+            navigate("/server-down");
+            return;
           }
           toastError(err?.response?.data?.message);
         }
@@ -196,8 +200,8 @@ export const AuthProvider = ({ children }) => {
         userDetails,
         setUserDetails,
         refreshToken,
-        isOpenModal, 
-        setIsOpenModal
+        isOpenModal,
+        setIsOpenModal,
       }}
     >
       {children}

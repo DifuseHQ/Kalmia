@@ -1,5 +1,5 @@
-import { AnimatePresence, motion } from "framer-motion";
 import React from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
 export default function DeleteModal({
   title,
@@ -17,15 +17,15 @@ export default function DeleteModal({
       >
         <div className="relative p-4 w-full max-w-xl">
           <div className="relative p-4 bg-gray-200 rounded-lg shadow dark:bg-gray-800 sm:p-5">
-            <div class="relative p-4 text-center bg-gray-200 rounded-lg shadow dark:bg-gray-800 sm:p-5">
+            <div className="relative p-4 text-center bg-gray-200 rounded-lg shadow dark:bg-gray-800 sm:p-5">
               <button
                 onClick={() => cancelModal()}
                 type="button"
-                class="text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white"
+                className="text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white"
               >
                 <svg
                   aria-hidden="true"
-                  class="w-5 h-5"
+                  className="w-5 h-5"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                   xmlns="http://www.w3.org/2000/svg"
@@ -36,21 +36,21 @@ export default function DeleteModal({
                     clip-rule="evenodd"
                   ></path>
                 </svg>
-                <span class="sr-only">Close modal</span>
+                <span className="sr-only">Close modal</span>
               </button>
               {title && (
-                <h3 class="mb-2 mt-5 text-lg font-semibold text-gray-900 dark:text-white">
+                <h3 className="mb-2 mt-5 text-lg font-semibold text-gray-900 dark:text-white">
                   {title}
                 </h3>
               )}
               {message && (
                 <div
-                  class="p-4 mb-4 text-sm text-left text-yellow-600 bg-orange-100 rounded-lg sm:mb-5 dark:bg-gray-400 dark:text-yellow-800"
+                  className="p-4 mb-4 text-sm text-left text-yellow-600 bg-orange-100 rounded-lg sm:mb-5 dark:bg-gray-400 dark:text-yellow-800"
                   role="alert"
                 >
-                  <div class="items-center mb-1">
+                  <div className="items-center mb-1">
                     <svg
-                      class="inline flex-shrink-0 mr-1 w-4 h-4"
+                      className="inline flex-shrink-0 mr-1 w-4 h-4"
                       aria-hidden="true"
                       fill="currentColor"
                       viewBox="0 0 20 20"
@@ -62,29 +62,29 @@ export default function DeleteModal({
                         clip-rule="evenodd"
                       ></path>
                     </svg>
-                    <span class="sr-only">Danger</span>
-                    <span class="font-semibold leading-none">Warning</span>
+                    <span className="sr-only">Danger</span>
+                    <span className="font-semibold leading-none">Warning</span>
                   </div>
 
                   <p>{message}</p>
                 </div>
               )}
-              <div class="flex justify-center items-center space-x-4">
+              <div className="flex justify-center items-center space-x-4">
                 <button
                   onClick={() => cancelModal()}
                   type="button"
-                  class="py-2 px-3 text-sm font-medium text-gray-800 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-primary-300 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600"
+                  className="py-2 px-3 text-sm font-medium text-gray-800 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-primary-300 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600"
                 >
                   No, cancel
                 </button>
                 <button
                   onClick={() => deleteDoc()}
                   type="submit"
-                  class="inline-flex items-center py-2 px-3 text-sm font-medium text-center text-white bg-red-600 rounded-lg hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 dark:bg-red-500 dark:hover:bg-red-600 dark:focus:ring-red-900"
+                  className="inline-flex items-center py-2 px-3 text-sm font-medium text-center text-white bg-red-600 rounded-lg hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 dark:bg-red-500 dark:hover:bg-red-600 dark:focus:ring-red-900"
                 >
                   <svg
                     aria-hidden="true"
-                    class="w-4 h-4 mr-1.5 -ml-1"
+                    className="w-4 h-4 mr-1.5 -ml-1"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                     xmlns="http://www.w3.org/2000/svg"

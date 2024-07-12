@@ -1,15 +1,14 @@
 import React, { useContext, useEffect, useState } from "react";
-import { getTheme } from "../../utlis/getTheme";
+import { AuthContext } from "../../Context/AuthContext";
 import { Link, NavLink } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { AuthContext } from "../../Context/AuthContext";
 
 export default function Navbar() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const { userDetails, logout } = useContext(AuthContext);
 
   useEffect(() => {
-    const initialTheme = getTheme();
+    const initialTheme = localStorage.getItem("theme");
     setIsDarkMode(initialTheme === "dark");
   }, []);
 

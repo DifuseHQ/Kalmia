@@ -1,15 +1,14 @@
 import React, { useContext, useEffect, useState } from "react";
+import { AuthContext } from "../../Context/AuthContext";
+import instance from "../../api/AxiosInstance";
 import { Link, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { toastError } from "../../utlis/toast";
-import { AuthContext } from "../../Context/AuthContext";
-import { v4 as uuidv4 } from "uuid";
-import instance from "../../api/AxiosInstance";
 
 export default function Sidebar() {
   const [documentation, setDocumentation] = useState([]);
   const [openDropdowns, setOpenDropdowns] = useState([]);
-  const { refresh, userDetails ,setIsOpenModal} = useContext(AuthContext);
+  const { refresh, userDetails, setIsOpenModal } = useContext(AuthContext);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,13 +16,13 @@ export default function Sidebar() {
       try {
         const response = await instance.get("/docs/documentations");
         if (response?.status === 200) {
-          setDocumentation(response?.data)
+          setDocumentation(response?.data);
         }
       } catch (err) {
-        if(!err.response){
+        if (!err.response) {
           toastError(err?.message);
-          navigate('/server-down')
-          return
+          navigate("/server-down");
+          return;
         }
         toastError(err?.response?.data?.message);
       }
@@ -107,18 +106,18 @@ export default function Sidebar() {
                 </svg>
               </motion.button>
             </li>
-            {(!documentation || documentation.length <= 0) ? (
- <li whilehover={{ scale: 1.08, originx: 0 }}>
- <p className="flex cursor-default items-center p-5 w-full text-base font-normal text-gray-600 rounded-lg transition duration-75 group ">
-   <span className="flex-1 ml-3 text-left whitespace-nowrap">
-     No documentations
-   </span>
- </p>
-</li>
-            ):(
+            {!documentation || documentation.length <= 0 ? (
+              <li whilehover={{ scale: 1.08, originx: 0 }}>
+                <p className="flex cursor-default items-center p-5 w-full text-base font-normal text-gray-600 rounded-lg transition duration-75 group ">
+                  <span className="flex-1 ml-3 text-left whitespace-nowrap">
+                    No documentations
+                  </span>
+                </p>
+              </li>
+            ) : (
               documentation.map((val, index) => (
                 <motion.li
-                  key={uuidv4()}
+                  key={`sidebar-${val.id}-${index}`}
                   whilehover={{ scale: 1.08, originx: 0 }}
                 >
                   <Link to={`/dashboard/documentation?id=${val.id}`}>
@@ -148,10 +147,7 @@ export default function Sidebar() {
                   </Link>
                 </motion.li>
               ))
-
-            
             )}
-           
           </ul>
 
           {userDetails && userDetails.Admin && (

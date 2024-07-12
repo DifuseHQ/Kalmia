@@ -1,11 +1,11 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./Context/AuthContext";
 import { ToastContainer } from "react-toastify";
-import LoginAuth from "./components/LoginAuth";
-import RequireAuth from "./components/RequireAuth";
-import AdminAuth from "./components/AdminAuth";
+import LoginAuth from "./protected/LoginAuth";
+import RequireAuth from "./protected/RequireAuth";
+import AdminAuth from "./protected/AdminAuth";
 import { Suspense } from "react";
-import { ClipLoader } from "react-spinners";
+import Loading from "./components/loading/Loading";
 import {
   LoginPage,
   DashboardPage,
@@ -23,17 +23,15 @@ import {
   Error,
 } from "./utlis/LazyLoadComponents";
 import "react-toastify/dist/ReactToastify.css";
-import "./App.css";
-import Test from "./components/Test";
+
 
 function App() {
   return (
     <Router>
       <AuthProvider>
         <ToastContainer />
-        <Suspense fallback={<ClipLoader size={50} color={"#123abc"} loading={true} />}>
-          <Routes>
-            <Route path="/test" element={<Test />} />
+        <Suspense fallback={<Loading/>}>
+          <Routes> 
 
             <Route element={<LoginAuth />}>
               <Route path="/" element={<LoginPage />} />

@@ -1,10 +1,11 @@
 import React, { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../../Context/AuthContext";
-import axios from "axios"; // Ensure Axios is imported
+import instance from "../../api/AxiosInstance";
+import axios from "axios";
 import { getTokenFromCookies } from "../../utlis/CookiesManagement";
 import { Link, useNavigate } from "react-router-dom";
 import { toastError, toastSuccess } from "../../utlis/toast";
-import instance from "../../api/AxiosInstance";
+
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import { AnimatePresence, motion } from "framer-motion";
@@ -37,15 +38,15 @@ export default function UserProfile() {
           setProfileImage(filterUser.Photo || "/assets/noProfile.png");
         }
       } catch (err) {
-        if(!err.response){
+        if (!err.response) {
           toastError(err?.message);
-          navigate('/server-down')
+          navigate("/server-down");
         }
         toastError(err?.response?.data?.message);
       }
     };
     fetchData();
-  }, [refresh,navigate]);
+  }, [refresh, navigate]);
 
   const handleUpload = async (e) => {
     const file = e.target.files[0];
@@ -72,9 +73,9 @@ export default function UserProfile() {
           }
         }
       } catch (err) {
-        if(!err.response){
+        if (!err.response) {
           toastError(err?.message);
-          navigate('/server-down')
+          navigate("/server-down");
         }
         toastError(err?.response?.data?.message);
       }
@@ -92,9 +93,9 @@ export default function UserProfile() {
         refreshData();
       }
     } catch (err) {
-      if(!err.response){
+      if (!err.response) {
         toastError(err?.message);
-        navigate('/server-down')
+        navigate("/server-down");
       }
       toastError(err?.response?.data?.message);
     }
@@ -115,9 +116,9 @@ export default function UserProfile() {
         refreshData();
       }
     } catch (err) {
-      if(!err.response){
+      if (!err.response) {
         toastError(err?.message);
-        navigate('/server-down')
+        navigate("/server-down");
       }
       toastError(err?.response?.data?.message);
     }
@@ -130,33 +131,33 @@ export default function UserProfile() {
           id="defaultModal"
           tabindex="-1"
           aria-hidden="true"
-          class=" flex  z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full"
+          className=" flex  z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full"
         >
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            class="relative p-4 w-full max-w-2xl h-full md:h-auto"
+            className="relative p-4 w-full max-w-2xl h-full md:h-auto"
           >
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              class="relative p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5"
+              className="relative p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5"
             >
-              <div class="flex justify-between items-center pb-4 mb-4 rounded-t border-b sm:mb-5 dark:border-gray-600">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+              <div className="flex justify-between items-center pb-4 mb-4 rounded-t border-b sm:mb-5 dark:border-gray-600">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                   Edit User
                 </h3>
                 <button
                   onClick={() => setIsEdit(false)}
                   type="button"
-                  class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white"
+                  className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white"
                   data-modal-toggle="defaultModal"
                 >
                   <svg
                     aria-hidden="true"
-                    class="w-5 h-5"
+                    className="w-5 h-5"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                     xmlns="http://www.w3.org/2000/svg"
@@ -167,16 +168,16 @@ export default function UserProfile() {
                       clip-rule="evenodd"
                     ></path>
                   </svg>
-                  <span class="sr-only">Close modal</span>
+                  <span className="sr-only">Close modal</span>
                 </button>
               </div>
 
               <form action="#" onSubmit={handleSubmit}>
-                <div class="grid gap-4 mb-4 ">
+                <div className="grid gap-4 mb-4 ">
                   <div>
                     <label
                       htmlFor="username"
-                      class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                      className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                     >
                       Username
                     </label>
@@ -186,14 +187,14 @@ export default function UserProfile() {
                       value={username}
                       name="username"
                       id="username"
-                      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                       required=""
                     />
                   </div>
                   <div>
                     <label
                       htmlFor="email"
-                      class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                      className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                     >
                       Email
                     </label>
@@ -203,7 +204,7 @@ export default function UserProfile() {
                       type="email"
                       name="email"
                       id="email"
-                      class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                       required=""
                     />
                   </div>
@@ -211,7 +212,7 @@ export default function UserProfile() {
                 <div className="flex justify-center">
                   <button
                     type="submit"
-                    class=" text-white inline-flex items-center bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                    className=" text-white inline-flex items-center bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
                   >
                     Update
                   </button>
