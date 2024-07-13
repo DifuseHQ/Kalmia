@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"strings"
+
 	"git.difuse.io/Difuse/kalmia/db/models"
 	"git.difuse.io/Difuse/kalmia/logger"
 	"git.difuse.io/Difuse/kalmia/services"
 	"git.difuse.io/Difuse/kalmia/utils"
 	"gorm.io/gorm"
-	"net/http"
-	"strings"
 )
 
 func CreateUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
