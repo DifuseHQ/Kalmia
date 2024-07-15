@@ -1,7 +1,7 @@
 import 'react-toastify/dist/ReactToastify.css';
 import { toast } from 'react-toastify';
 
-const toastMessage = (message, type) => {
+export const toastMessage = (message, type) => {
   toast[type](message, {
     position: 'top-right',
     autoClose: 1000,
@@ -13,4 +13,4 @@ const toastMessage = (message, type) => {
   });
 };
 
-export { toastMessage };
+
