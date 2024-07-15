@@ -12,5 +12,3 @@ export const toastMessage = (message, type) => {
     progress: undefined
   });
 };
-
-
