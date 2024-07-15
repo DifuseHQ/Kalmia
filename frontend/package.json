@@ -25,13 +25,16 @@
     "react-scripts": "5.0.1",
     "react-spinners": "^0.14.1",
     "react-toastify": "^10.0.5",
+    "semistandard": "^17.0.0",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "lint": "semistandard .",
+    "lint:fix": "semistandard . --fix"
   },
   "eslintConfig": {
     "extends": [
