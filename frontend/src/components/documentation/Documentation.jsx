@@ -9,6 +9,7 @@ import DeleteModal from "../deleteModal/DeleteModal";
 import { toastError, toastSuccess, toastWarning } from "../../utlis/toast";
 import CreatePageGroup from "../createPageGroup/CreatePageGroup";
 import { AnimatePresence, motion } from "framer-motion";
+import { Icon } from "@iconify/react";
 
 export default function Documentation() {
   const { refresh, refreshData, user } = useContext(AuthContext);
@@ -340,55 +341,28 @@ export default function Documentation() {
     // Use map instead of forEach to iterate asynchronously
     await Promise.all(newItems.map((item, index) => updateOrder(item, index)));
   };
-
+console.log(filteredItems);
   return (
     <AnimatePresence className="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5">
-      <motion.nav
+   <motion.nav
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="flex"
+        className="flex pb-5"
         aria-label="Breadcrumb"
       >
         <ol className="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
-          <li className="inline-flex items-center">
-            <Link
-              to="/dashboard"
-              className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white"
+        <li className="inline-flex items-center ">
+          <Link
+          to={`/dashboard/documentation?id=${doc_id}`} 
+          >
+            <span
+              className="inline-flex items-center gap-1 text-md  font-medium text-gray-500  dark:text-gray-400 cursor-text "
             >
-              <svg
-                className="w-3 h-3 me-2.5"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z" />
-              </svg>
-              Home
+              <Icon icon="material-symbols:home" className=" " />
+              {documentData.name}
+            </span>
             </Link>
-          </li>
-          <li aria-current="page">
-            <div className="flex items-center">
-              <svg
-                className="rtl:rotate-180 w-3 h-3 text-gray-400 mx-1"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 6 10"
-              >
-                <path
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="m1 9 4-4-4-4"
-                />
-              </svg>
-              <span className="ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400">
-                Documentation
-              </span>
-            </div>
           </li>
         </ol>
       </motion.nav>
@@ -436,23 +410,7 @@ export default function Documentation() {
           onClick={() => setIsEditModal(!isEditModal)}
           title="Edit Documentation"
         >
-          <svg
-            className="w-6 h-6 cursor-pointer text-gray-800 hover:border dark:text-white"
-            aria-hidden="true"
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="m14.304 4.844 2.852 2.852M7 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-4.5m2.409-9.91a2.017 2.017 0 0 1 0 2.853l-6.844 6.844L8 14l.713-3.565 6.844-6.844a2.015 2.015 0 0 1 2.852 0Z"
-            />
-          </svg>
+          <Icon icon="lucide:edit" className="w-6 h-6 text-yellow-500 dark:text-yellow-400"/>
         </motion.button>
 
         <motion.button
@@ -460,23 +418,7 @@ export default function Documentation() {
           onClick={handleDeletemodalopen}
           title="Delete Documentation"
         >
-          <svg
-            className="w-6 h-6 cursor-pointer hover:border  text-red-700 dark:text-red-400"
-            aria-hidden="true"
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"
-            />
-          </svg>
+          <Icon icon="material-symbols:delete"  className="w-6 h-6 text-red-600 dark:text-red-500"/>
         </motion.button>
       </motion.div>
 
@@ -484,7 +426,7 @@ export default function Documentation() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="grid max-w-screen-xl px-4 mx-auto lg:gap-8 xl:gap-0 lg:grid-cols-12"
+        className="grid max-w-screen-xl "
       >
         <div className="mr-auto place-self-center lg:col-span-7">
           <h1 className="max-w-xl mb-4 text-4xl font-bold tracking-tight leading-none md:text-4xl xl:text-4xl dark:text-white">
@@ -502,7 +444,7 @@ export default function Documentation() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ delay: 0.1 }}
-          className="mx-auto max-w-screen-xl px-4 lg:px-12"
+          className="mx-auto max-w-screen-xl "
         >
           <div className="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
             <div className="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
@@ -513,19 +455,7 @@ export default function Documentation() {
                   </label>
                   <div className="relative w-full">
                     <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                      <svg
-                        aria-hidden="true"
-                        className="w-5 h-5 text-gray-500 dark:text-gray-400"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
+                    <Icon icon="material-symbols:search" className="w-6 h-6 text-gray-400 dark:text-gray-500" />
                     </div>
                     <input
                       type="text"
@@ -545,7 +475,8 @@ export default function Documentation() {
                   type="button"
                   className="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
                 >
-                  Create Group
+                  <span className=" px-1 text-left items-center dark:text-white text-md " >New Group</span>
+                  <Icon icon="ei:plus" className="w-6 h-6 dark:text-white"  />  
                 </motion.button>
 
                 <motion.button whilehover={{ scale: 1.1 }}>
@@ -553,7 +484,8 @@ export default function Documentation() {
                     to={`/dashboard/documentation/create-page?id=${doc_id}&dir=true`}
                     className="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
                   >
-                    Create page
+                    <span className=" px-1 text-left items-center dark:text-white text-md " >New Page</span>
+                    <Icon icon="ei:plus" className="w-6 h-6 dark:text-white"  />  
                   </Link>
                 </motion.button>
               </div>
@@ -570,11 +502,11 @@ export default function Documentation() {
                             <th scope="col" className="px-4 py-3">
                               Title
                             </th>
-                            <th scope="col" className="px-4 py-3">
-                              Path
+                            <th scope="col" className="px-4 py-3 whitespace-nowrap">
+                              Create / update
                             </th>
-                            <th scope="col" className="px-4 py-3">
-                              Extension
+                            <th scope="col" className="px-4 py-3 whitespace-nowrap">
+                              Author / Edited
                             </th>
                             <th scope="col" className="px-4 py-3">
                               Actions
@@ -642,15 +574,7 @@ export default function Documentation() {
                                       scope="row"
                                       className="items-center w-5 cursor-pointer gap-2 px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white "
                                     >
-                                      <svg
-                                        fill="#000000"
-                                        className="w-6 h-6"
-                                        viewBox="0 0 256 256"
-                                        id="Flat"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                      >
-                                        <path d="M104,60.0001a12,12,0,1,1-12-12A12,12,0,0,1,104,60.0001Zm60,12a12,12,0,1,0-12-12A12,12,0,0,0,164,72.0001Zm-72,44a12,12,0,1,0,12,12A12,12,0,0,0,92,116.0001Zm72,0a12,12,0,1,0,12,12A12,12,0,0,0,164,116.0001Zm-72,68a12,12,0,1,0,12,12A12,12,0,0,0,92,184.0001Zm72,0a12,12,0,1,0,12,12A12,12,0,0,0,164,184.0001Z"></path>
-                                      </svg>
+                                    <Icon icon="nimbus:drag-dots" className="w-6 h-6 text-gray-600 dark:text-white" />
                                     </th>
 
                                     <th
@@ -710,14 +634,30 @@ export default function Documentation() {
                                     </th>
 
                                     <td className="px-4 py-3 cursor-text">
-                                      /{obj.name || obj.slug}
+                                      <div className="flex justify-start items-center gap-2">
+                                      <Icon icon="mdi:clock-outline" className="w-4 h-4 text-gray-500 dark:text-white"/>
+                                      <span className=" px-1 text-left items-center dark:text-white text-md whitespace-nowrap" >Demo Time</span>
+                                      </div>
+                                      <div className="flex gap-2 items-center
+                                      ">
+                                      <Icon icon="material-symbols:update" className="w-4 h-4 text-gray-500 dark:text-white" />
+                                      <span className=" px-1 text-left items-center dark:text-white text-md whitespace-nowrap" >Demo Update Time</span>
+                                      </div>
                                     </td>
 
                                     <td className="px-4 py-3 cursor-text">
-                                      {obj.name ? "Folder" : "file"}
+                                      <div className="flex justify-start items-center gap-2">
+                                      <Icon icon="mdi:user" className="w-4 h-4 text-gray-500 dark:text-white"/>
+                                      <span className=" px-1 text-left items-center dark:text-white text-md whitespace-nowrap" >Demo Author Name</span>
+                                      </div>
+                                      <div className="flex gap-2 items-center
+                                      ">
+                                      <Icon icon="mdi:edit-outline" className="w-4 h-4 text-gray-500 dark:text-white" />
+                                      <span className=" px-1 text-left items-center dark:text-white text-md whitespace-nowrap" >Demo Editor Name</span>
+                                      </div>
                                     </td>
 
-                                    {obj.name && (
+                                    {obj.name ? (
                                       <td className="px-4 py-3 cursor-pointer relative">
                                         <button
                                           onClick={() => toggleDropdown(index)}
@@ -776,6 +716,10 @@ export default function Documentation() {
                                           </ul>
                                         </div>
                                       </td>
+                                    ):(
+                                      <td className="px-4 py-3 ">
+                                    </td>
+
                                     )}
                                   </tr>
                                 )}

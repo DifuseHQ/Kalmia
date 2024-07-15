@@ -202,7 +202,8 @@ export default function CreateUser() {
                             type="submit"
                             className="flex text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
                           >
-                            New user
+                          <span className=" px-1 pt-0.5 text-left items-center dark:text-white text-md "  >New User</span>
+
                             <Icon icon="ei:plus" className="w-6 h-6 dark:text-white"  />  
                           </button>
                         </div>

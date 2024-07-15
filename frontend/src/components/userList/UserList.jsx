@@ -183,7 +183,7 @@ export default function UserList() {
                 to="/dashboard/admin/create-user"
                 className="flex text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
               >
-               <span className=" px-1 text-left items-center dark:text-white text-md">Add User</span>
+               <span className=" px-1 pt-0.5 text-left items-center dark:text-white text-md">Add User</span>
                 <Icon icon="ei:plus" className="w-6 h-6 dark:text-white"  /> 
               </Link>
             </button>
@@ -245,12 +245,12 @@ export default function UserList() {
                         className="border-b dark:border-gray-700"
                         key={user.ID}
                       >
-                        <td
+                        <th
                           scope="row"
                           className="px-4 py-3 text-md font-medium text-black whitespace-nowrap dark:text-white"
                         >
                           {user.Username}
-                        </td>
+                        </th>
                         <td className="px-4 py-3 text-md text-black dark:text-white">{user.Email}</td>
                         {/* <td className="px-4 py-3">
                           <button className="text-blue-500 border px-3 border-blue-500 rounded-lg hover:bg-blue-500 hover:text-white">

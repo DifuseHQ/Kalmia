@@ -90,7 +90,7 @@ export default function Sidebar() {
                 onClick={handleCreateDocument}
                 className="flex w-full py-2 px-5 my-5 justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-md  text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
               >
-                 <span className=" px-1 text-left items-center dark:text-white text-md "  >New Document</span>
+                 <span className=" px-1 pt-0.5 text-left items-center dark:text-white text-md "  >New Document</span>
                  <Icon icon="ei:plus" className="w-7 h-7 dark:text-white"  />  
                          </motion.button>
             </li>
