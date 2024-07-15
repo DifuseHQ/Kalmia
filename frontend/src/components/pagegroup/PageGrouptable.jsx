@@ -606,8 +606,8 @@ export default function PageGrouptable() {
           cancelModal={handleCancelPagegroupDelete}
           deleteDoc={() => handleDeletePageGroup(currentItem.id)}
           id={currentItem.id}
-          title={`Are you sure you want to delete this "${currentItem.name}"`}
-          message={`By deleting this PageGroup associated pages will also be permanently deleted.`}
+          title={`Are you sure? `}
+          message={`you want to delete this "${currentItem.name}"`}
         />
       )}
     </AnimatePresence>

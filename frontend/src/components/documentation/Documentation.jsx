@@ -420,8 +420,8 @@ export default function Documentation() {
           cancelModal={handleCancel}
           deleteDoc={handleDelete}
           id={documentData.id}
-          title={`Are you sure you want to delete this ${documentData.name} Documentation`}
-          message="By deleting this documentation associated page groups and pages will also be permanently deleted."
+          title={`Are you sure ?`}
+          message={`you want to delete this ${documentData.name} Documentation`}
         />
       )}
 
@@ -807,8 +807,8 @@ export default function Documentation() {
                 cancelModal={handleCancelPagegroupDelete}
                 deleteDoc={() => handleDeletePageGroup(currentItem.id)}
                 id={currentItem.id}
-                title={`Are you sure you want to delete this "${currentItem.name}"`}
-                message={`By deleting this PageGroup associated pages will also be permanently deleted.`}
+                title={`Are you sure ?`}
+                message={`you want to delete this "${currentItem.name}`}
               />
             )}
           </div>

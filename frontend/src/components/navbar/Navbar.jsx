@@ -1,22 +1,18 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useState } from "react";
 import { AuthContext } from "../../Context/AuthContext";
 import { Link, NavLink } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { ThemeContext } from "../../Context/ThemeContext";
+import { Icon } from "@iconify/react";
 
 export default function Navbar() {
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const { userDetails, logout } = useContext(AuthContext);
+  const { darkMode, toggleDarkMode } = useContext(ThemeContext);
 
-  useEffect(() => {
-    const initialTheme = localStorage.getItem("theme");
-    setIsDarkMode(initialTheme === "dark");
-  }, []);
+  const [isOpen, setIsOpen] = useState(false);
 
-  const handleDarkModeToggle = () => {
-    const newMode = isDarkMode ? "light" : "dark";
-    setIsDarkMode(!isDarkMode);
-    document.documentElement.classList.toggle("dark", isDarkMode);
-    localStorage.setItem("theme", newMode);
+  const toggleDropdown = () => {
+    setIsOpen((prevIsOpen) => !prevIsOpen);
   };
 
   return (
@@ -69,7 +65,7 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center lg:order-2">
-            <div className="flex" onClick={handleDarkModeToggle}>
+            {/* <div className="flex" onClick={handleDarkModeToggle}>
               {isDarkMode ? (
                 <button
                   className="flex items-center justify-center p-2 text-xs w-9 h-9 font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-500 dark:bg-gray-800 focus:outline-none dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
@@ -101,15 +97,42 @@ export default function Navbar() {
                   </svg>
                 </button>
               )}
+            </div> */}
+            <div className="flex items-center space-x-2">
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={darkMode}
+                  onChange={toggleDarkMode}
+                />
+                {darkMode ? (
+                  <p class="text-gray-500 dark:text-gray-400  hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5 w-10 h-10 inline-flex items-center justify-center">
+                    <Icon
+                      icon="ph:sun-light"
+                      className="w-10 h-10 text-yellow-300"
+                    />
+                  </p>
+                ) : (
+                  <p class="text-gray-500 dark:text-gray-400  hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5 w-10 h-10 inline-flex items-center justify-center">
+                    <Icon
+                      icon="bi:moon-fill"
+                      className="w-10 h-10 pt-1 text-gray-700"
+                    />
+                  </p>
+                )}
+              </label>
             </div>
+
             {userDetails ? (
-              <>
+              <div className="relative">
                 <button
                   type="button"
                   className="flex mx-3 text-sm bg-gray-800 rounded-full md:mr-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
                   id="user-menu-button"
-                  aria-expanded="false"
-                  data-dropdown-toggle="dropdown"
+                  aria-expanded={isOpen}
+                  onClick={toggleDropdown}
+                  data-dropdown-toggle={`Dropdown-user-${userDetails.ID}`}
                 >
                   <span className="sr-only">Open user menu</span>
 
@@ -120,42 +143,44 @@ export default function Navbar() {
                   />
                 </button>
 
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="hidden z-50 my-4 w-56 text-base list-none bg-white  divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600 rounded-xl"
-                  id="dropdown"
-                >
-                  <Link to="/dashboard/user-profile">
-                    <div className="py-3 px-4 hover:bg-gray-300 cursor-pointer">
-                      <span className="block text-sm font-semibold text-gray-900 dark:text-white">
-                        {userDetails.Username}
-                      </span>
-                      <span className="block text-sm text-gray-900 truncate dark:text-white">
-                        {userDetails.Email}
-                      </span>
-                    </div>
-                  </Link>
-                  <ul
-                    className="py-1 text-gray-700 dark:text-gray-300"
-                    aria-labelledby="dropdown"
+                {isOpen && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute right-0 z-50 my-4  text-base list-none bg-white  divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600 rounded-xl"
+                    id={`Dropdown-user-${userDetails.ID}`}
                   >
-                    <li>
-                      <p
-                        onClick={() => logout()}
-                        className="block cursor-pointer py-2 px-4 text-sm hover:bg-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
-                      >
-                        Sign out
-                      </p>
-                    </li>
-                  </ul>
-                </motion.div>
-              </>
+                    <Link to="/dashboard/user-profile">
+                      <div className="py-3 px-4 hover:bg-gray-300 cursor-pointer">
+                        <span className="block text-sm font-semibold text-gray-900 dark:text-white">
+                          {userDetails.Username}
+                        </span>
+                        <span className="block text-sm text-gray-900 truncate dark:text-white">
+                          {userDetails.Email}
+                        </span>
+                      </div>
+                    </Link>
+                    <ul
+                      className="py-1 text-gray-700 dark:text-gray-300"
+                      aria-labelledby="dropdown"
+                    >
+                      <li>
+                        <p
+                          onClick={() => logout()}
+                          className="block cursor-pointer py-2 px-4 text-sm hover:bg-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
+                        >
+                          Sign out
+                        </p>
+                      </li>
+                    </ul>
+                  </motion.div>
+                )}
+              </div>
             ) : (
               <Link
                 to="/login"
-                className="block cursor-pointer rounded-md mx-3 font-bold border hover:text-white border-blue-400 py-2 px-4 text-sm hover:bg-blue-500 dark:hover:bg-gray-600 dark:hover:text-white"
+                className="block cursor-pointer rounded-md mx-3 font-medium hover:text-white border-blue-400 py-2 px-4 text-md hover:bg-blue-500 dark:hover:bg-gray-600 dark:text-white"
               >
                 Login
               </Link>

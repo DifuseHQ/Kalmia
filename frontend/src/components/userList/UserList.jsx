@@ -6,6 +6,7 @@ import ClipLoader from "react-spinners/ClipLoader";
 import { Link, useNavigate } from "react-router-dom";
 import DeleteModal from "../deleteModal/DeleteModal";
 import { toastError, toastSuccess } from "../../utlis/toast";
+import { Icon } from "@iconify/react";
 
 export default function UserList() {
   const [userList, setUserList] = useState([]);
@@ -112,11 +113,34 @@ export default function UserList() {
 
   return (
     <AnimatePresence className="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5">
+      
+
+      <motion.nav
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="flex pb-10"
+        aria-label="Breadcrumb"
+      >
+        <ol className="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+          <li className="inline-flex items-center ">
+            <span
+             
+              className="inline-flex items-center gap-1 text-md font-medium text-gray-500  dark:text-gray-400 cursor-text"
+            >
+              <Icon icon="material-symbols:home" className="text-gray-500 dark:text-white " />
+             user management
+            </span>
+          </li>
+        </ol>
+      </motion.nav>
+      
+      
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="mx-auto max-w-screen-xl px-4 lg:px-12"
+        className="mx-auto max-w-screen-xl justify-start pr-4 lg:pr-12"
       >
         <div className="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
           <div className="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
@@ -154,14 +178,15 @@ export default function UserList() {
               </form>
             </div>
 
-            <div className="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
+            <button className="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
               <Link
                 to="/dashboard/admin/create-user"
-                className="flex items-center justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
+                className="flex text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
               >
-                Add User
+               <span className=" px-1 text-left items-center dark:text-white text-md">Add User</span>
+                <Icon icon="ei:plus" className="w-6 h-6 dark:text-white"  /> 
               </Link>
-            </div>
+            </button>
           </div>
 
           <div className="overflow-x-auto">
@@ -220,13 +245,13 @@ export default function UserList() {
                         className="border-b dark:border-gray-700"
                         key={user.ID}
                       >
-                        <th
+                        <td
                           scope="row"
-                          className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white"
+                          className="px-4 py-3 text-md font-medium text-black whitespace-nowrap dark:text-white"
                         >
                           {user.Username}
-                        </th>
-                        <td className="px-4 py-3">{user.Email}</td>
+                        </td>
+                        <td className="px-4 py-3 text-md text-black dark:text-white">{user.Email}</td>
                         {/* <td className="px-4 py-3">
                           <button className="text-blue-500 border px-3 border-blue-500 rounded-lg hover:bg-blue-500 hover:text-white">
                             Edit
@@ -235,9 +260,9 @@ export default function UserList() {
                         <td className="px-4 py-3">
                           <button
                             onClick={() => openDeleteModal(user)}
-                            className="text-red-500 border px-3 border-red-500 rounded-lg hover:bg-red-500 hover:text-white"
+                            className="text-red-500 px-2 border-red-500 rounded-lg hover:bg-red-500 hover:text-white"
                           >
-                            Delete
+                            <Icon icon="material-symbols:delete" className="w-5 h-5"  />
                           </button>
                         </td>
                       </motion.tr>

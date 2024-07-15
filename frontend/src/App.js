@@ -23,11 +23,13 @@ import {
   Error,
 } from "./utlis/LazyLoadComponents";
 import "react-toastify/dist/ReactToastify.css";
+import { ThemeProvider } from "./Context/ThemeContext";
 
 
 function App() {
   return (
     <Router>
+      <ThemeProvider>
       <AuthProvider>
         <ToastContainer />
         <Suspense fallback={<Loading/>}>
@@ -64,6 +66,7 @@ function App() {
           </Routes>
         </Suspense>
       </AuthProvider>
+      </ThemeProvider>
     </Router>
   );
 }

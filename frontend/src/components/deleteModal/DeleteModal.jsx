@@ -16,7 +16,6 @@ export default function DeleteModal({
         className="fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-50"
       >
         <div className="relative p-4 w-full max-w-xl">
-          <div className="relative p-4 bg-gray-200 rounded-lg shadow dark:bg-gray-800 sm:p-5">
             <div className="relative p-4 text-center bg-gray-200 rounded-lg shadow dark:bg-gray-800 sm:p-5">
               <button
                 onClick={() => cancelModal()}
@@ -99,7 +98,7 @@ export default function DeleteModal({
                 </button>
               </div>
             </div>
-          </div>
+         
         </div>
       </motion.div>
     </AnimatePresence>

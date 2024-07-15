@@ -128,8 +128,8 @@ export default function EditPage() {
           cancelModal={handleCloseDelete}
           deleteDoc={handleDelete}
           id={pageData.id}
-          title={`Are you sure you want to delete this file "${pageData.title}"`}
-          message={`By deleting this file it will be permanently deleted.`}
+          title={`Are you sure?`}
+          message={`you want to delete this file "${pageData.title}"`}
         />
       )}
       <motion.nav
