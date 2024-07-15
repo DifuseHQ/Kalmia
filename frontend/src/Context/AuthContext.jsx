@@ -19,7 +19,7 @@ export const AuthProvider = ({ children }) => {
     return null;
   });
 
-  const [userDetails, setUserDetails] = useState({});
+  const [userDetails, setUserDetails] = useState(null);
   const [isOpenModal, setIsOpenModal] = useState(false);
 
   const navigate = useNavigate();
@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }) => {
         setUser(decodedUser);
         Cookies.set("accessToken", JSON.stringify(response?.data), {
           expires: 1,
-          secure: true,
+          secure: !(window.location.href.includes('http://')),
         });
         toastSuccess("Login Succesfully");
         navigate("/dashboard", { replace: true });
@@ -91,7 +91,8 @@ export const AuthProvider = ({ children }) => {
         removeCookies();
         toastSuccess("Logout Succesfully");
         setUser(null);
-        navigate("/");
+        setUserDetails(null)
+        
       }
     } catch (err) {
       // if (!err?.response) {

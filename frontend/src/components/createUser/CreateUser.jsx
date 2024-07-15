@@ -3,6 +3,7 @@ import instance from "../../api/AxiosInstance";
 import { Link, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { toastError, toastSuccess, toastWarning } from "../../utlis/toast";
+import { Icon } from "@iconify/react";
 
 
 export default function CreateUser() {
@@ -57,29 +58,62 @@ export default function CreateUser() {
 
   return (
     <AnimatePresence>
+
+<motion.nav
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="flex pb-10"
+        aria-label="Breadcrumb"
+      >
+        <ol className="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+        <li className="inline-flex items-center ">
+          <Link
+          to="/dashboard/admin/user-list"
+          >
+          
+            <span
+              className="inline-flex items-center gap-1 text-md font-medium text-black hover:text-blue-600 dark:hover:text-blue-600 dark:text-white "
+            >
+              <Icon icon="material-symbols:home" className=" " />
+             user management
+            </span>
+            </Link>
+          </li>
+          <li aria-current="page">
+            <div className="flex items-center">
+            <Icon icon="mingcute:right-fill" className="w-5 h-5 text-gray-500"/>              
+            <span className="ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400">
+                Add User
+              </span>
+            </div>
+          </li>
+        </ol>
+      </motion.nav>
+
+
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5"
+        className="mx-auto max-w-screen-xl justify-start pr-4 lg:pr-12 "
       >
-        <div className="mx-auto max-w-screen-xl px-4 lg:px-12">
-          <div className="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
-            <div className="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
+            <div className="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4">
               <div className="w-full md:w-full">
                 <form onSubmit={handleSubmit}>
                   <div className="overflow-x-auto">
-                    <div className="relative p-4 w-full max-w-2xl h-full md:h-auto">
-                      <div className="relative p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
+                    <div className="relative justify-start w-full max-w-2xl h-full md:h-auto">
+                      <div className="relative bg-white rounded-lg shadow dark:bg-gray-800 sm:p-2">
                         <div className="flex justify-between items-center pb-4 mb-4 rounded-t border-b sm:mb-5 dark:border-gray-600">
                           <h3 className="text-lg text-center font-semibold text-gray-900 dark:text-white">
                             Add user
                           </h3>
                           <Link
                             to="/dashboard/admin/user-list"
-                            className="flex items-center justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
+                            className="flex items-center gap-2 justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
                           >
-                            back
+                            Back
+                            <Icon icon="pajamas:go-back" width="1.2rem" height="1.2rem" />
                           </Link>
                         </div>
 
@@ -166,9 +200,10 @@ export default function CreateUser() {
                         <div className="flex justify-center my-5">
                           <button
                             type="submit"
-                            className="text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                            className="flex text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
                           >
-                            Create user
+                            New user
+                            <Icon icon="ei:plus" className="w-6 h-6 dark:text-white"  />  
                           </button>
                         </div>
                       </div>
@@ -177,8 +212,8 @@ export default function CreateUser() {
                 </form>
               </div>
             </div>
-          </div>
-        </div>
+         
+       
       </motion.div>
     </AnimatePresence>
   );
