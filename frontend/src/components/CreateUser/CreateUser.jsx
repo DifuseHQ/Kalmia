@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import instance from '../../api/AxiosInstance';
 import { Link, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { toastMessage } from '../../utils/Toast';
 import { Icon } from '@iconify/react';
+import instance from '../../api/AxiosInstance';
+import { toastMessage } from '../../utils/Toast';
 
 export default function CreateUser () {
   const [formData, setFormData] = useState({
@@ -121,7 +121,7 @@ export default function CreateUser () {
                           htmlFor='username'
                           className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
                         >
-                              Username
+                          Username
                         </label>
                         <input
                           type='text'
@@ -141,7 +141,7 @@ export default function CreateUser () {
                           htmlFor='email'
                           className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
                         >
-                              Email
+                          Email
                         </label>
                         <input
                           type='email'
@@ -160,7 +160,7 @@ export default function CreateUser () {
                           htmlFor='password'
                           className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
                         >
-                              Password
+                          Password
                         </label>
                         <input
                           type='password'
@@ -180,7 +180,7 @@ export default function CreateUser () {
                           htmlFor='re-password'
                           className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
                         >
-                              Confirm Password
+                          Confirm Password
                         </label>
                         <input
                           type='password'

@@ -1,9 +1,9 @@
 import React, { useContext, useState } from 'react';
-import { AuthContext } from '../../context/AuthContext';
 import { Link, NavLink } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ThemeContext } from '../../context/ThemeContext';
 import { Icon } from '@iconify/react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { AuthContext } from '../../context/AuthContext';
+import { ThemeContext } from '../../context/ThemeContext';
 
 export default function Navbar () {
   const { userDetails, logout } = useContext(AuthContext);

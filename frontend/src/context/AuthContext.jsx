@@ -1,11 +1,11 @@
 import React, { createContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { toastMessage } from '../utils/Toast';
 import { jwtDecode } from 'jwt-decode';
 import Cookies from 'js-cookie';
 import { removeCookies } from '../utils/CookiesManagement';
 import instance from '../api/AxiosInstance';
+import { toastMessage } from '../utils/Toast';
 
 export const AuthContext = createContext();
 

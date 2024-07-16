@@ -1,12 +1,11 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Icon } from '@iconify/react';
 import { AuthContext } from '../../context/AuthContext';
 import instance from '../../api/AxiosInstance';
-import { AnimatePresence, motion } from 'framer-motion';
-import ClipLoader from 'react-spinners/ClipLoader';
-import { Link, useNavigate } from 'react-router-dom';
 import DeleteModal from '../DeleteModal/DeleteModal';
 import { toastMessage } from '../../utils/Toast';
-import { Icon } from '@iconify/react';
 
 export default function UserList () {
   const [userList, setUserList] = useState([]);
@@ -111,9 +110,73 @@ export default function UserList () {
     [totalPages]
   );
 
+  const renderTableContent = () => {
+    if (loading) {
+      return (
+        <tr className='border-b dark:border-gray-700'>
+          <td colSpan='4' className='py-8'>
+            <div className='flex flex-col items-center justify-center'>
+              {loading && (
+                <Icon
+                  icon='line-md:loading-twotone-loop'
+                  className='w-32 h-32'
+                />
+              )}
+            </div>
+          </td>
+        </tr>
+      );
+    } else if (!filterUser || filterUser.length <= 0) {
+      return (
+        <motion.tr
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className='border-b dark:border-gray-700'
+        >
+          <td colSpan='4' className='text-center py-8'>
+            <h1 className='text-center text-gray-600 sm:text-lg font-semibold'>
+              No user found
+            </h1>
+          </td>
+        </motion.tr>
+      );
+    } else {
+      return (
+        <>
+          {filterUser.slice(startIdx, endIdx).map((user) => (
+            <motion.tr className='border-b dark:border-gray-700' key={user.ID}>
+              <th
+                scope='row'
+                className='px-4 py-3 text-md font-medium text-black whitespace-nowrap dark:text-white'
+              >
+                {user.Username}
+              </th>
+              <td className='px-4 py-3 text-md text-black dark:text-white'>
+                {user.Email}
+              </td>
+              {/* <td className="px-4 py-3">
+                <button className="text-blue-500 border px-3 border-blue-500 rounded-lg hover:bg-blue-500 hover:text-white">
+                  Edit
+                </button>
+              </td> */}
+              <td className='px-4 py-3'>
+                <button
+                  onClick={() => openDeleteModal(user)}
+                  className='text-red-500 px-2 border-red-500 rounded-lg hover:bg-red-500 hover:text-white'
+                >
+                  <Icon icon='material-symbols:delete' className='w-5 h-5' />
+                </button>
+              </td>
+            </motion.tr>
+          ))}
+        </>
+      );
+    }
+  };
+
   return (
     <AnimatePresence className='bg-gray-50 dark:bg-gray-900 p-3 sm:p-5'>
-
       <motion.nav
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -123,11 +186,11 @@ export default function UserList () {
       >
         <ol className='inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse'>
           <li className='inline-flex items-center '>
-            <span
-
-              className='inline-flex items-center gap-1 text-md font-medium text-gray-500  dark:text-gray-400 cursor-text'
-            >
-              <Icon icon='material-symbols:home' className='text-gray-500 dark:text-white ' />
+            <span className='inline-flex items-center gap-1 text-md font-medium text-gray-500  dark:text-gray-400 cursor-text'>
+              <Icon
+                icon='material-symbols:home'
+                className='text-gray-500 dark:text-white '
+              />
               user management
             </span>
           </li>
@@ -149,19 +212,10 @@ export default function UserList () {
                 </label>
                 <div className='relative w-full'>
                   <div className='absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none'>
-                    <svg
-                      aria-hidden='true'
-                      className='w-5 h-5 text-gray-500 dark:text-gray-400'
-                      fill='currentColor'
-                      viewBox='0 0 20 20'
-                      xmlns='http://www.w3.org/2000/svg'
-                    >
-                      <path
-                        fillRule='evenodd'
-                        d='M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z'
-                        clipRule='evenodd'
-                      />
-                    </svg>
+                    <Icon
+                      icon='material-symbols:search'
+                      className='w-6 h-6 text-gray-400 dark:text-gray-500'
+                    />
                   </div>
                   <input
                     type='text'
@@ -181,7 +235,9 @@ export default function UserList () {
                 to='/dashboard/admin/create-user'
                 className='flex text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800'
               >
-                <span className=' px-1 pt-0.5 text-left items-center dark:text-white text-md'>Add User</span>
+                <span className=' px-1 pt-0.5 text-left items-center dark:text-white text-md'>
+                  Add User
+                </span>
                 <Icon icon='ei:plus' className='w-6 h-6 dark:text-white' />
               </Link>
             </button>
@@ -205,69 +261,7 @@ export default function UserList () {
                   </th>
                 </tr>
               </thead>
-              <tbody>
-                {loading ? (
-                  <tr className='border-b dark:border-gray-700'>
-                    <td colSpan='4' className='py-8'>
-                      <div className='flex flex-col items-center justify-center'>
-                        <ClipLoader
-                          color='#666161'
-                          loading={loading}
-                          size={100}
-                          aria-label='Loading Spinner'
-                          data-testid='loader'
-                        />
-                        <h1 className='text-xl font-bold text-center text-gray-500 mt-4'>
-                          Loading....
-                        </h1>
-                      </div>
-                    </td>
-                  </tr>
-                ) : !filterUser || filterUser.length <= 0 ? (
-                  <motion.tr
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className='border-b dark:border-gray-700'
-                  >
-                    <td colSpan='4' className='text-center py-8'>
-                      <h1 className='text-center text-gray-600 sm:text-lg font-semibold'>
-                        No user found
-                      </h1>
-                    </td>
-                  </motion.tr>
-                ) : (
-                  <>
-                    {filterUser.slice(startIdx, endIdx).map((user) => (
-                      <motion.tr
-                        className='border-b dark:border-gray-700'
-                        key={user.ID}
-                      >
-                        <th
-                          scope='row'
-                          className='px-4 py-3 text-md font-medium text-black whitespace-nowrap dark:text-white'
-                        >
-                          {user.Username}
-                        </th>
-                        <td className='px-4 py-3 text-md text-black dark:text-white'>{user.Email}</td>
-                        {/* <td className="px-4 py-3">
-                          <button className="text-blue-500 border px-3 border-blue-500 rounded-lg hover:bg-blue-500 hover:text-white">
-                            Edit
-                          </button>
-                        </td> */}
-                        <td className='px-4 py-3'>
-                          <button
-                            onClick={() => openDeleteModal(user)}
-                            className='text-red-500 px-2 border-red-500 rounded-lg hover:bg-red-500 hover:text-white'
-                          >
-                            <Icon icon='material-symbols:delete' className='w-5 h-5' />
-                          </button>
-                        </td>
-                      </motion.tr>
-                    ))}
-                  </>
-                )}
-              </tbody>
+              <tbody>{renderTableContent()}</tbody>
             </table>
           </div>
 
@@ -295,19 +289,7 @@ export default function UserList () {
                     className='flex items-center justify-center h-full py-1.5 px-3 ml-0 text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'
                   >
                     <span className='sr-only'>Previous</span>
-                    <svg
-                      className='w-5 h-5'
-                      aria-hidden='true'
-                      fill='currentColor'
-                      viewBox='0 0 20 20'
-                      xmlns='http://www.w3.org/2000/svg'
-                    >
-                      <path
-                        fillRule='evenodd'
-                        d='M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z'
-                        clipRule='evenodd'
-                      />
-                    </svg>
+                    <Icon icon='mingcute:left-fill' />
                   </button>
                 </li>
                 {Array.from({ length: totalPages }, (_, i) => (
@@ -330,20 +312,7 @@ export default function UserList () {
                     disabled={currentPage === totalPages}
                     className='flex items-center justify-center h-full py-1.5 px-3 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'
                   >
-                    <span className='sr-only'>Next</span>
-                    <svg
-                      className='w-5 h-5'
-                      aria-hidden='true'
-                      fill='currentColor'
-                      viewBox='0 0 20 20'
-                      xmlns='http://www.w3.org/2000/svg'
-                    >
-                      <path
-                        fillRule='evenodd'
-                        d='M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 111.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z'
-                        clipRule='evenodd'
-                      />
-                    </svg>
+                    <Icon icon='mingcute:right-fill' />
                   </button>
                 </li>
               </ul>
@@ -355,7 +324,8 @@ export default function UserList () {
             cancelModal={handleCancelDelete}
             deleteDoc={() => handleDeleteUser(currentItem.Username)}
             id={currentItem.id}
-            title={`Are you sure you want to delete this user "${currentItem.Username}"`}
+            title='Are you sure?'
+            message={`This user permanently deleted "${currentItem.Username}" `}
           />
         )}
       </motion.div>

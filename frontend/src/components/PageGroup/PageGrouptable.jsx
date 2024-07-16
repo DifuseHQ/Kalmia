@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import instance from '../../api/AxiosInstance';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Icon } from '@iconify/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import CreatePageGroup from '../CreatePageGroup/CreatePageGroup';
-import { toastMessage } from '../../utils/Toast';
-import EditDocumentModal from '../CreateDocumentModal/EditDocumentModal';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import instance from '../../api/AxiosInstance';
+import CreatePageGroup from '../CreatePageGroup/CreatePageGroup';
+import EditDocumentModal from '../CreateDocumentModal/EditDocumentModal';
 import DeleteModal from '../DeleteModal/DeleteModal';
+import { toastMessage } from '../../utils/Toast';
 
 export default function PageGrouptable () {
   const [pageRefresh, setPageRefresh] = useState(false);
@@ -87,7 +88,10 @@ export default function PageGrouptable () {
 
   const handleCreatePageGroup = async (title) => {
     if (title === '') {
-      toastMessage('Title is required. Please Enter PageGroup title', 'warning');
+      toastMessage(
+        'Title is required. Please Enter PageGroup title',
+        'warning'
+      );
       return;
     }
 
@@ -111,14 +115,6 @@ export default function PageGrouptable () {
       }
       toastMessage(err?.response?.data?.message, 'error');
     }
-  };
-
-  const [openDropdownId, setOpenDropdownId] = useState(null);
-
-  const toggleDropdown = (currentIndex) => {
-    setOpenDropdownId((prevId) =>
-      prevId === currentIndex ? null : currentIndex
-    );
   };
 
   const [isEditpageGroup, setIsEditpageGroup] = useState(false);
@@ -246,35 +242,13 @@ export default function PageGrouptable () {
               to='/dashboard'
               className='inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white'
             >
-              <svg
-                className='w-3 h-3 me-2.5'
-                aria-hidden='true'
-                xmlns='http://www.w3.org/2000/svg'
-                fill='currentColor'
-                viewBox='0 0 20 20'
-              >
-                <path d='m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z' />
-              </svg>
+              <Icon icon='material-symbols:home' className=' ' />
               Home
             </Link>
           </li>
           <li>
             <div className='flex items-center'>
-              <svg
-                className='rtl:rotate-180 w-3 h-3 text-gray-400 mx-1'
-                aria-hidden='true'
-                xmlns='http://www.w3.org/2000/svg'
-                fill='none'
-                viewBox='0 0 6 10'
-              >
-                <path
-                  stroke='currentColor'
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth='2'
-                  d='m1 9 4-4-4-4'
-                />
-              </svg>
+              <Icon icon='mingcute:right-fill' className='text-gray-500' />
               <Link
                 to={`/dashboard/documentation?id=${docId}`}
                 className='ms-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ms-2 dark:text-gray-400 dark:hover:text-white'
@@ -285,21 +259,7 @@ export default function PageGrouptable () {
           </li>
           <li aria-current='page'>
             <div className='flex items-center'>
-              <svg
-                className='rtl:rotate-180 w-3 h-3 text-gray-400 mx-1'
-                aria-hidden='true'
-                xmlns='http://www.w3.org/2000/svg'
-                fill='none'
-                viewBox='0 0 6 10'
-              >
-                <path
-                  stroke='currentColor'
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth='2'
-                  d='m1 9 4-4-4-4'
-                />
-              </svg>
+              <Icon icon='mingcute:right-fill' className='text-gray-500' />
               <span className='ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400'>
                 {/* {data.name} */}
               </span>
@@ -318,7 +278,7 @@ export default function PageGrouptable () {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className='grid max-w-screen-xl px-4 mx-auto lg:gap-8 xl:gap-0 lg:grid-cols-12'
+        className='grid max-w-screen-xl pr-4 mx-auto lg:gap-8 xl:gap-0 lg:grid-cols-12'
       >
         <div className='mr-auto place-self-center lg:col-span-7'>
           <h1 className='max-w-xl mb-4 text-4xl font-bold tracking-tight leading-none md:text-4xl xl:text-4xl dark:text-white'>
@@ -332,7 +292,7 @@ export default function PageGrouptable () {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ delay: 0.1 }}
-        className='mx-auto max-w-screen-xl px-4 lg:px-12'
+        className='mx-auto max-w-screen-xl pr-4 lg:pr-12'
       >
         <div className='bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden'>
           <div className='flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4'>
@@ -343,19 +303,10 @@ export default function PageGrouptable () {
                 </label>
                 <div className='relative w-full'>
                   <div className='absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none'>
-                    <svg
-                      aria-hidden='true'
-                      className='w-5 h-5 text-gray-500 dark:text-gray-400'
-                      fill='currentColor'
-                      viewBox='0 0 20 20'
-                      xmlns='http://www.w3.org/2000/svg'
-                    >
-                      <path
-                        fillRule='evenodd'
-                        d='M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z'
-                        clipRule='evenodd'
-                      />
-                    </svg>
+                    <Icon
+                      icon='material-symbols:search'
+                      className='w-6 h-6 text-gray-400 dark:text-gray-500'
+                    />
                   </div>
                   <input
                     type='text'
@@ -371,19 +322,26 @@ export default function PageGrouptable () {
             </div>
             <div className='w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0'>
               <motion.button
+                whilehover={{ scale: 1.1 }}
                 onClick={() => setOpenCreatePageGroup(true)}
-                whileHover={{ scale: 1.1 }}
                 type='button'
                 className='flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800'
               >
-                Create Group
+                <span className=' px-1 text-left items-center dark:text-white text-md '>
+                  New Group
+                </span>
+                <Icon icon='ei:plus' className='w-6 h-6 dark:text-white' />
               </motion.button>
-              <motion.button whileHover={{ scale: 1.1 }}>
+
+              <motion.button whilehover={{ scale: 1.1 }}>
                 <Link
-                  to={`/dashboard/documentation/create-page?id=${docId}&dir=false&pageGroupId=${pageGroupId}`}
+                  to={`/dashboard/documentation/create-page?id=${docId}&dir=true`}
                   className='flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800'
                 >
-                  Create page
+                  <span className=' px-1 text-left items-center dark:text-white text-md '>
+                    New Page
+                  </span>
+                  <Icon icon='ei:plus' className='w-6 h-6 dark:text-white' />
                 </Link>
               </motion.button>
             </div>
@@ -437,143 +395,119 @@ export default function PageGrouptable () {
                               {...provided.dragHandleProps}
                               className={`${
                                 snapshot.isDragging
-                                  ? 'opacity-80 bg-gray-200 border shadow-md shadow-black text-black'
+                                  ? 'opacity-80 bg-gray-200 dark:bg-gray-500 border shadow-md shadow-black text-black'
                                   : ''
-                              } border dark:border-gray-700 h-16 dark:bg-gray-700`}
+                              } border dark:border-gray-700 h-16 `}
                               key={`${obj.id}-${index}`}
                             >
                               <th
                                 scope='row'
                                 className='items-center w-5 cursor-pointer gap-2 px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white'
                               >
-                                <svg
-                                  fill='#000000'
-                                  className='w-6 h-6'
-                                  viewBox='0 0 256 256'
-                                  id='Flat'
-                                  xmlns='http://www.w3.org/2000/svg'
-                                >
-                                  <path d='M104,60.0001a12,12,0,1,1-12-12A12,12,0,0,1,104,60.0001Zm60,12a12,12,0,1,0-12-12A12,12,0,0,0,164,72.0001Zm-72,44a12,12,0,1,0,12,12A12,12,0,0,0,92,116.0001Zm72,0a12,12,0,1,0,12,12A12,12,0,0,0,164,116.0001Zm-72,68a12,12,0,1,0,12,12A12,12,0,0,0,92,184.0001Zm72,0a12,12,0,1,0,12,12A12,12,0,0,0,164,184.0001Z' />
-                                </svg>
+                                <Icon
+                                  icon='nimbus:drag-dots'
+                                  className='w-6 h-6 text-gray-600 dark:text-white'
+                                />
                               </th>
 
                               <th
                                 scope='row'
-                                className='  cursor-pointer gap-2 px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white'
+                                className='  cursor-pointer px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white'
                               >
                                 <Link
-                                  className='flex'
+                                  className='flex items-center gap-1'
                                   to={
                                     obj.name
                                       ? `/dashboard/documentation/pagegroup?id=${docId}&pageGroupId=${obj.id}`
-                                      : `/dashboard/documentation/edit-page?id=${docId}&dir=false&pageGroupId=${pageGroupId}&page_id=${obj.id}`
+                                      : `/dashboard/documentation/edit-page?id=${docId}&dir=false&pageGroupId=${pageGroupId}&pageId=${obj.id}`
                                   }
                                 >
                                   {obj.name
                                     ? (
-                                      <svg
-                                        className='w-6 h-6 text-yellow-400 dark:text-white'
-                                        aria-hidden='true'
-                                        xmlns='http://www.w3.org/2000/svg'
-                                        width='24'
-                                        height='24'
-                                        fill='currentColor'
-                                        viewBox='0 0 24 24'
-                                      >
-                                        <path
-                                          fillRule='evenodd'
-                                          d='M4 4a2 2 0 0 0-2 2v12a2 2 0 0 0 .087.586l2.977-7.937A1 1 0 0 1 6 10h12V9a2 2 0 0 0-2-2h-4.532l-1.9-2.28A2 2 0 0 0 8.032 4H4Zm2.693 8H6.5l-3 8H18l3-8H6.693Z'
-                                          clipRule='evenodd'
-                                        />
-                                      </svg>
+                                      <Icon
+                                        icon='material-symbols:folder'
+                                        className='text-yellow-400 dark:text-yellow-200 w-6 h-6'
+                                      />
                                       )
                                     : (
-                                      <svg
-                                        className='w-6 h-6 text-gray-600 dark:text-white'
-                                        aria-hidden='true'
-                                        xmlns='http://www.w3.org/2000/svg'
-                                        width='24'
-                                        height='24'
-                                        fill='none'
-                                        viewBox='0 0 24 24'
-                                      >
-                                        <path
-                                          stroke='currentColor'
-                                          strokeLinecap='round'
-                                          strokeLinejoin='round'
-                                          strokeWidth='2'
-                                          d='M10 3v4a1 1 0 0 1-1 1H5m4 8h6m-6-4h6m4-8v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7.914a1 1 0 0 1 .293-.707l3.914-3.914A1 1 0 0 1 9.914 3H18a1 1 0 0 1 1 1Z'
-                                        />
-                                      </svg>
+                                      <Icon
+                                        icon='bx:file'
+                                        className='w-6 h-6 text-gray-500 dark:text-white'
+                                      />
                                       )}
 
                                   {obj.name || obj.title}
                                 </Link>
                               </th>
 
-                              <td className='px-4 py-3'>
-                                /{obj.name || obj.slug}
+                              <td className='px-4 py-3 cursor-text'>
+                                <div className='flex justify-start items-center gap-2'>
+                                  <Icon
+                                    icon='mdi:clock-outline'
+                                    className='w-4 h-4 text-gray-500 dark:text-white'
+                                  />
+                                  <span className=' px-1 text-left items-center dark:text-white text-md whitespace-nowrap'>
+                                    Demo Time
+                                  </span>
+                                </div>
+                                <div
+                                  className='flex gap-2 items-center
+                                      '
+                                >
+                                  <Icon
+                                    icon='material-symbols:update'
+                                    className='w-4 h-4 text-gray-500 dark:text-white'
+                                  />
+                                  <span className=' px-1 text-left items-center dark:text-white text-md whitespace-nowrap'>
+                                    Demo Update Time
+                                  </span>
+                                </div>
                               </td>
 
-                              <td className='px-4 py-3'>
-                                {obj.name ? 'Folder' : 'file'}
+                              <td className='px-4 py-3 cursor-text'>
+                                <div className='flex justify-start items-center gap-2'>
+                                  <Icon
+                                    icon='mdi:user'
+                                    className='w-4 h-4 text-gray-500 dark:text-white'
+                                  />
+                                  <span className=' px-1 text-left items-center dark:text-white text-md whitespace-nowrap'>
+                                    Demo Author Name
+                                  </span>
+                                </div>
+                                <div className='flex gap-2 items-center'>
+                                  <Icon
+                                    icon='mdi:edit-outline'
+                                    className='w-4 h-4 text-gray-500 dark:text-white'
+                                  />
+                                  <span className=' px-1 text-left items-center dark:text-white text-md whitespace-nowrap'>
+                                    Demo Editor Name
+                                  </span>
+                                </div>
                               </td>
+
                               {obj.name && (
                                 <td className='px-4 py-3 cursor-pointer relative'>
                                   <button
-                                    onClick={() => toggleDropdown(index)}
                                     id={`dropdown-button-${obj.id}`}
                                     data-dropdown-toggle={`dropdown-${obj.id}`}
-                                    className='inline-flex items-center p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100'
+                                    className='inline-flex items-center gap-2 p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100'
                                     type='button'
                                   >
-                                    <svg
-                                      className='w-5 h-5'
-                                      aria-hidden='true'
-                                      fill='currentColor'
-                                      viewBox='0 0 20 20'
-                                      xmlns='http://www.w3.org/2000/svg'
-                                    >
-                                      <path d='M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z' />
-                                    </svg>
+                                    <Icon
+                                      icon='material-symbols:edit-outline'
+                                      className='w-6 h-6 text-yellow-500 dark:text-yellow-400'
+                                      onClick={() => {
+                                        openEditPageGroup(obj);
+                                      }}
+                                    />
+                                    <Icon
+                                      icon='material-symbols:delete'
+                                      className='w-6 h-6 text-red-600 dark:text-red-500'
+                                      onClick={() => {
+                                        openDeletePageGroups(obj);
+                                      }}
+                                    />
                                   </button>
-                                  <div
-                                    id={`dropdown-${obj.id}`}
-                                    className={`absolute z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600 ${
-                                      openDropdownId === index
-                                        ? 'block'
-                                        : 'hidden'
-                                    }`}
-                                    style={{ top: '100%', right: 0 }}
-                                  >
-                                    <ul
-                                      className='py-1 text-sm text-gray-700 dark:text-gray-200'
-                                      aria-labelledby={`dropdown-button-${obj.id}-${index}`}
-                                    >
-                                      <li key={`dropsown-${obj.id}-${index}`}>
-                                        <p
-                                          onClick={() => {
-                                            setOpenDropdownId(null);
-                                            openEditPageGroup(obj);
-                                          }}
-                                          className='block py-2 px-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white'
-                                        >
-                                          Edit
-                                        </p>
-                                      </li>
-                                      <li>
-                                        <p
-                                          onClick={() => {
-                                            setOpenDropdownId(null);
-                                            openDeletePageGroups(obj);
-                                          }}
-                                          className='block py-2 px-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white'
-                                        >
-                                          Delete
-                                        </p>
-                                      </li>
-                                    </ul>
-                                  </div>
                                 </td>
                               )}
                             </tr>
@@ -607,7 +541,7 @@ export default function PageGrouptable () {
           deleteDoc={() => handleDeletePageGroup(currentItem.id)}
           id={currentItem.id}
           title='Are you sure? '
-          message={`you want to delete this "${currentItem.name}"`}
+          message={`This will permanently deleted "${currentItem.name}"`}
         />
       )}
     </AnimatePresence>

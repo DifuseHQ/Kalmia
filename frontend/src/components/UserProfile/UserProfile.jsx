@@ -1,14 +1,14 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { AuthContext } from '../../context/AuthContext';
-import instance from '../../api/AxiosInstance';
-import axios from 'axios';
-import { getTokenFromCookies } from '../../utils/CookiesManagement';
 import { Link, useNavigate } from 'react-router-dom';
-import { toastMessage } from '../../utils/Toast';
-
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Icon } from '@iconify/react';
+import axios from 'axios';
+import { AuthContext } from '../../context/AuthContext';
+import instance from '../../api/AxiosInstance';
+import { getTokenFromCookies } from '../../utils/CookiesManagement';
+import { toastMessage } from '../../utils/Toast';
 
 export default function UserProfile () {
   const { refresh, refreshData } = useContext(AuthContext);
@@ -155,19 +155,8 @@ export default function UserProfile () {
                   className='text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white'
                   data-modal-toggle='defaultModal'
                 >
-                  <svg
-                    aria-hidden='true'
-                    className='w-5 h-5'
-                    fill='currentColor'
-                    viewBox='0 0 20 20'
-                    xmlns='http://www.w3.org/2000/svg'
-                  >
-                    <path
-                      fill-rule='evenodd'
-                      d='M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z'
-                      clip-rule='evenodd'
-                    />
-                  </svg>
+                  <Icon icon='material-symbols:close' className='w-6 h-6' />
+
                   <span className='sr-only'>Close modal</span>
                 </button>
               </div>
@@ -214,7 +203,11 @@ export default function UserProfile () {
                     type='submit'
                     className=' text-white inline-flex items-center bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800'
                   >
-                    Update
+                    <Icon
+                      icon='material-symbols:edit-outline'
+                      className='w-6 h-6 text-yellow-500 dark:text-yellow-400'
+                    />
+                    Edit
                   </button>
                 </div>
               </form>
@@ -245,22 +238,9 @@ export default function UserProfile () {
                 />
                 <label
                   htmlFor='upload-button'
-                  className='absolute bottom-0 right-0 bg-blue-500 text-white rounded-full p-2 hover:bg-blue-700 cursor-pointer'
+                  className='absolute bottom-0 right-0  text-blue-600 rounded-full p-2 hover:text-blue-500 cursor-pointer'
                 >
-                  <svg
-                    xmlns='http://www.w3.org/2000/svg'
-                    className='h-6 w-6'
-                    fill='none'
-                    viewBox='0 0 24 24'
-                    stroke='currentColor'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M12 6v6m0 0v6m0-6h6m-6 0H6'
-                    />
-                  </svg>
+                  <Icon icon='octicon:feed-plus-16' className='w-10 h-10' />
                   <input
                     id='upload-button'
                     type='file'
