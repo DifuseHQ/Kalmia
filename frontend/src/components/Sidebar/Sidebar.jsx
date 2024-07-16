@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
@@ -9,7 +9,7 @@ import { toastMessage } from '../../utils/Toast';
 export default function Sidebar () {
   const [documentation, setDocumentation] = useState([]);
   const [openDropdowns, setOpenDropdowns] = useState([]);
-  const { refresh, userDetails, setIsOpenModal } = useContext(AuthContext);
+  const { refresh, userDetails, setIsOpenModal, isSidebarOpen, setIsSidebarOpen } = useContext(AuthContext);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -46,14 +46,37 @@ export default function Sidebar () {
 
   const smallestId = documentation.reduce((min, doc) => (doc.id < min ? doc.id : min), documentation[0]?.id);
 
+  const handleClickOutside = useCallback((event) => {
+    if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
+      setIsSidebarOpen(false);
+    }
+  }, [setIsSidebarOpen]);
+
+  const sidebarRef = useRef(null);
+
+  useEffect(() => {
+    if (isSidebarOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isSidebarOpen, handleClickOutside]);
+
   return (
     <AnimatePresence>
       <motion.aside
+        ref={sidebarRef}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ delay: 0.1 }}
-        className='fixed top-0 left-0 z-40 w-64 h-screen pt-14 transition-transform -translate-x-full bg-white border-r border-gray-200 md:translate-x-0 dark:bg-gray-800 dark:border-gray-700'
+        className={`fixed top-0 left-0 z-40 w-64 h-screen pt-14 transition-transform bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700 ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        } md:translate-x-0`}
         aria-label='Sidenav'
         id='drawer-navigation'
       >
@@ -113,7 +136,7 @@ export default function Sidebar () {
                   to='/dashboard/admin/user-list'
                   className={`flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-200 dark:text-white dark:hover:bg-gray-700
                     ${path === '/dashboard/admin/user-list'
-                      ? 'text-black-500 bg-gray-300'
+                      ? 'text-black-500 bg-gray-300 dark:bg-gray-600'
                       : 'text-gray-900'}
                     `}
                   aria-controls=''

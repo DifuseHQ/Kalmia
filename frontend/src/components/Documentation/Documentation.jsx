@@ -499,11 +499,11 @@ export default function Documentation () {
             </div>
 
             {filteredItems && (
-              <div className='overflow-x-auto sm:overflow-visible '>
+              <div className='overflow-x-auto '>
                 <DragDropContext onDragEnd={handleDragEnd}>
                   <Droppable droppableId='table' type='TABLE'>
                     {(provided) => (
-                      <table className='w-full  text-sm text-left text-gray-500 dark:text-gray-400'>
+                      <table className='w-full text-sm text-left text-gray-500 dark:text-gray-400'>
                         <thead className='text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400'>
                           <tr>
                             <th />

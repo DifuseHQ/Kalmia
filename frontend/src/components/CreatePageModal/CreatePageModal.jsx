@@ -1,5 +1,4 @@
-import { initFlowbite } from 'flowbite';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Editor } from 'primereact/editor';
@@ -22,10 +21,6 @@ export default function CreatePageModal () {
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
   const [content, setContent] = useState('');
-
-  useEffect(() => {
-    initFlowbite();
-  }, []);
 
   const handleCreate = async () => {
     if (title === '' || slug === '') {

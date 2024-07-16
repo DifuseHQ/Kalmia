@@ -22,6 +22,8 @@ export const AuthProvider = ({ children }) => {
   const [userDetails, setUserDetails] = useState(null);
   const [isOpenModal, setIsOpenModal] = useState(false);
 
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   const navigate = useNavigate();
 
   const [refresh, setRefresh] = useState(false);
@@ -201,7 +203,9 @@ export const AuthProvider = ({ children }) => {
         setUserDetails,
         refreshToken,
         isOpenModal,
-        setIsOpenModal
+        setIsOpenModal,
+        isSidebarOpen,
+        setIsSidebarOpen
       }}
     >
       {children}
