@@ -129,7 +129,7 @@ export default function EditPage () {
           deleteDoc={handleDelete}
           id={pageData.id}
           title='Are you sure?'
-          message={`This will permanently deleted "${pageData.title}"`}
+          message={`You.re permanently deleting "${pageData.title}"`}
         />
       )}
       <motion.nav

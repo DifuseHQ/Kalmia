@@ -325,7 +325,7 @@ export default function UserList () {
             deleteDoc={() => handleDeleteUser(currentItem.Username)}
             id={currentItem.id}
             title='Are you sure?'
-            message={`This user permanently deleted "${currentItem.Username}" `}
+            message={`You're permanently deleting "${currentItem.Username}" `}
           />
         )}
       </motion.div>

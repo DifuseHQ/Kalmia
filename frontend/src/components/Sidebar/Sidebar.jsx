@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
 import { AuthContext } from '../../context/AuthContext';
@@ -38,9 +38,13 @@ export default function Sidebar () {
   };
 
   const handleCreateDocument = () => {
-    navigate('/dashboard/create-documentation');
     setIsOpenModal(true);
   };
+
+  const location = useLocation();
+  const path = location.pathname + location.search;
+
+  const smallestId = documentation.reduce((min, doc) => (doc.id < min ? doc.id : min), documentation[0]?.id);
 
   return (
     <AnimatePresence>
@@ -81,20 +85,22 @@ export default function Sidebar () {
                       key={`sidebar-${val.id}-${index}`}
                       whilehover={{ scale: 1.08, originx: 0 }}
                     >
-                      <Link to={`/dashboard/documentation?id=${val.id}`}>
-                        <button
-                          type='button'
-                          onClick={() => toggleDropdown(index)}
-                          className='flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-200 dark:text-white dark:hover:bg-gray-700'
-                          aria-controls={`${val.name}`}
-                          title={val.name}
-                        >
-                          <Icon icon='ep:document' className='w-8 h-8 dark:text-white' />
-                          <span className='flex-1 px-1 text-left overflow-hidden text-md whitespace-nowrap overflow-ellipsis'>
-                            {val.name}
-                          </span>
-                        </button>
-                      </Link>
+                      <NavLink
+                        to={`/dashboard/documentation?id=${val.id}`}
+                        onClick={() => toggleDropdown(index)}
+                        className={`flex items-center p-2 w-full text-base font-normal rounded-lg transition duration-75 group hover:bg-gray-200 dark:text-white dark:hover:bg-gray-700 ${
+                            (location.pathname === '/dashboard' && val.id === smallestId) || path === `/dashboard/documentation?id=${val.id}`
+                              ? 'text-black-500 bg-gray-300 dark:bg-gray-600'
+                              : 'text-gray-900'
+                          }`}
+                        aria-controls={`${val.name}`}
+                        title={val.name}
+                      >
+                        <Icon icon='ep:document' className='w-8 h-8 dark:text-white' />
+                        <span className='flex-1 px-1 text-left overflow-hidden text-md whitespace-nowrap overflow-ellipsis'>
+                          {val.name}
+                        </span>
+                      </NavLink>
                     </motion.li>
                   ))
                 )}
@@ -103,19 +109,21 @@ export default function Sidebar () {
           {userDetails && userDetails.Admin && (
             <ul className='pt-5 mt-5 space-y-2 border-t border-gray-200 dark:border-gray-700'>
               <li>
-                <Link to='/dashboard/admin/user-list'>
-                  <button
-                    type='button'
-                    className='flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-200 dark:text-white dark:hover:bg-gray-700'
-                    aria-controls=''
-                    title='User management'
-                  >
-                    <Icon icon='mdi:users' className='w-8 h-8 dark:text-white' />
-                    <span className='flex-1 px-1 text-left whitespace-nowrap text-md'>
-                      User Management
-                    </span>
-                  </button>
-                </Link>
+                <NavLink
+                  to='/dashboard/admin/user-list'
+                  className={`flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-200 dark:text-white dark:hover:bg-gray-700
+                    ${path === '/dashboard/admin/user-list'
+                      ? 'text-black-500 bg-gray-300'
+                      : 'text-gray-900'}
+                    `}
+                  aria-controls=''
+                  title='User management'
+                >
+                  <Icon icon='mdi:users' className='w-8 h-8 dark:text-white' />
+                  <span className='flex-1 px-1 text-left whitespace-nowrap text-md'>
+                    User Management
+                  </span>
+                </NavLink>
               </li>
             </ul>
           )}

@@ -278,7 +278,7 @@ export default function PageGrouptable () {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className='grid max-w-screen-xl pr-4 mx-auto lg:gap-8 xl:gap-0 lg:grid-cols-12'
+        className='grid max-w-screen-xl  '
       >
         <div className='mr-auto place-self-center lg:col-span-7'>
           <h1 className='max-w-xl mb-4 text-4xl font-bold tracking-tight leading-none md:text-4xl xl:text-4xl dark:text-white'>
@@ -292,7 +292,7 @@ export default function PageGrouptable () {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ delay: 0.1 }}
-        className='mx-auto max-w-screen-xl pr-4 lg:pr-12'
+        className=''
       >
         <div className='bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden'>
           <div className='flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4'>
@@ -541,7 +541,7 @@ export default function PageGrouptable () {
           deleteDoc={() => handleDeletePageGroup(currentItem.id)}
           id={currentItem.id}
           title='Are you sure? '
-          message={`This will permanently deleted "${currentItem.name}"`}
+          message={`You're permanently deleting "${currentItem.name}"`}
         />
       )}
     </AnimatePresence>

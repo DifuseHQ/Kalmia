@@ -9,6 +9,7 @@ import { toastMessage } from '../../utils/Toast';
 export default function CreateDocModal () {
   const { refreshData, isOpenModal, setIsOpenModal } = useContext(AuthContext);
   const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     title: '',
     description: ''
@@ -24,7 +25,6 @@ export default function CreateDocModal () {
 
   const handleCloseModal = () => {
     setIsOpenModal(false);
-    navigate('/dashboard');
   };
 
   const handleCreateDocument = async () => {
@@ -42,7 +42,6 @@ export default function CreateDocModal () {
       if (response?.status === 200) {
         setIsOpenModal(false);
         refreshData();
-        navigate('/dashboard');
         toastMessage(response?.data?.message, 'success');
       }
     } catch (err) {
