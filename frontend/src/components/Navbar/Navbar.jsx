@@ -56,7 +56,7 @@ export default function Navbar () {
                 />
                 {darkMode
                   ? (
-                    <p class='text-gray-500 dark:text-gray-400  hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5 w-10 h-10 inline-flex items-center justify-center'>
+                    <p className='text-gray-500 dark:text-gray-400  hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5 w-10 h-10 inline-flex items-center justify-center'>
                       <Icon
                         icon='ph:sun-light'
                         className='w-10 h-10 text-yellow-300'
@@ -64,7 +64,7 @@ export default function Navbar () {
                     </p>
                     )
                   : (
-                    <p class='text-gray-500 dark:text-gray-400  hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5 w-10 h-10 inline-flex items-center justify-center'>
+                    <p className='text-gray-500 dark:text-gray-400  hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5 w-10 h-10 inline-flex items-center justify-center'>
                       <Icon
                         icon='bi:moon-fill'
                         className='w-10 h-10 pt-1 text-gray-700'

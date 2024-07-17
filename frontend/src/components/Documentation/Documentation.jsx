@@ -151,7 +151,7 @@ export default function Documentation () {
     };
 
     fetchData();
-  }, [docId, refresh, navigate, user]);
+  }, [docId, refresh, refreshPage, navigate, user]);
 
   const handleDeletemodalopen = () => {
     setDeleteModal(true);
@@ -339,6 +339,23 @@ export default function Documentation () {
 
     // Use map instead of forEach to iterate asynchronously
     await Promise.all(newItems.map((item, index) => updateOrder(item, index)));
+
+    await handleRefresh();
+  };
+
+  const extraRowHeight = '2.5rem'; // Adjust this if your table rows have a different height
+
+  // const tableContainerStyles = {
+  //   overflowX: "auto"
+  // };
+
+  // const tbodyStyles = {
+  //   position: "relative"
+  // };
+
+  const extraSpaceStyles = {
+    display: 'table-row',
+    height: `calc(3 * ${extraRowHeight})`
   };
 
   return (
@@ -501,7 +518,7 @@ export default function Documentation () {
             </div>
 
             {filteredItems && (
-              <div className='overflow-x-auto '>
+              <div className='overflow-x-auto h-auto'>
                 <DragDropContext onDragEnd={handleDragEnd}>
                   <Droppable droppableId='table' type='TABLE'>
                     {(provided) => (
@@ -533,6 +550,7 @@ export default function Documentation () {
                         <tbody
                           {...provided.droppableProps}
                           ref={provided.innerRef}
+
                         >
                           {loading
                             ? (
@@ -567,13 +585,7 @@ export default function Documentation () {
                                   )
                                 : (
                                     filteredItems.map((obj, index) => (
-                                      <Draggable
-                                        key={`dragagable-${obj.id}-${index}`}
-                                        draggableId={`${obj.id.toString()}-${
-                                  obj.name || obj.title
-                                }`}
-                                        index={index}
-                                      >
+                                      <Draggable key={obj.name ? `pageGroup-${obj.id}` : `page-${obj.id}`} draggableId={obj.name ? `pageGroup-${obj.id}` : `page-${obj.id}`} index={index}>
                                         {(provided, snapshot) => (
                                           <tr
                                             ref={provided.innerRef}
@@ -697,6 +709,8 @@ export default function Documentation () {
                                       </Draggable>
                                     ))
                                   )}
+                          {provided.placeholder}
+                          <tr style={extraSpaceStyles} />
                         </tbody>
                       </table>
                     )}

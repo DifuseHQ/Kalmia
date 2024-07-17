@@ -253,6 +253,11 @@ export default function PageGrouptable () {
   // const handleNavigate = (index) => {
   //   setBreadcrumb(prevTrail => prevTrail.slice(0, index + 1));
   // };
+  const extraRowHeight = '2.5rem';
+  const extraSpaceStyles = {
+    display: 'table-row',
+    height: `calc(3 * ${extraRowHeight})`
+  };
 
   return (
     <AnimatePresence className='bg-gray-50 dark:bg-gray-900 p-3 sm:p-5'>
@@ -361,7 +366,7 @@ export default function PageGrouptable () {
 
               <motion.button whilehover={{ scale: 1.1 }}>
                 <Link
-                  to={`/dashboard/documentation/create-page?id=${docId}&dir=true`}
+                  to={`/dashboard/documentation/create-page?id=${docId}&dir=false&pageGroupId=${pageGroupId}`}
                   className='flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800'
                 >
                   <span className=' px-1 text-left items-center dark:text-white text-md '>
@@ -373,7 +378,7 @@ export default function PageGrouptable () {
             </div>
           </div>
 
-          <div className='overflow-x-auto min-h-[70vh]'>
+          <div className='overflow-x-auto h-auto'>
             <DragDropContext onDragEnd={handleDragEnd}>
               <Droppable droppableId='table' type='TABLE'>
                 {(provided) => (
@@ -407,13 +412,7 @@ export default function PageGrouptable () {
                       )}
 
                       {filteredItems.map((obj, index) => (
-                        <Draggable
-                          key={`${obj.id}-${index}`}
-                          draggableId={`${obj.id.toString()}-${
-                            obj.name || obj.title
-                          }`}
-                          index={index}
-                        >
+                        <Draggable key={obj.name ? `pageGroup-${obj.id}` : `page-${obj.id}`} draggableId={obj.name ? `pageGroup-${obj.id}` : `page-${obj.id}`} index={index}>
                           {(provided, snapshot) => (
                             <tr
                               ref={provided.innerRef}
@@ -542,6 +541,7 @@ export default function PageGrouptable () {
                       ))}
 
                       {provided.placeholder}
+                      <tr style={extraSpaceStyles} />
                     </tbody>
                   </table>
                 )}

@@ -85,7 +85,7 @@ export default function UserResetPassword () {
           >
             <div>
               <label
-                htmlForfor='password'
+                htmlFor='password'
                 className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
               >
                 New Password

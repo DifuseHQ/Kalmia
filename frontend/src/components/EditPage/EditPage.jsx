@@ -1,13 +1,13 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { Icon } from '@iconify/react/dist/iconify.js';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Editor } from 'primereact/editor';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AuthContext } from '../../context/AuthContext';
 import DeleteModal from '../DeleteModal/DeleteModal';
 import instance from '../../api/AxiosInstance';
 import { toastMessage } from '../../utils/Toast';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
+import EditorComponent from '../EditorComponent/EditorComponent';
 
 export default function EditPage () {
   const [searchParams] = useSearchParams();
@@ -21,8 +21,6 @@ export default function EditPage () {
   const [pageData, setPageData] = useState({});
   const [isDelete, setIsDelete] = useState(false);
 
-  const [tempPageData, setTempPageData] = useState({});
-
   const updateContent = (newContent, name) => {
     setPageData((prevPageData) => ({
       ...prevPageData,
@@ -30,15 +28,8 @@ export default function EditPage () {
     }));
   };
 
-  const isDataChanged = () => {
-    return (
-      pageData.title !== tempPageData.title ||
-      pageData.slug !== tempPageData.slug ||
-      pageData.content !== tempPageData.content
-    );
-  };
+  const [content, setContent] = useState({});
 
-  const isChanged = isDataChanged();
   useEffect(() => {
     const fetchdata = async () => {
       try {
@@ -47,7 +38,6 @@ export default function EditPage () {
         });
         if (response?.status === 200) {
           setPageData(response?.data);
-          setTempPageData(response?.data);
         }
       } catch (err) {
         if (!err.response) {
@@ -66,7 +56,7 @@ export default function EditPage () {
       const response = await instance.post('/docs/page/edit', {
         title: pageData?.title,
         slug: pageData?.slug,
-        content: pageData?.content,
+        content: JSON.stringify(content),
         id: Number(pageId)
       });
 
@@ -120,7 +110,9 @@ export default function EditPage () {
       toastMessage(err?.response?.data?.message, 'error');
     }
   };
-
+  const handleSave = useCallback((content) => {
+    setContent(content);
+  }, []);
   return (
     <AnimatePresence>
       {isDelete && (
@@ -162,11 +154,11 @@ export default function EditPage () {
         exit={{ opacity: 0 }}
         transition={{ delay: 0.1 }}
         id='defaultModal'
-        tabindex='-1'
+        tabIndex='-1'
         aria-hidden='true'
         className='flex  items-center w-full md:inset-0 h-modal md:h-full'
       >
-        <div className=' h-full md:h-auto'>
+        <div className='w-full h-full md:h-auto'>
           <div className='relative p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5'>
             <div className='flex justify-start items-center pb-4 mb-4 rounded-t border-b sm:mb-5 dark:border-gray-600'>
               <h3 className='text-2xl  font-semibold text-gray-900 dark:text-white'>
@@ -177,7 +169,7 @@ export default function EditPage () {
             <div className='grid gap-4 mb-4 '>
               <div>
                 <label
-                  htmlForfor='title'
+                  htmlFor='title'
                   className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
                 >
                   Title
@@ -196,7 +188,7 @@ export default function EditPage () {
 
               <div>
                 <label
-                  htmlForfor='slug'
+                  htmlFor='slug'
                   className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
                 >
                   Slug
@@ -215,39 +207,32 @@ export default function EditPage () {
 
               <div className=''>
                 <label
-                  for='content'
+                  htmlFor='content'
                   className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
                 >
                   Content
                 </label>
-                <Editor
-                  value={pageData.content}
-                  onTextChange={(e) => updateContent(e.htmlValue, 'content')}
-                  style={{ minHeight: '150px' }}
-                />
+                <div className='border border-gray-400 rounded-lg dark:text-white '>
+                  <EditorComponent pageId={pageId} onSave={handleSave} />
+                </div>
               </div>
             </div>
 
             <div className='flex justify-center gap-5'>
               <button
-                disabled={!isDataChanged()}
                 onClick={handleEdit}
                 type='submit'
-                className={`text-white inline-flex items-center ${
-                  isChanged
-                    ? 'bg-primary-700 hover:bg-primary-800 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800'
-                    : 'bg-gray-400'
-                }  focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center `}
+                className='text-white inline-flex gap-1 items-center bg-primary-700 hover:bg-primary-800 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center '
               >
                 <Icon
-                  icon='material-symbols:edit-outline'
-                  className='w-6 h-6 text-yellow-500 dark:text-yellow-400'
+                  icon='ri:edit-fill'
+                  className='w-5 h-5 text-white dark:text-white'
                 />
                 Edit
               </button>
 
               <button
-                whileHover={{ scale: 1.1 }}
+                whilehover={{ scale: 1.1 }}
                 onClick={() => setIsDelete(!isDelete)}
                 className='flex cursor-pointer items-center bg-red-600 text-white px-2  focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-smpy-2.5 text-center'
               >
