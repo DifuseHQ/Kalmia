@@ -62,30 +62,54 @@ export default function CreateUser () {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
+        className='flex mb-5'
+        aria-label='Breadcrumb'
+      >
+        <ol className='inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse'>
+          <li className='inline-flex items-center'>
+            <Link
+              to='/dashboard/admin/user-list'
+              className='inline-flex items-center text-lg font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white'
+            >
+              <Icon icon='mdi:users' className='w-5 h-5 dark:text-white' />
+              user management
+            </Link>
+          </li>
+          <li>
+            <div className='flex items-center'>
+              <Icon icon='mingcute:right-fill' className='text-gray-500' />
+              <p
+                className='ms-1 text-lg font-medium text-gray-700  md:ms-2 dark:text-gray-400 dark:hover:text-white'
+              >
+                Add User
+              </p>
+            </div>
+          </li>
+        </ol>
+      </motion.nav>
+
+      <motion.nav
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
         className='flex pb-10'
         aria-label='Breadcrumb'
       >
         <ol className='inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse'>
           <li className='inline-flex items-center '>
-            <Link
-              to='/dashboard/admin/user-list'
-            >
+            <Link>
 
               <span
                 className='inline-flex items-center gap-1 text-md font-medium text-black hover:text-blue-600 dark:hover:text-blue-600 dark:text-white '
-              >
-                <Icon icon='material-symbols:home' className=' ' />
-                user management
-              </span>
+              />
             </Link>
           </li>
-          <li aria-current='page'>
-            <div className='flex items-center'>
-              <Icon icon='mingcute:right-fill' className='w-5 h-5 text-gray-500' />
-              <span className='ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400'>
-                Add User
-              </span>
-            </div>
+          <li className='flex items-center '>
+            <Icon icon='mingcute:right-fill' className='w-5 h-5 text-gray-500' />
+            <span className='ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400'>
+              Add User
+            </span>
+
           </li>
         </ol>
       </motion.nav>

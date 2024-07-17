@@ -24,6 +24,8 @@ export const AuthProvider = ({ children }) => {
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  const [breadcrumb, setBreadcrumb] = useState([]);
+
   const navigate = useNavigate();
 
   const [refresh, setRefresh] = useState(false);
@@ -205,7 +207,9 @@ export const AuthProvider = ({ children }) => {
         isOpenModal,
         setIsOpenModal,
         isSidebarOpen,
-        setIsSidebarOpen
+        setIsSidebarOpen,
+        breadcrumb,
+        setBreadcrumb
       }}
     >
       {children}

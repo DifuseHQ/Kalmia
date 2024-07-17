@@ -186,11 +186,8 @@ export default function UserList () {
       >
         <ol className='inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse'>
           <li className='inline-flex items-center '>
-            <span className='inline-flex items-center gap-1 text-md font-medium text-gray-500  dark:text-gray-400 cursor-text'>
-              <Icon
-                icon='material-symbols:home'
-                className='text-gray-500 dark:text-white '
-              />
+            <span className='inline-flex items-center gap-1 text-lg font-medium text-gray-500  dark:text-gray-400 cursor-text'>
+              <Icon icon='mdi:users' className='w-5 h-5 dark:text-white' />
               user management
             </span>
           </li>

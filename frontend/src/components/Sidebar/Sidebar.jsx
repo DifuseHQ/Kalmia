@@ -109,7 +109,7 @@ export default function Sidebar () {
                       whilehover={{ scale: 1.08, originx: 0 }}
                     >
                       <NavLink
-                        to={`/dashboard/documentation?id=${val.id}`}
+                        to={`/dashboard/documentation?id=${val.id}&docName=${val.name}`}
                         onClick={() => toggleDropdown(index)}
                         className={`flex items-center p-2 w-full text-base font-normal rounded-lg transition duration-75 group hover:bg-gray-200 dark:text-white dark:hover:bg-gray-700 ${
                             (location.pathname === '/dashboard' && val.id === smallestId) || path === `/dashboard/documentation?id=${val.id}`

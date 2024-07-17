@@ -1,12 +1,13 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Icon } from '@iconify/react/dist/iconify.js';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Editor } from 'primereact/editor';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AuthContext } from '../../context/AuthContext';
 import DeleteModal from '../DeleteModal/DeleteModal';
 import instance from '../../api/AxiosInstance';
 import { toastMessage } from '../../utils/Toast';
+import Breadcrumb from '../Breadcrumb/Breadcrumb';
 
 export default function EditPage () {
   const [searchParams] = useSearchParams();
@@ -14,7 +15,6 @@ export default function EditPage () {
   const dir = searchParams.get('dir');
   const pageId = searchParams.get('pageId');
   const pageGroupId = searchParams.get('pageGroupId');
-  const groupName = searchParams.get('group_name');
   const { refreshData } = useContext(AuthContext);
 
   const navigate = useNavigate();
@@ -132,7 +132,7 @@ export default function EditPage () {
           message={`You.re permanently deleting "${pageData.title}"`}
         />
       )}
-      <motion.nav
+      {/* <motion.nav
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -141,47 +141,21 @@ export default function EditPage () {
         aria-label='Breadcrumb'
       >
         <ol className='inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse'>
-          <li className='inline-flex items-center'>
-            <p className='inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white'>
-              <Icon icon='material-symbols:home' className=' ' />
-              Home
-            </p>
-          </li>
-          <li>
-            <div className='flex items-center'>
-              <Icon icon='mingcute:right-fill' className='text-gray-500' />
-              <Link
-                to={`/dashboard/documentation?id=${docId}`}
-                className='ms-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ms-2 dark:text-gray-400 dark:hover:text-white'
+        {breadcrumb.map((crumb,index)=>(
+            <li>
+            <Link to={crumb.path} className='flex items-center ' >
+            <Icon icon='mingcute:right-fill'  className='text-gray-500' />
+              <p
+                className={`ms-1 text-sm font-medium  md:ms-2 dark:text-gray-400 dark:hover:text-white`}
               >
-                Documentation
-              </Link>
-            </div>
+                {crumb.title}
+              </p>
+            </Link>
           </li>
-          {pageGroupId && (
-            <li aria-current='page'>
-              <div className='flex items-center'>
-                <Icon icon='mingcute:right-fill' className='text-gray-500' />
-                <Link
-                  to={`/dashboard/documentation/pagegroup?id=${docId}&pageGroupId=${pageGroupId}`}
-                  className='ms-1 text-sm font-medium text-gray-800 md:ms-2 dark:text-gray-400'
-                >
-                  {groupName}
-                </Link>
-              </div>
-            </li>
-          )}
-          <li aria-current='page'>
-            <div className='flex items-center'>
-              <Icon icon='mingcute:right-fill' className='text-gray-500' />
-              <span className='ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400'>
-                Edit page
-              </span>
-            </div>
-          </li>
+          ))}
         </ol>
-      </motion.nav>
-
+      </motion.nav> */}
+      <Breadcrumb />
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

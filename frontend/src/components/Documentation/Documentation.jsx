@@ -9,6 +9,7 @@ import EditDocumentModal from '../CreateDocumentModal/EditDocumentModal';
 import DeleteModal from '../DeleteModal/DeleteModal';
 import CreatePageGroup from '../CreatePageGroup/CreatePageGroup';
 import { toastMessage } from '../../utils/Toast';
+import Breadcrumb from '../Breadcrumb/Breadcrumb';
 
 export default function Documentation () {
   const { refresh, refreshData, user } = useContext(AuthContext);
@@ -342,7 +343,8 @@ export default function Documentation () {
 
   return (
     <AnimatePresence className='bg-gray-50 dark:bg-gray-900 p-3 sm:p-5'>
-      <motion.nav
+      <Breadcrumb />
+      {/* <motion.nav
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -351,15 +353,15 @@ export default function Documentation () {
       >
         <ol className='inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse'>
           <li className='inline-flex items-center '>
-            <Link to={`/dashboard/documentation?id=${docId}`}>
-              <span className='inline-flex items-center gap-1 text-md  font-medium text-gray-500  dark:text-gray-400 cursor-text '>
-                <Icon icon='material-symbols:home' className=' ' />
+            <Link to={`/dashboard/documentation?id=${docId ?docId : smallestId }`}>
+              <span className='inline-flex items-center gap-1 text-md font-medium text-gray-500  dark:text-gray-400 cursor-text '>
+                <Icon icon='ep:document' className='w-5 h-5 pb-0.5 dark:text-white' />
                 {documentData.name}
               </span>
             </Link>
           </li>
         </ol>
-      </motion.nav>
+      </motion.nav> */}
 
       {/* Create pageGroup resusable component */}
       {openCreatePageGroup && (
@@ -606,8 +608,8 @@ export default function Documentation () {
                                                 className='flex items-center gap-1'
                                                 to={
                                           obj.name
-                                            ? `/dashboard/documentation/pagegroup?id=${docId}&pageGroupId=${obj.id}`
-                                            : `/dashboard/documentation/edit-page?id=${docId}&dir=true&pageId=${obj.id}`
+                                            ? `/dashboard/documentation/pagegroup?id=${docId}&pageGroupId=${obj.id}&groupName=${obj.name}`
+                                            : `/dashboard/documentation/edit-page?id=${docId}&dir=true&pageId=${obj.id}&pageName=${obj.title}`
                                         }
                                               >
                                                 {obj.name

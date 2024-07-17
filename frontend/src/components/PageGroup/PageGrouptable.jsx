@@ -8,6 +8,7 @@ import CreatePageGroup from '../CreatePageGroup/CreatePageGroup';
 import EditDocumentModal from '../CreateDocumentModal/EditDocumentModal';
 import DeleteModal from '../DeleteModal/DeleteModal';
 import { toastMessage } from '../../utils/Toast';
+import Breadcrumb from '../Breadcrumb/Breadcrumb';
 
 export default function PageGrouptable () {
   const [pageRefresh, setPageRefresh] = useState(false);
@@ -227,9 +228,36 @@ export default function PageGrouptable () {
     refreshPage();
   };
 
+  // useEffect(() => {
+  //   const fetchBreadcrumb = async () => {
+
+  //     let title = pageGroupName
+  //     let path = `/dashboard/documentation/pagegroup?id=${docId}&pageGroupId=${pageGroupId}`
+  //     const index = breadcrumb.findIndex(crumb => crumb.title === title && crumb.path === path);
+  //     console.log(index);
+
+  //     if (index === -1) {
+  //       const newCrumb = { title, path };
+  //       setBreadcrumb(prevTrail => [...prevTrail, newCrumb]);
+  //     } else {
+  //       // If found, truncate the trail to remove all entries after the matched breadcrumb
+  //       setBreadcrumb(prevTrail => prevTrail.slice(0, index + 1));
+  //     }
+  //   }
+  //   if(pageGroupName){
+  //     fetchBreadcrumb()
+  //   }
+
+  // }, [pageGroupId,pageGroupName]);
+
+  // const handleNavigate = (index) => {
+  //   setBreadcrumb(prevTrail => prevTrail.slice(0, index + 1));
+  // };
+
   return (
     <AnimatePresence className='bg-gray-50 dark:bg-gray-900 p-3 sm:p-5'>
-      <motion.nav
+      <Breadcrumb />
+      {/* <motion.nav
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -242,31 +270,29 @@ export default function PageGrouptable () {
               to='/dashboard'
               className='inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white'
             >
-              <Icon icon='material-symbols:home' className=' ' />
-              Home
+              <span className='inline-flex items-center gap-1 text-md font-medium text-gray-500  dark:text-gray-400 hover:text-blue-600  '>
+                <Icon icon='ep:document' className='w-5 h-5 pb-0.5 dark:text-white' />
+                Dummy documentation
+              </span>
             </Link>
           </li>
-          <li>
-            <div className='flex items-center'>
-              <Icon icon='mingcute:right-fill' className='text-gray-500' />
-              <Link
-                to={`/dashboard/documentation?id=${docId}`}
-                className='ms-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ms-2 dark:text-gray-400 dark:hover:text-white'
+
+          {breadcrumb.map((crumb,index)=>(
+            <li>
+            <Link to={crumb.path} className='flex items-center ' onClick={crumb.title !== groupDetail.name ? () => handleNavigate(index) : undefined}>
+            <Icon icon='mingcute:right-fill'  className='text-gray-500' />
+              <p
+                className={`ms-1 text-sm font-medium  md:ms-2 dark:text-gray-400 dark:hover:text-white
+                ${crumb.title === groupDetail.name ? "text-gray-400 cursor-text" : "hover:text-blue-600 text-gray-700"}
+                `}
               >
-                Documentation
-              </Link>
-            </div>
+                {crumb.title}
+              </p>
+            </Link>
           </li>
-          <li aria-current='page'>
-            <div className='flex items-center'>
-              <Icon icon='mingcute:right-fill' className='text-gray-500' />
-              <span className='ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400'>
-                {/* {data.name} */}
-              </span>
-            </div>
-          </li>
+          ))}
         </ol>
-      </motion.nav>
+      </motion.nav> */}
 
       {openCreatePageGroup && (
         <CreatePageGroup
@@ -418,8 +444,8 @@ export default function PageGrouptable () {
                                   className='flex items-center gap-1'
                                   to={
                                     obj.name
-                                      ? `/dashboard/documentation/pagegroup?id=${docId}&pageGroupId=${obj.id}`
-                                      : `/dashboard/documentation/edit-page?id=${docId}&dir=false&pageGroupId=${pageGroupId}&pageId=${obj.id}`
+                                      ? `/dashboard/documentation/pagegroup?id=${docId}&pageGroupId=${obj.id}&groupName=${obj.name}`
+                                      : `/dashboard/documentation/edit-page?id=${docId}&dir=false&pageGroupId=${pageGroupId}&pageId=${obj.id}&pageName=${obj.title}`
                                   }
                                 >
                                   {obj.name
