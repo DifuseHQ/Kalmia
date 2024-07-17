@@ -15,6 +15,7 @@ require (
 )
 
 require (
+	github.com/clarketm/json v1.17.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/glebarez/go-sqlite v1.21.2 // indirect

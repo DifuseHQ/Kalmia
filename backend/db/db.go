@@ -37,11 +37,11 @@ func SetupDatabase(env string, dbURL string, dataPath string) *gorm.DB {
 	db.Exec("PRAGMA journal_mode = WAL")
 
 	err = db.AutoMigrate(
-		&models.Token{},
 		&models.User{},
-		&models.Page{},
-		&models.PageGroup{},
+		&models.Token{},
 		&models.Documentation{},
+		&models.PageGroup{},
+		&models.Page{},
 	)
 
 	if err != nil {
@@ -91,10 +91,20 @@ func SetupBasicData(db *gorm.DB, admins []config.User) {
 		return
 	}
 
+	var firstUser models.User
+
+	if err := db.First(&firstUser).Error; err != nil {
+		logger.Error("Failed to fetch first user", zap.Error(err))
+		return
+	}
+
 	docSite = models.Documentation{
 		Name:        "Dummy Documentation Site",
 		Description: "A sample documentation site for demonstration purposes.",
 		ID:          1,
+		AuthorID:    firstUser.ID,
+		Author:      firstUser,
+		Editors:     []models.User{firstUser},
 	}
 
 	if err := db.FirstOrCreate(&docSite, models.Documentation{Name: docSite.Name}).Error; err != nil {
@@ -110,105 +120,57 @@ func SetupBasicData(db *gorm.DB, admins []config.User) {
 		Slug:            "stray-page",
 		DocumentationID: docSite.ID,
 		Order:           uintPtr(0),
+		AuthorID:        firstUser.ID,
+		Author:          firstUser,
+		Editors:         []models.User{firstUser},
 	}
 
 	db.Create(&strayPage)
 
-	pageGroups := []struct {
-		Name     string
-		Pages    []models.Page
-		Children []struct {
-			Name     string
-			Pages    []models.Page
-			Children []struct {
-				Name  string
-				Pages []models.Page
-			}
-		}
-	}{
-		{
-			Name: "First Page Group",
-			Pages: []models.Page{
-				{Title: "Dummy Page 1", Content: "Lorem ipsum dolor sit amet.", Slug: "dummy-page-1", DocumentationID: docSite.ID, Order: uintPtr(0)},
-				{Title: "Dummy Page 2", Content: "Consectetur adipiscing elit.", Slug: "dummy-page-2", DocumentationID: docSite.ID, Order: uintPtr(1)},
-			},
-		},
-		{
-			Name: "Second Page Group",
-			Pages: []models.Page{
-				{Title: "Dummy Page 3", Content: "Sed do eiusmod tempor incididunt.", Slug: "dummy-page-3", DocumentationID: docSite.ID, Order: uintPtr(2)},
-			},
-			Children: []struct {
-				Name     string
-				Pages    []models.Page
-				Children []struct {
-					Name  string
-					Pages []models.Page
-				}
-			}{
-				{
-					Name: "Third Page Group",
-					Pages: []models.Page{
-						{Title: "Dummy Page 4", Content: "Ut labore et dolore magna aliqua.", Slug: "dummy-page-4", DocumentationID: docSite.ID, Order: uintPtr(3)},
-						{Title: "Dummy Page 5", Content: "Ut enim ad minim veniam.", Slug: "dummy-page-5", DocumentationID: docSite.ID, Order: uintPtr(4)},
-					},
-					Children: []struct {
-						Name  string
-						Pages []models.Page
-					}{
-						{
-							Name: "Fourth Page Group",
-							Pages: []models.Page{
-								{Title: "Dummy Page 6", Content: "Exercitation ullamco laboris nisi.", Slug: "dummy-page-6", DocumentationID: docSite.ID, Order: uintPtr(5)},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-
-	for _, group := range pageGroups {
-		var newGroup models.PageGroup
-		result := db.FirstOrCreate(&newGroup, models.PageGroup{Name: group.Name, DocumentationID: docSite.ID})
-		if result.Error != nil {
-			logger.Error("Failed to create page group", zap.String("name", group.Name), zap.Error(result.Error))
-			continue
-		}
-
-		for _, page := range group.Pages {
-			page.PageGroupID = &newGroup.ID
-			db.Create(&page)
-		}
-
-		for _, child := range group.Children {
-			var childGroup models.PageGroup
-			result := db.FirstOrCreate(&childGroup, models.PageGroup{Name: child.Name, ParentID: &newGroup.ID, DocumentationID: docSite.ID})
-			if result.Error != nil {
-				logger.Error("Failed to create child page group", zap.String("name", child.Name), zap.Error(result.Error))
-				continue
-			}
-
-			for _, page := range child.Pages {
-				page.PageGroupID = &childGroup.ID
-				db.Create(&page)
-			}
-
-			for _, subChild := range child.Children {
-				var subChildGroup models.PageGroup
-				result := db.FirstOrCreate(&subChildGroup, models.PageGroup{Name: subChild.Name, ParentID: &childGroup.ID, DocumentationID: docSite.ID})
-				if result.Error != nil {
-					logger.Error("Failed to create sub-child page group", zap.String("name", subChild.Name), zap.Error(result.Error))
-					continue
-				}
-
-				for _, page := range subChild.Pages {
-					page.PageGroupID = &subChildGroup.ID
-					db.Create(&page)
-				}
-			}
+	pg1 := createPageGroupWithPages(db, "First Page Group", &docSite, firstUser, nil, []string{"Dummy Page 1", "Dummy Page 2"})
+	pg2 := createPageGroupWithPages(db, "Second Page Group", &docSite, firstUser, nil, []string{"Dummy Page 3"})
+	if pg1 != nil && pg2 != nil {
+		pg3 := createPageGroupWithPages(db, "Third Page Group", &docSite, firstUser, &pg2.ID, []string{"Dummy Page 4", "Dummy Page 5"})
+		if pg3 != nil {
+			createPageGroupWithPages(db, "Fourth Page Group", &docSite, firstUser, &pg3.ID, []string{"Dummy Page 6"})
 		}
 	}
 
 	logger.Info("Database initialized")
+}
+
+func createPageGroupWithPages(db *gorm.DB, groupName string, doc *models.Documentation, user models.User, parentID *uint, pageTitles []string) *models.PageGroup {
+	pageGroup := models.PageGroup{
+		Name:            groupName,
+		DocumentationID: doc.ID,
+		ParentID:        parentID,
+		AuthorID:        user.ID,
+		Editors:         []models.User{user},
+	}
+
+	if err := db.Create(&pageGroup).Error; err != nil {
+		logger.Error("Failed to create page group", zap.String("name", groupName), zap.Error(err))
+		return nil
+	}
+
+	if err := db.Model(&pageGroup).Association("Editors").Append(&user); err != nil {
+		logger.Error("Failed to add editor to page group", zap.String("name", groupName), zap.Error(err))
+	}
+
+	for _, title := range pageTitles {
+		page := models.Page{
+			Title:           title,
+			Content:         "Content for " + title,
+			Slug:            title,
+			DocumentationID: doc.ID,
+			PageGroupID:     &pageGroup.ID,
+			AuthorID:        user.ID,
+			Editors:         []models.User{user},
+		}
+		if err := db.Create(&page).Error; err != nil {
+			logger.Error("Failed to create page", zap.String("title", title), zap.Error(err))
+		}
+	}
+
+	return &pageGroup
 }

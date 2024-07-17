@@ -2,56 +2,46 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"git.difuse.io/Difuse/kalmia/db/models"
 	"git.difuse.io/Difuse/kalmia/logger"
+	"git.difuse.io/Difuse/kalmia/services"
 	"gorm.io/gorm"
 	"net/http"
 )
 
-func CreateDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
-	type Request struct {
-		Name        string `json:"name" validate:"required"`
-		Description string `json:"description"`
-	}
-
-	var req Request
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid request"})
-		return
-	}
-
-	err := validate.Struct(req)
-
-	if err != nil {
-		logger.Error(err.Error())
-		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid request"})
-		return
-	}
-
-	documentation := models.Documentation{
-		Name:        req.Name,
-		Description: req.Description,
-	}
-
-	if err := db.Create(&documentation).Error; err != nil {
-		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to create documentation", "reason": err.Error()})
-		return
-	}
-
-	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "Documentation created successfully"})
-}
-
 func GetDocumentations(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	var documentations []models.Documentation
 
-	if err := db.Preload("PageGroups", func(db *gorm.DB) *gorm.DB {
-		return db.Select("ID", "DocumentationID", "Name")
+	if err := db.Preload("Author", func(db *gorm.DB) *gorm.DB {
+		return db.Select("ID", "Username", "Email", "Photo")
+	}).Preload("Editors", func(db *gorm.DB) *gorm.DB {
+		return db.Select("ID", "Username", "Email", "Photo")
+	}).Preload("PageGroups", func(db *gorm.DB) *gorm.DB {
+		return db.Select("ID", "DocumentationID", "Name", "CreatedAt", "UpdatedAt", "AuthorID")
+	}).Preload("PageGroups.Author", func(db *gorm.DB) *gorm.DB {
+		return db.Select("ID", "Username", "Email", "Photo")
+	}).Preload("PageGroups.Editors", func(db *gorm.DB) *gorm.DB {
+		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
 	}).Preload("PageGroups.Pages", func(db *gorm.DB) *gorm.DB {
-		return db.Select("ID", "PageGroupID")
+		return db.Select("ID", "PageGroupID", "Title", "Slug", "CreatedAt", "UpdatedAt", "AuthorID")
+	}).Preload("PageGroups.Pages.Author", func(db *gorm.DB) *gorm.DB {
+		return db.Select("ID", "Username", "Email", "Photo")
+	}).Preload("PageGroups.Pages.Editors", func(db *gorm.DB) *gorm.DB {
+		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
 	}).Preload("Pages", func(db *gorm.DB) *gorm.DB {
-		return db.Select("ID", "DocumentationID", "Title", "Slug").Where("page_group_id IS NULL")
-	}).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt").Find(&documentations).Error; err != nil {
-		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to fetch documentations"})
+		return db.Select("ID", "DocumentationID", "Title", "Slug", "CreatedAt", "UpdatedAt", "AuthorID").Where("page_group_id IS NULL")
+	}).Preload("Pages.Author", func(db *gorm.DB) *gorm.DB {
+		return db.Select("ID", "Username", "Email", "Photo")
+	}).Preload("Pages.Editors", func(db *gorm.DB) *gorm.DB {
+		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
+	}).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID").
+		Find(&documentations).Error; err != nil {
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{
+			"status":  "error",
+			"message": "Failed to fetch documentations",
+		})
 		return
 	}
 
@@ -70,7 +60,6 @@ func GetDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 
 	err := validate.Struct(req)
-
 	if err != nil {
 		logger.Error(err.Error())
 		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid request"})
@@ -78,18 +67,88 @@ func GetDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 
 	var documentation models.Documentation
-	if err := db.Preload("PageGroups", func(db *gorm.DB) *gorm.DB {
-		return db.Select("ID", "DocumentationID", "Name")
+	if err := db.Preload("Author", func(db *gorm.DB) *gorm.DB {
+		return db.Select("ID", "Username", "Email", "Photo")
+	}).Preload("Editors", func(db *gorm.DB) *gorm.DB {
+		return db.Select("ID", "Username", "Email", "Photo")
+	}).Preload("PageGroups", func(db *gorm.DB) *gorm.DB {
+		return db.Select("ID", "DocumentationID", "Name", "CreatedAt", "UpdatedAt", "AuthorID")
+	}).Preload("PageGroups.Author", func(db *gorm.DB) *gorm.DB {
+		return db.Select("ID", "Username", "Email", "Photo")
+	}).Preload("PageGroups.Editors", func(db *gorm.DB) *gorm.DB {
+		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
 	}).Preload("PageGroups.Pages", func(db *gorm.DB) *gorm.DB {
-		return db.Select("ID", "PageGroupID")
+		return db.Select("ID", "PageGroupID", "Title", "Slug", "CreatedAt", "UpdatedAt", "AuthorID")
+	}).Preload("PageGroups.Pages.Author", func(db *gorm.DB) *gorm.DB {
+		return db.Select("ID", "Username", "Email", "Photo")
+	}).Preload("PageGroups.Pages.Editors", func(db *gorm.DB) *gorm.DB {
+		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
 	}).Preload("Pages", func(db *gorm.DB) *gorm.DB {
-		return db.Select("ID", "DocumentationID", "Title", "Slug").Where("page_group_id IS NULL")
-	}).First(&documentation, req.ID).Error; err != nil {
-		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to fetch documentation"})
+		return db.Select("ID", "DocumentationID", "Title", "Slug", "CreatedAt", "UpdatedAt", "AuthorID").Where("page_group_id IS NULL")
+	}).Preload("Pages.Author", func(db *gorm.DB) *gorm.DB {
+		return db.Select("ID", "Username", "Email", "Photo")
+	}).Preload("Pages.Editors", func(db *gorm.DB) *gorm.DB {
+		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
+	}).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID").
+		Find(&documentation).Where("id = ?", req.ID).Error; err != nil {
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{
+			"status":  "error",
+			"message": "Failed to fetch documentations",
+		})
 		return
 	}
 
 	SendJSONResponse(http.StatusOK, w, documentation)
+}
+
+func CreateDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
+	token, err := GetTokenFromHeader(r)
+
+	if err != nil {
+		SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"status": "error", "message": "Unauthorized"})
+		return
+	}
+
+	user, err := services.GetUserFromToken(db, token)
+
+	if err != nil {
+		SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"status": "error", "message": "Unauthorized"})
+		return
+	}
+
+	type Request struct {
+		Name        string `json:"name" validate:"required"`
+		Description string `json:"description"`
+	}
+
+	var req Request
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid request"})
+		return
+	}
+
+	err = validate.Struct(req)
+
+	if err != nil {
+		logger.Error(err.Error())
+		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid request"})
+		return
+	}
+
+	documentation := models.Documentation{
+		Name:        req.Name,
+		Description: req.Description,
+		AuthorID:    user.ID,
+		Author:      user,
+		Editors:     []models.User{user},
+	}
+
+	if err := db.Create(&documentation).Error; err != nil {
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to create documentation", "reason": err.Error()})
+		return
+	}
+
+	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "Documentation created successfully"})
 }
 
 func EditDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
@@ -106,7 +165,6 @@ func EditDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 
 	err := validate.Struct(req)
-
 	if err != nil {
 		logger.Error(err.Error())
 		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid request"})
@@ -114,9 +172,33 @@ func EditDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 
 	var documentation models.Documentation
-	if err := db.First(&documentation, req.ID).Error; err != nil {
+	if err := db.Preload("Editors").First(&documentation, req.ID).Error; err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to fetch documentation"})
 		return
+	}
+
+	token, err := GetTokenFromHeader(r)
+	if err != nil {
+		SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"status": "error", "message": "Unauthorized"})
+		return
+	}
+
+	user, err := services.GetUserFromToken(db, token)
+	if err != nil {
+		SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"status": "error", "message": "Unauthorized"})
+		return
+	}
+
+	alreadyEditor := false
+	for _, editor := range documentation.Editors {
+		if editor.ID == user.ID {
+			alreadyEditor = true
+			break
+		}
+	}
+
+	if !alreadyEditor {
+		documentation.Editors = append(documentation.Editors, user)
 	}
 
 	documentation.Name = req.Name
@@ -155,19 +237,23 @@ func DeleteDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := tx.Where("documentation_id = ?", req.ID).Delete(&models.Page{}).Error; err != nil {
+	var doc models.Documentation
+	if err := tx.Preload("PageGroups").Preload("Pages").First(&doc, req.ID).Error; err != nil {
 		tx.Rollback()
-		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to delete pages"})
+		SendJSONResponse(http.StatusNotFound, w, map[string]string{"status": "error", "message": "Documentation not found"})
 		return
 	}
 
-	if err := tx.Where("documentation_id = ?", req.ID).Delete(&models.PageGroup{}).Error; err != nil {
-		tx.Rollback()
-		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to delete page groups"})
-		return
+	associations := []string{"PageGroups", "Pages", "Editors"}
+	for _, assoc := range associations {
+		if err := tx.Model(&doc).Association(assoc).Clear(); err != nil {
+			tx.Rollback()
+			SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": fmt.Sprintf("Failed to clear %s", assoc)})
+			return
+		}
 	}
 
-	if err := tx.Where("id = ?", req.ID).Delete(&models.Documentation{}).Error; err != nil {
+	if err := tx.Delete(&doc).Error; err != nil {
 		tx.Rollback()
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to delete documentation"})
 		return
@@ -181,57 +267,15 @@ func DeleteDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "Documentation deleted successfully"})
 }
 
-func CreatePage(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
-	type Request struct {
-		Title           string `json:"title" validate:"required"`
-		Slug            string `json:"slug" validate:"required"`
-		Content         string `json:"content" validate:"required"`
-		DocumentationID uint   `json:"documentationSiteId" validate:"required"`
-		PageGroupID     *uint  `json:"pageGroupId"`
-		Order           *uint  `json:"order"`
-	}
-
-	var req Request
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid request"})
-		return
-	}
-
-	err := validate.Struct(req)
-
-	if err != nil {
-		logger.Error(err.Error())
-		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid request"})
-		return
-	}
-
-	page := models.Page{
-		Title:           req.Title,
-		Slug:            req.Slug,
-		Content:         req.Content,
-		DocumentationID: req.DocumentationID,
-	}
-
-	if req.PageGroupID != nil {
-		page.PageGroupID = req.PageGroupID
-	}
-
-	if req.Order != nil {
-		page.Order = req.Order
-	}
-
-	if err := db.Create(&page).Error; err != nil {
-		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to create page", "reason": err.Error()})
-		return
-	}
-
-	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "Page created successfully"})
-}
-
 func GetPages(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	var pages []models.Page
 
-	if err := db.Select("ID", "Title", "Slug", "DocumentationID", "PageGroupID", "Order").Find(&pages).Error; err != nil {
+	if err := db.Preload("Author", func(db *gorm.DB) *gorm.DB {
+		return db.Select("ID", "Username", "Email", "Photo")
+	}).Preload("Editors", func(db *gorm.DB) *gorm.DB {
+		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
+	}).Select("ID", "Title", "Slug", "DocumentationID", "PageGroupID", "Order", "CreatedAt", "UpdatedAt", "AuthorID").
+		Find(&pages).Error; err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to fetch pages"})
 		return
 	}
@@ -259,12 +303,84 @@ func GetPage(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 
 	var page models.Page
-	if err := db.First(&page, req.ID).Error; err != nil {
-		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to fetch page"})
+	if err := db.Preload("Author", func(db *gorm.DB) *gorm.DB {
+		return db.Select("ID", "Username", "Email", "Photo")
+	}).Preload("Editors", func(db *gorm.DB) *gorm.DB {
+		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
+	}).First(&page, req.ID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			SendJSONResponse(http.StatusNotFound, w, map[string]string{"status": "error", "message": "Page not found"})
+		} else {
+			SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to fetch page"})
+		}
 		return
 	}
 
 	SendJSONResponse(http.StatusOK, w, page)
+}
+
+func CreatePage(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
+	type Request struct {
+		Title           string `json:"title" validate:"required"`
+		Slug            string `json:"slug" validate:"required"`
+		Content         string `json:"content" validate:"required"`
+		DocumentationID uint   `json:"documentationSiteId" validate:"required"`
+		PageGroupID     *uint  `json:"pageGroupId"`
+		Order           *uint  `json:"order"`
+	}
+
+	var req Request
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid request"})
+		return
+	}
+
+	err := validate.Struct(req)
+
+	if err != nil {
+		logger.Error(err.Error())
+		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid request"})
+		return
+	}
+
+	token, err := GetTokenFromHeader(r)
+
+	if err != nil {
+		SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"status": "error", "message": "Unauthorized"})
+		return
+	}
+
+	user, err := services.GetUserFromToken(db, token)
+
+	if err != nil {
+		SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"status": "error", "message": "Unauthorized"})
+		return
+	}
+
+	page := models.Page{
+		Title:           req.Title,
+		Slug:            req.Slug,
+		Content:         req.Content,
+		DocumentationID: req.DocumentationID,
+		AuthorID:        user.ID,
+		Author:          user,
+		Editors:         []models.User{user},
+	}
+
+	if req.PageGroupID != nil {
+		page.PageGroupID = req.PageGroupID
+	}
+
+	if req.Order != nil {
+		page.Order = req.Order
+	}
+
+	if err := db.Create(&page).Error; err != nil {
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to create page", "reason": err.Error()})
+		return
+	}
+
+	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "Page created successfully"})
 }
 
 func EditPage(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
@@ -288,6 +404,32 @@ func EditPage(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	token, err := GetTokenFromHeader(r)
+
+	if err != nil {
+		SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"status": "error", "message": "Unauthorized"})
+		return
+	}
+
+	user, err := services.GetUserFromToken(db, token)
+
+	if err != nil {
+		SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"status": "error", "message": "Unauthorized"})
+		return
+	}
+
+	alreadyEditor := false
+	for _, editor := range page.Editors {
+		if editor.ID == user.ID {
+			alreadyEditor = true
+			break
+		}
+	}
+
+	if !alreadyEditor {
+		page.Editors = append(page.Editors, user)
+	}
+
 	page.Title = req.Title
 	page.Slug = req.Slug
 	page.Content = req.Content
@@ -302,6 +444,63 @@ func EditPage(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 
 	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "Page updated successfully"})
+}
+
+func DeletePage(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
+	type Request struct {
+		ID uint `json:"id" validate:"required"`
+	}
+
+	var req Request
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid request data"})
+		return
+	}
+
+	err := validate.Struct(req)
+	if err != nil {
+		logger.Error(err.Error())
+		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid request"})
+		return
+	}
+
+	tx := db.Begin()
+	if tx.Error != nil {
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to start transaction"})
+		return
+	}
+
+	var page models.Page
+	if err := tx.First(&page, req.ID).Error; err != nil {
+		tx.Rollback()
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			SendJSONResponse(http.StatusNotFound, w, map[string]string{"status": "error", "message": "Page not found"})
+		} else {
+			SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to fetch page"})
+		}
+		return
+	}
+
+	if err := tx.Model(&page).Association("Editors").Clear(); err != nil {
+		tx.Rollback()
+		logger.Error(fmt.Sprintf("Error clearing Editors association: %v", err))
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to clear page associations"})
+		return
+	}
+
+	if err := tx.Delete(&page).Error; err != nil {
+		tx.Rollback()
+		logger.Error(fmt.Sprintf("Error deleting Page: %v", err))
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to delete page"})
+		return
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Transaction commit failed"})
+		return
+	}
+
+	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "Page deleted successfully"})
 }
 
 func ReorderPage(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
@@ -341,71 +540,31 @@ func ReorderPage(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "Page reordered successfully"})
 }
 
-func DeletePage(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
-	type Request struct {
-		ID uint `json:"id" validate:"required"`
-	}
-
-	var req Request
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid request data"})
-		return
-	}
-
-	err := validate.Struct(req)
-
-	if err != nil {
-		logger.Error(err.Error())
-		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid request"})
-		return
-	}
-
-	if err := db.Where("id = ?", req.ID).Delete(&models.Page{}).Error; err != nil {
-		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to delete page"})
-		return
-	}
-
-	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "Page deleted successfully"})
-}
-
-func CreatePageGroup(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
-	type Request struct {
-		Name            string `json:"name" validate:"required"`
-		DocumentationID uint   `json:"documentationSiteId" validate:"required"`
-		ParentID        *uint  `json:"parentId"`
-		Order           *uint  `json:"order"`
-	}
-
-	var req Request
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid request"})
-		return
-	}
-
-	pageGroup := models.PageGroup{
-		Name:            req.Name,
-		DocumentationID: req.DocumentationID,
-	}
-
-	if req.ParentID != nil {
-		pageGroup.ParentID = req.ParentID
-	}
-
-	if req.Order != nil {
-		pageGroup.Order = req.Order
-	}
-
-	if err := db.Create(&pageGroup).Error; err != nil {
-		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to create page group"})
-		return
-	}
-
-	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "Page group created successfully"})
-}
-
 func convertPageGroupToMap(group models.PageGroup) map[string]interface{} {
 	simplifiedPages := make([]map[string]interface{}, 0, len(group.Pages))
 	for _, page := range group.Pages {
+		simplifiedAuthors := map[string]interface{}{
+			"id":       page.Author.ID,
+			"username": page.Author.Username,
+			"email":    page.Author.Email,
+		}
+		if page.Author.Photo != "" {
+			simplifiedAuthors["photo"] = page.Author.Photo
+		}
+
+		simplifiedEditors := make([]map[string]interface{}, 0, len(page.Editors))
+		for _, editor := range page.Editors {
+			editorMap := map[string]interface{}{
+				"id":       editor.ID,
+				"username": editor.Username,
+				"email":    editor.Email,
+			}
+			if editor.Photo != "" {
+				editorMap["photo"] = editor.Photo
+			}
+			simplifiedEditors = append(simplifiedEditors, editorMap)
+		}
+
 		simplifiedPages = append(simplifiedPages, map[string]interface{}{
 			"id":              page.ID,
 			"title":           page.Title,
@@ -413,7 +572,33 @@ func convertPageGroupToMap(group models.PageGroup) map[string]interface{} {
 			"pageGroupId":     page.PageGroupID,
 			"order":           page.Order,
 			"documentationId": page.DocumentationID,
+			"createdAt":       page.CreatedAt,
+			"updatedAt":       page.UpdatedAt,
+			"author":          simplifiedAuthors,
+			"editors":         simplifiedEditors,
 		})
+	}
+
+	simplifiedAuthors := map[string]interface{}{
+		"id":       group.Author.ID,
+		"username": group.Author.Username,
+		"email":    group.Author.Email,
+	}
+	if group.Author.Photo != "" {
+		simplifiedAuthors["photo"] = group.Author.Photo
+	}
+
+	simplifiedEditors := make([]map[string]interface{}, 0, len(group.Editors))
+	for _, editor := range group.Editors {
+		editorMap := map[string]interface{}{
+			"id":       editor.ID,
+			"username": editor.Username,
+			"email":    editor.Email,
+		}
+		if editor.Photo != "" {
+			editorMap["photo"] = editor.Photo
+		}
+		simplifiedEditors = append(simplifiedEditors, editorMap)
 	}
 
 	return map[string]interface{}{
@@ -422,13 +607,23 @@ func convertPageGroupToMap(group models.PageGroup) map[string]interface{} {
 		"name":            group.Name,
 		"parentId":        group.ParentID,
 		"order":           group.Order,
+		"createdAt":       group.CreatedAt,
+		"updatedAt":       group.UpdatedAt,
 		"pages":           simplifiedPages,
+		"author":          simplifiedAuthors,
+		"editors":         simplifiedEditors,
 	}
 }
 
 func recursiveFetchPageGroups(db *gorm.DB, groupMap map[string]interface{}) {
 	var childrenPageGroups []models.PageGroup
-	db.Model(&models.PageGroup{}).Where("parent_id = ?", groupMap["id"]).Preload("Pages").Find(&childrenPageGroups)
+	db.Model(&models.PageGroup{}).Where("parent_id = ?", groupMap["id"]).
+		Preload("Pages").
+		Preload("Pages.Author").
+		Preload("Pages.Editors").
+		Preload("Author").
+		Preload("Editors").
+		Find(&childrenPageGroups)
 
 	childGroupMaps := make([]map[string]interface{}, 0, len(childrenPageGroups))
 	for _, childGroup := range childrenPageGroups {
@@ -446,8 +641,14 @@ func GetPageGroups(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	var pageGroups []models.PageGroup
 
 	if err := db.Preload("Pages", func(db *gorm.DB) *gorm.DB {
-		return db.Select("ID", "Title", "Slug", "PageGroupID", "Order", "DocumentationID")
-	}).Select("ID", "Name", "DocumentationID", "ParentID", "Order").Where("parent_id IS NULL").Find(&pageGroups).Error; err != nil {
+		return db.Select("ID", "Title", "Slug", "PageGroupID", "Order", "DocumentationID", "CreatedAt", "UpdatedAt", "AuthorID")
+	}).Preload("Pages.Author").
+		Preload("Pages.Editors").
+		Preload("Author").
+		Preload("Editors").
+		Select("ID", "Name", "DocumentationID", "ParentID", "Order", "CreatedAt", "UpdatedAt", "AuthorID").
+		Where("parent_id IS NULL").
+		Find(&pageGroups).Error; err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to fetch page groups"})
 		return
 	}
@@ -482,9 +683,17 @@ func GetPageGroup(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 
 	var pageGroup models.PageGroup
 	if err := db.Preload("Pages", func(db *gorm.DB) *gorm.DB {
-		return db.Select("ID", "Title", "Slug", "PageGroupID", "Order", "DocumentationID")
-	}).First(&pageGroup, req.ID).Error; err != nil {
-		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to fetch page group"})
+		return db.Select("ID", "Title", "Slug", "PageGroupID", "Order", "DocumentationID", "CreatedAt", "UpdatedAt", "AuthorID")
+	}).Preload("Pages.Author").
+		Preload("Pages.Editors").
+		Preload("Author").
+		Preload("Editors").
+		First(&pageGroup, req.ID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			SendJSONResponse(http.StatusNotFound, w, map[string]string{"status": "error", "message": "Page group not found"})
+		} else {
+			SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to fetch page group"})
+		}
 		return
 	}
 
@@ -494,11 +703,71 @@ func GetPageGroup(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	SendJSONResponse(http.StatusOK, w, groupMap)
 }
 
+func CreatePageGroup(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
+	type Request struct {
+		Name            string `json:"name" validate:"required"`
+		DocumentationID uint   `json:"documentationSiteId" validate:"required"`
+		ParentID        *uint  `json:"parentId"`
+		Order           *uint  `json:"order"`
+	}
+
+	var req Request
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid request"})
+		return
+	}
+
+	err := validate.Struct(req)
+
+	if err != nil {
+		logger.Error(err.Error())
+		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid request"})
+		return
+	}
+
+	token, err := GetTokenFromHeader(r)
+
+	if err != nil {
+		SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"status": "error", "message": "Unauthorized"})
+		return
+	}
+
+	user, err := services.GetUserFromToken(db, token)
+
+	if err != nil {
+		SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"status": "error", "message": "Unauthorized"})
+		return
+	}
+
+	pageGroup := models.PageGroup{
+		Name:            req.Name,
+		DocumentationID: req.DocumentationID,
+		AuthorID:        user.ID,
+		Author:          user,
+		Editors:         []models.User{user},
+	}
+
+	if req.ParentID != nil {
+		pageGroup.ParentID = req.ParentID
+	}
+
+	if req.Order != nil {
+		pageGroup.Order = req.Order
+	}
+
+	if err := db.Create(&pageGroup).Error; err != nil {
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to create page group"})
+		return
+	}
+
+	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "Page group created successfully"})
+}
+
 func EditPageGroup(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	type Request struct {
 		ID              uint   `json:"id" validate:"required"`
 		Name            string `json:"name" validate:"required"`
-		DocumentationID uint   `json:"documentationSiteId" validate:"required"`
+		DocumentationID uint   `json:"documentationId" validate:"required"`
 		ParentID        *uint  `json:"parentId"`
 		Order           *uint  `json:"order"`
 	}
@@ -515,11 +784,63 @@ func EditPageGroup(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	token, err := GetTokenFromHeader(r)
+	if err != nil {
+		SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"status": "error", "message": "Unauthorized"})
+		return
+	}
+
+	user, err := services.GetUserFromToken(db, token)
+	if err != nil {
+		SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"status": "error", "message": "Unauthorized"})
+		return
+	}
+
+	alreadyEditor := false
+	for _, editor := range pageGroup.Editors {
+		if editor.ID == user.ID {
+			alreadyEditor = true
+			break
+		}
+	}
+
+	if !alreadyEditor {
+		pageGroup.Editors = append(pageGroup.Editors, user)
+	}
+
 	pageGroup.Name = req.Name
-	pageGroup.DocumentationID = req.DocumentationID
+
+	if pageGroup.DocumentationID != req.DocumentationID {
+		var docCount int64
+		if err := db.Model(&models.Documentation{}).Where("id = ?", req.DocumentationID).Count(&docCount).Error; err != nil {
+			SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to verify documentation"})
+			return
+		}
+		if docCount == 0 {
+			SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid documentation ID"})
+			return
+		}
+		pageGroup.DocumentationID = req.DocumentationID
+	}
 
 	if req.ParentID != nil {
-		pageGroup.ParentID = req.ParentID
+		if *req.ParentID != pageGroup.ID {
+			var parentCount int64
+			if err := db.Model(&models.PageGroup{}).Where("id = ?", req.ParentID).Count(&parentCount).Error; err != nil {
+				SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to verify parent page group"})
+				return
+			}
+			if parentCount == 0 {
+				SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid parent page group ID"})
+				return
+			}
+			pageGroup.ParentID = req.ParentID
+		} else {
+			SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Page group cannot be its own parent"})
+			return
+		}
+	} else {
+		pageGroup.ParentID = nil
 	}
 
 	if req.Order != nil {
@@ -527,11 +848,72 @@ func EditPageGroup(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := db.Save(&pageGroup).Error; err != nil {
+		fmt.Println(err)
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to update page group"})
 		return
 	}
 
 	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "Page group updated successfully"})
+}
+
+func DeletePageGroup(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
+	type Request struct {
+		ID uint `json:"id" validate:"required"`
+	}
+
+	var req Request
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid request data"})
+		return
+	}
+
+	err := validate.Struct(req)
+	if err != nil {
+		logger.Error(err.Error())
+		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid request"})
+		return
+	}
+
+	tx := db.Begin()
+	if tx.Error != nil {
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to start transaction"})
+		return
+	}
+
+	var pageGroup models.PageGroup
+	if err := tx.Preload("Pages").Preload("Editors").First(&pageGroup, req.ID).Error; err != nil {
+		tx.Rollback()
+		SendJSONResponse(http.StatusNotFound, w, map[string]string{"status": "error", "message": "Page group not found"})
+		return
+	}
+
+	associations := []string{"Pages", "Editors"}
+	for _, assoc := range associations {
+		if err := tx.Model(&pageGroup).Association(assoc).Clear(); err != nil {
+			tx.Rollback()
+			SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": fmt.Sprintf("Failed to clear %s", assoc)})
+			return
+		}
+	}
+
+	if err := tx.Where("parent_id = ?", req.ID).Delete(&models.PageGroup{}).Error; err != nil {
+		tx.Rollback()
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to delete child page groups"})
+		return
+	}
+
+	if err := tx.Delete(&pageGroup).Error; err != nil {
+		tx.Rollback()
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to delete page group"})
+		return
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Transaction commit failed"})
+		return
+	}
+
+	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "Page group deleted successfully"})
 }
 
 func ReorderPageGroup(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
@@ -571,47 +953,4 @@ func ReorderPageGroup(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 
 	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "Page group reordered successfully"})
-}
-
-func DeletePageGroup(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
-	type Request struct {
-		ID uint `json:"id" validate:"required"`
-	}
-
-	var req Request
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid request data"})
-		return
-	}
-
-	tx := db.Begin()
-	if tx.Error != nil {
-		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to start transaction"})
-		return
-	}
-
-	if err := tx.Where("page_group_id = ?", req.ID).Delete(&models.Page{}).Error; err != nil {
-		tx.Rollback()
-		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to delete pages"})
-		return
-	}
-
-	if err := tx.Where("parent_id = ?", req.ID).Delete(&models.PageGroup{}).Error; err != nil {
-		tx.Rollback()
-		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to delete child page groups"})
-		return
-	}
-
-	if err := tx.Where("id = ?", req.ID).Delete(&models.PageGroup{}).Error; err != nil {
-		tx.Rollback()
-		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to delete page group"})
-		return
-	}
-
-	if err := tx.Commit().Error; err != nil {
-		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Transaction commit failed"})
-		return
-	}
-
-	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "Page group deleted successfully"})
 }

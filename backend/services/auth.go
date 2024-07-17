@@ -47,3 +47,20 @@ func IsTokenAdmin(db *gorm.DB, token string) bool {
 
 	return user.Admin
 }
+
+func GetUserFromToken(db *gorm.DB, token string) (models.User, error) {
+	var tokenRecord models.Token
+
+	query := db.Where("token = ?", token).First(&tokenRecord)
+	if query.Error != nil {
+		return models.User{}, query.Error
+	}
+
+	var user models.User
+
+	if err := db.Where("id = ?", tokenRecord.UserID).First(&user).Error; err != nil {
+		return models.User{}, err
+	}
+
+	return user, nil
+}
