@@ -36,7 +36,7 @@ func GetDocumentations(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		return db.Select("ID", "Username", "Email", "Photo")
 	}).Preload("Pages.Editors", func(db *gorm.DB) *gorm.DB {
 		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
-	}).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID", "Version", "ClonedFrom").
+	}).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID", "Version", "ClonedFrom", "LastEditorID").
 		Find(&documentations).Error; err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{
 			"status":  "error",
@@ -89,7 +89,7 @@ func GetDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		return db.Select("ID", "Username", "Email", "Photo")
 	}).Preload("Pages.Editors", func(db *gorm.DB) *gorm.DB {
 		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
-	}).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID", "Version").
+	}).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID", "Version", "LastEditorID").
 		Find(&documentation).Where("id = ?", req.ID).Error; err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{
 			"status":  "error",
@@ -136,11 +136,12 @@ func CreateDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 
 	documentation := models.Documentation{
-		Name:        req.Name,
-		Description: req.Description,
-		AuthorID:    user.ID,
-		Author:      user,
-		Editors:     []models.User{user},
+		Name:         req.Name,
+		Description:  req.Description,
+		AuthorID:     user.ID,
+		Author:       user,
+		Editors:      []models.User{user},
+		LastEditorID: &user.ID,
 	}
 
 	if err := db.Create(&documentation).Error; err != nil {
@@ -200,6 +201,8 @@ func EditDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	if !alreadyEditor {
 		documentation.Editors = append(documentation.Editors, user)
 	}
+
+	documentation.LastEditorID = &user.ID
 
 	documentation.Name = req.Name
 	documentation.Description = req.Description
@@ -403,7 +406,7 @@ func GetPages(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		return db.Select("ID", "Username", "Email", "Photo")
 	}).Preload("Editors", func(db *gorm.DB) *gorm.DB {
 		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
-	}).Select("ID", "Title", "Slug", "DocumentationID", "PageGroupID", "Order", "CreatedAt", "UpdatedAt", "AuthorID").
+	}).Select("ID", "Title", "Slug", "DocumentationID", "PageGroupID", "Order", "CreatedAt", "UpdatedAt", "AuthorID", "LastEditorID").
 		Find(&pages).Error; err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to fetch pages"})
 		return
@@ -494,6 +497,7 @@ func CreatePage(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		AuthorID:        user.ID,
 		Author:          user,
 		Editors:         []models.User{user},
+		LastEditorID:    &user.ID,
 	}
 
 	if req.PageGroupID != nil {
@@ -562,6 +566,7 @@ func EditPage(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	page.Title = req.Title
 	page.Slug = req.Slug
 	page.Content = req.Content
+	page.LastEditorID = &user.ID
 
 	if req.Order != nil {
 		page.Order = req.Order
@@ -705,6 +710,7 @@ func convertPageGroupToMap(group models.PageGroup) map[string]interface{} {
 			"updatedAt":       page.UpdatedAt,
 			"author":          simplifiedAuthors,
 			"editors":         simplifiedEditors,
+			"lastEditorId":    page.LastEditorID,
 		})
 	}
 
@@ -741,6 +747,7 @@ func convertPageGroupToMap(group models.PageGroup) map[string]interface{} {
 		"pages":           simplifiedPages,
 		"author":          simplifiedAuthors,
 		"editors":         simplifiedEditors,
+		"lastEditorId":    group.LastEditorID,
 	}
 }
 
@@ -770,12 +777,12 @@ func GetPageGroups(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	var pageGroups []models.PageGroup
 
 	if err := db.Preload("Pages", func(db *gorm.DB) *gorm.DB {
-		return db.Select("ID", "Title", "Slug", "PageGroupID", "Order", "DocumentationID", "CreatedAt", "UpdatedAt", "AuthorID")
+		return db.Select("ID", "Title", "Slug", "PageGroupID", "Order", "DocumentationID", "CreatedAt", "UpdatedAt", "AuthorID", "LastEditorID")
 	}).Preload("Pages.Author").
 		Preload("Pages.Editors").
 		Preload("Author").
 		Preload("Editors").
-		Select("ID", "Name", "DocumentationID", "ParentID", "Order", "CreatedAt", "UpdatedAt", "AuthorID").
+		Select("ID", "Name", "DocumentationID", "ParentID", "Order", "CreatedAt", "UpdatedAt", "AuthorID", "LastEditorID").
 		Where("parent_id IS NULL").
 		Find(&pageGroups).Error; err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to fetch page groups"})
@@ -812,7 +819,7 @@ func GetPageGroup(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 
 	var pageGroup models.PageGroup
 	if err := db.Preload("Pages", func(db *gorm.DB) *gorm.DB {
-		return db.Select("ID", "Title", "Slug", "PageGroupID", "Order", "DocumentationID", "CreatedAt", "UpdatedAt", "AuthorID")
+		return db.Select("ID", "Title", "Slug", "PageGroupID", "Order", "DocumentationID", "CreatedAt", "UpdatedAt", "AuthorID", "LastEditorID")
 	}).Preload("Pages.Author").
 		Preload("Pages.Editors").
 		Preload("Author").
@@ -874,6 +881,7 @@ func CreatePageGroup(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		AuthorID:        user.ID,
 		Author:          user,
 		Editors:         []models.User{user},
+		LastEditorID:    &user.ID,
 	}
 
 	if req.ParentID != nil {
@@ -936,6 +944,8 @@ func EditPageGroup(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	if !alreadyEditor {
 		pageGroup.Editors = append(pageGroup.Editors, user)
 	}
+
+	pageGroup.LastEditorID = &user.ID
 
 	pageGroup.Name = req.Name
 
