@@ -1,8 +1,6 @@
-import { initFlowbite } from 'flowbite';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Editor } from 'primereact/editor';
 import { Icon } from '@iconify/react/dist/iconify.js';
 import 'primereact/resources/themes/lara-light-indigo/theme.css';
 import 'primereact/resources/primereact.min.css';
@@ -10,6 +8,7 @@ import 'primeicons/primeicons.css';
 import { toastMessage } from '../../utils/Toast';
 import { AuthContext } from '../../context/AuthContext';
 import instance from '../../api/AxiosInstance';
+import EditorComponent from '../EditorComponent/EditorComponent';
 
 export default function CreatePageModal () {
   const [searchParam] = useSearchParams();
@@ -23,13 +22,10 @@ export default function CreatePageModal () {
   const [slug, setSlug] = useState('');
   const [content, setContent] = useState('');
 
-  useEffect(() => {
-    initFlowbite();
-  }, []);
-
   const handleCreate = async () => {
     if (title === '' || slug === '') {
       toastMessage('Title and Slug required', 'warning');
+      return;
     }
 
     if (dir === 'true') {
@@ -37,7 +33,7 @@ export default function CreatePageModal () {
         const response = await instance.post('docs/page/create', {
           title,
           slug,
-          content,
+          content: JSON.stringify(content),
           documentationSiteId: Number(docId)
         });
 
@@ -58,7 +54,7 @@ export default function CreatePageModal () {
         const response = await instance.post('docs/page/create', {
           title,
           slug,
-          content,
+          content: JSON.stringify(content),
           documentationSiteId: Number(docId),
           pageGroupId: Number(pageGroupId)
         });
@@ -78,6 +74,10 @@ export default function CreatePageModal () {
         toastMessage(err?.response?.data?.message, 'error');
       }
     }
+  };
+
+  const handleSave = async (content) => {
+    setContent(content);
   };
 
   return (
@@ -145,7 +145,7 @@ export default function CreatePageModal () {
         aria-hidden='true'
         className='flex w-full md:inset-0 h-modal md:h-full'
       >
-        <div className='h-full md:h-auto'>
+        <div className='w-full h-full md:h-auto'>
           <div className='relative p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5'>
             <div className='flex justify-start items-center pb-4 mb-4 rounded-t border-b sm:mb-5 dark:border-gray-600'>
               <h3 className='text-2xl  font-semibold text-gray-900 dark:text-white'>
@@ -156,7 +156,7 @@ export default function CreatePageModal () {
             <div className='grid gap-4 mb-4 '>
               <div>
                 <label
-                  htmlForfor='title'
+                  htmlFor='title'
                   className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
                 >
                   Title
@@ -175,7 +175,7 @@ export default function CreatePageModal () {
 
               <div>
                 <label
-                  htmlForfor='slug'
+                  htmlFor='slug'
                   className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
                 >
                   Slug
@@ -199,11 +199,9 @@ export default function CreatePageModal () {
                 >
                   Content
                 </label>
-                <Editor
-                  value={content}
-                  onTextChange={(e) => setContent(e.htmlValue)}
-                  style={{ minHeight: '150px' }}
-                />
+                <div className='border border-gray-400 rounded-lg'>
+                  <EditorComponent onSave={handleSave} />
+                </div>
               </div>
             </div>
 

@@ -24,9 +24,9 @@ export default function AdminAuth () {
         const response = await instance.get('/auth/users');
         if (response?.status === 200) {
           const foundUser = response?.data.find(
-            (obj) => obj.ID.toString() === user?.user_id
+            (obj) => obj.id.toString() === user?.user_id
           );
-          if (foundUser && foundUser?.Admin === true) {
+          if (foundUser && foundUser?.admin === true) {
             setIsAdmin(true);
           }
         }

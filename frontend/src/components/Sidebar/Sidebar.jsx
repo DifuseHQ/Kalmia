@@ -1,5 +1,5 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
 import { AuthContext } from '../../context/AuthContext';
@@ -9,7 +9,7 @@ import { toastMessage } from '../../utils/Toast';
 export default function Sidebar () {
   const [documentation, setDocumentation] = useState([]);
   const [openDropdowns, setOpenDropdowns] = useState([]);
-  const { refresh, userDetails, setIsOpenModal } = useContext(AuthContext);
+  const { refresh, userDetails, setIsOpenModal, isSidebarOpen, setIsSidebarOpen } = useContext(AuthContext);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,7 +20,8 @@ export default function Sidebar () {
           setDocumentation(response?.data);
         }
       } catch (err) {
-        if (!err.response) {
+        console.error(err);
+        if (!err.response || err?.response?.status === 500) {
           toastMessage(err?.message, 'error');
           navigate('/server-down');
           return;
@@ -38,18 +39,45 @@ export default function Sidebar () {
   };
 
   const handleCreateDocument = () => {
-    navigate('/dashboard/create-documentation');
     setIsOpenModal(true);
   };
+
+  const location = useLocation();
+  const path = location.pathname + location.search;
+
+  const smallestId = documentation.reduce((min, doc) => (doc.id < min ? doc.id : min), documentation[0]?.id);
+
+  const handleClickOutside = useCallback((event) => {
+    if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
+      setIsSidebarOpen(false);
+    }
+  }, [setIsSidebarOpen]);
+
+  const sidebarRef = useRef(null);
+
+  useEffect(() => {
+    if (isSidebarOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isSidebarOpen, handleClickOutside]);
 
   return (
     <AnimatePresence>
       <motion.aside
+        ref={sidebarRef}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ delay: 0.1 }}
-        className='fixed top-0 left-0 z-40 w-64 h-screen pt-14 transition-transform -translate-x-full bg-white border-r border-gray-200 md:translate-x-0 dark:bg-gray-800 dark:border-gray-700'
+        className={`fixed top-0 left-0 z-40 w-64 h-screen pt-14 transition-transform bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700 ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        } md:translate-x-0`}
         aria-label='Sidenav'
         id='drawer-navigation'
       >
@@ -81,41 +109,45 @@ export default function Sidebar () {
                       key={`sidebar-${val.id}-${index}`}
                       whilehover={{ scale: 1.08, originx: 0 }}
                     >
-                      <Link to={`/dashboard/documentation?id=${val.id}`}>
-                        <button
-                          type='button'
-                          onClick={() => toggleDropdown(index)}
-                          className='flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-200 dark:text-white dark:hover:bg-gray-700'
-                          aria-controls={`${val.name}`}
-                          title={val.name}
-                        >
-                          <Icon icon='ep:document' className='w-8 h-8 dark:text-white' />
-                          <span className='flex-1 px-1 text-left overflow-hidden text-md whitespace-nowrap overflow-ellipsis'>
-                            {val.name}
-                          </span>
-                        </button>
-                      </Link>
+                      <NavLink
+                        to={`/dashboard/documentation?id=${val.id}&docName=${val.name}`}
+                        onClick={() => toggleDropdown(index)}
+                        className={`flex items-center p-2 w-full text-base font-normal rounded-lg transition duration-75 group hover:bg-gray-200 dark:text-white dark:hover:bg-gray-700 ${
+                            (location.pathname === '/dashboard' && val.id === smallestId) || path === `/dashboard/documentation?id=${val.id}`
+                              ? 'text-black-500 bg-gray-300 dark:bg-gray-600'
+                              : 'text-gray-900'
+                          }`}
+                        aria-controls={`${val.name}`}
+                        title={val.name}
+                      >
+                        <Icon icon='ep:document' className='w-8 h-8 dark:text-white' />
+                        <span className='flex-1 px-1 text-left overflow-hidden text-md whitespace-nowrap overflow-ellipsis'>
+                          {val.name}
+                        </span>
+                      </NavLink>
                     </motion.li>
                   ))
                 )}
           </ul>
 
-          {userDetails && userDetails.Admin && (
+          {userDetails && userDetails.admin && (
             <ul className='pt-5 mt-5 space-y-2 border-t border-gray-200 dark:border-gray-700'>
               <li>
-                <Link to='/dashboard/admin/user-list'>
-                  <button
-                    type='button'
-                    className='flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-200 dark:text-white dark:hover:bg-gray-700'
-                    aria-controls=''
-                    title='User management'
-                  >
-                    <Icon icon='mdi:users' className='w-8 h-8 dark:text-white' />
-                    <span className='flex-1 px-1 text-left whitespace-nowrap text-md'>
-                      User Management
-                    </span>
-                  </button>
-                </Link>
+                <NavLink
+                  to='/dashboard/admin/user-list'
+                  className={`flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-200 dark:text-white dark:hover:bg-gray-700
+                    ${path === '/dashboard/admin/user-list'
+                      ? 'text-black-500 bg-gray-300 dark:bg-gray-600'
+                      : 'text-gray-900'}
+                    `}
+                  aria-controls=''
+                  title='User management'
+                >
+                  <Icon icon='mdi:users' className='w-8 h-8 dark:text-white' />
+                  <span className='flex-1 px-1 text-left whitespace-nowrap text-md'>
+                    User Management
+                  </span>
+                </NavLink>
               </li>
             </ul>
           )}

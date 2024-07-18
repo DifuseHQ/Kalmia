@@ -9,6 +9,7 @@ import EditDocumentModal from '../CreateDocumentModal/EditDocumentModal';
 import DeleteModal from '../DeleteModal/DeleteModal';
 import CreatePageGroup from '../CreatePageGroup/CreatePageGroup';
 import { toastMessage } from '../../utils/Toast';
+import Breadcrumb from '../Breadcrumb/Breadcrumb';
 
 export default function Documentation () {
   const { refresh, refreshData, user } = useContext(AuthContext);
@@ -34,6 +35,7 @@ export default function Documentation () {
   const [fetchPage, setFetchPage] = useState([]);
   const [documentationData, setDocumentationData] = useState([]);
   const [refreshPage, setRefreshpage] = useState(false);
+  const [smallestId, setSmallestId] = useState([]);
 
   const handleRefresh = () => {
     setRefreshpage(!refreshPage);
@@ -47,17 +49,17 @@ export default function Documentation () {
         const responsePages = await instance.get('/docs/pages');
         setFetchPage(responsePages?.data || []);
       } catch (err) {
-        if (!err.response) {
+        console.error(err);
+        if (!err.response || err?.response?.status === 500) {
           navigate('/server-down');
           return;
         }
-        console.error(err);
         toastMessage(err?.response?.data?.message, 'error');
       }
     };
 
     fetchData();
-  }, [user, refreshPage, refresh, navigate, refreshPage]);
+  }, [user, refreshPage, refresh, navigate]);
 
   useEffect(() => {
     const combineData = () => {
@@ -99,37 +101,47 @@ export default function Documentation () {
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
   };
-
-  // Filter the items based on the search term
   const filteredItems = documentationData.filter(
     (obj) =>
-      obj.documentationId === Number(docId) &&
+      obj.documentationId === (docId ? Number(docId) : smallestId) &&
       (obj.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         obj.title?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  // Fetch document information
   useEffect(() => {
-    setLoading(true);
-    const fetchdata = async () => {
-      setLoading(true);
-
-      if (!docId) {
-        setLoading(false);
-        return;
-      }
-
+    const fetchData = async () => {
       try {
-        const response = await instance.post('/docs/documentation', {
-          id: Number(docId)
-        });
-
+        const response = await instance.get('/docs/documentations');
         if (response?.status === 200) {
-          setDocumentData(response?.data);
-          setLoading(false);
+          const data = response.data;
+
+          const smallestId = data.reduce(
+            (min, doc) => (doc.id < min ? doc.id : min),
+            data[0]?.id
+          );
+          setSmallestId(smallestId);
+          if (docId) {
+            const responseDoc = await instance.post('/docs/documentation', {
+              id: Number(docId)
+            });
+            if (responseDoc?.status === 200) {
+              setDocumentData(responseDoc.data);
+              setLoading(false);
+            }
+          } else {
+            const responseSmallest = await instance.post(
+              '/docs/documentation',
+              { id: smallestId }
+            );
+            if (responseSmallest?.status === 200) {
+              setDocumentData(responseSmallest.data);
+              setLoading(false);
+            }
+          }
         }
       } catch (err) {
-        if (!err.response) {
+        console.error(err);
+        if (!err.response || err?.response?.status === 500) {
           toastMessage(err?.message, 'error');
           navigate('/server-down');
           return;
@@ -138,8 +150,8 @@ export default function Documentation () {
       }
     };
 
-    fetchdata();
-  }, [docId, refresh, navigate, user]);
+    fetchData();
+  }, [docId, refresh, refreshPage, navigate, user]);
 
   const handleDeletemodalopen = () => {
     setDeleteModal(true);
@@ -156,12 +168,14 @@ export default function Documentation () {
         id: Number(docId)
       });
       if (response?.status === 200) {
+        setDeleteModal(false);
         toastMessage(response?.data.message, 'success');
         refreshData();
         navigate('/dashboard');
       }
     } catch (err) {
-      if (!err.response) {
+      console.error(err);
+      if (!err.response || err?.response?.status === 500) {
         toastMessage(err?.message, 'error');
         navigate('/server-down');
         return;
@@ -188,7 +202,8 @@ export default function Documentation () {
         toastMessage(response?.data.message, 'success');
       }
     } catch (err) {
-      if (!err.response) {
+      console.error(err);
+      if (!err.response || err?.response?.status === 500) {
         toastMessage(err?.message, 'error');
         navigate('/server-down');
         return;
@@ -214,18 +229,14 @@ export default function Documentation () {
         id: Number(id)
       });
       if (response?.status === 200) {
-        console.log('deleted');
         setIsPageGroupsDeleteModal(false);
         toastMessage(response?.data.message, 'success');
-        if (filteredItems.length > 1) {
-          navigate(`/dashboard/documentation?id=${docId}`);
-          handleRefresh();
-        } else {
-          window.location.reload();
-        }
+        navigate(`/dashboard/documentation?id=${docId}`);
+        handleRefresh();
       }
     } catch (err) {
-      if (!err.response) {
+      console.error(err);
+      if (!err.response || err?.response?.status === 500) {
         toastMessage(err?.message, 'error');
         navigate('/server-down');
         return;
@@ -233,7 +244,7 @@ export default function Documentation () {
       toastMessage(err?.response?.data?.message, 'error');
     }
   };
-  console.log(filteredItems.length);
+
   const openEditPageGroup = (item) => {
     setCurrentItem(item);
     setIsEditpageGroup(true);
@@ -258,7 +269,8 @@ export default function Documentation () {
         toastMessage(response?.data.message, 'success');
       }
     } catch (err) {
-      if (!err.response) {
+      console.error(err);
+      if (!err.response || err?.response?.status === 500) {
         toastMessage(err?.message, 'error');
         navigate('/server-down');
         return;
@@ -289,7 +301,8 @@ export default function Documentation () {
         toastMessage(response?.data.message, 'success');
       }
     } catch (err) {
-      if (!err.response) {
+      console.error(err);
+      if (!err.response || err?.response?.status === 500) {
         toastMessage(err?.message, 'error');
         navigate('/server-down');
         return;
@@ -320,7 +333,8 @@ export default function Documentation () {
           order: index
         });
       } catch (err) {
-        if (!err.response) {
+        console.error(err);
+        if (!err.response || err?.response?.status === 500) {
           toastMessage(err?.message, 'error');
           navigate('/server-down');
           return;
@@ -331,11 +345,29 @@ export default function Documentation () {
 
     // Use map instead of forEach to iterate asynchronously
     await Promise.all(newItems.map((item, index) => updateOrder(item, index)));
+
+    await handleRefresh();
   };
-  console.log(filteredItems);
+
+  const extraRowHeight = '2.5rem'; // Adjust this if your table rows have a different height
+
+  // const tableContainerStyles = {
+  //   overflowX: "auto"
+  // };
+
+  // const tbodyStyles = {
+  //   position: "relative"
+  // };
+
+  const extraSpaceStyles = {
+    display: 'table-row',
+    height: `calc(3 * ${extraRowHeight})`
+  };
+
   return (
     <AnimatePresence className='bg-gray-50 dark:bg-gray-900 p-3 sm:p-5'>
-      <motion.nav
+      <Breadcrumb />
+      {/* <motion.nav
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -344,19 +376,15 @@ export default function Documentation () {
       >
         <ol className='inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse'>
           <li className='inline-flex items-center '>
-            <Link
-              to={`/dashboard/documentation?id=${docId}`}
-            >
-              <span
-                className='inline-flex items-center gap-1 text-md  font-medium text-gray-500  dark:text-gray-400 cursor-text '
-              >
-                <Icon icon='material-symbols:home' className=' ' />
+            <Link to={`/dashboard/documentation?id=${docId ?docId : smallestId }`}>
+              <span className='inline-flex items-center gap-1 text-md font-medium text-gray-500  dark:text-gray-400 cursor-text '>
+                <Icon icon='ep:document' className='w-5 h-5 pb-0.5 dark:text-white' />
                 {documentData.name}
               </span>
             </Link>
           </li>
         </ol>
-      </motion.nav>
+      </motion.nav> */}
 
       {/* Create pageGroup resusable component */}
       {openCreatePageGroup && (
@@ -386,7 +414,7 @@ export default function Documentation () {
           deleteDoc={handleDelete}
           id={documentData.id}
           title='Are you sure?'
-          message={`This will permanently deleted "${documentData.name}"`}
+          message={`You're permanently deleting "${documentData.name}"`}
         />
       )}
 
@@ -401,7 +429,10 @@ export default function Documentation () {
           onClick={() => setIsEditModal(!isEditModal)}
           title='Edit Documentation'
         >
-          <Icon icon='material-symbols:edit-outline' className='w-6 h-6 text-yellow-500 dark:text-yellow-400' />
+          <Icon
+            icon='material-symbols:edit-outline'
+            className='w-6 h-6 text-yellow-500 dark:text-yellow-400'
+          />
         </motion.button>
 
         <motion.button
@@ -409,7 +440,10 @@ export default function Documentation () {
           onClick={handleDeletemodalopen}
           title='Delete Documentation'
         >
-          <Icon icon='material-symbols:delete' className='w-6 h-6 text-red-600 dark:text-red-500' />
+          <Icon
+            icon='material-symbols:delete'
+            className='w-6 h-6 text-red-600 dark:text-red-500'
+          />
         </motion.button>
       </motion.div>
 
@@ -429,13 +463,13 @@ export default function Documentation () {
         </div>
       </motion.div>
 
-      {filteredItems &&
+      {filteredItems && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ delay: 0.1 }}
-          className='mx-auto max-w-screen-xl '
+          className=' '
         >
           <div className='bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden'>
             <div className='flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4'>
@@ -446,7 +480,10 @@ export default function Documentation () {
                   </label>
                   <div className='relative w-full'>
                     <div className='absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none'>
-                      <Icon icon='material-symbols:search' className='w-6 h-6 text-gray-400 dark:text-gray-500' />
+                      <Icon
+                        icon='material-symbols:search'
+                        className='w-6 h-6 text-gray-400 dark:text-gray-500'
+                      />
                     </div>
                     <input
                       type='text'
@@ -466,7 +503,9 @@ export default function Documentation () {
                   type='button'
                   className='flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800'
                 >
-                  <span className=' px-1 text-left items-center dark:text-white text-md '>New Group</span>
+                  <span className=' px-1 text-left items-center dark:text-white text-md '>
+                    New Group
+                  </span>
                   <Icon icon='ei:plus' className='w-6 h-6 dark:text-white' />
                 </motion.button>
 
@@ -475,7 +514,9 @@ export default function Documentation () {
                     to={`/dashboard/documentation/create-page?id=${docId}&dir=true`}
                     className='flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800'
                   >
-                    <span className=' px-1 text-left items-center dark:text-white text-md '>New Page</span>
+                    <span className=' px-1 text-left items-center dark:text-white text-md '>
+                      New Page
+                    </span>
                     <Icon icon='ei:plus' className='w-6 h-6 dark:text-white' />
                   </Link>
                 </motion.button>
@@ -483,21 +524,27 @@ export default function Documentation () {
             </div>
 
             {filteredItems && (
-              <div className='overflow-x-auto sm:overflow-visible min-h-[70vh]'>
+              <div className='overflow-x-auto h-auto'>
                 <DragDropContext onDragEnd={handleDragEnd}>
                   <Droppable droppableId='table' type='TABLE'>
                     {(provided) => (
-                      <table className='w-full  text-sm text-left text-gray-500 dark:text-gray-400'>
+                      <table className='w-full text-sm text-left text-gray-500 dark:text-gray-400'>
                         <thead className='text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400'>
                           <tr>
                             <th />
                             <th scope='col' className='px-4 py-3'>
                               Title
                             </th>
-                            <th scope='col' className='px-4 py-3 whitespace-nowrap'>
+                            <th
+                              scope='col'
+                              className='px-4 py-3 whitespace-nowrap'
+                            >
                               Create / update
                             </th>
-                            <th scope='col' className='px-4 py-3 whitespace-nowrap'>
+                            <th
+                              scope='col'
+                              className='px-4 py-3 whitespace-nowrap'
+                            >
                               Author / Editor
                             </th>
                             <th scope='col' className='px-4 py-3'>
@@ -514,10 +561,14 @@ export default function Documentation () {
                           {loading
                             ? (
                               <tr className='border-b dark:border-gray-700'>
-                                <td colSpan='4' className='py-8'>
+                                <td colSpan='12' className='py-8'>
                                   <div className='flex flex-col items-center justify-center'>
-                                    {loading &&
-                                      <Icon icon='line-md:loading-twotone-loop' className='w-32 h-32' />}
+                                    {loading && (
+                                      <Icon
+                                        icon='line-md:loading-twotone-loop'
+                                        className='w-32 h-32'
+                                      />
+                                    )}
                                   </div>
                                 </td>
                               </tr>
@@ -531,7 +582,7 @@ export default function Documentation () {
                                     exit={{ opacity: 0 }}
                                     className='border-b dark:bg-gray-700'
                                   >
-                                    <td colSpan='4' className='text-center py-8'>
+                                    <td colSpan='12' className='text-center py-8'>
                                       <h1 className='text-center text-gray-600 sm:text-lg font-semibold'>
                                         No Pages Found
                                       </h1>
@@ -540,13 +591,7 @@ export default function Documentation () {
                                   )
                                 : (
                                     filteredItems.map((obj, index) => (
-                                      <Draggable
-                                        key={`dragagable-${obj.id}-${index}`}
-                                        draggableId={`${obj.id.toString()}-${
-                                  obj.name || obj.title
-                                }`}
-                                        index={index}
-                                      >
+                                      <Draggable key={obj.name ? `pageGroup-${obj.id}` : `page-${obj.id}`} draggableId={obj.name ? `pageGroup-${obj.id}` : `page-${obj.id}`} index={index}>
                                         {(provided, snapshot) => (
                                           <tr
                                             ref={provided.innerRef}
@@ -563,7 +608,10 @@ export default function Documentation () {
                                               scope='row'
                                               className='items-center w-5 cursor-pointer gap-2 px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white '
                                             >
-                                              <Icon icon='nimbus:drag-dots' className='w-6 h-6 text-gray-600 dark:text-white' />
+                                              <Icon
+                                                icon='nimbus:drag-dots'
+                                                className='w-6 h-6 text-gray-600 dark:text-white'
+                                              />
                                             </th>
 
                                             <th
@@ -578,8 +626,8 @@ export default function Documentation () {
                                                 className='flex items-center gap-1'
                                                 to={
                                           obj.name
-                                            ? `/dashboard/documentation/pagegroup?id=${docId}&pageGroupId=${obj.id}`
-                                            : `/dashboard/documentation/edit-page?id=${docId}&dir=true&pageId=${obj.id}`
+                                            ? `/dashboard/documentation/pagegroup?id=${docId}&pageGroupId=${obj.id}&groupName=${obj.name}`
+                                            : `/dashboard/documentation/edit-page?id=${docId}&dir=true&pageId=${obj.id}&pageName=${obj.title}`
                                         }
                                               >
                                                 {obj.name
@@ -596,57 +644,79 @@ export default function Documentation () {
 
                                             <td className='px-4 py-3 cursor-text'>
                                               <div className='flex justify-start items-center gap-2'>
-                                                <Icon icon='mdi:clock-outline' className='w-4 h-4 text-gray-500 dark:text-white' />
-                                                <span className=' px-1 text-left items-center dark:text-white text-md whitespace-nowrap'>Demo Time</span>
+                                                <Icon
+                                                  icon='mdi:clock-outline'
+                                                  className='w-4 h-4 text-gray-500 dark:text-white'
+                                                />
+                                                <span className=' px-1 text-left items-center dark:text-white text-md whitespace-nowrap'>
+                                                  Demo Time
+                                                </span>
                                               </div>
-                                              <div className='flex gap-2 items-center
+                                              <div
+                                                className='flex gap-2 items-center
                                       '
                                               >
-                                                <Icon icon='material-symbols:update' className='w-4 h-4 text-gray-500 dark:text-white' />
-                                                <span className=' px-1 text-left items-center dark:text-white text-md whitespace-nowrap'>Demo Update Time</span>
+                                                <Icon
+                                                  icon='material-symbols:update'
+                                                  className='w-4 h-4 text-gray-500 dark:text-white'
+                                                />
+                                                <span className=' px-1 text-left items-center dark:text-white text-md whitespace-nowrap'>
+                                                  Demo Update Time
+                                                </span>
                                               </div>
                                             </td>
 
                                             <td className='px-4 py-3 cursor-text'>
                                               <div className='flex justify-start items-center gap-2'>
-                                                <Icon icon='mdi:user' className='w-4 h-4 text-gray-500 dark:text-white' />
-                                                <span className=' px-1 text-left items-center dark:text-white text-md whitespace-nowrap'>Demo Author Name</span>
+                                                <Icon
+                                                  icon='mdi:user'
+                                                  className='w-4 h-4 text-gray-500 dark:text-white'
+                                                />
+                                                <span className=' px-1 text-left items-center dark:text-white text-md whitespace-nowrap'>
+                                                  Demo Author Name
+                                                </span>
                                               </div>
                                               <div className='flex gap-2 items-center'>
-                                                <Icon icon='mdi:edit-outline' className='w-4 h-4 text-gray-500 dark:text-white' />
-                                                <span className=' px-1 text-left items-center dark:text-white text-md whitespace-nowrap'>Demo Editor Name</span>
+                                                <Icon
+                                                  icon='mdi:edit-outline'
+                                                  className='w-4 h-4 text-gray-500 dark:text-white'
+                                                />
+                                                <span className=' px-1 text-left items-center dark:text-white text-md whitespace-nowrap'>
+                                                  Demo Editor Name
+                                                </span>
                                               </div>
                                             </td>
 
-                                            {obj.name &&
-                                              (
-                                                <td className='px-4 py-3 cursor-pointer relative'>
-                                                  <button
-                                                    id={`dropdown-button-${obj.id}`}
-                                                    data-dropdown-toggle={`dropdown123-${obj.id}`}
-                                                    className='inline-flex items-center gap-3 p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100'
-                                                    type='button'
-                                                  >
-                                                    <Icon
-                                                      icon='material-symbols:edit-outline' className='w-6 h-6 text-yellow-500 dark:text-yellow-400'
-                                                      onClick={() => {
-                                                        openEditPageGroup(obj);
-                                                      }}
-                                                    />
-                                                    <Icon
-                                                      icon='material-symbols:delete' className='w-6 h-6 text-red-600 dark:text-red-500'
-                                                      onClick={() => {
-                                                        openDeletePageGroups(obj);
-                                                      }}
-                                                    />
-                                                  </button>
-                                                </td>
-                                              )}
+                                            {obj.name && (
+                                              <td className='px-4 py-3 cursor-pointer relative'>
+                                                <button
+                                                  id={`dropdown-button-${obj.id}`}
+                                                  data-dropdown-toggle={`dropdown123-${obj.id}`}
+                                                  className='inline-flex items-center gap-3 p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100'
+                                                  type='button'
+                                                >
+                                                  <Icon
+                                                    icon='material-symbols:edit-outline' className='w-6 h-6 text-yellow-500 dark:text-yellow-400' onClick={() => {
+                                                      openEditPageGroup(obj);
+                                                    }}
+                                                  />
+                                                  <Icon
+                                                    icon='material-symbols:delete'
+                                                    className='w-6 h-6 text-red-600 dark:text-red-500'
+                                                    onClick={() => {
+                                                      openDeletePageGroups(obj);
+                                                    }}
+                                                  />
+                                                </button>
+                                              </td>
+                                            )}
                                           </tr>
                                         )}
                                       </Draggable>
                                     ))
                                   )}
+                          {provided.placeholder}
+                          <tr style={extraSpaceStyles} />
                         </tbody>
                       </table>
                     )}
@@ -673,12 +743,12 @@ export default function Documentation () {
                 deleteDoc={() => handleDeletePageGroup(currentItem.id)}
                 id={currentItem.id}
                 title='Are you sure?'
-                message={`This will permanently deleted "${currentItem.name}`}
+                message={`You're permanently deleting "${currentItem.name}`}
               />
             )}
           </div>
-        </motion.div>}
-
+        </motion.div>
+      )}
     </AnimatePresence>
   );
 }
