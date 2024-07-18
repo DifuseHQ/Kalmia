@@ -14,7 +14,6 @@ import PageGrouptable from '../src/components/PageGroup/PageGrouptable';
 import CreatePageModal from '../src/components/CreatePageModal/CreatePageModal';
 import EditPage from '../src/components/EditPage/EditPage';
 import UserProfile from '../src/components/UserProfile/UserProfile';
-import UserResetPassword from '../src/components/UserResetPassword/UserResetPassword';
 import UserList from '../src/components/UserList/UserList';
 import CreateUser from '../src/components/CreateUser/CreateUser';
 import Error500 from '../src/components/error500/Error500';
@@ -43,7 +42,6 @@ function App () {
                 <Route path='documentation/create-page' element={<CreatePageModal />} />
                 <Route path='documentation/edit-page' element={<EditPage />} />
                 <Route path='user-profile' element={<UserProfile />} />
-                <Route path='user-changePassword' element={<UserResetPassword />} />
 
                 <Route element={<AdminAuth />}>
                   <Route path='admin/user-list' element={<UserList />} />
