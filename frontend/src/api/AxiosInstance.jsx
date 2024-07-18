@@ -14,6 +14,8 @@ instance.interceptors.response.use(
   (error) => {
     if (!error?.response) {
       throw error;
+    } else if (error?.response?.status === 500) {
+      throw error;
     } else if (error?.response?.status === 400) {
       throw error;
     } else if (error?.response?.status === 401) {

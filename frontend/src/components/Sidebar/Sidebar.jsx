@@ -20,7 +20,8 @@ export default function Sidebar () {
           setDocumentation(response?.data);
         }
       } catch (err) {
-        if (!err.response) {
+        console.error(err);
+        if (!err.response || err?.response?.status === 500) {
           toastMessage(err?.message, 'error');
           navigate('/server-down');
           return;
@@ -129,7 +130,7 @@ export default function Sidebar () {
                 )}
           </ul>
 
-          {userDetails && userDetails.Admin && (
+          {userDetails && userDetails.admin && (
             <ul className='pt-5 mt-5 space-y-2 border-t border-gray-200 dark:border-gray-700'>
               <li>
                 <NavLink

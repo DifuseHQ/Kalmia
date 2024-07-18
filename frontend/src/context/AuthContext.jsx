@@ -51,7 +51,8 @@ export const AuthProvider = ({ children }) => {
         navigate('/dashboard', { replace: true });
       }
     } catch (err) {
-      if (!err.response) {
+      console.error(err);
+      if (!err.response || err?.response?.status === 500) {
         toastMessage(err?.message, 'error');
         navigate('/server-down');
         return;
@@ -66,16 +67,16 @@ export const AuthProvider = ({ children }) => {
         const response = await instance.get('/auth/users');
         if (response?.status === 200) {
           const filterUser = response?.data.find(
-            (obj) => obj?.ID.toString() === user?.user_id
+            (obj) => obj?.id.toString() === user?.user_id
           );
           setUserDetails(filterUser);
         }
       } catch (err) {
-        if (!err.response) {
+        console.error(err);
+        if (!err.response || err?.response?.status === 500) {
           navigate('/server-down');
           return;
         }
-        console.error(err);
         toastMessage(err?.response?.data?.message, 'error');
       }
     };
@@ -107,7 +108,8 @@ export const AuthProvider = ({ children }) => {
       // } else {
       //   toastMessage(err.response.data.message, 'error');
       // }
-      if (!err.response) {
+      console.error(err);
+      if (!err.response || err?.response?.status === 500) {
         toastMessage(err?.message, 'error');
         navigate('/server-down');
         return;
@@ -129,7 +131,8 @@ export const AuthProvider = ({ children }) => {
         });
       }
     } catch (err) {
-      if (!err.response) {
+      console.error(err);
+      if (!err.response || err?.response?.status === 500) {
         toastMessage(err?.message, 'error');
         navigate('/server-down');
         return;
@@ -170,7 +173,8 @@ export const AuthProvider = ({ children }) => {
             }
           }
         } catch (err) {
-          if (!err.response) {
+          console.error(err);
+          if (!err.response || err?.response?.status === 500) {
             toastMessage(err?.message, 'error');
             navigate('/server-down');
             return;

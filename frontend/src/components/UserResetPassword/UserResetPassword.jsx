@@ -11,7 +11,7 @@ export default function UserResetPassword () {
   const [confirmPasswod, setConfirmPassword] = useState('');
 
   const [searchParam] = useSearchParams();
-  const userId = searchParam.get('userId');
+  const userId = searchParam.get('user_id');
 
   const handleChangePassword = async (e) => {
     e.preventDefault();

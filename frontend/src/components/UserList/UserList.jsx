@@ -25,6 +25,7 @@ export default function UserList () {
     const fetchData = async () => {
       try {
         const response = await instance.get('/auth/users');
+        console.log(response);
         if (response?.status === 200) {
           setUserList(response?.data || []);
           setLoading(false);
@@ -44,9 +45,9 @@ export default function UserList () {
   // Filtered user list based on search term
   const filterUser = userList.filter(
     (user) =>
-      user.Admin === false &&
-      (user.Username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.Email?.toLowerCase().includes(searchTerm.toLowerCase()))
+      !user.admin &&
+      (user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   // Handle search input change
@@ -145,15 +146,15 @@ export default function UserList () {
       return (
         <>
           {filterUser.slice(startIdx, endIdx).map((user) => (
-            <motion.tr className='border-b dark:border-gray-700' key={user.ID}>
+            <motion.tr className='border-b dark:border-gray-700' key={user.id}>
               <th
                 scope='row'
                 className='px-4 py-3 text-md font-medium text-black whitespace-nowrap dark:text-white'
               >
-                {user.Username}
+                {user.username}
               </th>
               <td className='px-4 py-3 text-md text-black dark:text-white'>
-                {user.Email}
+                {user.email}
               </td>
               {/* <td className="px-4 py-3">
                 <button className="text-blue-500 border px-3 border-blue-500 rounded-lg hover:bg-blue-500 hover:text-white">
@@ -319,10 +320,10 @@ export default function UserList () {
         {isDeleteModal && currentItem && (
           <DeleteModal
             cancelModal={handleCancelDelete}
-            deleteDoc={() => handleDeleteUser(currentItem.Username)}
+            deleteDoc={() => handleDeleteUser(currentItem.username)}
             id={currentItem.id}
             title='Are you sure?'
-            message={`You're permanently deleting "${currentItem.Username}" `}
+            message={`You're permanently deleting "${currentItem.username}" `}
           />
         )}
       </motion.div>

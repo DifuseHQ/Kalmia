@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -16,9 +16,28 @@ export default function Navbar () {
   };
 
   const toggleSidebar = () => {
-    console.log('yes');
     setIsSidebarOpen(!isSidebarOpen);
   };
+
+  const handleClickOutside = useCallback((event) => {
+    if (navbarRef.current && !navbarRef.current.contains(event.target)) {
+      setIsOpen(false);
+    }
+  }, [setIsOpen]);
+
+  const navbarRef = useRef(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen, handleClickOutside]);
 
   return (
     <AnimatePresence>
@@ -83,32 +102,33 @@ export default function Navbar () {
                     id='user-menu-button'
                     aria-expanded={isOpen}
                     onClick={toggleDropdown}
-                    data-dropdown-toggle={`Dropdown-user-${userDetails.ID}`}
+                    data-dropdown-toggle={`Dropdown-user-${userDetails.id}`}
                   >
                     <span className='sr-only'>Open user menu</span>
 
                     <img
                       className='w-8 h-8 rounded-full object-cover'
-                      src={userDetails?.Photo || '/assets/noProfile.png'}
+                      src={userDetails?.photo || '/assets/noProfile.png'}
                       alt='user'
                     />
                   </button>
 
                   {isOpen && (
                     <motion.div
+                      ref={navbarRef}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       className='absolute right-0 z-50 my-4  text-base list-none bg-white  divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600 rounded-xl'
-                      id={`Dropdown-user-${userDetails.ID}`}
+                      id={`Dropdown-user-${userDetails.id}`}
                     >
-                      <Link to='/dashboard/user-profile'>
+                      <Link to='/dashboard/user-profile' onClick={() => setIsOpen(!isOpen)}>
                         <div className='py-3 px-4 hover:bg-gray-300 cursor-pointer'>
                           <span className='block text-sm font-semibold text-gray-900 dark:text-white'>
-                            {userDetails.Username}
+                            {userDetails.username}
                           </span>
                           <span className='block text-sm text-gray-900 truncate dark:text-white'>
-                            {userDetails.Email}
+                            {userDetails.email}
                           </span>
                         </div>
                       </Link>

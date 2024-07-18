@@ -49,11 +49,11 @@ export default function Documentation () {
         const responsePages = await instance.get('/docs/pages');
         setFetchPage(responsePages?.data || []);
       } catch (err) {
-        if (!err.response) {
+        console.error(err);
+        if (!err.response || err?.response?.status === 500) {
           navigate('/server-down');
           return;
         }
-        console.error(err);
         toastMessage(err?.response?.data?.message, 'error');
       }
     };
@@ -101,7 +101,6 @@ export default function Documentation () {
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
   };
-
   const filteredItems = documentationData.filter(
     (obj) =>
       obj.documentationId === (docId ? Number(docId) : smallestId) &&
@@ -141,7 +140,8 @@ export default function Documentation () {
           }
         }
       } catch (err) {
-        if (!err.response) {
+        console.error(err);
+        if (!err.response || err?.response?.status === 500) {
           toastMessage(err?.message, 'error');
           navigate('/server-down');
           return;
@@ -174,7 +174,8 @@ export default function Documentation () {
         navigate('/dashboard');
       }
     } catch (err) {
-      if (!err.response) {
+      console.error(err);
+      if (!err.response || err?.response?.status === 500) {
         toastMessage(err?.message, 'error');
         navigate('/server-down');
         return;
@@ -201,7 +202,8 @@ export default function Documentation () {
         toastMessage(response?.data.message, 'success');
       }
     } catch (err) {
-      if (!err.response) {
+      console.error(err);
+      if (!err.response || err?.response?.status === 500) {
         toastMessage(err?.message, 'error');
         navigate('/server-down');
         return;
@@ -233,7 +235,8 @@ export default function Documentation () {
         handleRefresh();
       }
     } catch (err) {
-      if (!err.response) {
+      console.error(err);
+      if (!err.response || err?.response?.status === 500) {
         toastMessage(err?.message, 'error');
         navigate('/server-down');
         return;
@@ -266,7 +269,8 @@ export default function Documentation () {
         toastMessage(response?.data.message, 'success');
       }
     } catch (err) {
-      if (!err.response) {
+      console.error(err);
+      if (!err.response || err?.response?.status === 500) {
         toastMessage(err?.message, 'error');
         navigate('/server-down');
         return;
@@ -297,7 +301,8 @@ export default function Documentation () {
         toastMessage(response?.data.message, 'success');
       }
     } catch (err) {
-      if (!err.response) {
+      console.error(err);
+      if (!err.response || err?.response?.status === 500) {
         toastMessage(err?.message, 'error');
         navigate('/server-down');
         return;
@@ -328,7 +333,8 @@ export default function Documentation () {
           order: index
         });
       } catch (err) {
-        if (!err.response) {
+        console.error(err);
+        if (!err.response || err?.response?.status === 500) {
           toastMessage(err?.message, 'error');
           navigate('/server-down');
           return;

@@ -30,12 +30,12 @@ export default function UserProfile () {
         const { data, status } = await instance.get('/auth/users');
         if (status === 200) {
           const filterUser = data.find(
-            (obj) => obj.ID.toString() === accessToken.user_id
+            (obj) => obj.id.toString() === accessToken.user_id
           );
           setUserData(filterUser);
-          setUsername(filterUser.Username);
-          setEmail(filterUser.Email);
-          setProfileImage(filterUser.Photo || '/assets/noProfile.png');
+          setUsername(filterUser.username);
+          setEmail(filterUser.email);
+          setProfileImage(filterUser.photo || '/assets/noProfile.png');
         }
       } catch (err) {
         if (!err.response) {
@@ -85,7 +85,7 @@ export default function UserProfile () {
   const uploadImage = async (image) => {
     try {
       const response = await instance.post('/auth/user/edit', {
-        id: Number(userData.ID),
+        id: Number(userData.id),
         photo: image
       });
       if (response?.status === 200) {
@@ -106,7 +106,7 @@ export default function UserProfile () {
     try {
       console.log(username);
       const response = await instance.post('/auth/user/edit', {
-        id: Number(userData.ID),
+        id: Number(userData.id),
         username,
         email
       });
@@ -258,7 +258,7 @@ export default function UserProfile () {
                   Edit Profile
                 </button>
                 <Link
-                  to={`/dashboard/user-changePassword?user_id=${userData.ID}`}
+                  to={`/dashboard/user-changePassword?user_id=${userData.id}`}
                 >
                   <button className='bg-blue-500 px-5 rounded-lg text-white hover:bg-blue-700'>
                     Change Password
@@ -270,7 +270,7 @@ export default function UserProfile () {
             <div className='grid grid-cols-1 gap-4 sm:grid-cols-3'>
               <dt className='text-sm font-medium text-gray-500'>Username</dt>
               <dd className='mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2'>
-                {userData.Username}
+                {userData.username}
               </dd>
             </div>
 
@@ -279,7 +279,7 @@ export default function UserProfile () {
                 Email Address
               </dt>
               <dd className='mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2'>
-                {userData.Email}
+                {userData.email}
               </dd>
             </div>
           </motion.div>
