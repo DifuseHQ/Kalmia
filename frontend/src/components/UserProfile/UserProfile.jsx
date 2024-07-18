@@ -25,16 +25,12 @@ export default function UserProfile () {
 
   const token = getTokenFromCookies();
   const inputRef = useRef(null);
-  const passwordref = useRef(null);
 
   useEffect(() => {
     if (isEdit) {
       inputRef.current.focus();
     }
-    if (isPasswordChange) {
-      passwordref.current.focus();
-    }
-  }, [isEdit, isPasswordChange]);
+  }, [isEdit]);
 
   useEffect(() => {
     const tokenData = JSON.parse(Cookies.get('accessToken'));
@@ -130,7 +126,6 @@ export default function UserProfile () {
       });
       if (response?.status === 200) {
         toastMessage('user details updated', 'success');
-        setIsEdit(false);
         refreshData();
       }
     } catch (err) {
@@ -172,9 +167,10 @@ export default function UserProfile () {
         password: password.toString()
       });
       if (response?.status === 200) {
-        toastMessage('password change successfully', 'success');
-        setIsPasswordChange(!isPasswordChange);
         refreshData();
+        toastMessage('password change successfully', 'success');
+        setPassword('');
+        setConfirmPassword('');
       }
     } catch (err) {
       console.error(err);
@@ -186,15 +182,6 @@ export default function UserProfile () {
     }
   };
 
-  const handelCancel = (message) => {
-    if (message === 'cancelEditProfile') {
-      setIsEdit(!isEdit);
-      refreshData();
-    } else if (message === 'cancelPasswordChange') {
-      setIsPasswordChange(!isPasswordChange);
-      refreshData();
-    }
-  };
   return (
     <AnimatePresence className='container mx-auto p-5'>
       <h1 className='text-2xl font-bold mb-5 dark:text-white '>User Profile</h1>
@@ -231,7 +218,13 @@ export default function UserProfile () {
           </div>
         </motion.div>
 
-        <div className='w-2/3'>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className='w-2/3'
+        >
+
           <div className='flex my-4'>
             <p className='text-sm mr-16 font-medium text-gray-500 dark:text-white'>
               Username
@@ -271,107 +264,81 @@ export default function UserProfile () {
             />
           </div>
 
-          {isEdit && (
-            <div className='flex justify-center my-8 gap-5'>
-              <button
-                className='btn bg-blue-500 text-white rounded-lg px-5 py-2 hover:bg-blue-700 '
-                onClick={handleSubmit}
-              >
-                Save
-              </button>
-              <button
-                className='btn bg-blue-500 text-white rounded-lg px-5 py-2 hover:bg-blue-700 '
-                onClick={() => handelCancel('cancelEditProfile')}
-              >
-                Cancel
-              </button>
-            </div>
-          )}
+          <div className='flex justify-center my-8 gap-5'>
+            <button
+              className='btn bg-blue-500 text-white rounded-lg px-5 py-2 hover:bg-blue-700 '
+              onClick={handleSubmit}
+            >
+              Save
+            </button>
+            <button
+              className='btn bg-blue-500 text-white rounded-lg px-5 py-2 hover:bg-blue-700 '
+              onClick={() => handleOpenEdit('editProfile')}
+            >
+              Edit Profile
+            </button>
+          </div>
 
-          {!isEdit && !isPasswordChange && (
-            <div className='flex justify-start my-8 gap-4 flex-col sm:flex-row '>
-              <button
-                onClick={() => handleOpenEdit('changePassword')}
-                className='bg-blue-500 px-5 py-1 rounded-lg text-white  hover:bg-blue-700'
-              >
-                Change Password
-              </button>
-              <button
-                onClick={() => handleOpenEdit('editProfile')}
-                className='bg-blue-500 px-5 py-1 rounded-lg text-white hover:bg-blue-700'
-              >
-                Edit Profile
-              </button>
-            </div>
-          )}
-        </div>
+        </motion.div>
 
-        {isPasswordChange && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className='w-full rounded-lg  md:mt-0 sm:max-w-md dark:bg-gray-800 dark:border-gray-700'
-          >
-            <div className='flex justify-center items-center pb-4 mb-4 rounded-t sm:mb-1 dark:border-gray-600'>
-              <h3 className='text-lg font-semibold text-gray-900 dark:text-white'>
-                Reset Password
-              </h3>
-            </div>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className='w-full rounded-lg  md:mt-0 sm:max-w-md dark:bg-gray-800 dark:border-gray-700'
+        >
+          <div className='flex justify-center items-center pb-4 mb-4 rounded-t sm:mb-1 dark:border-gray-600'>
+            <h3 className='text-lg font-semibold text-gray-900 dark:text-white'>
+              Reset Password
+            </h3>
+          </div>
 
-            <div className='mb-5'>
-              <label
-                htmlFor='password'
-                className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
-              >
-                New Password
-              </label>
-              <input
-                ref={passwordref}
-                type='password'
-                onChange={(e) => setPassword(e.target.value)}
-                name='password'
-                id='password'
-                autoComplete='new-password'
-                placeholder='••••••••'
-                className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
-                required=''
-              />
-            </div>
-            <div>
-              <label
-                htmlFor='confirm-password'
-                className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
-              >
-                Confirm password
-              </label>
-              <input
-                type='password'
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                name='confirm-password'
-                id='confirm-password'
-                autoComplete='new-password'
-                placeholder='••••••••'
-                className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
-                required=''
-              />
-            </div>
-            <div className='flex gap-5 justify-center my-5'>
-              <button
-                className='btn bg-blue-500 text-white rounded-lg px-5 py-2 hover:bg-blue-700 '
-                onClick={handleChangePassword}
-              >
-                Save
-              </button>
-              <button
-                className='btn bg-blue-500 text-white rounded-lg px-5 py-2 hover:bg-blue-700 '
-                onClick={() => handelCancel('cancelPasswordChange')}
-              >
-                Cancel
-              </button>
-            </div>
-          </motion.div>
-        )}
+          <div className='mb-5'>
+            <label
+              htmlFor='password'
+              className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
+            >
+              New Password
+            </label>
+            <input
+              type='password'
+              onChange={(e) => setPassword(e.target.value)}
+              name='password'
+              id='password'
+              autoComplete='new-password'
+              placeholder='••••••••'
+              className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
+              required=''
+            />
+          </div>
+          <div>
+            <label
+              htmlFor='confirm-password'
+              className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
+            >
+              Confirm password
+            </label>
+            <input
+              type='password'
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              name='confirm-password'
+              id='confirm-password'
+              autoComplete='new-password'
+              placeholder='••••••••'
+              className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
+              required=''
+            />
+          </div>
+          <div className='flex gap-5 justify-center my-5'>
+            <button
+              className='btn bg-blue-500 text-white rounded-lg px-5 py-2 hover:bg-blue-700 '
+              onClick={handleChangePassword}
+            >
+              Save
+            </button>
+          </div>
+        </motion.div>
+
       </motion.div>
     </AnimatePresence>
   );

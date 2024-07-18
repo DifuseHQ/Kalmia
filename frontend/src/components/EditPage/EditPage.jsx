@@ -65,12 +65,12 @@ export default function EditPage () {
         toastMessage(response?.data.message, 'success');
         if (dir === 'true') {
           refreshData();
-          navigate(`/dashboard/documentation?id=${docId}`);
+          // navigate(`/dashboard/documentation?id=${docId}`);
         } else {
           refreshData();
-          navigate(
-            `/dashboard/documentation/pagegroup?id=${docId}&pageGroupId=${pageGroupId}`
-          );
+          // navigate(
+          //   `/dashboard/documentation/pagegroup?id=${docId}&pageGroupId=${pageGroupId}`
+          // );
         }
       }
     } catch (err) {
