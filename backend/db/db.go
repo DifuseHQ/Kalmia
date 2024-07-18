@@ -99,9 +99,10 @@ func SetupBasicData(db *gorm.DB, admins []config.User) {
 	}
 
 	docSite = models.Documentation{
+		ID:          0,
 		Name:        "Dummy Documentation Site",
 		Description: "A sample documentation site for demonstration purposes.",
-		ID:          1,
+		Version:     "1.0",
 		AuthorID:    firstUser.ID,
 		Author:      firstUser,
 		Editors:     []models.User{firstUser},

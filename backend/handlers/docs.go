@@ -36,7 +36,7 @@ func GetDocumentations(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		return db.Select("ID", "Username", "Email", "Photo")
 	}).Preload("Pages.Editors", func(db *gorm.DB) *gorm.DB {
 		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
-	}).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID").
+	}).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID", "Version", "ClonedFrom").
 		Find(&documentations).Error; err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{
 			"status":  "error",
@@ -89,7 +89,7 @@ func GetDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		return db.Select("ID", "Username", "Email", "Photo")
 	}).Preload("Pages.Editors", func(db *gorm.DB) *gorm.DB {
 		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
-	}).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID").
+	}).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID", "Version").
 		Find(&documentation).Where("id = ?", req.ID).Error; err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{
 			"status":  "error",
@@ -265,6 +265,135 @@ func DeleteDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 
 	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "Documentation deleted successfully"})
+}
+
+func CreateDocumentationVersion(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
+	type Request struct {
+		OriginalDocID uint   `json:"originalDocId" validate:"required"`
+		NewVersion    string `json:"version" validate:"required"`
+	}
+
+	var req Request
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid request data"})
+		return
+	}
+
+	var originalDoc models.Documentation
+	if err := db.Preload("PageGroups.Pages").Preload("Pages").First(&originalDoc, req.OriginalDocID).Error; err != nil {
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to fetch documentation"})
+		return
+	}
+
+	newDoc := models.Documentation{
+		Name:        originalDoc.Name,
+		Description: originalDoc.Description,
+		Version:     req.NewVersion,
+		AuthorID:    originalDoc.AuthorID,
+		ClonedFrom:  &req.OriginalDocID,
+	}
+
+	err := db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(&newDoc).Error; err != nil {
+			return fmt.Errorf("failed to create new doc: %w", err)
+		}
+
+		for _, editor := range originalDoc.Editors {
+			if err := tx.Model(&newDoc).Association("Editors").Append(&editor); err != nil {
+				return fmt.Errorf("failed to append editor: %w", err)
+			}
+		}
+
+		pageGroupMap := make(map[uint]uint)
+		for _, pg := range originalDoc.PageGroups {
+			newPG := models.PageGroup{
+				DocumentationID: newDoc.ID,
+				ParentID:        pg.ParentID,
+				AuthorID:        pg.AuthorID,
+				Name:            pg.Name,
+				Order:           pg.Order,
+			}
+
+			if err := tx.Create(&newPG).Error; err != nil {
+				return fmt.Errorf("failed to create new page group: %w", err)
+			}
+
+			pageGroupMap[pg.ID] = newPG.ID
+
+			for _, editor := range pg.Editors {
+				if err := tx.Model(&newPG).Association("Editors").Append(&editor); err != nil {
+					return fmt.Errorf("failed to append editor to page group: %w", err)
+				}
+			}
+
+			for _, page := range pg.Pages {
+				newPage := models.Page{
+					DocumentationID: newDoc.ID,
+					PageGroupID:     &newPG.ID,
+					AuthorID:        page.AuthorID,
+					Title:           page.Title,
+					Slug:            page.Slug,
+					Content:         page.Content,
+					Order:           page.Order,
+				}
+
+				if err := tx.Create(&newPage).Error; err != nil {
+					return fmt.Errorf("failed to create new page: %w", err)
+				}
+
+				for _, editor := range page.Editors {
+					if err := tx.Model(&newPage).Association("Editors").Append(&editor); err != nil {
+						return fmt.Errorf("failed to append editor to page: %w", err)
+					}
+				}
+			}
+		}
+
+		for oldID, newID := range pageGroupMap {
+			if originalDoc.PageGroups[oldID].ParentID != nil {
+				parentID, ok := pageGroupMap[*originalDoc.PageGroups[oldID].ParentID]
+				if !ok {
+					return fmt.Errorf("parent page group not found for ID: %d", *originalDoc.PageGroups[oldID].ParentID)
+				}
+				if err := tx.Model(&models.PageGroup{}).Where("id = ?", newID).
+					Update("parent_id", parentID).Error; err != nil {
+					return fmt.Errorf("failed to update parent ID: %w", err)
+				}
+			}
+		}
+
+		for _, page := range originalDoc.Pages {
+			if page.PageGroupID == nil {
+				newPage := models.Page{
+					DocumentationID: newDoc.ID,
+					AuthorID:        page.AuthorID,
+					Title:           page.Title,
+					Slug:            page.Slug,
+					Content:         page.Content,
+					Order:           page.Order,
+				}
+
+				if err := tx.Create(&newPage).Error; err != nil {
+					return fmt.Errorf("failed to create new page without group: %w", err)
+				}
+
+				for _, editor := range page.Editors {
+					if err := tx.Model(&newPage).Association("Editors").Append(&editor); err != nil {
+						return fmt.Errorf("failed to append editor to page without group: %w", err)
+					}
+				}
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to version documentation"})
+		return
+	}
+
+	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": fmt.Sprintf("Documentation version %s created", req.NewVersion)})
 }
 
 func GetPages(db *gorm.DB, w http.ResponseWriter, r *http.Request) {

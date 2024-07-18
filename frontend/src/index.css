@@ -2,3 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
+.cdx-search-field__input {
+    @apply dark:text-black text-red-500;
+}

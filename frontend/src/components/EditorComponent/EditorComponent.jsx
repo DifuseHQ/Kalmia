@@ -1,3 +1,4 @@
+import './EditorComponent.css';
 import React, { useCallback, useEffect, useRef } from 'react';
 import EditorJs from '@editorjs/editorjs';
 import Header from 'editorjs-header-with-alignment';
@@ -17,7 +18,6 @@ import InlineCode from '@editorjs/inline-code';
 import Underline from '@editorjs/underline';
 import Hyperlink from 'editorjs-hyperlink';
 import instance from '../../api/AxiosInstance';
-import './EditorComponent.css';
 import axios from 'axios';
 import { getTokenFromCookies } from '../../utils/CookiesManagement';
 
@@ -31,7 +31,7 @@ export default function EditorComponent ({
     const editor = new EditorJs({
       holder: 'editorjs',
       onReady: () => {
-        new Undo({ editor });
+        new Undo({ editor }); // eslint-disable-line no-new
       },
       data: serverData || [],
       onChange: async () => {
@@ -42,7 +42,14 @@ export default function EditorComponent ({
       },
       tools: {
         title: Title,
-        header: Header,
+        header: {
+          class: Header,
+          config: {
+            placeholder: 'Enter a header',
+            levels: [2, 3, 4],
+            defaultLevel: 3
+          }
+        },
         quote: Quote,
         alert: Alert,
         table: Table,
@@ -122,7 +129,6 @@ export default function EditorComponent ({
     });
 
     editorjsInstance.current = editor;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -150,7 +156,6 @@ export default function EditorComponent ({
         editorjsInstance.current = null;
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageId]);
 
   return <div id='editorjs' />;

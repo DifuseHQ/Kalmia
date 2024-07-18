@@ -3,6 +3,7 @@ module git.difuse.io/Difuse/kalmia
 go 1.22.1
 
 require (
+	github.com/clarketm/json v1.17.1
 	github.com/glebarez/sqlite v1.11.0
 	github.com/go-playground/validator/v10 v10.22.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
@@ -15,7 +16,6 @@ require (
 )
 
 require (
-	github.com/clarketm/json v1.17.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/glebarez/go-sqlite v1.21.2 // indirect

@@ -9,10 +9,10 @@ type Page struct {
 	ID              uint       `gorm:"primarykey" json:"id,omitempty"`
 	AuthorID        uint       `json:"authorId,omitempty"`
 	Author          User       `gorm:"foreignKey:AuthorID" json:"author,omitempty"`
-	DocumentationID uint       `json:"documentationId,omitempty"`
+	DocumentationID uint       `gorm:"index:idx_doc_slug,unique:true,composite:true" json:"documentationId,omitempty"`
 	PageGroupID     *uint      `json:"pageGroupId,omitempty" gorm:"foreignKey:PageGroupID"`
 	Title           string     `json:"title,omitempty"`
-	Slug            string     `gorm:"unique" json:"slug,omitempty"`
+	Slug            string     `gorm:"index:idx_doc_slug,unique:true,composite:true" json:"slug,omitempty"`
 	Content         string     `json:"content,omitempty"`
 	CreatedAt       *time.Time `gorm:"autoCreateTime" json:"createdAt,omitempty"`
 	UpdatedAt       *time.Time `gorm:"autoUpdateTime" json:"updatedAt,omitempty"`
@@ -46,7 +46,9 @@ func (s PageGroup) MarshalJSON() ([]byte, error) {
 
 type Documentation struct {
 	ID          uint        `gorm:"primarykey" json:"id,omitempty"`
-	Name        string      `gorm:"unique" json:"name,omitempty"`
+	Name        string      `gorm:"index:idx_name_version,unique:true,composite:true" json:"name,omitempty"`
+	Version     string      `gorm:"index:idx_name_version,unique:true,composite:true;index:idx_cloned_version,unique:true,composite:true" json:"version,omitempty"`
+	ClonedFrom  *uint       `gorm:"default:null;index:idx_cloned_version,unique:true,composite:true" json:"clonedFrom"`
 	Description string      `json:"description,omitempty"`
 	AuthorID    uint        `json:"authorId,omitempty"`
 	Author      User        `gorm:"foreignKey:AuthorID" json:"author,omitempty"`
