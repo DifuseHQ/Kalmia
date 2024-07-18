@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
 import { AuthContext } from '../../context/AuthContext';
@@ -9,6 +9,8 @@ import { toastMessage } from '../../utils/Toast';
 export default function Sidebar () {
   const [documentation, setDocumentation] = useState([]);
   const [openDropdowns, setOpenDropdowns] = useState([]);
+  const [searchParam] = useSearchParams();
+  const docId = searchParam.get('id');
   const { refresh, userDetails, setIsOpenModal, isSidebarOpen, setIsSidebarOpen } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -113,7 +115,7 @@ export default function Sidebar () {
                         to={`/dashboard/documentation?id=${val.id}&docName=${val.name}`}
                         onClick={() => toggleDropdown(index)}
                         className={`flex items-center p-2 w-full text-base font-normal rounded-lg transition duration-75 group hover:bg-gray-200 dark:text-white dark:hover:bg-gray-700 ${
-                            (location.pathname === '/dashboard' && val.id === smallestId) || path === `/dashboard/documentation?id=${val.id}`
+                            (location.pathname === '/dashboard' && val.id === smallestId) || val.id === Number(docId)
                               ? 'text-black-500 bg-gray-300 dark:bg-gray-600'
                               : 'text-gray-900'
                           }`}

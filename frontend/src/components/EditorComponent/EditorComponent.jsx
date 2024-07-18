@@ -17,6 +17,7 @@ import Marker from '@editorjs/marker';
 import InlineCode from '@editorjs/inline-code';
 import Underline from '@editorjs/underline';
 import Hyperlink from 'editorjs-hyperlink';
+import Strikethrough from '@sotaproject/strikethrough';
 import instance from '../../api/AxiosInstance';
 import axios from 'axios';
 import { getTokenFromCookies } from '../../utils/CookiesManagement';
@@ -41,15 +42,17 @@ export default function EditorComponent ({
         }
       },
       tools: {
-        title: Title,
+
         header: {
           class: Header,
+          inlineToolbar: true,
           config: {
             placeholder: 'Enter a header',
-            levels: [2, 3, 4],
-            defaultLevel: 3
+            levels: [1, 2, 3, 4, 5],
+            defaultLevel: 1
           }
         },
+        title: Title,
         quote: Quote,
         alert: Alert,
         table: Table,
@@ -65,6 +68,7 @@ export default function EditorComponent ({
           inlineToolbar: true
         },
         nestedchecklist: editorjsNestedChecklist,
+        strikethrough: Strikethrough,
         embed: {
           class: Embed,
           config: {
@@ -129,7 +133,7 @@ export default function EditorComponent ({
     });
 
     editorjsInstance.current = editor;
-  }, []);
+  }, [onSave]);
 
   useEffect(() => {
     const fetchDataAndInitializeEditor = async () => {
@@ -138,8 +142,10 @@ export default function EditorComponent ({
           const serverResponse = await instance.post('docs/page', {
             id: Number(pageId)
           });
+          console.log(serverResponse);
           const serverData = serverResponse.data.content;
           const parsedData = JSON.parse(serverData);
+          console.log(parsedData);
           initEditor(parsedData);
         } catch (error) {
           console.error('Error fetching data:', error);
@@ -156,7 +162,7 @@ export default function EditorComponent ({
         editorjsInstance.current = null;
       }
     };
-  }, [pageId]);
+  }, [pageId, initEditor]); // eslint-disable-line no-new
 
   return <div id='editorjs' />;
 }

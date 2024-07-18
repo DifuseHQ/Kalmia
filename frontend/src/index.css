@@ -2,6 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
+
+.codex-editor {
+     @apply w-3/4 mx-auto shadow-gray-700 shadow-lg m-5 rounded-md dark:shadow-lg dark:shadow-gray-500
+}
 .cdx-search-field__input {
-    @apply dark:text-black text-red-500;
+    @apply dark:text-black text-black;
+}
+
+.ce-popover__container {
+    @apply dark:bg-gray-700
+}
+
+.ce-popover-item {
+    @apply dark:text-white dark:hover:bg-gray-800
+}
+
+.ce-toolbar__plus {
+ @apply dark:text-white dark:hover:bg-gray-500
+  }
+
+.ce-toolbar__settings-btn {
+ @apply dark:text-white dark:hover:bg-gray-500
+}
+
+.cdx-settings-button {
+    @apply dark:text-black
 }

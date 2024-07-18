@@ -38,6 +38,7 @@ export default function EditPage () {
         });
         if (response?.status === 200) {
           setPageData(response?.data);
+          setContent(JSON.parse(response?.data?.content));
         }
       } catch (err) {
         if (!err.response) {
@@ -113,6 +114,8 @@ export default function EditPage () {
   const handleSave = useCallback((content) => {
     setContent(content);
   }, []);
+
+  console.log('content is ', content);
   return (
     <AnimatePresence>
       {isDelete && (
