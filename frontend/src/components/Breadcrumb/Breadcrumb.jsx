@@ -99,7 +99,7 @@ export default function Breadcrumb () {
       className='flex mb-5'
       aria-label='Breadcrumb'
     >
-      <ol className='inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse'>
+      <ol className='inline-flex flex-wrap items-center space-x-1 md:space-x-2 rtl:space-x-reverse'>
         <Icon icon='ep:document' className='w-5 h-5 pb-0.5 dark:text-white' />
         {breadcrumb
           .filter((crumb) => crumb.title !== null)

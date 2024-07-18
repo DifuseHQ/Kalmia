@@ -133,7 +133,7 @@ export default function EditorComponent ({
     });
 
     editorjsInstance.current = editor;
-  }, [onSave]);
+  }, []);
 
   useEffect(() => {
     const fetchDataAndInitializeEditor = async () => {
