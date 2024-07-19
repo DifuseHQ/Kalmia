@@ -39,6 +39,7 @@ const EditorWrapper = React.memo(({ editor, theme }) => {
       editor={editor}
       theme={theme}
       placeholder='Start typing...'
+      className='pt-1.5'
     />
   );
 });
