@@ -161,28 +161,28 @@ export default function EditPage () {
         background: '#ffffff'
       },
       menu: {
-        text: '#ffffff',
-        background: '#1e40af'
+        text: '#222222',
+        background: '#ffffff'
       },
       tooltip: {
-        text: '#ffffff',
-        background: '#3b82f6'
+        text: '#222222',
+        background: '#ffffff'
       },
       hovered: {
-        text: '#ffffff',
-        background: '#2563eb'
+        text: '#222222',
+        background: '#e3e3e3'
       },
       selected: {
-        text: '#ffffff',
-        background: '#1d4ed8'
+        text: '#222222',
+        background: '#b8b9ba'
       },
       disabled: {
-        text: '#6b7280',
-        background: '#d1d5db'
+        text: '#222222',
+        background: '#b8b9ba'
       },
       shadow: '#000000',
-      border: '#1e3a8a',
-      sideMenu: '#f3f4f6',
+      border: '#e3e3e3',
+      sideMenu: '#222222',
       highlights: lightDefaultTheme.colors.highlights
     },
     borderRadius: 4,
@@ -193,7 +193,7 @@ export default function EditPage () {
   const darkTheme = {
     colors: {
       editor: {
-        text: '#FFFFFF',
+        text: '#ffffff',
         background: '#374151'
       },
       menu: {
@@ -202,28 +202,28 @@ export default function EditPage () {
       },
       tooltip: {
         text: '#ffffff',
-        background: '#3b82f6'
+        background: '#374151'
       },
       hovered: {
         text: '#ffffff',
-        background: '#4b5563'
+        background: '#111827'
       },
       selected: {
         text: '#ffffff',
-        background: '#1d4ed8'
+        background: '#111827'
       },
       disabled: {
-        text: '#6b7280', // Gray for disabled text
-        background: '#d1d5db' // Light gray for disabled background
+        text: '#6b7280',
+        background: '#4b5563'
       },
-      shadow: '#000000', // Black shadow
-      border: '#1e3a8a', // Dark blue border
-      sideMenu: '#f3f4f6', // Light gray for side menu
+      shadow: '#000000',
+      border: '#222222',
+      sideMenu: '#f3f4f6',
       highlights: darkDefaultTheme.colors.highlights
     },
     borderRadius: 4,
     fontFamily: 'Helvetica Neue, sans-serif',
-    colorScheme: 'light'
+    colorScheme: 'dark'
   };
 
   const blueTheme = {
