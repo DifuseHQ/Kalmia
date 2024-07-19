@@ -353,10 +353,21 @@ func CreateDocumentationVersion(db *gorm.DB, w http.ResponseWriter, r *http.Requ
 		}
 
 		for oldID, newID := range pageGroupMap {
-			if originalDoc.PageGroups[oldID].ParentID != nil {
-				parentID, ok := pageGroupMap[*originalDoc.PageGroups[oldID].ParentID]
+			var originalPageGroup *models.PageGroup
+			for _, pg := range originalDoc.PageGroups {
+				if pg.ID == oldID {
+					originalPageGroup = &pg
+					break
+				}
+			}
+			if originalPageGroup == nil {
+				return fmt.Errorf("original page group not found for ID: %d", oldID)
+			}
+
+			if originalPageGroup.ParentID != nil {
+				parentID, ok := pageGroupMap[*originalPageGroup.ParentID]
 				if !ok {
-					return fmt.Errorf("parent page group not found for ID: %d", *originalDoc.PageGroups[oldID].ParentID)
+					return fmt.Errorf("parent page group not found for ID: %d", *originalPageGroup.ParentID)
 				}
 				if err := tx.Model(&models.PageGroup{}).Where("id = ?", newID).
 					Update("parent_id", parentID).Error; err != nil {
@@ -456,7 +467,7 @@ func CreatePage(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		Title           string `json:"title" validate:"required"`
 		Slug            string `json:"slug" validate:"required"`
 		Content         string `json:"content" validate:"required"`
-		DocumentationID uint   `json:"documentationSiteId" validate:"required"`
+		DocumentationID uint   `json:"documentationId" validate:"required"`
 		PageGroupID     *uint  `json:"pageGroupId"`
 		Order           *uint  `json:"order"`
 	}
@@ -842,7 +853,7 @@ func GetPageGroup(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 func CreatePageGroup(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	type Request struct {
 		Name            string `json:"name" validate:"required"`
-		DocumentationID uint   `json:"documentationSiteId" validate:"required"`
+		DocumentationID uint   `json:"documentationId" validate:"required"`
 		ParentID        *uint  `json:"parentId"`
 		Order           *uint  `json:"order"`
 	}
@@ -946,7 +957,6 @@ func EditPageGroup(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 
 	pageGroup.LastEditorID = &user.ID
-
 	pageGroup.Name = req.Name
 
 	if pageGroup.DocumentationID != req.DocumentationID {
