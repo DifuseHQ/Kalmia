@@ -2,15 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import instance from '../../api/AxiosInstance';
 import CreatePageGroup from '../CreatePageGroup/CreatePageGroup';
 import EditDocumentModal from '../CreateDocumentModal/EditDocumentModal';
 import DeleteModal from '../DeleteModal/DeleteModal';
-import { toastMessage } from '../../utils/Toast';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
+import { toastMessage } from '../../utils/Toast';
+import { handleError, getFormattedDate } from '../../utils/Common';
+import { getPageGroup, createPageGroup, deletePageGroup, updatePageGroup } from '../../api/Requests';
 
-export default function PageGrouptable () {
+export default function PageGroupTable () {
   const [pageRefresh, setPageRefresh] = useState(false);
   const [searchParams] = useSearchParams();
   const docId = searchParams.get('id');
@@ -25,41 +27,34 @@ export default function PageGrouptable () {
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        const response = await instance.post('docs/page-group', {
-          id: Number(pageGroupId)
-        });
-        if (response?.status === 200) {
-          setGroupDetail(response?.data);
-          const groupData = response?.data?.pageGroups ?? [];
-          const pages = response?.data?.pages ?? [];
-          if (Array.isArray(groupData) && Array.isArray(pages)) {
-            const combinedPages = [...groupData, ...pages];
-            combinedPages.sort((a, b) => {
-              const orderA = a.order !== null ? a.order : Infinity;
-              const orderB = b.order !== null ? b.order : Infinity;
+      const result = await getPageGroup(Number(pageGroupId));
 
-              if (orderA !== orderB) {
-                return orderA - orderB;
-              } else {
-                return combinedPages.indexOf(a) - combinedPages.indexOf(b);
-              }
-            });
+      if (handleError(result, navigate)) {
+        return;
+      }
 
-            setData(combinedPages);
+      if (result.status === 'success') {
+        setGroupDetail(result.data);
+        const groupData = result.data?.pageGroups ?? [];
+        const pages = result.data?.pages ?? [];
 
-            setPageRefresh();
-          } else {
-            console.error('Unexpected data structure', { groupData, pages });
-          }
+        if (Array.isArray(groupData) && Array.isArray(pages)) {
+          const combinedPages = [...groupData, ...pages];
+          combinedPages.sort((a, b) => {
+            const orderA = a.order !== null ? a.order : Infinity;
+            const orderB = b.order !== null ? b.order : Infinity;
+            if (orderA !== orderB) {
+              return orderA - orderB;
+            } else {
+              return combinedPages.indexOf(a) - combinedPages.indexOf(b);
+            }
+          });
+          setData(combinedPages);
+          setPageRefresh();
+        } else {
+          console.error('Unexpected data structure', { groupData, pages });
+          toastMessage('Error processing page group data', 'error');
         }
-      } catch (err) {
-        if (!err.response) {
-          toastMessage(err?.message, 'error');
-          navigate('/server-down');
-          return;
-        }
-        toastMessage(err?.response?.data?.message, 'error');
       }
     };
 
@@ -89,32 +84,24 @@ export default function PageGrouptable () {
 
   const handleCreatePageGroup = async (title) => {
     if (title === '') {
-      toastMessage(
-        'Title is required. Please Enter PageGroup title',
-        'warning'
-      );
+      toastMessage('Title is required. Please Enter PageGroup title', 'warning');
       return;
     }
 
-    try {
-      const response = await instance.post('docs/page-group/create', {
-        name: title,
-        documentationSiteId: Number(docId),
-        parentId: Number(pageGroupId)
-      });
+    const result = await createPageGroup({
+      name: title,
+      documentationId: Number(docId),
+      parentId: Number(pageGroupId)
+    });
 
-      if (response?.status === 200) {
-        setOpenCreatePageGroup(false);
-        refreshPage();
-        toastMessage(response?.data?.message, 'success');
-      }
-    } catch (err) {
-      if (!err.response) {
-        toastMessage(err?.message, 'error');
-        navigate('/server-down');
-        return;
-      }
-      toastMessage(err?.response?.data?.message, 'error');
+    if (handleError(result, navigate)) {
+      return;
+    }
+
+    if (result.status === 'success') {
+      setOpenCreatePageGroup(false);
+      refreshPage();
+      toastMessage(result.data.message, 'success');
     }
   };
 
@@ -133,22 +120,16 @@ export default function PageGrouptable () {
   };
 
   const handleDeletePageGroup = async (id) => {
-    try {
-      const response = await instance.post('docs/page-group/delete', {
-        id: Number(id)
-      });
-      if (response?.status === 200) {
-        toastMessage(response?.data?.message, 'success');
-        setIsPageGroupsDeleteModal(false);
-        refreshPage();
-      }
-    } catch (err) {
-      if (!err.response) {
-        toastMessage(err?.message, 'error');
-        navigate('/server-down');
-        return;
-      }
-      toastMessage(err?.response?.data?.message, 'error');
+    const result = await deletePageGroup(Number(id));
+
+    if (handleError(result, navigate)) {
+      return;
+    }
+
+    if (result.status === 'success') {
+      toastMessage(result.data.message, 'success');
+      setIsPageGroupsDeleteModal(false);
+      refreshPage();
     }
   };
 
@@ -162,26 +143,22 @@ export default function PageGrouptable () {
     setCurrentItem(null);
   };
 
-  const handelPageGroupUpdate = async (editTitle, editDescription, id) => {
-    try {
-      const response = await instance.post('docs/page-group/edit', {
-        id: Number(id),
-        name: editTitle,
-        documentationSiteId: Number(docId)
-      });
+  const handlePageGroupUpdate = async (editTitle, editDescription, id) => {
+    const result = await updatePageGroup({
+      id: Number(id),
+      name: editTitle,
+      documentationId: Number(docId),
+      parentId: Number(pageGroupId)
+    });
 
-      if (response?.status === 200) {
-        setIsEditpageGroup(false);
-        refreshPage();
-        toastMessage(response?.data?.message, 'success');
-      }
-    } catch (err) {
-      if (!err.response) {
-        toastMessage(err?.message, 'error');
-        navigate('/server-down');
-        return;
-      }
-      toastMessage(err?.response?.data?.message, 'error');
+    if (handleError(result, navigate)) {
+      return;
+    }
+
+    if (result.status === 'success') {
+      setIsEditpageGroup(false);
+      refreshPage();
+      toastMessage(result.data.message, 'success');
     }
   };
 
@@ -222,82 +199,13 @@ export default function PageGrouptable () {
       }
     };
 
-    // // Use map instead of forEach to iterate asynchronously
     await Promise.all(newItems.map((item, index) => updateOrder(item, index)));
-
     refreshPage();
-  };
-
-  // useEffect(() => {
-  //   const fetchBreadcrumb = async () => {
-
-  //     let title = pageGroupName
-  //     let path = `/dashboard/documentation/pagegroup?id=${docId}&pageGroupId=${pageGroupId}`
-  //     const index = breadcrumb.findIndex(crumb => crumb.title === title && crumb.path === path);
-  //     console.log(index);
-
-  //     if (index === -1) {
-  //       const newCrumb = { title, path };
-  //       setBreadcrumb(prevTrail => [...prevTrail, newCrumb]);
-  //     } else {
-  //       // If found, truncate the trail to remove all entries after the matched breadcrumb
-  //       setBreadcrumb(prevTrail => prevTrail.slice(0, index + 1));
-  //     }
-  //   }
-  //   if(pageGroupName){
-  //     fetchBreadcrumb()
-  //   }
-
-  // }, [pageGroupId,pageGroupName]);
-
-  // const handleNavigate = (index) => {
-  //   setBreadcrumb(prevTrail => prevTrail.slice(0, index + 1));
-  // };
-  const extraRowHeight = '2.5rem';
-  const extraSpaceStyles = {
-    display: 'table-row',
-    height: `calc(3 * ${extraRowHeight})`
   };
 
   return (
     <AnimatePresence className='bg-gray-50 dark:bg-gray-900 p-3 sm:p-5'>
       <Breadcrumb />
-      {/* <motion.nav
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className='flex mb-5'
-        aria-label='Breadcrumb'
-      >
-        <ol className='inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse'>
-          <li className='inline-flex items-center'>
-            <Link
-              to='/dashboard'
-              className='inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white'
-            >
-              <span className='inline-flex items-center gap-1 text-md font-medium text-gray-500  dark:text-gray-400 hover:text-blue-600  '>
-                <Icon icon='ep:document' className='w-5 h-5 pb-0.5 dark:text-white' />
-                Dummy documentation
-              </span>
-            </Link>
-          </li>
-
-          {breadcrumb.map((crumb,index)=>(
-            <li>
-            <Link to={crumb.path} className='flex items-center ' onClick={crumb.title !== groupDetail.name ? () => handleNavigate(index) : undefined}>
-            <Icon icon='mingcute:right-fill'  className='text-gray-500' />
-              <p
-                className={`ms-1 text-sm font-medium  md:ms-2 dark:text-gray-400 dark:hover:text-white
-                ${crumb.title === groupDetail.name ? "text-gray-400 cursor-text" : "hover:text-blue-600 text-gray-700"}
-                `}
-              >
-                {crumb.title}
-              </p>
-            </Link>
-          </li>
-          ))}
-        </ol>
-      </motion.nav> */}
 
       {openCreatePageGroup && (
         <CreatePageGroup
@@ -305,11 +213,13 @@ export default function PageGrouptable () {
           handleCreate={handleCreatePageGroup}
         />
       )}
+
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className='grid max-w-screen-xl  '
+        className='grid max-w-screen-xl'
+        key='pageGroupName'
       >
         <div className='mr-auto place-self-center lg:col-span-7'>
           <h1 className='max-w-xl mb-4 text-4xl font-bold tracking-tight leading-none md:text-4xl xl:text-4xl dark:text-white'>
@@ -324,6 +234,7 @@ export default function PageGrouptable () {
         exit={{ opacity: 0 }}
         transition={{ delay: 0.1 }}
         className=''
+        key='pageGroupTable'
       >
         <div className='bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden'>
           <div className='flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4'>
@@ -390,20 +301,18 @@ export default function PageGrouptable () {
                           Title
                         </th>
                         <th scope='col' className='px-4 py-3'>
-                          Path
+                          Author / Editor
                         </th>
                         <th scope='col' className='px-4 py-3'>
-                          Extension
+                          Create / Update
                         </th>
-                        <th scope='col' className='px-4 py-3'>
-                          Actions
-                        </th>
+                        <th scope='col' className='px-4 py-3' />
                       </tr>
                     </thead>
                     <tbody {...provided.droppableProps} ref={provided.innerRef}>
                       {filteredItems.length <= 0 && (
                         <tr className='border-b dark:border-gray-700'>
-                          <td colSpan='4' className='text-center py-8'>
+                          <td colSpan='4' className='text-center p-8'>
                             <h1 className='text-center text-gray-600 sm:text-lg font-semibold'>
                               No Pages Found
                             </h1>
@@ -418,11 +327,10 @@ export default function PageGrouptable () {
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
-                              className={`${
-                                snapshot.isDragging
+                              className={`${snapshot.isDragging
                                   ? 'opacity-80 bg-gray-200 dark:bg-gray-500 border shadow-md shadow-black text-black'
                                   : ''
-                              } border dark:border-gray-700 h-16 `}
+                                } border dark:border-gray-700 h-16 `}
                               key={`${obj.id}-${index}`}
                             >
                               <th
@@ -443,20 +351,20 @@ export default function PageGrouptable () {
                                   className='flex items-center gap-1'
                                   to={
                                     obj.name
-                                      ? `/dashboard/documentation/pagegroup?id=${docId}&pageGroupId=${obj.id}&groupName=${obj.name}`
+                                      ? `/dashboard/documentation/page-group?id=${docId}&pageGroupId=${obj.id}&groupName=${obj.name}`
                                       : `/dashboard/documentation/edit-page?id=${docId}&dir=false&pageGroupId=${pageGroupId}&pageId=${obj.id}&pageName=${obj.title}`
                                   }
                                 >
                                   {obj.name
                                     ? (
                                       <Icon
-                                        icon='material-symbols:folder'
-                                        className='text-yellow-400 dark:text-yellow-200 w-6 h-6'
+                                        icon='clarity:folder-solid'
+                                        className='w-6 h-6'
                                       />
                                       )
                                     : (
                                       <Icon
-                                        icon='bx:file'
+                                        icon='iconoir:page'
                                         className='w-6 h-6 text-gray-500 dark:text-white'
                                       />
                                       )}
@@ -468,35 +376,11 @@ export default function PageGrouptable () {
                               <td className='px-4 py-3 cursor-text'>
                                 <div className='flex justify-start items-center gap-2'>
                                   <Icon
-                                    icon='mdi:clock-outline'
-                                    className='w-4 h-4 text-gray-500 dark:text-white'
-                                  />
-                                  <span className=' px-1 text-left items-center dark:text-white text-md whitespace-nowrap'>
-                                    Demo Time
-                                  </span>
-                                </div>
-                                <div
-                                  className='flex gap-2 items-center
-                                      '
-                                >
-                                  <Icon
-                                    icon='material-symbols:update'
-                                    className='w-4 h-4 text-gray-500 dark:text-white'
-                                  />
-                                  <span className=' px-1 text-left items-center dark:text-white text-md whitespace-nowrap'>
-                                    Demo Update Time
-                                  </span>
-                                </div>
-                              </td>
-
-                              <td className='px-4 py-3 cursor-text'>
-                                <div className='flex justify-start items-center gap-2'>
-                                  <Icon
                                     icon='mdi:user'
                                     className='w-4 h-4 text-gray-500 dark:text-white'
                                   />
                                   <span className=' px-1 text-left items-center dark:text-white text-md whitespace-nowrap'>
-                                    Demo Author Name
+                                    {obj.author.username}
                                   </span>
                                 </div>
                                 <div className='flex gap-2 items-center'>
@@ -505,7 +389,33 @@ export default function PageGrouptable () {
                                     className='w-4 h-4 text-gray-500 dark:text-white'
                                   />
                                   <span className=' px-1 text-left items-center dark:text-white text-md whitespace-nowrap'>
-                                    Demo Editor Name
+                                    {
+                                      (obj.editors).filter((editor) => editor.id === obj.lastEditorId)[0]?.username || obj.editors[0]?.username
+                                    }
+                                  </span>
+                                </div>
+                              </td>
+
+                              <td className='px-4 py-3 cursor-text'>
+                                <div className='flex justify-start items-center gap-2' title='Creation Date'>
+                                  <Icon
+                                    icon='mdi:clock-plus-outline'
+                                    className='w-4 h-4 text-gray-500 dark:text-white'
+                                  />
+                                  <span className=' px-1 text-left items-center dark:text-white text-md whitespace-nowrap'>
+                                    {getFormattedDate(obj.createdAt)}
+                                  </span>
+                                </div>
+                                <div
+                                  className='flex gap-2 items-center'
+                                  title='Last Update Date'
+                                >
+                                  <Icon
+                                    icon='mdi:clock-edit-outline'
+                                    className='w-4 h-4 text-gray-500 dark:text-white'
+                                  />
+                                  <span className=' px-1 text-left items-center dark:text-white text-md whitespace-nowrap'>
+                                    {getFormattedDate(obj.updatedAt)}
                                   </span>
                                 </div>
                               </td>
@@ -541,7 +451,6 @@ export default function PageGrouptable () {
                       ))}
 
                       {provided.placeholder}
-                      <tr style={extraSpaceStyles} />
                     </tbody>
                   </table>
                 )}
@@ -557,7 +466,7 @@ export default function PageGrouptable () {
           title={currentItem.name}
           id={currentItem.id}
           closeModal={handleEditPageGroupClose}
-          updateData={handelPageGroupUpdate}
+          updateData={handlePageGroupUpdate}
         />
       )}
       {/* PageGroup delete Component */}

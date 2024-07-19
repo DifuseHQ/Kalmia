@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { Icon } from '@iconify/react';
 import { AuthContext } from '../../context/AuthContext';
 import instance from '../../api/AxiosInstance';
@@ -10,10 +10,16 @@ import DeleteModal from '../DeleteModal/DeleteModal';
 import CreatePageGroup from '../CreatePageGroup/CreatePageGroup';
 import { toastMessage } from '../../utils/Toast';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
+import { getFormattedDate, handleError } from '../../utils/Common';
+import {
+  getPageGroups, getPages, getDocumentations, getDocumentation,
+  deleteDocumentation, updateDocumentation, deletePageGroup,
+  updatePageGroup, createPageGroup
+} from '../../api/Requests';
 
 export default function Documentation () {
-  const { refresh, refreshData, user } = useContext(AuthContext);
   const navigate = useNavigate();
+  const { refresh, refreshData, user } = useContext(AuthContext);
   const [searchParam] = useSearchParams();
   const docId = searchParam.get('id');
 
@@ -43,23 +49,25 @@ export default function Documentation () {
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        const responsePageGroups = await instance.get('/docs/page-groups');
-        setFetchPageGroup(responsePageGroups?.data || []);
-        const responsePages = await instance.get('/docs/pages');
-        setFetchPage(responsePages?.data || []);
-      } catch (err) {
-        console.error(err);
-        if (!err.response || err?.response?.status === 500) {
-          navigate('/server-down');
-          return;
-        }
-        toastMessage(err?.response?.data?.message, 'error');
+      const [
+        pageGroupsResult,
+        pagesResult
+      ] = await Promise.all([getPageGroups(), getPages()]);
+
+      handleError(pageGroupsResult, navigate);
+      handleError(pagesResult, navigate);
+
+      if (pageGroupsResult.status === 'success') {
+        setFetchPageGroup(pageGroupsResult.data || []);
+      }
+
+      if (pagesResult.status === 'success') {
+        setFetchPage(pagesResult.data || []);
       }
     };
 
     fetchData();
-  }, [user, refreshPage, refresh, navigate]);
+  }, [user, navigate, refreshPage, refresh]);
 
   useEffect(() => {
     const combineData = () => {
@@ -110,48 +118,36 @@ export default function Documentation () {
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        const response = await instance.get('/docs/documentations');
-        if (response?.status === 200) {
-          const data = response.data;
+      const documentationsResult = await getDocumentations();
 
-          const smallestId = data.reduce(
-            (min, doc) => (doc.id < min ? doc.id : min),
-            data[0]?.id
-          );
-          setSmallestId(smallestId);
-          if (docId) {
-            const responseDoc = await instance.post('/docs/documentation', {
-              id: Number(docId)
-            });
-            if (responseDoc?.status === 200) {
-              setDocumentData(responseDoc.data);
-              setLoading(false);
-            }
-          } else {
-            const responseSmallest = await instance.post(
-              '/docs/documentation',
-              { id: smallestId }
-            );
-            if (responseSmallest?.status === 200) {
-              setDocumentData(responseSmallest.data);
-              setLoading(false);
-            }
-          }
-        }
-      } catch (err) {
-        console.error(err);
-        if (!err.response || err?.response?.status === 500) {
-          toastMessage(err?.message, 'error');
-          navigate('/server-down');
+      if (handleError(documentationsResult, navigate)) {
+        return;
+      }
+
+      if (documentationsResult.status === 'success') {
+        const data = documentationsResult.data;
+        const smallestId = data.reduce(
+          (min, doc) => (doc.id < min ? doc.id : min),
+          data[0]?.id
+        );
+        setSmallestId(smallestId);
+
+        const idToFetch = docId ? Number(docId) : smallestId;
+        const documentationResult = await getDocumentation(idToFetch);
+
+        if (handleError(documentationResult, navigate)) {
           return;
         }
-        toastMessage(err?.response?.data?.message, 'error');
+
+        if (documentationResult.status === 'success') {
+          setDocumentData(documentationResult.data);
+          setLoading(false);
+        }
       }
     };
 
     fetchData();
-  }, [docId, refresh, refreshPage, navigate, user]);
+  }, [docId, refresh, refreshPage, user, navigate]);
 
   const handleDeletemodalopen = () => {
     setDeleteModal(true);
@@ -161,26 +157,18 @@ export default function Documentation () {
     setDeleteModal(false);
   };
 
-  // Documentation CRUD function
   const handleDelete = async () => {
-    try {
-      const response = await instance.post('docs/documentation/delete', {
-        id: Number(docId)
-      });
-      if (response?.status === 200) {
-        setDeleteModal(false);
-        toastMessage(response?.data.message, 'success');
-        refreshData();
-        navigate('/dashboard');
-      }
-    } catch (err) {
-      console.error(err);
-      if (!err.response || err?.response?.status === 500) {
-        toastMessage(err?.message, 'error');
-        navigate('/server-down');
-        return;
-      }
-      toastMessage(err?.response?.data?.message, 'error');
+    const result = await deleteDocumentation(Number(docId));
+
+    if (handleError(result, navigate)) {
+      return;
+    }
+
+    if (result.status === 'success') {
+      setDeleteModal(false);
+      toastMessage(result.data.message, 'success');
+      refreshData();
+      navigate('/dashboard');
     }
   };
 
@@ -188,31 +176,24 @@ export default function Documentation () {
     setIsEditModal(!isEditModal);
   };
 
-  const handelUpdate = async (editTitle, editDescription) => {
-    try {
-      const response = await instance.post('docs/documentation/edit', {
-        id: Number(docId),
-        name: editTitle,
-        description: editDescription
-      });
+  const handleUpdate = async (editTitle, editDescription) => {
+    const result = await updateDocumentation({
+      id: Number(docId),
+      name: editTitle,
+      description: editDescription
+    });
 
-      if (response?.status === 200) {
-        setIsEditModal(false);
-        refreshData();
-        toastMessage(response?.data.message, 'success');
-      }
-    } catch (err) {
-      console.error(err);
-      if (!err.response || err?.response?.status === 500) {
-        toastMessage(err?.message, 'error');
-        navigate('/server-down');
-        return;
-      }
-      toastMessage(err?.response?.data?.message, 'error');
+    if (handleError(result, navigate)) {
+      return;
+    }
+
+    if (result.status === 'success') {
+      setIsEditModal(false);
+      refreshData();
+      toastMessage(result.data.message, 'success');
     }
   };
 
-  // PageGroup CRUD function
   const openDeletePageGroups = (item) => {
     setCurrentItem(item);
     setIsPageGroupsDeleteModal(true);
@@ -224,24 +205,17 @@ export default function Documentation () {
   };
 
   const handleDeletePageGroup = async (id) => {
-    try {
-      const response = await instance.post('docs/page-group/delete', {
-        id: Number(id)
-      });
-      if (response?.status === 200) {
-        setIsPageGroupsDeleteModal(false);
-        toastMessage(response?.data.message, 'success');
-        navigate(`/dashboard/documentation?id=${docId}`);
-        handleRefresh();
-      }
-    } catch (err) {
-      console.error(err);
-      if (!err.response || err?.response?.status === 500) {
-        toastMessage(err?.message, 'error');
-        navigate('/server-down');
-        return;
-      }
-      toastMessage(err?.response?.data?.message, 'error');
+    const result = await deletePageGroup(Number(id));
+
+    if (handleError(result, navigate)) {
+      return;
+    }
+
+    if (result.status === 'success') {
+      setIsPageGroupsDeleteModal(false);
+      toastMessage(result.data.message, 'success');
+      navigate(`/dashboard/documentation?id=${docId}`);
+      handleRefresh();
     }
   };
 
@@ -255,27 +229,21 @@ export default function Documentation () {
     setCurrentItem(null);
   };
 
-  const handelPageGroupUpdate = async (editTitle, editDescription, id) => {
-    try {
-      const response = await instance.post('docs/page-group/edit', {
-        id: Number(id),
-        name: editTitle,
-        documentationSiteId: Number(docId)
-      });
+  const handlePageGroupUpdate = async (editTitle, editDescription, id) => {
+    const result = await updatePageGroup({
+      id: Number(id),
+      name: editTitle,
+      documentationId: Number(docId)
+    });
 
-      if (response?.status === 200) {
-        setIsEditpageGroup(false);
-        refreshData();
-        toastMessage(response?.data.message, 'success');
-      }
-    } catch (err) {
-      console.error(err);
-      if (!err.response || err?.response?.status === 500) {
-        toastMessage(err?.message, 'error');
-        navigate('/server-down');
-        return;
-      }
-      toastMessage(err?.response?.data?.message, 'error');
+    if (handleError(result, navigate)) {
+      return;
+    }
+
+    if (result.status === 'success') {
+      setIsEditpageGroup(false);
+      refreshData();
+      toastMessage(result.data.message, 'success');
     }
   };
 
@@ -285,29 +253,23 @@ export default function Documentation () {
 
   const handleCreatePageGroup = async (title) => {
     if (title === '') {
-      toastMessage('Title is required. Please Enter PageGroup title', 'warn');
+      toastMessage('Title is required. Please Enter PageGroup title', 'warning');
       return;
     }
 
-    try {
-      const response = await instance.post('docs/page-group/create', {
-        name: title,
-        documentationSiteId: Number(docId)
-      });
+    const result = await createPageGroup({
+      name: title,
+      documentationId: Number(docId)
+    });
 
-      if (response?.status === 200) {
-        setOpenCreatePageGroup(false);
-        refreshData();
-        toastMessage(response?.data.message, 'success');
-      }
-    } catch (err) {
-      console.error(err);
-      if (!err.response || err?.response?.status === 500) {
-        toastMessage(err?.message, 'error');
-        navigate('/server-down');
-        return;
-      }
-      toastMessage(err?.response?.data?.message, 'error');
+    if (handleError(result, navigate)) {
+      return;
+    }
+
+    if (result.status === 'success') {
+      setOpenCreatePageGroup(false);
+      refreshData();
+      toastMessage(result.data.message, 'success');
     }
   };
 
@@ -318,6 +280,7 @@ export default function Documentation () {
 
     const newItems = Array.from(documentationData);
     const [reorderedItem] = newItems.splice(result.source.index, 1);
+
     newItems.splice(result.destination.index, 0, reorderedItem);
 
     setDocumentationData(newItems);
@@ -343,54 +306,20 @@ export default function Documentation () {
       }
     };
 
-    // Use map instead of forEach to iterate asynchronously
     await Promise.all(newItems.map((item, index) => updateOrder(item, index)));
-
-    await handleRefresh();
-  };
-
-  const extraRowHeight = '2.5rem'; // Adjust this if your table rows have a different height
-
-  // const tableContainerStyles = {
-  //   overflowX: "auto"
-  // };
-
-  // const tbodyStyles = {
-  //   position: "relative"
-  // };
-
-  const extraSpaceStyles = {
-    display: 'table-row',
-    height: `calc(3 * ${extraRowHeight})`
+    handleRefresh();
   };
 
   return (
     <AnimatePresence className='bg-gray-50 dark:bg-gray-900 p-3 sm:p-5'>
       <Breadcrumb />
-      {/* <motion.nav
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className='flex pb-5'
-        aria-label='Breadcrumb'
-      >
-        <ol className='inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse'>
-          <li className='inline-flex items-center '>
-            <Link to={`/dashboard/documentation?id=${docId ?docId : smallestId }`}>
-              <span className='inline-flex items-center gap-1 text-md font-medium text-gray-500  dark:text-gray-400 cursor-text '>
-                <Icon icon='ep:document' className='w-5 h-5 pb-0.5 dark:text-white' />
-                {documentData.name}
-              </span>
-            </Link>
-          </li>
-        </ol>
-      </motion.nav> */}
 
       {/* Create pageGroup resusable component */}
       {openCreatePageGroup && (
         <CreatePageGroup
           closeModal={CreatePageGroupModalClose}
           handleCreate={handleCreatePageGroup}
+          key='create-page-group-0'
         />
       )}
 
@@ -403,7 +332,7 @@ export default function Documentation () {
           title={documentData.name}
           description={documentData.description}
           closeModal={handleEditClose}
-          updateData={handelUpdate}
+          updateData={handleUpdate}
         />
       )}
 
@@ -423,6 +352,7 @@ export default function Documentation () {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className=' lg:mt-0 lg:col-span-5 flex justify-end mr-5 gap-3'
+        key='documentation-actions'
       >
         <motion.button
           whilehover={{ scale: 1.3 }}
@@ -451,7 +381,8 @@ export default function Documentation () {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className='grid max-w-screen-xl '
+        className='grid max-w-screen-xl'
+        key='documentation-info'
       >
         <div className='mr-auto place-self-center lg:col-span-7'>
           <h1 className='max-w-xl mb-4 text-4xl font-bold tracking-tight leading-none md:text-4xl xl:text-4xl dark:text-white'>
@@ -469,7 +400,8 @@ export default function Documentation () {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ delay: 0.1 }}
-          className=' '
+          className=''
+          key='documentation-table'
         >
           <div className='bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden'>
             <div className='flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4'>
@@ -514,7 +446,7 @@ export default function Documentation () {
                     to={`/dashboard/documentation/create-page?id=${docId}&dir=true`}
                     className='flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800'
                   >
-                    <span className=' px-1 text-left items-center dark:text-white text-md '>
+                    <span className='px-1 text-left items-center dark:text-white text-md'>
                       New Page
                     </span>
                     <Icon icon='ei:plus' className='w-6 h-6 dark:text-white' />
@@ -539,29 +471,26 @@ export default function Documentation () {
                               scope='col'
                               className='px-4 py-3 whitespace-nowrap'
                             >
-                              Create / update
+                              Author / Editor
                             </th>
                             <th
                               scope='col'
                               className='px-4 py-3 whitespace-nowrap'
                             >
-                              Author / Editor
+                              Create / update
                             </th>
-                            <th scope='col' className='px-4 py-3'>
-                              Actions
-                            </th>
+                            <th scope='col' className='px-4 py-3' />
                           </tr>
                         </thead>
 
                         <tbody
                           {...provided.droppableProps}
                           ref={provided.innerRef}
-
                         >
                           {loading
                             ? (
                               <tr className='border-b dark:border-gray-700'>
-                                <td colSpan='12' className='py-8'>
+                                <td colSpan='12' className='p-8'>
                                   <div className='flex flex-col items-center justify-center'>
                                     {loading && (
                                       <Icon
@@ -582,7 +511,7 @@ export default function Documentation () {
                                     exit={{ opacity: 0 }}
                                     className='border-b dark:bg-gray-700'
                                   >
-                                    <td colSpan='12' className='text-center py-8'>
+                                    <td colSpan='12' className='text-center p-8'>
                                       <h1 className='text-center text-gray-600 sm:text-lg font-semibold'>
                                         No Pages Found
                                       </h1>
@@ -626,16 +555,16 @@ export default function Documentation () {
                                                 className='flex items-center gap-1'
                                                 to={
                                           obj.name
-                                            ? `/dashboard/documentation/pagegroup?id=${docId}&pageGroupId=${obj.id}&groupName=${obj.name}`
+                                            ? `/dashboard/documentation/page-group?id=${docId}&pageGroupId=${obj.id}&groupName=${obj.name}`
                                             : `/dashboard/documentation/edit-page?id=${docId}&dir=true&pageId=${obj.id}&pageName=${obj.title}`
                                         }
                                               >
                                                 {obj.name
                                                   ? (
-                                                    <Icon icon='material-symbols:folder' className='text-yellow-400 dark:text-yellow-200 w-6 h-6' />
+                                                    <Icon icon='clarity:folder-solid' className='w-6 h-6' />
                                                     )
                                                   : (
-                                                    <Icon icon='bx:file' className='w-6 h-6 text-gray-500 dark:text-white' />
+                                                    <Icon icon='iconoir:page' className='w-6 h-6 text-gray-500 dark:text-white' />
                                                     )}
 
                                                 {obj.name || obj.title}
@@ -645,35 +574,11 @@ export default function Documentation () {
                                             <td className='px-4 py-3 cursor-text'>
                                               <div className='flex justify-start items-center gap-2'>
                                                 <Icon
-                                                  icon='mdi:clock-outline'
-                                                  className='w-4 h-4 text-gray-500 dark:text-white'
-                                                />
-                                                <span className=' px-1 text-left items-center dark:text-white text-md whitespace-nowrap'>
-                                                  Demo Time
-                                                </span>
-                                              </div>
-                                              <div
-                                                className='flex gap-2 items-center
-                                      '
-                                              >
-                                                <Icon
-                                                  icon='material-symbols:update'
-                                                  className='w-4 h-4 text-gray-500 dark:text-white'
-                                                />
-                                                <span className=' px-1 text-left items-center dark:text-white text-md whitespace-nowrap'>
-                                                  Demo Update Time
-                                                </span>
-                                              </div>
-                                            </td>
-
-                                            <td className='px-4 py-3 cursor-text'>
-                                              <div className='flex justify-start items-center gap-2'>
-                                                <Icon
                                                   icon='mdi:user'
                                                   className='w-4 h-4 text-gray-500 dark:text-white'
                                                 />
                                                 <span className=' px-1 text-left items-center dark:text-white text-md whitespace-nowrap'>
-                                                  Demo Author Name
+                                                  {obj.author.username}
                                                 </span>
                                               </div>
                                               <div className='flex gap-2 items-center'>
@@ -682,7 +587,33 @@ export default function Documentation () {
                                                   className='w-4 h-4 text-gray-500 dark:text-white'
                                                 />
                                                 <span className=' px-1 text-left items-center dark:text-white text-md whitespace-nowrap'>
-                                                  Demo Editor Name
+                                                  {
+                                                    (obj.editors).filter((editor) => editor.id === obj.lastEditorId)[0]?.username || obj.editors[0]?.username
+                                                  }
+                                                </span>
+                                              </div>
+                                            </td>
+
+                                            <td className='px-4 py-3 cursor-text'>
+                                              <div className='flex justify-start items-center gap-2' title='Creation Date'>
+                                                <Icon
+                                                  icon='mdi:clock-plus-outline'
+                                                  className='w-4 h-4 text-gray-500 dark:text-white'
+                                                />
+                                                <span className=' px-1 text-left items-center dark:text-white text-md whitespace-nowrap'>
+                                                  {getFormattedDate(obj.createdAt)}
+                                                </span>
+                                              </div>
+                                              <div
+                                                className='flex gap-2 items-center'
+                                                title='Last Update Date'
+                                              >
+                                                <Icon
+                                                  icon='mdi:clock-edit-outline'
+                                                  className='w-4 h-4 text-gray-500 dark:text-white'
+                                                />
+                                                <span className=' px-1 text-left items-center dark:text-white text-md whitespace-nowrap'>
+                                                  {getFormattedDate(obj.updatedAt)}
                                                 </span>
                                               </div>
                                             </td>
@@ -716,7 +647,6 @@ export default function Documentation () {
                                     ))
                                   )}
                           {provided.placeholder}
-                          <tr style={extraSpaceStyles} />
                         </tbody>
                       </table>
                     )}
@@ -732,7 +662,7 @@ export default function Documentation () {
                 title={currentItem.name}
                 id={currentItem.id}
                 closeModal={handleEditPageGroupClose}
-                updateData={handelPageGroupUpdate}
+                updateData={handlePageGroupUpdate}
               />
             )}
 
@@ -749,6 +679,7 @@ export default function Documentation () {
           </div>
         </motion.div>
       )}
+
     </AnimatePresence>
   );
 }

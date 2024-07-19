@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@iconify/react/dist/iconify.js';
 import 'primereact/resources/themes/lara-light-indigo/theme.css';
@@ -7,20 +7,21 @@ import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import { toastMessage } from '../../utils/Toast';
 import { AuthContext } from '../../context/AuthContext';
-import instance from '../../api/AxiosInstance';
-import EditorComponent from '../EditorComponent/EditorComponent';
+import { createPage } from '../../api/Requests';
+import { handleError } from '../../utils/Common';
+import Breadcrumb from '../Breadcrumb/Breadcrumb';
 
 export default function CreatePageModal () {
+  const { refreshData } = useContext(AuthContext);
   const [searchParam] = useSearchParams();
+  const [title, setTitle] = useState('');
+  const [slug, setSlug] = useState('');
+  const [content] = useState('');
+
+  const navigate = useNavigate();
   const docId = searchParam.get('id');
   const dir = searchParam.get('dir');
   const pageGroupId = searchParam.get('pageGroupId');
-  const { refreshData } = useContext(AuthContext);
-
-  const navigate = useNavigate();
-  const [title, setTitle] = useState('');
-  const [slug, setSlug] = useState('');
-  const [content, setContent] = useState('');
 
   const handleCreate = async () => {
     if (title === '' || slug === '') {
@@ -28,112 +29,40 @@ export default function CreatePageModal () {
       return;
     }
 
-    if (dir === 'true') {
-      try {
-        const response = await instance.post('docs/page/create', {
-          title,
-          slug,
-          content: JSON.stringify(content),
-          documentationSiteId: Number(docId)
-        });
+    const pageData = {
+      title,
+      slug,
+      content: JSON.stringify(content),
+      documentationId: Number(docId)
+    };
 
-        if (response?.status === 200) {
-          refreshData();
-          toastMessage(response?.data?.message, 'success');
-          navigate(`/dashboard/documentation?id=${docId}`);
-        }
-      } catch (err) {
-        if (!err.response) {
-          toastMessage(err?.message, 'error');
-          navigate('/server-down');
-        }
-        toastMessage(err?.response?.data?.message, 'error');
-      }
-    } else if (dir === 'false') {
-      try {
-        const response = await instance.post('docs/page/create', {
-          title,
-          slug,
-          content: JSON.stringify(content),
-          documentationSiteId: Number(docId),
-          pageGroupId: Number(pageGroupId)
-        });
+    if (dir === 'false') {
+      pageData.pageGroupId = Number(pageGroupId);
+    }
 
-        if (response?.status === 200) {
-          refreshData();
-          toastMessage(response?.data?.message, 'success');
-          navigate(
-            `/dashboard/documentation/pagegroup?id=${docId}&pageGroupId=${pageGroupId}`
-          );
-        }
-      } catch (err) {
-        if (!err.response) {
-          toastMessage(err?.message, 'error');
-          navigate('/server-down');
-        }
-        toastMessage(err?.response?.data?.message, 'error');
+    const result = await createPage(pageData);
+
+    if (result.status === 'success') {
+      refreshData();
+      toastMessage('Page created successfully', 'success');
+
+      if (dir === 'true') {
+        navigate(`/dashboard/documentation?id=${docId}`);
+      } else {
+        navigate(`/dashboard/documentation/page-group?id=${docId}&pageGroupId=${pageGroupId}`);
       }
+    } else {
+      handleError(result, navigate);
     }
   };
 
-  const handleSave = async (content) => {
-    setContent(content);
-  };
+  // const handleSave = async (content) => {
+  //   setContent(content);
+  // };
 
   return (
     <AnimatePresence>
-      <motion.nav
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ delay: 0.1 }}
-        className='flex mb-10'
-        aria-label='Breadcrumb'
-      >
-        <ol className='inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse'>
-          <li className='inline-flex items-center'>
-            <Link
-              to='/dashboard'
-              className='inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white'
-            >
-              <Icon icon='material-symbols:home' className=' ' />
-              Home
-            </Link>
-          </li>
-          <li>
-            <div className='flex items-center'>
-              <Icon icon='mingcute:right-fill' className='text-gray-500' />
-              <Link
-                to={`/dashboard/documentation?id=${docId}`}
-                className='ms-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ms-2 dark:text-gray-400 dark:hover:text-white'
-              >
-                Documentation
-              </Link>
-            </div>
-          </li>
-          {pageGroupId && (
-            <li aria-current='page'>
-              <div className='flex items-center'>
-
-                <Link
-                  to={`/dashboard/documentation/pagegroup?id=${docId}&pageGroupId=${pageGroupId}`}
-                  className='ms-1 text-sm font-medium text-gray-800 md:ms-2 dark:text-gray-400'
-                >
-                  PageGroup
-                </Link>
-              </div>
-            </li>
-          )}
-          <li aria-current='page'>
-            <div className='flex items-center'>
-              <Icon icon='mingcute:right-fill' className='text-gray-500' />
-              <span className='ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400'>
-                create page
-              </span>
-            </div>
-          </li>
-        </ol>
-      </motion.nav>
+      <Breadcrumb />
 
       <motion.div
         initial={{ opacity: 0 }}
@@ -141,9 +70,10 @@ export default function CreatePageModal () {
         exit={{ opacity: 0 }}
         transition={{ delay: 0.1 }}
         id='defaultModal'
-        tabindex='-1'
+        tabIndex='-1'
         aria-hidden='true'
         className='flex w-full md:inset-0 h-modal md:h-full'
+        key='create-page-1'
       >
         <div className='w-full h-full md:h-auto'>
           <div className='relative p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5'>
@@ -194,13 +124,13 @@ export default function CreatePageModal () {
 
               <div className=''>
                 <label
-                  for='content'
+                  htmlFor='content'
                   className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
                 >
                   Content
                 </label>
                 <div className='border border-gray-400 rounded-lg'>
-                  <EditorComponent onSave={handleSave} />
+                  {/* Use Same stuff as edit page */}
                 </div>
               </div>
             </div>

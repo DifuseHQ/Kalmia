@@ -2,12 +2,7 @@ import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
 
-export default function DeleteModal ({
-  title,
-  cancelModal,
-  deleteDoc,
-  message
-}) {
+export default function DeleteModal ({ title, cancelModal, deleteDoc, message }) {
   return (
     <AnimatePresence>
       <motion.div
@@ -17,49 +12,39 @@ export default function DeleteModal ({
         className='fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-50'
       >
         <motion.div
-          initial={{ scale: 0.8 }}
-          animate={{ scale: 1 }}
-          exit={{ scale: 0.8 }}
-          className='relative p-4 w-full max-w-xl'
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.9, opacity: 0 }}
+          className='relative p-4 w-full max-w-md'
         >
-          <div className='relative p-4 text-center bg-gray-200 rounded-lg shadow dark:bg-gray-800 sm:p-5'>
-            <button
-              onClick={() => cancelModal()}
-              type='button'
-              className='text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white'
-            >
-              <Icon icon='material-symbols:close' className='w-6 h-6' />
-              <span className='sr-only'>Close modal</span>
-            </button>
-            <div className='flex justify-center'><Icon icon='carbon:warning' className='text-yellow-500 w-20 h-20' /></div>
+          <div className='relative bg-white rounded-lg shadow-lg dark:bg-gray-700 p-6 text-center'>
+            <div className='mb-6'>
+              <Icon icon='carbon:warning' className='text-yellow-400 w-24 h-24 mx-auto' />
+            </div>
             {title && (
-              <h3 className=' text-3xl font-semibold text-gray-900 dark:text-white'>
+              <h3 className='mb-4 text-2xl font-bold text-gray-900 dark:text-white'>
                 {title}
               </h3>
             )}
             {message && (
-              <div
-                className='flex justify-center my-5 text-lg text-left text-black  rounded-lg bg-orange-100 p-3   dark:bg-gray-500'
-                role='alert'
-              >
-                <p>{message}</p>
-              </div>
+              <p className='mb-6 text-lg text-gray-500 dark:text-gray-300'>
+                {message}
+              </p>
             )}
             <div className='flex justify-center items-center space-x-4'>
               <button
-                onClick={() => deleteDoc()}
-                type='submit'
-                className='inline-flex items-center py-2 px-3 text-sm font-medium text-center text-white bg-red-600 rounded-lg hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 dark:bg-red-500 dark:hover:bg-red-600 dark:focus:ring-red-900'
+                onClick={deleteDoc}
+                type='button'
+                className='px-5 py-2.5 text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm dark:bg-red-500 dark:hover:bg-red-600 dark:focus:ring-red-900 transition duration-300 ease-in-out'
               >
-                <Icon icon='material-symbols:delete' className='w-4 h-4' />
-                Yes, confirm delete
+                Yes, delete it!
               </button>
               <button
-                onClick={() => cancelModal()}
+                onClick={cancelModal}
                 type='button'
-                className='py-2 px-3 text-sm font-medium  text-white dark:bg-blue-500 bg-blue-600 dark:hover:bg-blue-700 rounded-lg  hover:bg-blue-700  '
+                className='px-5 py-2.5 text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:ring-gray-300 rounded-lg border border-gray-200 text-sm font-medium dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:bg-gray-600 dark:focus:ring-gray-600 transition duration-300 ease-in-out'
               >
-                No, cancel
+                Cancel
               </button>
             </div>
           </div>

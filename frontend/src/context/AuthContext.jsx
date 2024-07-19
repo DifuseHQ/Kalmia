@@ -47,7 +47,6 @@ export const AuthProvider = ({ children }) => {
           expires: 1,
           secure: !(window.location.href.includes('http://'))
         });
-        toastMessage('Login Succesfully', 'success');
         navigate('/dashboard', { replace: true });
       }
     } catch (err) {
@@ -94,7 +93,7 @@ export const AuthProvider = ({ children }) => {
       });
       if (response?.status === 200) {
         removeCookies();
-        toastMessage('Logout Succesfully', 'success');
+        toastMessage('Logged Out', 'success');
         setUser(null);
         setUserDetails(null);
       }

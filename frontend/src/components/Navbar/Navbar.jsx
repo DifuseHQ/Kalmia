@@ -50,7 +50,8 @@ export default function Navbar () {
         <div className='flex flex-wrap justify-between items-center'>
           <div className='flex justify-start items-center'>
             <NavLink to='/dashboard'>
-              <h1 className='text-blue-500 font-bold hidden sm:block'>CMS</h1>
+              {/* <h1 className='text-blue-500 font-bold hidden sm:block'>CMS</h1> */}
+              <img src='/assets/cropped.png' alt='logo' className='w-42 h-8 dark:invert' />
             </NavLink>
             <button
               onClick={toggleSidebar}
@@ -150,12 +151,7 @@ export default function Navbar () {
                 </div>
                 )
               : (
-                <Link
-                  to='/login'
-                  className='block cursor-pointer rounded-md mx-3 font-medium hover:text-white border-blue-400 py-2 px-4 text-md hover:bg-blue-500 dark:hover:bg-gray-600 dark:text-white'
-                >
-                  Login
-                </Link>
+                <div className='hidden' />
                 )}
           </div>
         </div>

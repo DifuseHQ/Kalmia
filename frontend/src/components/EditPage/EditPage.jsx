@@ -1,15 +1,56 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
-import { Icon } from '@iconify/react/dist/iconify.js';
+import { useCreateBlockNote } from '@blocknote/react';
+
+import {
+  BlockNoteView,
+  darkDefaultTheme,
+  lightDefaultTheme
+} from '@blocknote/mantine';
+import '@blocknote/core/fonts/inter.css';
+import '@blocknote/mantine/style.css';
+
+import React, { useContext, useEffect, useState } from 'react';
+import { Icon } from '@iconify/react/dist/iconify';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AuthContext } from '../../context/AuthContext';
 import DeleteModal from '../DeleteModal/DeleteModal';
-import instance from '../../api/AxiosInstance';
 import { toastMessage } from '../../utils/Toast';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
-import EditorComponent from '../EditorComponent/EditorComponent';
+
+import { getPage, updatePage, deletePage } from '../../api/Requests';
+import { handleError } from '../../utils/Common';
+import { ThemeContext } from '../../context/ThemeContext';
+
+const EditorWrapper = React.memo(({ editor, theme }) => {
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    if (editor) {
+      setIsReady(true);
+    }
+  }, [editor]);
+
+  if (!isReady) {
+    return <div>Loading editor...</div>;
+  }
+
+  return (
+    <BlockNoteView
+      editor={editor}
+      theme={theme}
+      placeholder='Start typing...'
+    />
+  );
+});
 
 export default function EditPage () {
+  const { darkMode } = useContext(ThemeContext);
+  const [themeKey, setThemeKey] = useState(0);
+
+  useEffect(() => {
+    setThemeKey(prev => prev + 1);
+  }, [darkMode]);
+
   const [searchParams] = useSearchParams();
   const docId = searchParams.get('id');
   const dir = searchParams.get('dir');
@@ -18,8 +59,9 @@ export default function EditPage () {
   const { refreshData } = useContext(AuthContext);
 
   const navigate = useNavigate();
-  const [pageData, setPageData] = useState({});
+  const [pageData, setPageData] = useState({ title: '', slug: '', content: {} });
   const [isDelete, setIsDelete] = useState(false);
+  const [editorContent, setEditorContent] = useState([{ type: 'paragraph', content: '' }]);
 
   const updateContent = (newContent, name) => {
     setPageData((prevPageData) => ({
@@ -28,57 +70,60 @@ export default function EditPage () {
     }));
   };
 
-  const [content, setContent] = useState({});
+  const editor = useCreateBlockNote({
+    initialContent: editorContent
+  });
+
+  function parsedContent (data) {
+    try {
+      return JSON.parse(data);
+    } catch (e) {
+      console.error('Error parsing page content:', e);
+      toastMessage('Error parsing page content', 'error');
+      return {};
+    }
+  }
 
   useEffect(() => {
-    const fetchdata = async () => {
-      try {
-        const response = await instance.post('docs/page', {
-          id: Number(pageId)
-        });
-        if (response?.status === 200) {
-          setPageData(response?.data);
-          setContent(JSON.parse(response?.data?.content));
-        }
-      } catch (err) {
-        if (!err.response) {
-          toastMessage(err?.message, 'error');
-          navigate('/server-down');
-        }
-        toastMessage(err?.response?.data?.message, 'error');
+    const fetchData = async () => {
+      const result = await getPage(Number(pageId));
+      if (handleError(result, navigate)) return;
+
+      if (result.status === 'success') {
+        setPageData(prev => ({
+          ...prev,
+          title: result.data.title || '',
+          slug: result.data.slug || ''
+        }));
+        const parsed = parsedContent(result.data.content);
+        setEditorContent(parsed.length > 0 ? parsed : []);
       }
     };
 
-    fetchdata();
+    fetchData();
   }, [pageId, navigate]);
 
-  const handleEdit = async () => {
-    try {
-      const response = await instance.post('/docs/page/edit', {
-        title: pageData?.title,
-        slug: pageData?.slug,
-        content: JSON.stringify(content),
-        id: Number(pageId)
-      });
+  useEffect(() => {
+    if (editor && editorContent.length > 0) {
+      editor.replaceBlocks(editor.topLevelBlocks, editorContent);
+    }
+  }, [editor, editorContent]);
 
-      if (response?.status === 200) {
-        toastMessage(response?.data.message, 'success');
-        if (dir === 'true') {
-          refreshData();
-          // navigate(`/dashboard/documentation?id=${docId}`);
-        } else {
-          refreshData();
-          // navigate(
-          //   `/dashboard/documentation/pagegroup?id=${docId}&pageGroupId=${pageGroupId}`
-          // );
-        }
-      }
-    } catch (err) {
-      if (!err.response) {
-        toastMessage(err?.message, 'error');
-        navigate('/server-down');
-      }
-      toastMessage(err?.response?.data?.message, 'error');
+  const handleEdit = async () => {
+    const result = await updatePage({
+      title: pageData?.title,
+      slug: pageData?.slug,
+      content: JSON.stringify(editor.topLevelBlocks),
+      id: Number(pageId)
+    });
+
+    if (handleError(result, navigate)) {
+      return;
+    }
+
+    if (result.status === 'success') {
+      toastMessage(result.data.message, 'success');
+      refreshData();
     }
   };
 
@@ -87,35 +132,105 @@ export default function EditPage () {
   };
 
   const handleDelete = async () => {
-    try {
-      const response = await instance.post('docs/page/delete', {
-        id: Number(pageId)
-      });
-      if (response?.status === 200) {
-        toastMessage(response?.data?.message, 'success');
-        if (dir === 'true') {
-          refreshData();
-          navigate(`/dashboard/documentation?id=${docId}`);
-        } else {
-          refreshData();
-          navigate(
-            `/dashboard/documentation/pagegroup?id=${docId}&pageGroupId=${pageGroupId}`
-          );
-        }
+    const result = await deletePage(Number(pageId));
+
+    if (handleError(result, navigate)) {
+      return;
+    }
+
+    if (result.status === 'success') {
+      toastMessage(result.data.message, 'success');
+      refreshData();
+
+      if (dir === 'true') {
+        navigate(`/dashboard/documentation?id=${docId}`);
+      } else {
+        navigate(`/dashboard/documentation/page-group?id=${docId}&pageGroupId=${pageGroupId}`);
       }
-    } catch (err) {
-      if (!err.response) {
-        toastMessage(err?.message, 'error');
-        navigate('/server-down');
-      }
-      toastMessage(err?.response?.data?.message, 'error');
     }
   };
-  const handleSave = useCallback((content) => {
-    setContent(content);
-  }, []);
 
-  console.log('content is ', content);
+  // const handleSave = useCallback((newContent) => {
+  //   setEditorContent(newContent);
+  // }, []);
+
+  const lightTheme = {
+    colors: {
+      editor: {
+        text: '#222222',
+        background: '#ffffff'
+      },
+      menu: {
+        text: '#ffffff',
+        background: '#1e40af'
+      },
+      tooltip: {
+        text: '#ffffff',
+        background: '#3b82f6'
+      },
+      hovered: {
+        text: '#ffffff',
+        background: '#2563eb'
+      },
+      selected: {
+        text: '#ffffff',
+        background: '#1d4ed8'
+      },
+      disabled: {
+        text: '#6b7280',
+        background: '#d1d5db'
+      },
+      shadow: '#000000',
+      border: '#1e3a8a',
+      sideMenu: '#f3f4f6',
+      highlights: lightDefaultTheme.colors.highlights
+    },
+    borderRadius: 4,
+    fontFamily: 'Helvetica Neue, sans-serif',
+    colorScheme: 'light'
+  };
+
+  const darkTheme = {
+    colors: {
+      editor: {
+        text: '#FFFFFF',
+        background: '#374151'
+      },
+      menu: {
+        text: '#ffffff',
+        background: '#374151'
+      },
+      tooltip: {
+        text: '#ffffff',
+        background: '#3b82f6'
+      },
+      hovered: {
+        text: '#ffffff',
+        background: '#4b5563'
+      },
+      selected: {
+        text: '#ffffff',
+        background: '#1d4ed8'
+      },
+      disabled: {
+        text: '#6b7280', // Gray for disabled text
+        background: '#d1d5db' // Light gray for disabled background
+      },
+      shadow: '#000000', // Black shadow
+      border: '#1e3a8a', // Dark blue border
+      sideMenu: '#f3f4f6', // Light gray for side menu
+      highlights: darkDefaultTheme.colors.highlights
+    },
+    borderRadius: 4,
+    fontFamily: 'Helvetica Neue, sans-serif',
+    colorScheme: 'light'
+  };
+
+  const blueTheme = {
+    light: lightTheme,
+    dark: darkTheme
+  };
+
   return (
     <AnimatePresence>
       {isDelete && (
@@ -125,31 +240,10 @@ export default function EditPage () {
           id={pageData.id}
           title='Are you sure?'
           message={`You.re permanently deleting "${pageData.title}"`}
+          key='delete-page'
         />
       )}
-      {/* <motion.nav
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ delay: 0.1 }}
-        className='flex mb-5'
-        aria-label='Breadcrumb'
-      >
-        <ol className='inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse'>
-        {breadcrumb.map((crumb,index)=>(
-            <li>
-            <Link to={crumb.path} className='flex items-center ' >
-            <Icon icon='mingcute:right-fill'  className='text-gray-500' />
-              <p
-                className={`ms-1 text-sm font-medium  md:ms-2 dark:text-gray-400 dark:hover:text-white`}
-              >
-                {crumb.title}
-              </p>
-            </Link>
-          </li>
-          ))}
-        </ol>
-      </motion.nav> */}
+
       <Breadcrumb />
       <motion.div
         initial={{ opacity: 0 }}
@@ -160,64 +254,63 @@ export default function EditPage () {
         tabIndex='-1'
         aria-hidden='true'
         className='flex  items-center w-full md:inset-0 h-modal md:h-full'
+        key='edit-page-1'
       >
         <div className='w-full h-full md:h-auto'>
-          <div className='relative p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5'>
+          <div className='relative p-4 dark:bg-gray-800 sm:p-5'>
             <div className='flex justify-start items-center pb-4 mb-4 rounded-t border-b sm:mb-5 dark:border-gray-600'>
               <h3 className='text-2xl  font-semibold text-gray-900 dark:text-white'>
                 Edit Page
               </h3>
             </div>
 
-            <div className='grid gap-4 mb-4 '>
+            <div className='grid gap-4 mb-4 grid-cols-1'>
               <div>
-                <label
-                  htmlFor='title'
-                  className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
-                >
-                  Title
-                </label>
-                <input
-                  type='text'
-                  required
-                  value={pageData.title}
-                  onChange={(e) => updateContent(e.target.value, e.target.name)}
-                  name='title'
-                  id='title'
-                  className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
-                  placeholder='Page title'
-                />
+                <div className='mb-4'>
+                  <label htmlFor='title' className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'>
+                    Title
+                  </label>
+                  <input
+                    type='text'
+                    required
+                    value={pageData.title}
+                    onChange={(e) => updateContent(e.target.value, e.target.name)}
+                    name='title'
+                    id='title'
+                    className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
+                    placeholder='Page title'
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor='slug' className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'>
+                    Slug
+                  </label>
+                  <input
+                    type='text'
+                    required
+                    value={pageData.slug}
+                    onChange={(e) => updateContent(e.target.value, e.target.name)}
+                    name='slug'
+                    id='slug'
+                    className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
+                    placeholder='Page slug'
+                  />
+                </div>
               </div>
 
               <div>
-                <label
-                  htmlFor='slug'
-                  className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
-                >
-                  Slug
-                </label>
-                <input
-                  type='text'
-                  required
-                  value={pageData.slug}
-                  onChange={(e) => updateContent(e.target.value, e.target.name)}
-                  name='slug'
-                  id='slug'
-                  className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
-                  placeholder='Page slug'
-                />
-              </div>
-
-              <div className=''>
-                <label
-                  htmlFor='content'
-                  className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
-                >
+                <label htmlFor='content' className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'>
                   Content
                 </label>
-                <div className='border border-gray-400 rounded-lg dark:text-white '>
-                  <EditorComponent pageId={pageId} onSave={handleSave} />
-                </div>
+
+                {editor && (
+                  <EditorWrapper
+                    key={themeKey}
+                    editor={editor}
+                    theme={darkMode ? blueTheme.dark : blueTheme.light}
+                  />
+                )}
               </div>
             </div>
 
@@ -225,7 +318,7 @@ export default function EditPage () {
               <button
                 onClick={handleEdit}
                 type='submit'
-                className='text-white inline-flex gap-1 items-center bg-primary-700 hover:bg-primary-800 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center '
+                className='text-white inline-flex gap-1 items-center bg-yellow-400 hover:bg-yellow-500 dark:bg-yellow-600 dark:hover:bg-yellow-700 dark:focus:ring-yellow-800 focus:ring-4 focus:outline-none focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center'
               >
                 <Icon
                   icon='ri:edit-fill'
@@ -235,14 +328,14 @@ export default function EditPage () {
               </button>
 
               <button
-                whilehover={{ scale: 1.1 }}
                 onClick={() => setIsDelete(!isDelete)}
-                className='flex cursor-pointer items-center bg-red-600 text-white px-2  focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-smpy-2.5 text-center'
+                className='inline-flex items-center gap-1 bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-900 text-white font-medium rounded-lg text-sm px-5 py-2.5 text-center'
               >
+                <Icon icon='material-symbols:delete' className='w-5 h-5' />
                 Delete
-                <Icon icon='material-symbols:delete' className='w-6 h-6' />
               </button>
             </div>
+
           </div>
         </div>
       </motion.div>

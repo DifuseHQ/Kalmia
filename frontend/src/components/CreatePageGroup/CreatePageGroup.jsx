@@ -17,6 +17,7 @@ export default function CreatePageGroup ({ closeModal, handleCreate }) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className='fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-50'
+        key='create-page-group-1'
       >
         <div className='relative p-4 w-full max-w-xl'>
           <div className='relative p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5'>

@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
-import instance from '../../api/AxiosInstance';
+import { createUser } from '../../api/Requests';
 import { toastMessage } from '../../utils/Toast';
+import { handleError } from '../../utils/Common';
+import Breadcrumb from '../Breadcrumb/Breadcrumb';
 
 export default function CreateUser () {
   const [formData, setFormData] = useState({
@@ -27,92 +29,34 @@ export default function CreateUser () {
     e.preventDefault();
 
     if (formData.password.length < 8) {
-      toastMessage('Password must be 8 characters', 'warn');
+      toastMessage('Password must be at least 8 characters', 'warning');
       return;
     }
 
     if (formData.password !== formData.rePassword) {
-      toastMessage('Password and Confirm Password do not match', 'warn');
+      toastMessage('Password and Confirm Password do not match', 'warning');
       return;
     }
 
-    try {
-      const response = await instance.post('/auth/user/create', {
-        username: formData.username,
-        password: formData.password,
-        email: formData.email
-      });
-      if (response?.status === 200) {
-        toastMessage('User Created Successfully', 'success');
-        navigate('/dashboard/admin/user-list');
-      }
-    } catch (err) {
-      if (!err.response) {
-        toastMessage(err?.message, 'error');
-        navigate('/server-down');
-      }
-      toastMessage(err?.response?.data?.message, 'error');
+    const userData = {
+      username: formData.username,
+      password: formData.password,
+      email: formData.email
+    };
+
+    const result = await createUser(userData);
+
+    if (result.status === 'success') {
+      toastMessage('User Created Successfully', 'success');
+      navigate('/dashboard/admin/user-list');
+    } else {
+      handleError(result, navigate);
     }
   };
 
   return (
     <AnimatePresence>
-
-      <motion.nav
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className='flex mb-5'
-        aria-label='Breadcrumb'
-      >
-        <ol className='inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse'>
-          <li className='inline-flex items-center'>
-            <Link
-              to='/dashboard/admin/user-list'
-              className='inline-flex items-center text-lg font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white'
-            >
-              <Icon icon='mdi:users' className='w-5 h-5 dark:text-white' />
-              user management
-            </Link>
-          </li>
-          <li>
-            <div className='flex items-center'>
-              <Icon icon='mingcute:right-fill' className='text-gray-500' />
-              <p
-                className='ms-1 text-lg font-medium text-gray-700  md:ms-2 dark:text-gray-400 dark:hover:text-white'
-              >
-                Add User
-              </p>
-            </div>
-          </li>
-        </ol>
-      </motion.nav>
-
-      <motion.nav
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className='flex pb-10'
-        aria-label='Breadcrumb'
-      >
-        <ol className='inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse'>
-          <li className='inline-flex items-center '>
-            <Link>
-
-              <span
-                className='inline-flex items-center gap-1 text-md font-medium text-black hover:text-blue-600 dark:hover:text-blue-600 dark:text-white '
-              />
-            </Link>
-          </li>
-          <li className='flex items-center '>
-            <Icon icon='mingcute:right-fill' className='w-5 h-5 text-gray-500' />
-            <span className='ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400'>
-              Add User
-            </span>
-
-          </li>
-        </ol>
-      </motion.nav>
+      <Breadcrumb />
 
       <motion.div
         initial={{ opacity: 0 }}

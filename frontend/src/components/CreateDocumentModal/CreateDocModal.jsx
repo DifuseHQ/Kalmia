@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
 import { AuthContext } from '../../context/AuthContext';
-import instance from '../../api/AxiosInstance';
+import { handleError } from '../../utils/Common';
 import { toastMessage } from '../../utils/Toast';
+import { createDocumentation } from '../../api/Requests';
 
 export default function CreateDocModal () {
-  const { refreshData, isOpenModal, setIsOpenModal } = useContext(AuthContext);
   const navigate = useNavigate();
-
+  const { refreshData, isOpenModal, setIsOpenModal } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     title: '',
     description: ''
@@ -33,23 +33,22 @@ export default function CreateDocModal () {
       return;
     }
 
-    try {
-      const response = await instance.post('/docs/documentation/create', {
-        name: formData.title,
-        description: formData.description
-      });
+    if (formData.description === '') {
+      toastMessage('Description is required. Please enter a new Document Description.', 'warning');
+      return;
+    }
 
-      if (response?.status === 200) {
-        setIsOpenModal(false);
-        refreshData();
-        toastMessage(response?.data?.message, 'success');
-      }
-    } catch (err) {
-      if (!err.response) {
-        toastMessage(err?.message, 'error');
-        navigate('/server-down');
-      }
-      toastMessage(err?.response?.data?.message, 'error');
+    const result = await createDocumentation({
+      name: formData.title,
+      description: formData.description
+    });
+
+    if (result.status === 'success') {
+      setIsOpenModal(false);
+      refreshData();
+      toastMessage('Document created successfully', 'success');
+    } else {
+      handleError(result, navigate);
     }
   };
 
@@ -61,12 +60,14 @@ export default function CreateDocModal () {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className='fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-50'
+          key='create-documentation'
         >
           <motion.div
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0.8 }}
             className='relative p-4 w-full max-w-xl'
+            key='create-documentation-2'
           >
             <div className='relative p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5'>
               <div className='flex justify-between items-center mb-4 sm:mb-5 dark:border-gray-600'>

@@ -10,7 +10,7 @@ import LoginPage from '../src/pages/LoginPage';
 import DashboardPage from '../src/pages/DashboardPage';
 import CreateDocModal from '../src/components/CreateDocumentModal/CreateDocModal';
 import Documentation from '../src/components/Documentation/Documentation';
-import PageGrouptable from '../src/components/PageGroup/PageGrouptable';
+import PageGroupTable from '../src/components/PageGroup/PageGroupTable';
 import CreatePageModal from '../src/components/CreatePageModal/CreatePageModal';
 import EditPage from '../src/components/EditPage/EditPage';
 import UserProfile from '../src/components/UserProfile/UserProfile';
@@ -38,7 +38,7 @@ function App () {
                 <Route path='create-documentation' element={<CreateDocModal />} />
                 <Route path='edit-documentation' element={<CreateDocModal />} />
                 <Route path='documentation' element={<Documentation />} />
-                <Route path='documentation/pagegroup' element={<PageGrouptable />} />
+                <Route path='documentation/page-group' element={<PageGroupTable />} />
                 <Route path='documentation/create-page' element={<CreatePageModal />} />
                 <Route path='documentation/edit-page' element={<EditPage />} />
                 <Route path='user-profile' element={<UserProfile />} />

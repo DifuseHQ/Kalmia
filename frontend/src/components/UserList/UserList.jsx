@@ -6,6 +6,8 @@ import { AuthContext } from '../../context/AuthContext';
 import instance from '../../api/AxiosInstance';
 import DeleteModal from '../DeleteModal/DeleteModal';
 import { toastMessage } from '../../utils/Toast';
+import Breadcrumb from '../Breadcrumb/Breadcrumb';
+import { getFormattedDate } from '../../utils/Common';
 
 export default function UserList () {
   const [userList, setUserList] = useState([]);
@@ -25,7 +27,6 @@ export default function UserList () {
     const fetchData = async () => {
       try {
         const response = await instance.get('/auth/users');
-        console.log(response);
         if (response?.status === 200) {
           setUserList(response?.data || []);
           setLoading(false);
@@ -42,7 +43,6 @@ export default function UserList () {
     fetchData();
   }, [refresh, navigate]);
 
-  // Filtered user list based on search term
   const filterUser = userList.filter(
     (user) =>
       !user.admin &&
@@ -50,25 +50,21 @@ export default function UserList () {
         user.email?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  // Handle search input change
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
     setCurrentPage(1);
   };
 
-  // Handle opening delete modal
   const openDeleteModal = (item) => {
     setCurrentItem(item);
     setIsDeleteModal(true);
   };
 
-  // Handle cancel delete action
   const handleCancelDelete = () => {
     setIsDeleteModal(false);
     setCurrentItem(null);
   };
 
-  // Handle delete user action
   const handleDeleteUser = async (username) => {
     if (!username) {
       toastMessage('Something went wrong, try again', 'error');
@@ -95,13 +91,11 @@ export default function UserList () {
     }
   };
 
-  // Calculate pagination indices
   const startIdx = (currentPage - 1) * itemsPerPage;
   const endIdx = startIdx + itemsPerPage;
   const totalItems = filterUser.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-  // Handle page change
   const handlePageChange = useCallback(
     (pageNumber) => {
       if (pageNumber >= 1 && pageNumber <= totalPages) {
@@ -115,7 +109,7 @@ export default function UserList () {
     if (loading) {
       return (
         <tr className='border-b dark:border-gray-700'>
-          <td colSpan='4' className='py-8'>
+          <td colSpan='4' className='p-8'>
             <div className='flex flex-col items-center justify-center'>
               {loading && (
                 <Icon
@@ -135,7 +129,7 @@ export default function UserList () {
           exit={{ opacity: 0 }}
           className='border-b dark:border-gray-700'
         >
-          <td colSpan='4' className='text-center py-8'>
+          <td colSpan='4' className='text-center p-8'>
             <h1 className='text-center text-gray-600 sm:text-lg font-semibold'>
               No user found
             </h1>
@@ -156,17 +150,50 @@ export default function UserList () {
               <td className='px-4 py-3 text-md text-black dark:text-white'>
                 {user.email}
               </td>
-              {/* <td className="px-4 py-3">
-                <button className="text-blue-500 border px-3 border-blue-500 rounded-lg hover:bg-blue-500 hover:text-white">
-                  Edit
-                </button>
-              </td> */}
+              <td className='px-4 py-3 cursor-text'>
+                <div className='flex justify-start items-center gap-2' title='Creation Date'>
+                  <Icon
+                    icon='mdi:clock-plus-outline'
+                    className='w-4 h-4 text-gray-500 dark:text-white'
+                  />
+                  <span className=' px-1 text-left items-center dark:text-white text-md whitespace-nowrap'>
+                    {getFormattedDate(user.createdAt)}
+                  </span>
+                </div>
+                <div
+                  className='flex gap-2 items-center'
+                  title='Last Update Date'
+                >
+                  <Icon
+                    icon='mdi:clock-edit-outline'
+                    className='w-4 h-4 text-gray-500 dark:text-white'
+                  />
+                  <span className=' px-1 text-left items-center dark:text-white text-md whitespace-nowrap'>
+                    {getFormattedDate(user.updatedAt)}
+                  </span>
+                </div>
+              </td>
               <td className='px-4 py-3'>
                 <button
-                  onClick={() => openDeleteModal(user)}
-                  className='text-red-500 px-2 border-red-500 rounded-lg hover:bg-red-500 hover:text-white'
+                  id={`edit-delete-${user.id}`}
+                  data-dropdown-toggle={`edit-delete-${user.id}`}
+                  className='inline-flex items-center gap-3 p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100'
+                  type='button'
                 >
-                  <Icon icon='material-symbols:delete' className='w-5 h-5' />
+                  <Icon
+                    icon='material-symbols:edit-outline' className='w-6 h-6 text-yellow-500 dark:text-yellow-400'
+                    onClick={() => {
+                      window.alert('Edit user');
+                      console.log(user);
+                    }}
+                  />
+                  <Icon
+                    icon='material-symbols:delete'
+                    className='w-6 h-6 text-red-600 dark:text-red-500'
+                    onClick={() => {
+                      openDeleteModal(user);
+                    }}
+                  />
                 </button>
               </td>
             </motion.tr>
@@ -178,31 +205,19 @@ export default function UserList () {
 
   return (
     <AnimatePresence className='bg-gray-50 dark:bg-gray-900 p-3 sm:p-5'>
-      <motion.nav
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className='flex pb-10'
-        aria-label='Breadcrumb'
-      >
-        <ol className='inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse'>
-          <li className='inline-flex items-center '>
-            <span className='inline-flex items-center gap-1 text-lg font-medium text-gray-500  dark:text-gray-400 cursor-text'>
-              <Icon icon='mdi:users' className='w-5 h-5 dark:text-white' />
-              user management
-            </span>
-          </li>
-        </ol>
-      </motion.nav>
+      <Breadcrumb />
 
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className='mx-auto max-w-screen-xl justify-start pr-4 lg:pr-12'
+        className='mx-auto justify-start'
+        key='user-list'
       >
         <div className='bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden'>
-          <div className='flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4'>
+          <div
+            className='flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4'
+          >
             <div className='w-full md:w-1/2'>
               <form className='flex items-center'>
                 <label htmlFor='simple-search' className='sr-only'>
@@ -251,12 +266,10 @@ export default function UserList () {
                   <th scope='col' className='px-4 py-3'>
                     Email
                   </th>
-                  {/* <th scope="col" className="px-4 py-3">
-                    Edit
-                  </th> */}
                   <th scope='col' className='px-4 py-3'>
-                    Delete
+                    Create / Update
                   </th>
+                  <th scope='col' className='px-4 py-3' />
                 </tr>
               </thead>
               <tbody>{renderTableContent()}</tbody>

@@ -3,8 +3,8 @@ import { NavLink, useLocation, useNavigate, useSearchParams } from 'react-router
 import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
 import { AuthContext } from '../../context/AuthContext';
-import instance from '../../api/AxiosInstance';
 import { toastMessage } from '../../utils/Toast';
+import { getDocumentations } from '../../api/Requests';
 
 export default function Sidebar () {
   const [documentation, setDocumentation] = useState([]);
@@ -15,23 +15,17 @@ export default function Sidebar () {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchdata = async () => {
-      try {
-        const response = await instance.get('/docs/documentations');
-        if (response?.status === 200) {
-          setDocumentation(response?.data);
-        }
-      } catch (err) {
-        console.error(err);
-        if (!err.response || err?.response?.status === 500) {
-          toastMessage(err?.message, 'error');
-          navigate('/server-down');
-          return;
-        }
-        toastMessage(err?.response?.data?.message, 'error');
+    const fetchData = async () => {
+      const documentations = await getDocumentations();
+      if (documentations.status === 'success') {
+        setDocumentation(documentations.data);
+      } else {
+        toastMessage(documentations.message, 'error');
+        navigate('/server-down');
       }
     };
-    fetchdata();
+
+    fetchData();
   }, [refresh, navigate]);
 
   const toggleDropdown = (index) => {
@@ -91,7 +85,7 @@ export default function Sidebar () {
                 onClick={handleCreateDocument}
                 className='flex w-full py-2 px-5 my-5 justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-md  text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800'
               >
-                <span className=' px-1 pt-0.5 text-left items-center dark:text-white text-md '>New Document</span>
+                <span className=' px-1 pt-1 text-left items-center dark:text-white text-md text-sm'>New Documentation</span>
                 <Icon icon='ei:plus' className='w-7 h-7 dark:text-white' />
               </motion.button>
             </li>
@@ -112,7 +106,7 @@ export default function Sidebar () {
                       whilehover={{ scale: 1.08, originx: 0 }}
                     >
                       <NavLink
-                        to={`/dashboard/documentation?id=${val.id}&docName=${val.name}`}
+                        to={`/dashboard/documentation?id=${val.id}`}
                         onClick={() => toggleDropdown(index)}
                         className={`flex items-center p-2 w-full text-base font-normal rounded-lg transition duration-75 group hover:bg-gray-200 dark:text-white dark:hover:bg-gray-700 ${
                             (location.pathname === '/dashboard' && val.id === smallestId) || val.id === Number(docId)
@@ -122,7 +116,7 @@ export default function Sidebar () {
                         aria-controls={`${val.name}`}
                         title={val.name}
                       >
-                        <Icon icon='ep:document' className='w-8 h-8 dark:text-white' />
+                        <Icon icon='uiw:document' className='w-8 h-8 dark:text-white' />
                         <span className='flex-1 px-1 text-left overflow-hidden text-md whitespace-nowrap overflow-ellipsis'>
                           {val.name}
                         </span>
