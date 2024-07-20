@@ -46,6 +46,7 @@ export default function Navbar () {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className='bg-white border-b border-gray-200 px-4 py-2.5 dark:bg-gray-800 dark:border-gray-700 fixed left-0 right-0 top-0 z-50'
+        key='navbar'
       >
         <div className='flex flex-wrap justify-between items-center'>
           <div className='flex justify-start items-center'>
@@ -120,32 +121,30 @@ export default function Navbar () {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className='absolute right-0 z-50 my-4  text-base list-none bg-white  divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600 rounded-xl'
+                      className='absolute right-0 z-50 my-4 overflow-hidden text-base list-none bg-white  divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600 rounded-xl'
                       id={`Dropdown-user-${userDetails.id}`}
+                      key='user-details-dropdown'
                     >
                       <Link to='/dashboard/user-profile' onClick={() => setIsOpen(!isOpen)}>
-                        <div className='py-3 px-4 hover:bg-gray-300 cursor-pointer'>
-                          <span className='block text-sm font-semibold text-gray-900 dark:text-white'>
+                        <div className='py-3 px-4 hover:bg-gray-300 dark:hover:bg-gray-500 cursor-pointer'>
+                          <span className='block text-md font-semibold text-gray-900 dark:text-white'>
                             {userDetails.username}
                           </span>
-                          <span className='block text-sm text-gray-900 truncate dark:text-white'>
+                          <span className='block text-md text-gray-900 truncate dark:text-white'>
                             {userDetails.email}
                           </span>
                         </div>
                       </Link>
-                      <ul
-                        className='py-1 text-gray-700 dark:text-gray-300'
-                        aria-labelledby='dropdown'
-                      >
-                        <li>
-                          <p
-                            onClick={() => logout()}
-                            className='block cursor-pointer py-2 px-4 text-sm hover:bg-gray-300 dark:hover:bg-gray-600 dark:hover:text-white'
-                          >
-                            Sign out
-                          </p>
-                        </li>
-                      </ul>
+
+                      <div className='px-4 hover:bg-gray-300 dark:hover:bg-gray-500 cursor-pointer'>
+                        <span
+                          onClick={() => logout()}
+                          className='block text-md py-3 font-semibold text-gray-900 dark:text-white'
+                        >
+                          Sign Out
+                        </span>
+                      </div>
+
                     </motion.div>
                   )}
                 </div>
