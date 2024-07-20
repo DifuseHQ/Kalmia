@@ -39,17 +39,15 @@ export const getRandomNumber = (min, max) => {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 };
 
-
-export const isTokenExpiringSoon= async(data)=>{
-
+export const isTokenExpiringSoon = async (data) => {
   const expiryDateString = data.expiry.replace(
     /(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}).*/,
     '$1'
   );
 
-    const expiryDate = new Date(expiryDateString);
-    const currentTime = new Date();
-    const timeDifference = expiryDate.getTime() - currentTime.getTime();
-    const oneHourInMilliseconds = 60 * 60 * 1000;
-    return timeDifference < oneHourInMilliseconds;
+  const expiryDate = new Date(expiryDateString);
+  const currentTime = new Date();
+  const timeDifference = expiryDate.getTime() - currentTime.getTime();
+  const oneHourInMilliseconds = 60 * 60 * 1000;
+  return timeDifference < oneHourInMilliseconds;
 };

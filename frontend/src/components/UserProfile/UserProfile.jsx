@@ -243,17 +243,17 @@ export default function UserProfile () {
                         scale={scale}
                         rotate={0}
                       />
-                      <div className='flex justify-around mt-2 '> 
-                        <div className='flex flex-col'> 
-                        <span className='dark:text-white text-md'>scale</span>
-                        <input
-                          type='range'
-                          min='1'
-                          max='2.5'
-                          step='0.01'
-                          value={scale}
-                          onChange={(e) => setScale(e.target.value)}
-                        />
+                      <div className='flex justify-around mt-2 '>
+                        <div className='flex flex-col'>
+                          <span className='dark:text-white text-md'>scale</span>
+                          <input
+                            type='range'
+                            min='1'
+                            max='2.5'
+                            step='0.01'
+                            value={scale}
+                            onChange={(e) => setScale(e.target.value)}
+                          />
                         </div>
                         <button onClick={handleSave} className='bg-blue-500 text-white rounded px-4 py-2'>
                           Crop

@@ -5,20 +5,19 @@ import { jwtDecode } from 'jwt-decode';
 import Cookies from 'js-cookie';
 import { toastMessage } from '../utils/Toast';
 import { getUsers, refreshJWT, signOut, validateJWT } from '../api/Requests';
-import {handleError, isTokenExpiringSoon} from '../utils/Common'
+import { handleError, isTokenExpiringSoon } from '../utils/Common';
 
-export const AuthContext = createContext(); 
+export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-
-  const [token ,setToken] = useState(() => {
+  const [token, setToken] = useState(() => {
     if (Cookies.get('accessToken')) {
       const tokenData = JSON.parse(Cookies.get('accessToken'));
       const accessToken = tokenData.token;
       return accessToken;
     }
     return null;
-  })
+  });
 
   const [user, setUser] = useState(() => {
     if (Cookies.get('accessToken')) {
@@ -52,7 +51,7 @@ export const AuthProvider = ({ children }) => {
         password
       });
       if (response?.status === 200) {
-        setToken(response.data.token)
+        setToken(response.data.token);
         const decodedUser = jwtDecode(response?.data?.token);
         setUser(decodedUser);
         Cookies.set('accessToken', JSON.stringify(response?.data), {
@@ -74,88 +73,84 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const fetchUserDetails = async (user) => {
-        const result = await getUsers();
-        if(handleError(result,navigate)) return;
+      const result = await getUsers();
+      if (handleError(result, navigate)) return;
 
-        if (result.status === "success") {
-          const data = result.data;
-          const filterUser = data.find(
-            (obj) => obj?.id.toString() === user?.user_id
-          );
-          setUserDetails(filterUser);
-        }
+      if (result.status === 'success') {
+        const data = result.data;
+        const filterUser = data.find(
+          (obj) => obj?.id.toString() === user?.user_id
+        );
+        setUserDetails(filterUser);
+      }
     };
 
     if (user) {
       fetchUserDetails(user);
     }
-  }, [user, navigate, refresh]); 
+  }, [user, navigate, refresh]);
 
   const logout = async () => {
-   
-      const result = await signOut(token);
+    const result = await signOut(token);
 
-      if(handleError(result,navigate)) return ;
+    if (handleError(result, navigate)) return;
 
-      if (result.status === "success") {
-        Cookies.remove('accessToken');
-        toastMessage('Logged Out', 'success');
-        setUser(null);
-        setUserDetails(null);
-      }
+    if (result.status === 'success') {
+      Cookies.remove('accessToken');
+      toastMessage('Logged Out', 'success');
+      setUser(null);
+      setUserDetails(null);
+    }
   };
 
   const refreshToken = useCallback(async () => {
+    const result = await refreshJWT(token);
 
-      const result = await refreshJWT(token);
+    if (handleError(result, navigate)) return;
 
-      if(handleError(result, navigate)) return ;
-
-      if (result.status === "success") {
-        const data = result.data;
-        Cookies.set('accessToken', JSON.stringify(data), {
-          expires: 1,
-          secure: true
-        });
-        window.location.reload()
-      }
-   
-  }, [navigate,token]);
+    if (result.status === 'success') {
+      const data = result.data;
+      Cookies.set('accessToken', JSON.stringify(data), {
+        expires: 1,
+        secure: true
+      });
+      window.location.reload();
+    }
+  }, [navigate, token]);
 
   useEffect(() => {
     const interval = setInterval(() => {
       const validateToken = async () => {
+        if (!token) {
+          Cookies.remove('accessToken');
+          setUser(null);
+          navigate('/');
+          clearInterval(interval);
+          return;
+        }
 
-          if (!token) {
-            Cookies.remove('accessToken');
-            setUser(null);
-            navigate('/');
-            clearInterval(interval);
-            return;
+        const result = await validateJWT(token);
+
+        if (handleError(result, navigate)) return;
+
+        if (result.status === 'success') {
+          const data = result.data;
+          const isExpiringSoon = await isTokenExpiringSoon(data);
+          if (isExpiringSoon) {
+            refreshToken();
           }
-
-          const result = await validateJWT(token);
-
-          if(handleError(result, navigate)) return;
-          
-          if (result.status === "success") {
-            const data=  result.data;
-            const isExpiringSoon =await isTokenExpiringSoon(data);
-            if (isExpiringSoon) {
-              refreshToken();
-            }
-          }
+        }
       };
 
       validateToken();
     }, 5 * 1000);
 
     return () => clearInterval(interval);
-  }, [navigate, refreshToken, setUser,token]);
+  }, [navigate, refreshToken, setUser, token]);
 
   return (
     <AuthContext.Provider
-      value={{ 
+      value={{
         login,
         user,
         setUser,

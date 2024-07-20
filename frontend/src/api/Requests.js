@@ -34,9 +34,9 @@ async function makeRequest (url, method = 'get', data = null) {
   }
 }
 
-export const refreshJWT = (token) => makeRequest('/auth/jwt/refresh', 'post', {token});
-export const validateJWT = (token) => makeRequest('/auth/jwt/validate','post', {token});
-export const signOut = (token) => makeRequest('/auth/jwt/revoke','post', {token});
+export const refreshJWT = (token) => makeRequest('/auth/jwt/refresh', 'post', { token });
+export const validateJWT = (token) => makeRequest('/auth/jwt/validate', 'post', { token });
+export const signOut = (token) => makeRequest('/auth/jwt/revoke', 'post', { token });
 
 export const getDocumentations = () => makeRequest('/docs/documentations');
 export const getDocumentation = (id) => makeRequest('/docs/documentation', 'post', { id });
@@ -59,4 +59,3 @@ export const getUsers = () => makeRequest('/auth/users');
 export const createUser = (data) => makeRequest('/auth/user/create', 'post', data);
 export const updateUser = (data) => makeRequest('/auth/user/edit', 'post', data);
 export const uploadPhoto = (data) => makeRequest('auth/user/upload-photo', 'post', data);
-
