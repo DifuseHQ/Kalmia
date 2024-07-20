@@ -1,4 +1,5 @@
-import { useCreateBlockNote } from '@blocknote/react';
+import { BlockNoteSchema, defaultBlockSpecs, filterSuggestionItems } from '@blocknote/core';
+import { useCreateBlockNote, SuggestionMenuController, getDefaultReactSlashMenuItems } from '@blocknote/react';
 
 import {
   BlockNoteView,
@@ -7,9 +8,12 @@ import {
 } from '@blocknote/mantine';
 import '@blocknote/core/fonts/inter.css';
 import '@blocknote/mantine/style.css';
+import './EditorCustomTool.css';
+import { Alert } from './EditorCustomTools';
 
 import React, { useContext, useEffect, useState } from 'react';
 import { Icon } from '@iconify/react/dist/iconify';
+import warnIcon from '@iconify/icons-mdi/alert';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AuthContext } from '../../context/AuthContext';
@@ -20,6 +24,24 @@ import Breadcrumb from '../Breadcrumb/Breadcrumb';
 import { getPage, updatePage, deletePage } from '../../api/Requests';
 import { handleError } from '../../utils/Common';
 import { ThemeContext } from '../../context/ThemeContext';
+
+const schema = BlockNoteSchema.create({
+  blockSpecs: {
+    ...defaultBlockSpecs,
+    alert: Alert
+  }
+});
+
+const insertAlert = (editor) => ({
+  title: 'Alert',
+  subtext: 'This is a notification alert.',
+  onItemClick: () => {
+    editor.insertBlocks([{ type: 'alert' }], editor.getTextCursorPosition().block, 'after');
+  },
+  aliases: ['alert', 'notification', 'emphasize', 'warning', 'error', 'info', 'success'],
+  group: 'Alert',
+  icon: <Icon icon={warnIcon} />
+});
 
 const EditorWrapper = React.memo(({ editor, theme }) => {
   const [isReady, setIsReady] = useState(false);
@@ -40,7 +62,17 @@ const EditorWrapper = React.memo(({ editor, theme }) => {
       theme={theme}
       placeholder='Start typing...'
       className='pt-1.5'
-    />
+      slashMenu={false}
+    >
+      <SuggestionMenuController
+        triggerCharacter='/'
+        getItems={async (query) =>
+          filterSuggestionItems(
+            [...getDefaultReactSlashMenuItems(editor), insertAlert(editor)],
+            query
+          )}
+      />
+    </BlockNoteView>
   );
 });
 
@@ -72,6 +104,7 @@ export default function EditPage () {
   };
 
   const editor = useCreateBlockNote({
+    schema,
     initialContent: editorContent
   });
 

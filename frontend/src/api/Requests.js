@@ -13,6 +13,7 @@ function getMessageAndPath (statusCode) {
 async function makeRequest (url, method = 'get', data = null) {
   try {
     const response = await instance[method](url, data);
+    console.log(response);
     return {
       status: 'success',
       code: response.status,
@@ -21,6 +22,7 @@ async function makeRequest (url, method = 'get', data = null) {
       path: ''
     };
   } catch (error) {
+    console.log(error);
     const statusCode = error.response?.status || 500;
     const [message, path] = getMessageAndPath(statusCode);
     return {
