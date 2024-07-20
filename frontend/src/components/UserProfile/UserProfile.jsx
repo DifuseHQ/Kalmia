@@ -190,12 +190,14 @@ export default function UserProfile () {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className='flex flex-col  items-start sm:w-2/3 md:w-2/3 lg:w-2/3 w-full'
+        key="user-profile-container"
       >
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className='flex justify-between items-center mb-6'
+          key="user-profile-image"
         >
           <div className='relative'>
             <img
@@ -223,6 +225,7 @@ export default function UserProfile () {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className='w-2/3'
+          key="user-profile-details"
         >
 
           <div className='flex my-4'>
@@ -285,7 +288,8 @@ export default function UserProfile () {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className='w-full rounded-lg  md:mt-0 sm:max-w-md dark:bg-gray-800 dark:border-gray-700'
+          className='w-full rounded-lg  md:mt-0 sm:max-w-md  '
+          key="user-profile-reset-password"
         >
           <div className='flex justify-center items-center pb-4 mb-4 rounded-t sm:mb-1 dark:border-gray-600'>
             <h3 className='text-lg font-semibold text-gray-900 dark:text-white'>
