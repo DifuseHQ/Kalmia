@@ -1,30 +1,51 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Cookies from 'js-cookie';
-import { jwtDecode } from 'jwt-decode';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
-import axios from 'axios';
+import AvatarEditor from 'react-avatar-editor';
 import { AuthContext } from '../../context/AuthContext';
-import instance from '../../api/AxiosInstance';
-import { getTokenFromCookies } from '../../utils/CookiesManagement';
 import { toastMessage } from '../../utils/Toast';
+import { getUsers, updateUser, uploadPhoto } from '../../api/Requests';
+import { handleError } from '../../utils/Common';
 
 export default function UserProfile () {
-  const { refresh, refreshData } = useContext(AuthContext);
+  const { user, refresh, refreshData } = useContext(AuthContext);
   const [isEdit, setIsEdit] = useState(false);
-  const [isPasswordChange, setIsPasswordChange] = useState(false);
   const navigate = useNavigate();
   const [userData, setUserData] = useState([]);
+  const [editor, setEditor] = useState(null);
+  const [scale, setScale] = useState(1);
+  const [imageFile, setImageFile] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
   const [profileImage, setProfileImage] = useState('/assets/noProfile.png');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPasswod, setConfirmPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const token = getTokenFromCookies();
   const inputRef = useRef(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const users = await getUsers();
+
+      if (handleError(users, navigate)) return;
+
+      if (users.status === 'success') {
+        const data = users.data;
+        const filterUser = data.find(
+          (obj) => obj.id.toString() === user.user_id
+        );
+        setUserData(filterUser);
+        setUsername(filterUser.username);
+        setEmail(filterUser.email);
+        setProfileImage(filterUser.photo || '/assets/noProfile.png');
+      }
+    };
+    fetchData();
+  }, [user, refresh, navigate]);
 
   useEffect(() => {
     if (isEdit) {
@@ -32,82 +53,68 @@ export default function UserProfile () {
     }
   }, [isEdit]);
 
-  useEffect(() => {
-    const tokenData = JSON.parse(Cookies.get('accessToken'));
-    const accessToken = jwtDecode(tokenData.token);
-    const fetchData = async () => {
-      try {
-        const { data, status } = await instance.get('/auth/users');
-        if (status === 200) {
-          const filterUser = data.find(
-            (obj) => obj.id.toString() === accessToken.user_id
-          );
-          setUserData(filterUser);
-          setUsername(filterUser.username);
-          setEmail(filterUser.email);
-          setProfileImage(filterUser.photo || '/assets/noProfile.png');
-        }
-      } catch (err) {
-        if (!err.response) {
-          toastMessage(err?.message, 'error');
-          navigate('/server-down');
-        }
-        toastMessage(err?.response?.data?.message, 'error');
-      }
-    };
-    fetchData();
-  }, [refresh, navigate]);
-
-  const handleUpload = async (e) => {
+  const handleUploadFile = (e) => {
     const file = e.target.files[0];
-    console.log(file);
-    if (file) {
-      const formData = new FormData();
-      formData.append('upload', file);
-
-      try {
-        const response = await axios.post(
-          'http://[::1]:2727/auth/user/upload-photo',
-          formData,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-              Authorization: `Bearer ${token}`
-            }
-          }
-        );
-        if (response?.status === 200) {
-          if (response?.data?.photo) {
-            const image = response?.data?.photo;
-            uploadImage(image);
-          }
-        }
-      } catch (err) {
-        if (!err.response) {
-          toastMessage(err?.message, 'error');
-          navigate('/server-down');
-        }
-        toastMessage(err?.response?.data?.message, 'error');
-      }
+    const allowedTypes = ['image/jpeg', 'image/png'];
+    if (file && allowedTypes.includes(file.type)) {
+      const reader = new window.FileReader();
+      reader.onloadend = () => {
+        setImageFile(reader.result);
+        setShowModal(true);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      toastMessage('Please upload a JPEG or PNG image', 'error');
     }
   };
 
-  const uploadImage = async (image) => {
-    try {
-      const response = await instance.post('/auth/user/edit', {
-        id: Number(userData.id),
-        photo: image
-      });
-      if (response?.status === 200) {
-        toastMessage('user photo updated', 'success');
-        refreshData();
-      }
-    } catch (err) {
-      if (!err.response) {
-        toastMessage(err?.message, 'error');
-        navigate('/server-down');
-      }
-      toastMessage(err?.response?.data?.message, 'error');
+  const handleSave = async () => {
+    setIsLoading(true);
+    setShowModal(false);
+
+    if (editor) {
+      const canvas = editor.getImage();
+      canvas.toBlob(async (blob) => {
+        if (blob) {
+          const formData = new FormData();
+          formData.append('upload', blob, 'cropped-image.jpg');
+
+          // Upload the photo
+          const photo = await uploadPhoto(formData);
+
+          if (handleError(photo, navigate)) {
+            setIsLoading(false);
+            return;
+          }
+
+          if (photo.status === 'success') {
+            const image = photo?.data?.photo;
+            setProfileImage(image);
+            setIsLoading(false);
+
+            const result = await updateUser({
+              id: Number(userData.id),
+              photo: image
+            });
+
+            if (handleError(result, navigate)) {
+              setIsLoading(false);
+              return;
+            }
+
+            if (result.status === 'success') {
+              setIsLoading(false);
+              toastMessage('User photo updated', 'success');
+              refreshData();
+            }
+          }
+        } else {
+          setIsLoading(false);
+        }
+      }, 'image/jpeg');
+    } else {
+      setIsLoading(false);
+      refreshData();
     }
   };
 
@@ -118,41 +125,31 @@ export default function UserProfile () {
       toastMessage('No changes were made to your profile', 'warn');
       return;
     }
-    try {
-      const response = await instance.post('/auth/user/edit', {
-        id: Number(userData.id),
-        username,
-        email
-      });
-      if (response?.status === 200) {
-        toastMessage('user details updated', 'success');
-        refreshData();
-      }
-    } catch (err) {
-      if (!err.response) {
-        toastMessage(err?.message, 'error');
-        navigate('/server-down');
-      }
-      toastMessage(err?.response?.data?.message, 'error');
-    }
-  };
-  const handleOpenEdit = (message) => {
-    if (message === 'editProfile') {
+
+    const result = await updateUser({
+      id: Number(userData.id),
+      username,
+      email
+    });
+
+    if (handleError(result, navigate)) return;
+
+    if (result.status === 'success') {
+      toastMessage('user details updated', 'success');
       setIsEdit(!isEdit);
-    } else if (message === 'changePassword') {
-      setIsPasswordChange(!isPasswordChange);
+      refreshData();
     }
   };
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
     if (!password) {
-      toastMessage('Enter new password', 'warning');
+      toastMessage('Enter new password', 'warn');
       return;
     }
 
     if (password.length < 8) {
-      toastMessage('Password must be 8 characters', 'warning');
+      toastMessage('Password must be 8 characters', 'warn');
       return;
     }
 
@@ -161,25 +158,27 @@ export default function UserProfile () {
       return;
     }
 
-    try {
-      const response = await instance.post('/auth/user/edit', {
-        id: Number(userData.id),
-        password: password.toString()
-      });
-      if (response?.status === 200) {
-        refreshData();
-        toastMessage('password change successfully', 'success');
-        setPassword('');
-        setConfirmPassword('');
-      }
-    } catch (err) {
-      console.error(err);
-      if (!err.response) {
-        toastMessage('Error changing password', 'error');
-        navigate('/server-down');
-      }
-      toastMessage(err?.response?.data?.message, 'error');
+    const result = await updateUser({
+      id: Number(userData.id),
+      password: password.toString()
+    });
+
+    if (handleError(result, navigate)) return;
+    if (result.status === 'success') {
+      refreshData();
+      toastMessage('password change successfully', 'success');
+      setPassword('');
+      setConfirmPassword('');
     }
+  };
+
+  const handleWheel = (e) => {
+    e.preventDefault();
+    const delta = Math.sign(e.deltaY);
+    setScale((prevScale) => {
+      const newScale = delta > 0 ? Math.max(1, prevScale - 0.1) : Math.min(2.5, prevScale + 0.1);
+      return newScale;
+    });
   };
 
   return (
@@ -190,21 +189,32 @@ export default function UserProfile () {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className='flex flex-col  items-start sm:w-2/3 md:w-2/3 lg:w-2/3 w-full'
-        key="user-profile-container"
+        key='user-profile-container'
       >
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className='flex justify-between items-center mb-6'
-          key="user-profile-image"
+          key='user-profile-image'
         >
           <div className='relative'>
-            <img
-              className='h-32 w-32 rounded-full border-4 border-white dark:border-gray-800'
-              src={profileImage}
-              alt='Profile'
-            />
+            {isLoading
+              ? (
+
+                <div className='flex items-center justify-center h-32 w-32 rounded-full border-4 border-white dark:bg-gray-700 dark:border-gray-800'>
+                  <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-gray-300' />
+                </div>
+
+                )
+              : (
+
+                <img
+                  className='h-32 w-32 rounded-full border-4 border-white dark:border-gray-800'
+                  src={profileImage || 'defaultProfileImage.jpg'}
+                  alt='Profile'
+                />
+                )}
             <label
               htmlFor='upload-button'
               className='absolute bottom-0 right-0  text-blue-600 rounded-full p-2 hover:text-blue-500 cursor-pointer'
@@ -214,9 +224,44 @@ export default function UserProfile () {
                 id='upload-button'
                 type='file'
                 className='hidden'
-                onChange={handleUpload}
+                onChange={handleUploadFile}
               />
             </label>
+
+            {showModal && (
+              <div className='fixed z-10 inset-0 overflow-y-auto'>
+                <div className='flex items-center justify-center min-h-screen'>
+                  <div className='bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6'>
+                    <div className='mt-4' onWheel={handleWheel}>
+                      <AvatarEditor
+                        ref={setEditor}
+                        image={imageFile}
+                        width={250}
+                        height={250}
+                        border={50}
+                        borderRadius={125}
+                        scale={scale}
+                        rotate={0}
+                      />
+                      <div className='flex justify-between mt-2'>
+                        <input
+                          type='range'
+                          min='1'
+                          max='2.5'
+                          step='0.01'
+                          value={scale}
+                          onChange={(e) => setScale(e.target.value)}
+                        />
+                        <button onClick={handleSave} className='bg-blue-500 text-white rounded px-4 py-2'>
+                          Crop
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
           </div>
         </motion.div>
 
@@ -225,7 +270,7 @@ export default function UserProfile () {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className='w-2/3'
-          key="user-profile-details"
+          key='user-profile-details'
         >
 
           <div className='flex my-4'>
@@ -268,18 +313,35 @@ export default function UserProfile () {
           </div>
 
           <div className='flex justify-center my-8 gap-5'>
-            <button
-              className='btn bg-blue-500 text-white rounded-lg px-5 py-2 hover:bg-blue-700 '
-              onClick={handleSubmit}
-            >
-              Save
-            </button>
-            <button
-              className='btn bg-blue-500 text-white rounded-lg px-5 py-2 hover:bg-blue-700 '
-              onClick={() => handleOpenEdit('editProfile')}
-            >
-              Edit Profile
-            </button>
+            {!isEdit
+              ? (
+                <button
+                  className='btn bg-blue-500 text-white rounded-lg px-5 py-2 hover:bg-blue-700 '
+                  onClick={() => setIsEdit(!isEdit)}
+                >
+                  Edit Profile
+                </button>
+                )
+              : (
+                <>
+                  <button
+                    className='btn bg-blue-500 text-white rounded-lg px-5 py-2 hover:bg-blue-700 '
+                    onClick={handleSubmit}
+                  >
+                    Update
+                  </button>
+                  <button
+                    className='btn bg-blue-500 text-white rounded-lg px-5 py-2 hover:bg-blue-700 '
+                    onClick={() => {
+                      setIsEdit(!isEdit);
+                      refreshData();
+                    }}
+                  >
+                    cancel
+                  </button>
+                </>
+                )}
+
           </div>
 
         </motion.div>
@@ -289,7 +351,7 @@ export default function UserProfile () {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className='w-full rounded-lg  md:mt-0 sm:max-w-md  '
-          key="user-profile-reset-password"
+          key='user-profile-reset-password'
         >
           <div className='flex justify-center items-center pb-4 mb-4 rounded-t sm:mb-1 dark:border-gray-600'>
             <h3 className='text-lg font-semibold text-gray-900 dark:text-white'>
@@ -338,7 +400,7 @@ export default function UserProfile () {
               className='btn bg-blue-500 text-white rounded-lg px-5 py-2 hover:bg-blue-700 '
               onClick={handleChangePassword}
             >
-              Save
+              Update
             </button>
           </div>
         </motion.div>

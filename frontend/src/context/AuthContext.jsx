@@ -30,8 +30,9 @@ export const AuthProvider = ({ children }) => {
 
   const [refresh, setRefresh] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
+
   const refreshData = () => {
-    setRefresh(!refresh);
+    setRefresh(prev => !prev);
   };
 
   const login = async (username, password) => {
@@ -83,7 +84,7 @@ export const AuthProvider = ({ children }) => {
     if (user) {
       fetchUserDetails(user);
     }
-  }, [user, navigate]);
+  }, [user, navigate, refresh]);
 
   const logout = async () => {
     const accessToken = JSON.parse(Cookies.get('accessToken'));

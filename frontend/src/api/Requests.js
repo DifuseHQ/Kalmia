@@ -13,7 +13,6 @@ function getMessageAndPath (statusCode) {
 async function makeRequest (url, method = 'get', data = null) {
   try {
     const response = await instance[method](url, data);
-    console.log(response);
     return {
       status: 'success',
       code: response.status,
@@ -52,4 +51,7 @@ export const updatePage = (data) => makeRequest('/docs/page/edit', 'post', data)
 export const createPage = (data) => makeRequest('/docs/page/create', 'post', data);
 export const deletePage = (id) => makeRequest('/docs/page/delete', 'post', { id });
 
+export const getUsers = () => makeRequest('/auth/users');
 export const createUser = (data) => makeRequest('/auth/user/create', 'post', data);
+export const updateUser = (data) => makeRequest('/auth/user/edit', 'post', data);
+export const uploadPhoto = (data) => makeRequest('auth/user/upload-photo', 'post', data);
