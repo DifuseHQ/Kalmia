@@ -231,7 +231,7 @@ export default function UserProfile () {
             {showModal && (
               <div className='fixed z-10 inset-0 overflow-y-auto'>
                 <div className='flex items-center justify-center min-h-screen'>
-                  <div className='bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6'>
+                  <div className='bg-white dark:bg-gray-800 rounded-lg shadow-lg p-3'>
                     <div className='mt-4' onWheel={handleWheel}>
                       <AvatarEditor
                         ref={setEditor}
@@ -243,7 +243,9 @@ export default function UserProfile () {
                         scale={scale}
                         rotate={0}
                       />
-                      <div className='flex justify-between mt-2'>
+                      <div className='flex justify-around mt-2 '> 
+                        <div className='flex flex-col'> 
+                        <span className='dark:text-white text-md'>scale</span>
                         <input
                           type='range'
                           min='1'
@@ -252,6 +254,7 @@ export default function UserProfile () {
                           value={scale}
                           onChange={(e) => setScale(e.target.value)}
                         />
+                        </div>
                         <button onClick={handleSave} className='bg-blue-500 text-white rounded px-4 py-2'>
                           Crop
                         </button>
