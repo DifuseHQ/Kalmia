@@ -1,16 +1,21 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from '../components/Navbar/Navbar';
 import Sidebar from '../components/Sidebar/Sidebar';
 import CreateDocModal from '../components/CreateDocumentModal/CreateDocModal';
+import { AuthContext } from '../context/AuthContext';
 
-export default function DashboardPage () {
+export default function DashboardPage() {
+
+  const { createDocumentationModal } = useContext(AuthContext)
   return (
     <div className='antialiased bg-gray-50 dark:bg-gray-900'>
       <Navbar />
       <Sidebar />
       <main className='p-4 md:ml-64 min-h-screen pt-20'>
-        <CreateDocModal />
+        {createDocumentationModal &&
+          <CreateDocModal />
+        }
         <Outlet />
       </main>
     </div>

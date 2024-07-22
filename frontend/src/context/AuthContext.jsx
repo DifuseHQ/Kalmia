@@ -29,16 +29,18 @@ export const AuthProvider = ({ children }) => {
   });
 
   const [userDetails, setUserDetails] = useState(null);
-  const [isOpenModal, setIsOpenModal] = useState(false);
-
+  const [createDocumentationModal, setCreateDocumentationModal] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const [breadcrumb, setBreadcrumb] = useState([]);
+  const [createPageGroupModal, setCreatePageGroupModal] = useState(false);
+  const [editModal, setEditModal] = useState(false);
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [currentItem, setCurrentItem] = useState(null);
+  const [deleteItem, setDeleteItem] = useState(null);
 
   const navigate = useNavigate();
 
   const [refresh, setRefresh] = useState(false);
-  const [deleteModal, setDeleteModal] = useState(false);
 
   const refreshData = () => {
     setRefresh(prev => !prev);
@@ -143,7 +145,7 @@ export const AuthProvider = ({ children }) => {
       };
 
       validateToken();
-    }, 5 * 1000);
+    }, 5 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, [navigate, refreshToken, setUser, token]);
@@ -157,17 +159,22 @@ export const AuthProvider = ({ children }) => {
         logout,
         refresh,
         refreshData,
-        deleteModal,
-        setDeleteModal,
         userDetails,
         setUserDetails,
-        refreshToken,
-        isOpenModal,
-        setIsOpenModal,
+        createDocumentationModal,
+        setCreateDocumentationModal,
         isSidebarOpen,
         setIsSidebarOpen,
-        breadcrumb,
-        setBreadcrumb
+        createPageGroupModal,
+        setCreatePageGroupModal,
+        editModal,
+        setEditModal,
+        deleteModal,
+        setDeleteModal,
+        currentItem,
+        setCurrentItem,
+        deleteItem,
+        setDeleteItem
       }}
     >
       {children}

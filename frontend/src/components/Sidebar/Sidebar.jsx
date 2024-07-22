@@ -11,7 +11,7 @@ export default function Sidebar () {
   const [openDropdowns, setOpenDropdowns] = useState([]);
   const [searchParam] = useSearchParams();
   const docId = searchParam.get('id');
-  const { refresh, userDetails, setIsOpenModal, isSidebarOpen, setIsSidebarOpen } = useContext(AuthContext);
+  const { refresh, userDetails, setCreateDocumentationModal, isSidebarOpen, setIsSidebarOpen } = useContext(AuthContext);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -35,7 +35,7 @@ export default function Sidebar () {
   };
 
   const handleCreateDocument = () => {
-    setIsOpenModal(true);
+    setCreateDocumentationModal(true);
   };
 
   const location = useLocation();

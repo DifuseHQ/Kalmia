@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
+import { AuthContext } from '../../context/AuthContext';
 
 export default function EditDocumentModal ({
   title,
@@ -12,6 +13,7 @@ export default function EditDocumentModal ({
 }) {
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
+  const { setCurrentItem, setEditModal } = useContext(AuthContext);
 
   useEffect(() => {
     setEditTitle(title || '');
@@ -37,7 +39,10 @@ export default function EditDocumentModal ({
                 </div>
               )}
               <button
-                onClick={() => closeModal()}
+                onClick={() => {
+                  setEditModal(false);
+                  setCurrentItem(null);
+                }}
                 type='button'
                 className='text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white'
               >

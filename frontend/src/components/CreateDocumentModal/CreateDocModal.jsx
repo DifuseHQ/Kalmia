@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
@@ -9,11 +9,19 @@ import { createDocumentation } from '../../api/Requests';
 
 export default function CreateDocModal () {
   const navigate = useNavigate();
-  const { refreshData, isOpenModal, setIsOpenModal } = useContext(AuthContext);
+  const { refreshData,setCreateDocumentationModal } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     title: '',
     description: ''
   });
+
+  const titleRef = useRef(null);
+
+  useEffect(() => {
+    if (titleRef.current) {
+      titleRef.current.focus();
+    }
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -23,9 +31,6 @@ export default function CreateDocModal () {
     });
   };
 
-  const handleCloseModal = () => {
-    setIsOpenModal(false);
-  };
 
   const handleCreateDocument = async () => {
     if (formData.title === '') {
@@ -44,7 +49,7 @@ export default function CreateDocModal () {
     });
 
     if (result.status === 'success') {
-      setIsOpenModal(false);
+      setCreateDocumentationModal(false);
       refreshData();
       toastMessage('Document created successfully', 'success');
     } else {
@@ -54,7 +59,7 @@ export default function CreateDocModal () {
 
   return (
     <AnimatePresence>
-      {isOpenModal && (
+     
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -77,7 +82,7 @@ export default function CreateDocModal () {
                   </h3>
                 </div>
                 <button
-                  onClick={handleCloseModal}
+                  onClick={()=>setCreateDocumentationModal(false)}
                   type='button'
                   className='text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white'
                 >
@@ -95,6 +100,7 @@ export default function CreateDocModal () {
                     Title
                   </label>
                   <input
+                  ref={titleRef}
                     onChange={handleChange}
                     type='text'
                     name='title'
@@ -135,7 +141,7 @@ export default function CreateDocModal () {
             </div>
           </motion.div>
         </motion.div>
-      )}
+   
     </AnimatePresence>
   );
 }
