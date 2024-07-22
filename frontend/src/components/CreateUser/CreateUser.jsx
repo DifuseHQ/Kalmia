@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
@@ -13,9 +13,17 @@ export default function CreateUser () {
     email: '',
     password: '',
     rePassword: ''
-  });
+  }); 
 
   const navigate = useNavigate();
+
+  const usernameRef= useRef(null);
+
+ useEffect(() => {
+    if (usernameRef.current) {
+      usernameRef.current.focus();
+    }
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -92,6 +100,7 @@ export default function CreateUser () {
                           Username
                         </label>
                         <input
+                        ref={usernameRef}
                           type='text'
                           name='username'
                           id='username'

@@ -174,7 +174,7 @@ export default function UserList () {
                 </div>
               </td>
               <td className='px-4 py-3'>
-                <button
+                <Link to="/dashboard/admin/edit-user" 
                   id={`edit-delete-${user.id}`}
                   data-dropdown-toggle={`edit-delete-${user.id}`}
                   className='inline-flex items-center gap-3 p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100'
@@ -182,10 +182,6 @@ export default function UserList () {
                 >
                   <Icon
                     icon='material-symbols:edit-outline' className='w-6 h-6 text-yellow-500 dark:text-yellow-400'
-                    onClick={() => {
-                      window.alert('Edit user');
-                      console.log(user);
-                    }}
                   />
                   <Icon
                     icon='material-symbols:delete'
@@ -194,7 +190,7 @@ export default function UserList () {
                       openDeleteModal(user);
                     }}
                   />
-                </button>
+                </Link>
               </td>
             </motion.tr>
           ))}

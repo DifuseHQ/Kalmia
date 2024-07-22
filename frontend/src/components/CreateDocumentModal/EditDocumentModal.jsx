@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
 import { AuthContext } from '../../context/AuthContext';
@@ -6,7 +6,6 @@ import { AuthContext } from '../../context/AuthContext';
 export default function EditDocumentModal ({
   title,
   description,
-  closeModal,
   updateData,
   heading,
   id
@@ -14,6 +13,14 @@ export default function EditDocumentModal ({
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const { setCurrentItem, setEditModal } = useContext(AuthContext);
+
+  const titleRef = useRef(null);
+
+  useEffect(() => {
+    if (titleRef.current) {
+      titleRef.current.focus();
+    }
+  }, []);
 
   useEffect(() => {
     setEditTitle(title || '');
@@ -61,6 +68,7 @@ export default function EditDocumentModal ({
                     Title
                   </label>
                   <input
+                  ref={titleRef}
                     value={editTitle}
                     onChange={(e) => setEditTitle(e.target.value)}
                     type='text'
