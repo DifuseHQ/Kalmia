@@ -310,6 +310,34 @@ export default function Documentation () {
     handleRefresh();
   };
 
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedVersion, setSelectedVersion] = useState('Version 1.0'); // Default version
+  const versions = [
+    'Version 1.0',
+    'Version 1.1',
+    'Version 1.2',
+    'Version 2.0',
+    'Version 2.1'
+  ];
+
+  const toggleDropdown = () => {
+    setShowDropdown(!showDropdown);
+  };
+
+  const handleSearchVersionChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleVersionSelect = (version) => {
+    setSelectedVersion(version);
+    setShowDropdown(false); // Close dropdown after selection
+  };
+
+  const filteredOptions = versions.filter((version) =>
+    version.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <AnimatePresence className='bg-gray-50 dark:bg-gray-900 p-3 sm:p-5'>
       <Breadcrumb />
@@ -356,12 +384,22 @@ export default function Documentation () {
       >
         <motion.button
           whilehover={{ scale: 1.3 }}
+          title='Clone Documentation'
+        >
+          <Icon
+            icon='clarity:clone-line'
+            className='w-6 h-6 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-700'
+          />
+        </motion.button>
+
+        <motion.button
+          whilehover={{ scale: 1.3 }}
           onClick={() => setIsEditModal(!isEditModal)}
           title='Edit Documentation'
         >
           <Icon
             icon='material-symbols:edit-outline'
-            className='w-6 h-6 text-yellow-500 dark:text-yellow-400'
+            className='w-6 h-6 text-yellow-500 dark:text-yellow-400 hover:text-yellow-600 dark:hover:text-yellow-600'
           />
         </motion.button>
 
@@ -372,7 +410,7 @@ export default function Documentation () {
         >
           <Icon
             icon='material-symbols:delete'
-            className='w-6 h-6 text-red-600 dark:text-red-500'
+            className='w-6 h-6 text-red-600 dark:text-red-500 hover:text-red-700 dark:hover:text-red-600'
           />
         </motion.button>
       </motion.div>
@@ -428,6 +466,78 @@ export default function Documentation () {
                   </div>
                 </div>
               </div>
+
+              <div className='relative inline-block border-black'>
+                <div
+                  id='dropdownSelect'
+                  className='flex items-center border border-gray-400 hover:bg-gray-200 px-3 py-1.5 rounded-lg cursor-pointer dark:bg-gray-600 dark:border-gray-700 dark:hover:bg-gray-800 dark:text-white'
+                  onClick={toggleDropdown}
+                >
+                  {selectedVersion} {/* Display the selected version */}
+                  <svg
+                    className='w-2.5 h-2.5 ms-3'
+                    aria-hidden='true'
+                    xmlns='http://www.w3.org/2000/svg'
+                    fill='none'
+                    viewBox='0 0 10 6'
+                  >
+                    <path
+                      stroke='currentColor'
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth='2'
+                      d='m1 1 4 4 4-4'
+                    />
+                  </svg>
+                </div>
+
+                {showDropdown && (
+                  <div
+                    id='dropdownSearch'
+                    className='z-10  absolute bg-white rounded-lg shadow w-52 dark:bg-gray-700'
+                  >
+                    <div className='p-1 h-auto w-full'>
+                      <label htmlFor='input-group-search' className='sr-only'>
+                        Search
+                      </label>
+                      <div className='relative'>
+                        <input
+                          type='text'
+                          id='input-group-search'
+                          className='block w-full p-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
+                          placeholder='Search version'
+                          value={searchQuery}
+                          onChange={handleSearchVersionChange}
+                        />
+                      </div>
+
+                      <ul className='h-auto w-full mt-2 overflow-y-auto text-sm text-gray-700 dark:text-gray-200' aria-labelledby='dropdownSelect'>
+                        {filteredOptions.length > 0 ? (
+                          filteredOptions.map((option, index) => (
+                            <li key={index} className='relative w-full'>
+                              <div
+                                className=' flex items-center ps-2 rounded hover:bg-gray-200 dark:hover:bg-gray-800 cursor-pointer'
+                                onClick={() => handleVersionSelect(option)}
+                              >
+                                <p className='w-full p-3 ms-2 text-md font-medium text-gray-900 rounded dark:text-gray-300'>
+                        {option}
+                      </p>
+                              </div>
+                            </li>
+                          ))
+                        ) : (
+                          <li>
+                            <div className='flex items-center ps-2 rounded'>
+                              <span className='w-full py-2 ms-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300'>No options found</span>
+                            </div>
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className='w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0'>
                 <motion.button
                   whilehover={{ scale: 1.1 }}
