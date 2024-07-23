@@ -89,11 +89,10 @@ export default function EditPage () {
   const dir = searchParams.get('dir');
   const pageId = searchParams.get('pageId');
   const pageGroupId = searchParams.get('pageGroupId');
-  const { refreshData } = useContext(AuthContext);
+  const { refreshData, deleteModal, setDeleteModal } = useContext(AuthContext);
 
   const navigate = useNavigate();
   const [pageData, setPageData] = useState({ title: '', slug: '', content: {} });
-  const [isDelete, setIsDelete] = useState(false);
   const [editorContent, setEditorContent] = useState([{ type: 'paragraph', content: '' }]);
 
   const updateContent = (newContent, name) => {
@@ -161,10 +160,6 @@ export default function EditPage () {
     }
   };
 
-  const handleCloseDelete = () => {
-    setIsDelete(false);
-  };
-
   const handleDelete = async () => {
     const result = await deletePage(Number(pageId));
 
@@ -183,10 +178,6 @@ export default function EditPage () {
       }
     }
   };
-
-  // const handleSave = useCallback((newContent) => {
-  //   setEditorContent(newContent);
-  // }, []);
 
   const lightTheme = {
     colors: {
@@ -267,9 +258,8 @@ export default function EditPage () {
 
   return (
     <AnimatePresence>
-      {isDelete && (
+      {deleteModal && (
         <DeleteModal
-          cancelModal={handleCloseDelete}
           deleteDoc={handleDelete}
           id={pageData.id}
           title='Are you sure?'
@@ -362,7 +352,7 @@ export default function EditPage () {
               </button>
 
               <button
-                onClick={() => setIsDelete(!isDelete)}
+                onClick={() => setDeleteModal(true)}
                 className='inline-flex items-center gap-1 bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-900 text-white font-medium rounded-lg text-sm px-5 py-2.5 text-center'
               >
                 <Icon icon='material-symbols:delete' className='w-5 h-5' />

@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@iconify/react/dist/iconify.js';
@@ -22,6 +22,14 @@ export default function CreatePageModal () {
   const docId = searchParam.get('id');
   const dir = searchParam.get('dir');
   const pageGroupId = searchParam.get('pageGroupId');
+
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
 
   const handleCreate = async () => {
     if (title === '' || slug === '') {
@@ -56,10 +64,6 @@ export default function CreatePageModal () {
     }
   };
 
-  // const handleSave = async (content) => {
-  //   setContent(content);
-  // };
-
   return (
     <AnimatePresence>
       <Breadcrumb />
@@ -92,6 +96,7 @@ export default function CreatePageModal () {
                   Title
                 </label>
                 <input
+                  ref={inputRef}
                   type='text'
                   required
                   value={title}

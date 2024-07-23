@@ -1,17 +1,27 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
+import { AuthContext } from '../../context/AuthContext';
 
 export default function EditDocumentModal ({
   title,
   description,
-  closeModal,
   updateData,
   heading,
   id
 }) {
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
+  const [version, setVersion] = useState('');
+  const { setCurrentItem, setEditModal, cloneDocument } = useContext(AuthContext);
+
+  const titleRef = useRef(null);
+
+  useEffect(() => {
+    if (titleRef.current) {
+      titleRef.current.focus();
+    }
+  }, []);
 
   useEffect(() => {
     setEditTitle(title || '');
@@ -32,12 +42,15 @@ export default function EditDocumentModal ({
               {heading && (
                 <div className='flex-grow text-center'>
                   <h3 className='text-lg  font-semibold text-gray-900 dark:text-white'>
-                    {heading}
+                    {cloneDocument ? 'New Document Version' : heading}
                   </h3>
                 </div>
               )}
               <button
-                onClick={() => closeModal()}
+                onClick={() => {
+                  setEditModal(false);
+                  setCurrentItem(null);
+                }}
                 type='button'
                 className='text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white'
               >
@@ -46,59 +59,98 @@ export default function EditDocumentModal ({
               </button>
             </div>
 
-            <div className='grid gap-4 mb-4'>
-              {title && (
-                <div>
-                  <label
-                    htmlFor='title'
-                    className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
-                  >
-                    Title
-                  </label>
-                  <input
-                    value={editTitle}
-                    onChange={(e) => setEditTitle(e.target.value)}
-                    type='text'
-                    name='title'
-                    id='title'
-                    className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
-                    placeholder='Enter new document title'
-                    required
-                  />
-                </div>
-              )}
+            {cloneDocument
+              ? (
 
-              {description && (
-                <div>
-                  <label
-                    htmlFor='description'
-                    className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
-                  >
-                    Description
-                  </label>
-
-                  <div className='py-2'>
-                    <textarea
-                      value={editDescription}
-                      onChange={(e) => setEditDescription(e.target.value)}
-                      name='description'
-                      id='description'
+                <div className='grid gap-4 mb-4'>
+                  <div>
+                    <label
+                      htmlFor='version'
+                      className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
+                    >
+                      Version
+                    </label>
+                    <input
+                      ref={titleRef}
+                      value={version}
+                      onChange={(e) => setVersion(e.target.value)}
+                      type='text'
+                      name='version'
+                      id='version'
                       className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
-                      placeholder='Description about your new document'
-                      rows='3'
+                      placeholder='Enter document clone version'
+                      required
                     />
                   </div>
+                  <button
+                    onClick={() => updateData(editTitle, editDescription, version)}
+                    type='button'
+                    className='flex justify-center items-center text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800'
+                  >
+                    <span> New Version</span>
+                    <Icon icon='ei:plus' className='w-6 h-6' />
+                  </button>
                 </div>
-              )}
 
-              <button
-                onClick={() => updateData(editTitle, editDescription, id)}
-                type='button'
-                className='text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800'
-              >
-                Update
-              </button>
-            </div>
+                )
+              : (
+                <div className='grid gap-4 mb-4'>
+                  {title && (
+                    <div>
+                      <label
+                        htmlFor='title'
+                        className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
+                      >
+                        Title
+                      </label>
+                      <input
+                        ref={titleRef}
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        type='text'
+                        name='title'
+                        id='title'
+                        className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
+                        placeholder='Enter new document title'
+                        required
+                      />
+                    </div>
+                  )}
+
+                  {description && (
+                    <div>
+                      <label
+                        htmlFor='description'
+                        className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
+                      >
+                        Description
+                      </label>
+
+                      <div className='py-2'>
+                        <textarea
+                          value={editDescription}
+                          onChange={(e) => setEditDescription(e.target.value)}
+                          name='description'
+                          id='description'
+                          className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
+                          placeholder='Description about your new document'
+                          rows='3'
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => updateData(editTitle, editDescription, version)}
+                    type='button'
+                    className='flex justify-center items-center text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800'
+                  >
+                    <span>Update</span>
+                    <Icon icon='ei:plus' className='w-6 h-6' />
+                  </button>
+                </div>
+                )}
+
           </div>
         </div>
       </motion.div>

@@ -11,14 +11,15 @@ export default function Sidebar () {
   const [openDropdowns, setOpenDropdowns] = useState([]);
   const [searchParam] = useSearchParams();
   const docId = searchParam.get('id');
-  const { refresh, userDetails, setIsOpenModal, isSidebarOpen, setIsSidebarOpen } = useContext(AuthContext);
+  const { refresh, userDetails, setCreateDocumentationModal, isSidebarOpen, setIsSidebarOpen } = useContext(AuthContext);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
       const documentations = await getDocumentations();
       if (documentations.status === 'success') {
-        setDocumentation(documentations.data);
+        const data = documentations.data;
+        setDocumentation(data);
       } else {
         toastMessage(documentations.message, 'error');
         navigate('/server-down');
@@ -35,7 +36,7 @@ export default function Sidebar () {
   };
 
   const handleCreateDocument = () => {
-    setIsOpenModal(true);
+    setCreateDocumentationModal(true);
   };
 
   const location = useLocation();
@@ -100,7 +101,7 @@ export default function Sidebar () {
                 </li>
                 )
               : (
-                  documentation.map((val, index) => (
+                  documentation.filter((obj) => obj.clonedFrom === null).map((val, index) => (
                     <motion.li
                       key={`sidebar-${val.id}-${index}`}
                       whilehover={{ scale: 1.08, originx: 0 }}

@@ -18,6 +18,7 @@ import UserList from '../src/components/UserList/UserList';
 import CreateUser from '../src/components/CreateUser/CreateUser';
 import Error500 from '../src/components/error500/Error500';
 import Error from '../src/components/error/Error';
+import EditUser from './components/EditUser/EditUser';
 
 function App () {
   return (
@@ -45,7 +46,9 @@ function App () {
 
                 <Route element={<AdminAuth />}>
                   <Route path='admin/user-list' element={<UserList />} />
+                  <Route path='admin/edit-user' element={<EditUser />} />
                   <Route path='admin/create-user' element={<CreateUser />} />
+
                 </Route>
 
               </Route>

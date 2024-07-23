@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
+import { AuthContext } from '../../context/AuthContext';
 
 export default function CreatePageGroup ({ closeModal, handleCreate }) {
   const [title, setTitle] = useState('');
@@ -10,6 +11,16 @@ export default function CreatePageGroup ({ closeModal, handleCreate }) {
       handleCreate(title);
     }
   };
+  const { setCreatePageGroupModal } = useContext(AuthContext);
+
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+
   return (
     <AnimatePresence>
       <motion.div
@@ -28,7 +39,7 @@ export default function CreatePageGroup ({ closeModal, handleCreate }) {
                 </h3>
               </div>
               <button
-                onClick={closeModal}
+                onClick={() => setCreatePageGroupModal(false)}
                 type='button'
                 className='text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white'
               >
@@ -46,6 +57,7 @@ export default function CreatePageGroup ({ closeModal, handleCreate }) {
                   Title
                 </label>
                 <input
+                  ref={inputRef}
                   onChange={(e) => setTitle(e.target.value)}
                   onKeyDown={handleKeyDown}
                   type='text'
