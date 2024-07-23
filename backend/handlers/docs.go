@@ -119,7 +119,7 @@ func CreateDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	type Request struct {
 		Name        string `json:"name" validate:"required"`
 		Description string `json:"description"`
-		Version     string
+		Version     string `json:"version" validate:"required"`
 	}
 
 	var req Request
