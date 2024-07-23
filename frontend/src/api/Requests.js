@@ -21,7 +21,7 @@ async function makeRequest (url, method = 'get', data = null) {
       path: ''
     };
   } catch (error) {
-    console.log(error);
+    console.error(error);
     const statusCode = error.response?.status || 500;
     const [message, path] = getMessageAndPath(statusCode);
     return {

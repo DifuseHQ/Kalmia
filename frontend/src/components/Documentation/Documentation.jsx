@@ -53,9 +53,11 @@ export default function Documentation() {
   // pageGroup CRUD
   const [documentationData, setDocumentationData] = useState([]);
   const [smallestId, setSmallestId] = useState([]);
+
 const token = Cookies.get('accessToken')
 const par = JSON.parse(token)
 console.log(par.token); 
+
   useEffect(() => {
     const fetchData = async () => {
       const documentationsResult = await getDocumentations();
@@ -66,6 +68,9 @@ console.log(par.token);
 
       if (documentationsResult.status === "success") {
         const data = documentationsResult.data;
+        console.log("data",data);
+        const clonedData = data.filter((obj)=>obj.clonedFrom === Number(docId))
+        console.log("clone" , clonedData);
         const smallestId = data.reduce(
           (min, doc) => (doc.id < min ? doc.id : min),
           data[0]?.id
@@ -76,16 +81,15 @@ console.log(par.token);
         console.log("doc", docId);
        
         const documentationResult = await getDocumentation(Number(idToFetch));
-        console.log(documentationResult);
         if (handleError(documentationResult, navigate)) {
           return;
         }
-
+        console.log(documentationResult.data);
         if (documentationResult.status === "success") {
           setDocumentData(documentationResult.data);
           setLoading(false);
         }
-      }
+      } 
     };
 
     fetchData();
