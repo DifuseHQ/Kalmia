@@ -89,8 +89,8 @@ func GetDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		return db.Select("ID", "Username", "Email", "Photo")
 	}).Preload("Pages.Editors", func(db *gorm.DB) *gorm.DB {
 		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
-	}).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID", "Version", "LastEditorID").
-		Find(&documentation).Where("id = ?", req.ID).Error; err != nil {
+	}).Where("id = ?", req.ID).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID", "Version", "LastEditorID").
+		Find(&documentation).Error; err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{
 			"status":  "error",
 			"message": "Failed to fetch documentations",
@@ -1036,13 +1036,16 @@ func DeletePageGroup(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	associations := []string{"Pages", "Editors"}
-	for _, assoc := range associations {
-		if err := tx.Model(&pageGroup).Association(assoc).Clear(); err != nil {
-			tx.Rollback()
-			SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": fmt.Sprintf("Failed to clear %s", assoc)})
-			return
-		}
+	if err := tx.Model(&pageGroup).Association("Editors").Clear(); err != nil {
+		tx.Rollback()
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to clear Editors"})
+		return
+	}
+
+	if err := tx.Where("page_group_id = ?", req.ID).Delete(&models.Page{}).Error; err != nil {
+		tx.Rollback()
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to delete associated pages"})
+		return
 	}
 
 	if err := tx.Where("parent_id = ?", req.ID).Delete(&models.PageGroup{}).Error; err != nil {
