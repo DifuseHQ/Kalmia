@@ -119,6 +119,7 @@ func CreateDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	type Request struct {
 		Name        string `json:"name" validate:"required"`
 		Description string `json:"description"`
+		Version     string `json:"version" validate:"required"`
 	}
 
 	var req Request
@@ -142,6 +143,7 @@ func CreateDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		Author:       user,
 		Editors:      []models.User{user},
 		LastEditorID: &user.ID,
+		Version:      req.Version,
 	}
 
 	if err := db.Create(&documentation).Error; err != nil {
