@@ -20,7 +20,7 @@ import {
 import Table from '../Table/Table';
 import { AuthContext } from '../../context/AuthContext';
 
-export default function PageGroupTable() {
+export default function PageGroupTable () {
   const [searchParams] = useSearchParams();
   const docId = searchParams.get('id');
   const pageGroupId = searchParams.get('pageGroupId');
@@ -104,9 +104,9 @@ export default function PageGroupTable() {
   const handleDeletePageGroup = async (id, path) => {
     let result;
 
-    if (path === "pageGroup") {
+    if (path === 'pageGroup') {
       result = await deletePageGroup(Number(id));
-    } else if (path === "page") {
+    } else if (path === 'page') {
       result = await deletePage(Number(id));
     }
 

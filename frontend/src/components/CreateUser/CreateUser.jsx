@@ -13,13 +13,13 @@ export default function CreateUser () {
     email: '',
     password: '',
     rePassword: ''
-  }); 
+  });
 
   const navigate = useNavigate();
 
-  const usernameRef= useRef(null);
+  const usernameRef = useRef(null);
 
- useEffect(() => {
+  useEffect(() => {
     if (usernameRef.current) {
       usernameRef.current.focus();
     }
@@ -100,7 +100,7 @@ export default function CreateUser () {
                           Username
                         </label>
                         <input
-                        ref={usernameRef}
+                          ref={usernameRef}
                           type='text'
                           name='username'
                           id='username'

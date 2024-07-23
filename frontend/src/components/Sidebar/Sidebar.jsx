@@ -18,7 +18,7 @@ export default function Sidebar () {
     const fetchData = async () => {
       const documentations = await getDocumentations();
       if (documentations.status === 'success') {
-        const data = documentations.data
+        const data = documentations.data;
         setDocumentation(data);
       } else {
         toastMessage(documentations.message, 'error');
@@ -101,7 +101,7 @@ export default function Sidebar () {
                 </li>
                 )
               : (
-                  documentation.filter((obj)=>obj.clonedFrom === null).map((val, index) => (
+                  documentation.filter((obj) => obj.clonedFrom === null).map((val, index) => (
                     <motion.li
                       key={`sidebar-${val.id}-${index}`}
                       whilehover={{ scale: 1.08, originx: 0 }}

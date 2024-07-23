@@ -43,6 +43,9 @@ export const getDocumentation = (id) => makeRequest('/docs/documentation', 'post
 export const createDocumentation = (data) => makeRequest('/docs/documentation/create', 'post', data);
 export const updateDocumentation = (data) => makeRequest('/docs/documentation/edit', 'post', data);
 export const deleteDocumentation = (id) => makeRequest('/docs/documentation/delete', 'post', { id });
+
+export const createDocumentationVersion = (data) => makeRequest('/docs/documentation/version', 'post', data);
+
 export const getPageGroups = () => makeRequest('/docs/page-groups');
 export const getPageGroup = (id) => makeRequest('/docs/page-group', 'post', { id });
 export const createPageGroup = (data) => makeRequest('/docs/page-group/create', 'post', data);

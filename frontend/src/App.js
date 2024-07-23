@@ -45,10 +45,10 @@ function App () {
                 <Route path='user-profile' element={<UserProfile />} />
 
                 <Route element={<AdminAuth />}>
-                  <Route path='admin/user-list' element={<UserList />} /> 
-                  <Route path='admin/edit-user' element={<EditUser/>}/>
+                  <Route path='admin/user-list' element={<UserList />} />
+                  <Route path='admin/edit-user' element={<EditUser />} />
                   <Route path='admin/create-user' element={<CreateUser />} />
-                 
+
                 </Route>
 
               </Route>

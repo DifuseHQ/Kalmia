@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
 import { AuthContext } from '../../context/AuthContext';
 
-export default function DeleteModal({ title, deleteDoc, message }) {
+export default function DeleteModal ({ title, deleteDoc, message }) {
   const { setDeleteModal, setCurrentItem, setDeleteItem } = useContext(AuthContext);
   return (
     <AnimatePresence>
@@ -43,7 +43,7 @@ export default function DeleteModal({ title, deleteDoc, message }) {
               </button>
               <button
                 onClick={() => {
-                  setDeleteItem(null)
+                  setDeleteItem(null);
                   setDeleteModal(false);
                   setCurrentItem(null);
                 }}

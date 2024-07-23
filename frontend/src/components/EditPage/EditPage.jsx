@@ -76,7 +76,7 @@ const EditorWrapper = React.memo(({ editor, theme }) => {
   );
 });
 
-export default function EditPage() {
+export default function EditPage () {
   const { darkMode } = useContext(ThemeContext);
   const [themeKey, setThemeKey] = useState(0);
 
@@ -107,7 +107,7 @@ export default function EditPage() {
     initialContent: editorContent
   });
 
-  function parsedContent(data) {
+  function parsedContent (data) {
     try {
       return JSON.parse(data);
     } catch (e) {

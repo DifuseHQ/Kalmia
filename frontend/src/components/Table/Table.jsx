@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { getFormattedDate } from '../../utils/Common';
 import { AuthContext } from '../../context/AuthContext';
 
-export default function Table({ provided, snapshot, docId, pageGroupId, obj, index, openEditPageGroup }) {
+export default function Table ({ provided, snapshot, docId, pageGroupId, obj, index, openEditPageGroup }) {
   const { setCurrentItem, setDeleteModal, setEditModal, setDeleteItem } = useContext(AuthContext);
   return (
     <tr
@@ -45,13 +45,13 @@ export default function Table({ provided, snapshot, docId, pageGroupId, obj, ind
                 icon='clarity:folder-solid'
                 className='w-6 h-6'
               />
-            )
+              )
             : (
               <Icon
                 icon='iconoir:page'
                 className='w-6 h-6 text-gray-500 dark:text-white'
               />
-            )}
+              )}
 
           {obj.name || obj.title}
         </Link>
@@ -125,14 +125,14 @@ export default function Table({ provided, snapshot, docId, pageGroupId, obj, ind
                 icon='material-symbols:delete'
                 className='w-6 h-6 text-red-600 dark:text-red-500'
                 onClick={() => {
-                  setDeleteItem("pageGroup")
+                  setDeleteItem('pageGroup');
                   setCurrentItem(obj);
                   setDeleteModal(true);
                 }}
               />
             </button>
           </td>
-        )
+          )
         : (
           <td className='px-4 py-3 cursor-pointer relative'>
             <button
@@ -152,7 +152,7 @@ export default function Table({ provided, snapshot, docId, pageGroupId, obj, ind
                 icon='material-symbols:delete'
                 className='w-6 h-6 text-red-600 dark:text-red-500'
                 onClick={() => {
-                  setDeleteItem("page")
+                  setDeleteItem('page');
                   setCurrentItem(obj);
                   setDeleteModal(true);
                 }}
@@ -160,7 +160,7 @@ export default function Table({ provided, snapshot, docId, pageGroupId, obj, ind
             </button>
           </td>
 
-        )}
+          )}
     </tr>
   );
 }

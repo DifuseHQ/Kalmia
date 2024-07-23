@@ -12,15 +12,14 @@ export default function CreatePageGroup ({ closeModal, handleCreate }) {
     }
   };
   const { setCreatePageGroupModal } = useContext(AuthContext);
-  
+
   const inputRef = useRef(null);
 
-  useEffect(()=>{
-    if(inputRef.current){
-      inputRef.current.focus()
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
     }
-  },[])
-
+  }, []);
 
   return (
     <AnimatePresence>
@@ -58,7 +57,7 @@ export default function CreatePageGroup ({ closeModal, handleCreate }) {
                   Title
                 </label>
                 <input
-                ref={inputRef}
+                  ref={inputRef}
                   onChange={(e) => setTitle(e.target.value)}
                   onKeyDown={handleKeyDown}
                   type='text'

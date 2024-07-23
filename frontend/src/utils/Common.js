@@ -1,14 +1,14 @@
-import { toastMessage } from "./Toast";
-import { DateTime } from "luxon";
+import { toastMessage } from './Toast';
+import { DateTime } from 'luxon';
 
 export const handleError = (result, navigate = null) => {
-  if (result.status === "error") {
+  if (result.status === 'error') {
     if (result.code === 500) {
       if (navigate) {
         navigate(result.path);
       }
     } else {
-      toastMessage(result.message, "error");
+      toastMessage(result.message, 'error');
     }
 
     return true;
@@ -19,8 +19,8 @@ export const handleError = (result, navigate = null) => {
 
 export const getFormattedDate = (date) => {
   try {
-    const dt = DateTime.fromISO(date).setZone("local");
-    return dt.toFormat("dd-MM-yy hh:mm a");
+    const dt = DateTime.fromISO(date).setZone('local');
+    return dt.toFormat('dd-MM-yy hh:mm a');
   } catch (error) {
     return date;
   }
@@ -28,8 +28,8 @@ export const getFormattedDate = (date) => {
 
 export const getRandomString = (length) => {
   const randomChars =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let result = "";
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
   for (let i = 0; i < length; i++) {
     result += randomChars.charAt(
       Math.floor(Math.random() * randomChars.length)
@@ -45,7 +45,7 @@ export const getRandomNumber = (min, max) => {
 export const isTokenExpiringSoon = async (data) => {
   const expiryDateString = data.expiry.replace(
     /(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}).*/,
-    "$1"
+    '$1'
   );
 
   const expiryDate = new Date(expiryDateString);

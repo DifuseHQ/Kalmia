@@ -30,6 +30,7 @@ export const AuthProvider = ({ children }) => {
 
   const [userDetails, setUserDetails] = useState(null);
   const [createDocumentationModal, setCreateDocumentationModal] = useState(false);
+  const [cloneDocument, setCloneDocument] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const [createPageGroupModal, setCreatePageGroupModal] = useState(false);
@@ -174,7 +175,9 @@ export const AuthProvider = ({ children }) => {
         currentItem,
         setCurrentItem,
         deleteItem,
-        setDeleteItem
+        setDeleteItem,
+        cloneDocument,
+        setCloneDocument
       }}
     >
       {children}

@@ -174,7 +174,8 @@ export default function UserList () {
                 </div>
               </td>
               <td className='px-4 py-3'>
-                <Link to="/dashboard/admin/edit-user" 
+                <Link
+                  to='/dashboard/admin/edit-user'
                   id={`edit-delete-${user.id}`}
                   data-dropdown-toggle={`edit-delete-${user.id}`}
                   className='inline-flex items-center gap-3 p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100'

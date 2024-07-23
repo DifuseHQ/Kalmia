@@ -22,15 +22,14 @@ export default function CreatePageModal () {
   const docId = searchParam.get('id');
   const dir = searchParam.get('dir');
   const pageGroupId = searchParam.get('pageGroupId');
-  
+
   const inputRef = useRef(null);
 
-  useEffect(()=>{
-    if(inputRef.current){
-      inputRef.current.focus()
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
     }
-  },[])
-
+  }, []);
 
   const handleCreate = async () => {
     if (title === '' || slug === '') {
@@ -97,7 +96,7 @@ export default function CreatePageModal () {
                   Title
                 </label>
                 <input
-                ref={inputRef}
+                  ref={inputRef}
                   type='text'
                   required
                   value={title}

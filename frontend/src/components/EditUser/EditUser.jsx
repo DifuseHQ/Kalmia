@@ -1,13 +1,12 @@
 import { Icon } from '@iconify/react/dist/iconify.js';
-import { AnimatePresence ,motion } from 'framer-motion';
-import React, { useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion';
+import React, { useState } from 'react';
 
-export default function EditUser() {
-
-    const [isLoading,setisLoading] = useState(false);
-    setisLoading() //just for prevent lint you can erase
+export default function EditUser () {
+  const [isLoading, setisLoading] = useState(false);
+  setisLoading(); // just for prevent lint you can erase
   return (
-        <AnimatePresence className='container mx-auto p-5'>
+    <AnimatePresence className='container mx-auto p-5'>
       <h1 className='text-2xl font-bold mb-5 dark:text-white '>User Profile Edit</h1>
       <motion.div
         initial={{ opacity: 0 }}
@@ -36,7 +35,7 @@ export default function EditUser() {
 
                 <img
                   className='h-32 w-32 rounded-full border-4 border-white dark:border-gray-800'
-                  src={'defaultProfileImage.jpg'}
+                  src='defaultProfileImage.jpg'
                   alt='Profile'
                 />
                 )}
@@ -49,7 +48,7 @@ export default function EditUser() {
                 id='upload-button'
                 type='file'
                 className='hidden'
-                onChange=""
+                onChange=''
               />
             </label>
 
@@ -59,7 +58,7 @@ export default function EditUser() {
                   <div className='bg-white dark:bg-gray-800 rounded-lg shadow-lg p-3'>
                     <div className='mt-4' onWheel={handleWheel}>
                       <AvatarEditor
-                        
+
                         image={imageFile}
                         width={250}
                         height={250}
@@ -107,9 +106,9 @@ export default function EditUser() {
             </p>
             <input
               type='text'
-              onChange="{(e) => setUsername(e.target.value)}"
-              value="username"
-             
+              onChange='{(e) => setUsername(e.target.value)}'
+              value='username'
+
               name='username'
               id='username'
               className={`bg-gray-50 ${
@@ -117,7 +116,7 @@ export default function EditUser() {
                   ? 'border border-gray-500 focus:ring-primary-600 focus:border-primary-600 dark:bg-gray-600 dark:border-white'
                   : ''
               } text-gray-900 text-sm rounded-lg  block  p-1 px-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500`}
-              readOnly="{!isEdit}"
+              readOnly='{!isEdit}'
             />
           </div>
 
@@ -235,6 +234,5 @@ export default function EditUser() {
 
       </motion.div>
     </AnimatePresence>
-  )
+  );
 }
-  
