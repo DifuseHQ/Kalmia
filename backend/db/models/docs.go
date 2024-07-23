@@ -38,7 +38,7 @@ type PageGroup struct {
 	Order           *uint      `json:"order,omitempty"`
 	Editors         []User     `gorm:"many2many:pagegroup_editors;" json:"editors,omitempty"`
 	LastEditorID    *uint      `json:"lastEditorId,omitempty"`
-	Pages           []Page     `json:"pages,omitempty" gorm:"foreignKey:PageGroupID"`
+	Pages           []Page     `json:"pages,omitempty" gorm:"foreignKey:PageGroupID;constraint:OnDelete:CASCADE"`
 }
 
 func (s PageGroup) MarshalJSON() ([]byte, error) {
