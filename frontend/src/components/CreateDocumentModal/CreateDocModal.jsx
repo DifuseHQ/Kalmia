@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
 import { AuthContext } from '../../context/AuthContext';
@@ -10,6 +10,10 @@ import { createDocumentation } from '../../api/Requests';
 export default function CreateDocModal () {
   const navigate = useNavigate();
   const { refreshData, setCreateDocumentationModal } = useContext(AuthContext);
+  
+  const [searchParam] = useSearchParams();
+  const docId = searchParam.get('id');
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -51,6 +55,9 @@ export default function CreateDocModal () {
 
     if (result.status === 'success') {
       setCreateDocumentationModal(false);
+      if(!docId){
+        navigate('/')
+      }
       refreshData();
       toastMessage('Document created successfully', 'success');
     } else {

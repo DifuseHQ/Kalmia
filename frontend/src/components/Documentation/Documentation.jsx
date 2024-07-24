@@ -45,6 +45,7 @@ export default function Documentation () {
     cloneDocument,
     setCloneDocument
   } = useContext(AuthContext);
+
   const [searchParam] = useSearchParams();
   const docId = searchParam.get('id');
 
@@ -54,12 +55,12 @@ export default function Documentation () {
   const [documentData, setDocumentData] = useState([]);
 
   // pageGroup CRUD
-  const [documentationData, setDocumentationData] = useState([]);
+  const [groupsAndPageData, setGroupsAndPageData] = useState([]);
   const [smallestId, setSmallestId] = useState([]);
 
   const token = Cookies.get('accessToken');
   const par = JSON.parse(token);
-  console.log(par.token);
+  // console.log(par.token);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -71,9 +72,9 @@ export default function Documentation () {
 
       if (documentationsResult.status === 'success') {
         const data = documentationsResult.data;
-        console.log('data', data);
+
         const clonedData = data.filter((obj) => obj.clonedFrom === Number(docId));
-        console.log('clone', clonedData);
+
         const smallestId = data.reduce(
           (min, doc) => (doc.id < min ? doc.id : min),
           data[0]?.id
@@ -81,21 +82,23 @@ export default function Documentation () {
         setSmallestId(smallestId);
 
         const idToFetch = docId ? Number(docId) : smallestId;
-        console.log('doc', docId);
 
-        const documentationResult = await getDocumentation(Number(idToFetch));
-        if (handleError(documentationResult, navigate)) {
-          return;
+        if(idToFetch){
+          const documentationResult = await getDocumentation(Number(idToFetch));
+          if (handleError(documentationResult, navigate)) {
+            return;
+          }
+          if (documentationResult.status === 'success') {
+            setDocumentData(documentationResult.data);
+            setLoading(false);
+          }
         }
-        console.log(documentationResult.data);
-        if (documentationResult.status === 'success') {
-          setDocumentData(documentationResult.data);
-          setLoading(false);
-        }
+       
       }
     };
-
-    fetchData();
+    if(docId){
+      fetchData();
+    }
   }, [docId, refresh, user, navigate]);
 
   useEffect(() => {
@@ -116,20 +119,25 @@ export default function Documentation () {
           pageGroupsResult.data || [],
           pagesResult.data || []
         );
-        setDocumentationData(combinedData);
+        setGroupsAndPageData(combinedData);
       }
     };
+    if(docId){
+      fetchData();
+    }
 
-    fetchData();
   }, [user, navigate, refresh]);
 
   const [searchTerm, setSearchTerm] = useState('');
+
+  console.log("documentdata ", documentData);
+  console.log("groupsAndPage" , groupsAndPageData);
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
   };
 
-  const filteredItems = documentationData.filter(
+  const filteredItems = groupsAndPageData.filter(
     (obj) =>
       obj.documentationId === (docId ? Number(docId) : smallestId) &&
       (obj.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -147,7 +155,7 @@ export default function Documentation () {
       setDeleteModal(false);
       toastMessage(result.data.message, 'success');
       refreshData();
-      navigate('/dashboard');
+      navigate('/');
     }
   };
 
@@ -247,12 +255,12 @@ export default function Documentation () {
       return;
     }
 
-    const newItems = Array.from(documentationData);
+    const newItems = Array.from(groupsAndPageData);
     const [reorderedItem] = newItems.splice(result.source.index, 1);
 
     newItems.splice(result.destination.index, 0, reorderedItem);
 
-    setDocumentationData(newItems);
+    setGroupsAndPageData(newItems);
 
     const updateOrder = async (item, index) => {
       try {
@@ -306,11 +314,28 @@ export default function Documentation () {
   const filteredOptions = versions.filter((version) =>
     version.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  console.log("filterItems" , filteredItems);
   return (
     <AnimatePresence className='bg-gray-50 dark:bg-gray-900 p-3 sm:p-5'>
       <Breadcrumb />
 
-      <motion.div
+   
+
+      {documentData.length <=0 ? (
+          <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className='flex justify-center'
+          key="no-documentation-div"
+          >
+          <h1 className='text-gray-600 text-3xl p-10'>no documentations found</h1>
+        </motion.div>
+      ):
+      (
+        <>
+        <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -379,7 +404,6 @@ export default function Documentation () {
         </div>
       </motion.div>
 
-      {filteredItems && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -650,6 +674,8 @@ export default function Documentation () {
             )}
           </div>
         </motion.div>
+
+        </>
       )}
       {/* Create pageGroup resusable component */}
       {createPageGroupModal && (
