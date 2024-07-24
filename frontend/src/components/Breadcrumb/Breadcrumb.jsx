@@ -16,6 +16,17 @@ export default function Breadcrumb () {
     async function updateBreadcrumb () {
       const newBreadcrumb = [];
 
+      if (location.pathname.includes('/dashboard/user-profile')) {
+        newBreadcrumb.push({
+          title: 'User Profile',
+          path: '/dashboard/user-profile',
+          icon: 'mdi:account-circle'
+        });
+
+        setBreadcrumb(newBreadcrumb);
+        return;
+      }
+
       if (location.pathname.includes('/dashboard/admin')) {
         newBreadcrumb.push({
           title: 'User Management',

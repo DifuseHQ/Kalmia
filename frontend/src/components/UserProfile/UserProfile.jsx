@@ -1,12 +1,12 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
 import AvatarEditor from 'react-avatar-editor';
 import { AuthContext } from '../../context/AuthContext';
 import { toastMessage } from '../../utils/Toast';
 import { getUsers, updateUser, uploadPhoto } from '../../api/Requests';
 import { handleError } from '../../utils/Common';
+import Breadcrumb from '../Breadcrumb/Breadcrumb';
 
 export default function UserProfile () {
   const { user, refresh, refreshData } = useContext(AuthContext);
@@ -122,7 +122,7 @@ export default function UserProfile () {
     e.preventDefault();
 
     if (userData.username === username && userData.email === email) {
-      toastMessage('No changes were made to your profile', 'warn');
+      toastMessage('No changes detected', 'warn');
       return;
     }
 
@@ -135,7 +135,7 @@ export default function UserProfile () {
     if (handleError(result, navigate)) return;
 
     if (result.status === 'success') {
-      toastMessage('user details updated', 'success');
+      toastMessage('User Details Updated', 'success');
       setIsEdit(!isEdit);
       refreshData();
     }
@@ -149,7 +149,7 @@ export default function UserProfile () {
     }
 
     if (password.length < 8) {
-      toastMessage('Password must be 8 characters', 'warn');
+      toastMessage('Password too weak', 'warn');
       return;
     }
 
@@ -182,233 +182,209 @@ export default function UserProfile () {
   };
 
   return (
-    <AnimatePresence className='container mx-auto p-5'>
-      <h1 className='text-2xl font-bold mb-5 dark:text-white '>User Profile</h1>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className='flex flex-col  items-start sm:w-2/3 md:w-2/3 lg:w-2/3 w-full'
-        key='user-profile-container'
-      >
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className='flex justify-between items-center mb-6'
-          key='user-profile-image'
-        >
-          <div className='relative'>
-            {isLoading
-              ? (
-
-                <div className='flex items-center justify-center h-32 w-32 rounded-full border-4 border-white dark:bg-gray-700 dark:border-gray-800'>
-                  <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-gray-300' />
-                </div>
-
-                )
-              : (
-
-                <img
-                  className='h-32 w-32 rounded-full border-4 border-white dark:border-gray-800'
-                  src={profileImage || 'defaultProfileImage.jpg'}
-                  alt='Profile'
-                />
-                )}
-            <label
-              htmlFor='upload-button'
-              className='absolute bottom-0 right-0  text-blue-600 rounded-full p-2 hover:text-blue-500 cursor-pointer'
-            >
-              <Icon icon='octicon:feed-plus-16' className='w-10 h-10' />
-              <input
-                id='upload-button'
-                type='file'
-                className='hidden'
-                onChange={handleUploadFile}
-              />
-            </label>
-
-            {showModal && (
-              <div className='fixed z-10 inset-0 overflow-y-auto'>
-                <div className='flex items-center justify-center min-h-screen'>
-                  <div className='bg-white dark:bg-gray-800 rounded-lg shadow-lg p-3'>
-                    <div className='mt-4' onWheel={handleWheel}>
-                      <AvatarEditor
-                        ref={setEditor}
-                        image={imageFile}
-                        width={250}
-                        height={250}
-                        border={50}
-                        borderRadius={125}
-                        scale={scale}
-                        rotate={0}
-                      />
-                      <div className='flex justify-around mt-2 '>
-                        <div className='flex flex-col'>
-                          <span className='dark:text-white text-md'>scale</span>
-                          <input
-                            type='range'
-                            min='1'
-                            max='2.5'
-                            step='0.01'
-                            value={scale}
-                            onChange={(e) => setScale(e.target.value)}
-                          />
-                        </div>
-                        <button onClick={handleSave} className='bg-blue-500 text-white rounded px-4 py-2'>
-                          Crop
-                        </button>
-                      </div>
-                    </div>
+    <div className='container'>
+      <Breadcrumb />
+      <div className='bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6'>
+        <div className='flex flex-col md:flex-row'>
+          {/* Profile Image Section */}
+          <div className='md:w-1/3 mb-6 md:mb-0'>
+            <div className='relative inline-block'>
+              {isLoading
+                ? (
+                  <div className='flex items-center justify-center h-48 w-48 rounded-full border-4 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800'>
+                    <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500' />
                   </div>
-                </div>
-              </div>
-            )}
-
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className='w-2/3'
-          key='user-profile-details'
-        >
-
-          <div className='flex my-4'>
-            <p className='text-sm mr-16 font-medium text-gray-500 dark:text-white'>
-              Username
-            </p>
-            <input
-              type='text'
-              onChange={(e) => setUsername(e.target.value)}
-              value={username}
-              ref={inputRef}
-              name='username'
-              id='username'
-              className={`bg-gray-50 ${
-                isEdit
-                  ? 'border border-gray-500 focus:ring-primary-600 focus:border-primary-600 dark:bg-gray-600 dark:border-white'
-                  : ''
-              } text-gray-900 text-sm rounded-lg  block  p-1 px-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500`}
-              readOnly={!isEdit}
-            />
+                  )
+                : (
+                  <img
+                    className='h-48 w-48 rounded-full border-4 border-gray-200 dark:border-gray-700 object-cover'
+                    src={profileImage || '/assets/noProfile.png'}
+                    alt='Profile'
+                  />
+                  )}
+              <label
+                htmlFor='upload-button'
+                className='absolute bottom-1 right-1 bg-blue-500 text-white rounded-full p-2 hover:bg-blue-600 cursor-pointer shadow-lg transition duration-300'
+              >
+                <Icon icon='mdi:camera' className='w-5 h-5' />
+                <input
+                  id='upload-button'
+                  type='file'
+                  className='hidden'
+                  onChange={handleUploadFile}
+                />
+              </label>
+            </div>
           </div>
 
-          <div className='flex my-4'>
-            <p className='text-sm font-medium mr-10 text-gray-500 dark:text-white '>
-              Email Address
-            </p>
-            <input
-              onChange={(e) => setEmail(e.target.value)}
-              value={email}
-              type='email'
-              name='email'
-              id='email'
-              className={`bg-gray-50 ${
-                isEdit
-                  ? 'border border-gray-500 focus:ring-primary-600 focus:border-primary-600 dark:bg-gray-600 dark:border-white'
-                  : ''
-              } text-gray-900 text-sm rounded-lg  block p-1 px-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500`}
-              readOnly={!isEdit}
-            />
-          </div>
+          {/* User Details Section */}
+          <div className='md:w-2/3 md:pl-8'>
+            <div className='mb-6'>
+              <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+                Username
+              </label>
+              <input
+                type='text'
+                onChange={(e) => setUsername(e.target.value)}
+                value={username}
+                ref={inputRef}
+                className={`w-full px-3 py-2 border rounded-md ${
+                  isEdit
+                    ? 'border-blue-500 focus:ring-2 focus:ring-blue-500'
+                    : 'border-gray-300 dark:border-gray-600'
+                } bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                readOnly={!isEdit}
+              />
+            </div>
 
-          <div className='flex justify-center my-8 gap-5'>
-            {!isEdit
-              ? (
-                <button
-                  className='btn bg-blue-500 text-white rounded-lg px-5 py-2 hover:bg-blue-700 '
-                  onClick={() => setIsEdit(!isEdit)}
-                >
-                  Edit Profile
-                </button>
-                )
-              : (
-                <>
+            <div className='mb-6'>
+              <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+                Email Address
+              </label>
+              <input
+                type='email'
+                onChange={(e) => setEmail(e.target.value)}
+                value={email}
+                className={`w-full px-3 py-2 border rounded-md ${
+                  isEdit
+                    ? 'border-blue-500 focus:ring-2 focus:ring-blue-500'
+                    : 'border-gray-300 dark:border-gray-600'
+                } bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                readOnly={!isEdit}
+              />
+            </div>
+
+            <div className='flex justify-end space-x-4'>
+              {!isEdit
+                ? (
                   <button
-                    className='btn bg-blue-500 text-white rounded-lg px-5 py-2 hover:bg-blue-700 '
-                    onClick={handleSubmit}
+                    className='bg-blue-500 text-white rounded-md px-4 py-2 hover:bg-blue-600 transition duration-300'
+                    onClick={() => setIsEdit(!isEdit)}
                   >
-                    Update
+                    Edit Profile
                   </button>
-                  <button
-                    className='btn bg-blue-500 text-white rounded-lg px-5 py-2 hover:bg-blue-700 '
-                    onClick={() => {
-                      setIsEdit(!isEdit);
-                      refreshData();
-                    }}
-                  >
-                    cancel
-                  </button>
-                </>
-                )}
-
+                  )
+                : (
+                  <>
+                    <button
+                      className='bg-green-500 text-white rounded-md px-4 py-2 hover:bg-green-600 transition duration-300'
+                      onClick={handleSubmit}
+                    >
+                      Update
+                    </button>
+                    <button
+                      className='bg-gray-500 text-white rounded-md px-4 py-2 hover:bg-gray-600 transition duration-300'
+                      onClick={() => {
+                        setIsEdit(!isEdit);
+                        refreshData();
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </>
+                  )}
+            </div>
           </div>
+        </div>
 
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className='w-full rounded-lg  md:mt-0 sm:max-w-md  '
-          key='user-profile-reset-password'
-        >
-          <div className='flex justify-center items-center pb-4 mb-4 rounded-t sm:mb-1 dark:border-gray-600'>
-            <h3 className='text-lg font-semibold text-gray-900 dark:text-white'>
-              Reset Password
-            </h3>
+        {/* Password Reset Section */}
+        <div className='mt-12 border-t pt-8 dark:border-gray-700'>
+          <h3 className='text-xl font-semibold text-gray-900 dark:text-white mb-6'>
+            Reset Password
+          </h3>
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+            <div>
+              <label
+                htmlFor='password'
+                className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'
+              >
+                New Password
+              </label>
+              <input
+                type='password'
+                onChange={(e) => setPassword(e.target.value)}
+                id='password'
+                autoComplete='new-password'
+                placeholder='••••••••'
+                className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white'
+              />
+            </div>
+            <div>
+              <label
+                htmlFor='confirm-password'
+                className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'
+              >
+                Confirm Password
+              </label>
+              <input
+                type='password'
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                id='confirm-password'
+                autoComplete='new-password'
+                placeholder='••••••••'
+                className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white'
+              />
+            </div>
           </div>
-
-          <div className='mb-5'>
-            <label
-              htmlFor='password'
-              className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
-            >
-              New Password
-            </label>
-            <input
-              type='password'
-              onChange={(e) => setPassword(e.target.value)}
-              name='password'
-              id='password'
-              autoComplete='new-password'
-              placeholder='••••••••'
-              className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
-              required=''
-            />
-          </div>
-          <div>
-            <label
-              htmlFor='confirm-password'
-              className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
-            >
-              Confirm password
-            </label>
-            <input
-              type='password'
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              name='confirm-password'
-              id='confirm-password'
-              autoComplete='new-password'
-              placeholder='••••••••'
-              className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
-              required=''
-            />
-          </div>
-          <div className='flex gap-5 justify-center my-5'>
+          <div className='mt-6'>
             <button
-              className='btn bg-blue-500 text-white rounded-lg px-5 py-2 hover:bg-blue-700 '
+              className='bg-blue-500 text-white rounded-md px-6 py-2 hover:bg-blue-600 transition duration-300'
               onClick={handleChangePassword}
             >
-              Update
+              Update Password
             </button>
           </div>
-        </motion.div>
+        </div>
+      </div>
 
-      </motion.div>
-    </AnimatePresence>
+      {/* Image Cropping Modal */}
+      {showModal && (
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+          <div className='bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-96'>
+            <h3 className='text-lg font-semibold mb-4 dark:text-white'>Crop Image</h3>
+            <div onWheel={handleWheel}>
+              <AvatarEditor
+                ref={setEditor}
+                image={imageFile}
+                width={250}
+                height={250}
+                border={50}
+                borderRadius={125}
+                scale={scale}
+                rotate={0}
+              />
+            </div>
+            <div className='mt-4'>
+              <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+                Scale
+              </label>
+              <input
+                type='range'
+                min='1'
+                max='2.5'
+                step='0.01'
+                value={scale}
+                onChange={(e) => setScale(e.target.value)}
+                className='w-full'
+              />
+            </div>
+            <div className='mt-6 flex justify-end space-x-4'>
+              <button
+                onClick={() => setShowModal(false)}
+                className='px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition duration-300'
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                className='px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300'
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

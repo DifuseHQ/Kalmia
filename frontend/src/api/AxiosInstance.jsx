@@ -6,7 +6,6 @@ const instance = axios.create({
   baseURL: 'http://[::1]:2727'
 });
 
-// Response interceptor to handle different error scenarios
 instance.interceptors.response.use(
   (response) => {
     return response;
@@ -29,11 +28,10 @@ instance.interceptors.response.use(
       throw error;
     }
 
-    return Promise.reject(error); // Reject the promise to propagate the error further
+    return Promise.reject(error);
   }
 );
 
-// Request interceptor to add Authorization header with access token
 instance.interceptors.request.use(
   (config) => {
     const accessToken = Cookies.get('accessToken');
