@@ -11,7 +11,6 @@ import CreatePageGroup from '../CreatePageGroup/CreatePageGroup';
 import { toastMessage } from '../../utils/Toast';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
 import { combinePages, getClosestVersion, getVersion, handleError } from '../../utils/Common';
-import Cookies from 'js-cookie';
 import {
   getPageGroups,
   getPages,
@@ -58,15 +57,10 @@ export default function Documentation () {
   // pageGroup CRUD
   const [groupsAndPageData, setGroupsAndPageData] = useState([]);
 
-  const token = Cookies.get('accessToken');
-  const par = JSON.parse(token);
-  // console.log(par.token);
-
-
+  // ver
   const [showVersionDropdown, setShowVersionDropdown] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedVersion, setSelectedVersion] = useState("");
-
+  const [selectedVersion, setSelectedVersion] = useState('');
 
   const toggleDropdown = () => {
     setShowVersionDropdown(!showVersionDropdown);
@@ -77,13 +71,13 @@ export default function Documentation () {
   };
   const handleVersionSelect = (version) => {
     setSelectedVersion(version);
-    setShowVersionDropdown(false); 
-    navigate(`/dashboard/documentation?id=13&versionId=${version.id}&version=${version.version}`)
+    setShowVersionDropdown(false);
+    navigate(`/dashboard/documentation?id=13&versionId=${version.id}&version=${version.version}`);
   };
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true)
+      setLoading(true);
       const documentationsResult = await getDocumentations();
 
       if (handleError(documentationsResult, navigate)) {
@@ -93,30 +87,28 @@ export default function Documentation () {
       if (documentationsResult.status === 'success') {
         const data = documentationsResult.data;
 
-        const clonedData = data.filter((obj) =>obj.id ===Number(docId) || obj.clonedFrom === Number(docId));
-       
+        const clonedData = data.filter((obj) => obj.id === Number(docId) || obj.clonedFrom === Number(docId));
+
         setDocumentData(clonedData);
 
-        if(versionId){
-          const currentVersion = getVersion(clonedData, versionId)
-          setSelectedVersion(currentVersion)
-        }else{
-          const latestVersion =await getClosestVersion(clonedData)
-          setSelectedVersion(latestVersion)
+        if (versionId) {
+          const currentVersion = getVersion(clonedData, versionId);
+          setSelectedVersion(currentVersion);
+        } else {
+          const latestVersion = await getClosestVersion(clonedData);
+          setSelectedVersion(latestVersion);
         }
-
       }
-      setLoading(false)
+      setLoading(false);
     };
-    if(docId){
+    if (docId) {
       fetchData();
     }
-  }, [docId, refresh, user, navigate]);
-
+  }, [docId, refresh, user, navigate, versionId]);
 
   useEffect(() => {
     const fetchData = async () => {
-      setPageGroupLoading(true)
+      setPageGroupLoading(true);
       const [pageGroupsResult, pagesResult] = await Promise.all([
         getPageGroups(),
         getPages()
@@ -135,13 +127,12 @@ export default function Documentation () {
         );
         setGroupsAndPageData(combinedData);
       }
-      setPageGroupLoading(false)
+      setPageGroupLoading(false);
     };
-    if(docId){
+    if (docId) {
       fetchData();
     }
-
-  }, [user, navigate, refresh]);
+  }, [docId, user, navigate, refresh]);
 
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -219,7 +210,7 @@ export default function Documentation () {
     }
   };
 
-  const handlePageGroupUpdate = async (editTitle, editDescription, id) => {
+  const handlePageGroupUpdate = async (editTitle, editDescription, version, id) => {
     const result = await updatePageGroup({
       id: Number(id),
       name: editTitle,
@@ -267,11 +258,10 @@ export default function Documentation () {
       return;
     }
 
-      const newItems = Array.from(groupsAndPageData.filter(
-        (obj) =>
-          obj.documentationId === Number(selectedVersion.id)
-      ));
-
+    const newItems = Array.from(groupsAndPageData.filter(
+      (obj) =>
+        obj.documentationId === Number(selectedVersion.id)
+    ));
 
     const [reorderedItem] = newItems.splice(result.source.index, 1);
 
@@ -307,368 +297,371 @@ export default function Documentation () {
 
   const filteredOptions = documentData.filter((version) =>
     version.version.toLowerCase().includes(searchQuery.toLowerCase())
-  ); 
-console.log("select version" , selectedVersion);
+  );
+  console.log('select version', selectedVersion);
   return (
     <AnimatePresence className='bg-gray-50 dark:bg-gray-900 p-3 sm:p-5'>
       <Breadcrumb />
 
-{!loading && documentData.length <= 0 ? ( 
-          <motion.div
+      {!loading &&
+      documentData.length <= 0 ? (
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className='flex justify-center'
-          key="no-documentation-found-message"
-          >
+          key='no-documentation-found-message'
+        >
           <h1 className='text-gray-600 text-3xl p-10'>no documentations found</h1>
         </motion.div>
-      ):
-      (
-        <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        key='documentation-component'
-        >
-        <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className=' lg:mt-0 lg:col-span-5 flex justify-end mr-5 gap-3'
-        key='documentation-actions'
-      >
-        <motion.button
-          whilehover={{ scale: 1.3 }}
-          onClick={() => {
-            setCloneDocument(true);
-            setCurrentItem(null);
-            setEditModal(true);            
-          }}
-          title='Clone Documentation'
-          key='clone-button'
-        >
-          <Icon
-            icon='clarity:clone-line'
-            className='w-6 h-6 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-700'
-          />
-        </motion.button>
+          )
+        : (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            key='documentation-component'
+          >
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className=' lg:mt-0 lg:col-span-5 flex justify-end mr-5 gap-3'
+              key='documentation-actions'
+            >
+              <motion.button
+                whilehover={{ scale: 1.3 }}
+                onClick={() => {
+                  setCloneDocument(true);
+                  setCurrentItem(null);
+                  setEditModal(true);
+                }}
+                title='Clone Documentation'
+                key='clone-button'
+              >
+                <Icon
+                  icon='clarity:clone-line'
+                  className='w-6 h-6 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-700'
+                />
+              </motion.button>
 
-        <motion.button
-          whilehover={{ scale: 1.3 }}
-          onClick={() => {
-            setCloneDocument(false);
-            setCurrentItem(null);
-            setEditModal(true);
-          }}
-          title='Edit Documentation'
-           key='edit-document-button'
-        >
-          <Icon
-            icon='material-symbols:edit-outline'
-            className='w-6 h-6 text-yellow-500 dark:text-yellow-400 hover:text-yellow-600 dark:hover:text-yellow-600'
-          />
-        </motion.button>
+              <motion.button
+                whilehover={{ scale: 1.3 }}
+                onClick={() => {
+                  setCloneDocument(false);
+                  setCurrentItem(null);
+                  setEditModal(true);
+                }}
+                title='Edit Documentation'
+                key='edit-document-button'
+              >
+                <Icon
+                  icon='material-symbols:edit-outline'
+                  className='w-6 h-6 text-yellow-500 dark:text-yellow-400 hover:text-yellow-600 dark:hover:text-yellow-600'
+                />
+              </motion.button>
 
-        <motion.button
-          whilehover={{ scale: 1.3 }}
-          onClick={() => {
-            setCurrentItem(null);
-            setDeleteModal(true);
-          }}
-          key="delete-document-button"
-          title='Delete Documentation'
-        >
-          <Icon
-            icon='material-symbols:delete'
-            className='w-6 h-6 text-red-600 dark:text-red-500 hover:text-red-700 dark:hover:text-red-600'
-          />
-        </motion.button>
-      </motion.div>
+              <motion.button
+                whilehover={{ scale: 1.3 }}
+                onClick={() => {
+                  setCurrentItem(null);
+                  setDeleteModal(true);
+                }}
+                key='delete-document-button'
+                title='Delete Documentation'
+              >
+                <Icon
+                  icon='material-symbols:delete'
+                  className='w-6 h-6 text-red-600 dark:text-red-500 hover:text-red-700 dark:hover:text-red-600'
+                />
+              </motion.button>
+            </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className='grid max-w-screen-xl'
-        key='documentation-info'
-      >
-        <div className='mr-auto place-self-center lg:col-span-7'>
-          <h1 className='max-w-xl mb-4 text-4xl font-bold tracking-tight leading-none md:text-4xl xl:text-4xl dark:text-white'>
-            {documentData[0]?.name}
-          </h1>
-          <p className='max-w-2xl mb-6 font-light text-gray-700 lg:mb-8 md:text-lg lg:text-xl dark:text-gray-400'>
-            {documentData[0]?.description}
-          </p>
-        </div>
-      </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ delay: 0.1 }}
-          className=''
-          key='documentation-table'
-        >
-          <div className='bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden'>
-            <div className='flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4'>
-              <div className='w-full md:w-1/3'>
-                <div className='flex items-center'>
-                  <label htmlFor='simple-search' className='sr-only'>
-                    Search
-                  </label>
-                  <div className='relative w-full'>
-                    <div className='absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none'>
-                      <Icon
-                        icon='material-symbols:search'
-                        className='w-6 h-6 text-gray-400 dark:text-gray-500'
-                      />
-                    </div>
-                    <input
-                      type='text'
-                      id='simple-search'
-                      value={searchTerm}
-                      onChange={handleSearchChange}
-                      className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
-                      placeholder='Search'
-                    />
-                  </div>
-                </div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className='grid max-w-screen-xl'
+              key='documentation-info'
+            >
+              <div className='mr-auto place-self-center lg:col-span-7'>
+                <h1 className='max-w-xl mb-4 text-4xl font-bold tracking-tight leading-none md:text-4xl xl:text-4xl dark:text-white'>
+                  {documentData[0]?.name}
+                </h1>
+                <p className='max-w-2xl mb-6 font-light text-gray-700 lg:mb-8 md:text-lg lg:text-xl dark:text-gray-400'>
+                  {documentData[0]?.description}
+                </p>
               </div>
+            </motion.div>
 
-              <div className='relative inline-block border-black'>
-                <div
-                  id='dropdownSelect'
-                  className='flex items-center border gap-2 border-gray-400 hover:bg-gray-200 px-3 py-1.5 rounded-lg cursor-pointer dark:bg-gray-600 dark:border-gray-700 dark:hover:bg-gray-800 dark:text-white'
-                  onClick={toggleDropdown}
-                >
-                  {selectedVersion.version} {/* Display the selected version */}
-                  <Icon icon="mingcute:down-fill" className='h-6 w-6'/>
-                </div>
-
-                {showVersionDropdown && (
-                  <div
-                    id='dropdownSearch'
-                    className='z-10  absolute bg-white rounded-lg shadow w-52 dark:bg-gray-700'
-                  >
-                    <div className='p-1 h-auto w-full'>
-                    
-                      <label htmlFor='input-group-search' className='sr-only'>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ delay: 0.1 }}
+              className=''
+              key='documentation-table'
+            >
+              <div className='bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden'>
+                <div className='flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4'>
+                  <div className='w-full md:w-1/3'>
+                    <div className='flex items-center'>
+                      <label htmlFor='simple-search' className='sr-only'>
                         Search
                       </label>
-                      {filteredOptions.length !== 1 ? (
-                      <div className='relative'>
+                      <div className='relative w-full'>
+                        <div className='absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none'>
+                          <Icon
+                            icon='material-symbols:search'
+                            className='w-6 h-6 text-gray-400 dark:text-gray-500'
+                          />
+                        </div>
                         <input
                           type='text'
-                          id='input-group-search'
-                          className='block w-full p-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
-                          placeholder='Search version'
-                          value={searchQuery}
-                          onChange={handleSearchVersionChange}
+                          id='simple-search'
+                          value={searchTerm}
+                          onChange={handleSearchChange}
+                          className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
+                          placeholder='Search'
                         />
                       </div>
-                ):( <div className='flex items-center ps-2 rounded'>
-                  <span className='w-full py-2 ms-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300'>
-                    No versions found
-                  </span>
-                </div>)}
-                      <ul
-                        className='h-auto w-full mt-2 overflow-y-auto text-sm text-gray-700 dark:text-gray-200'
-                        aria-labelledby='dropdownSelect'
-                      >
-                        {filteredOptions.length > 0
-                          ? (
-                              filteredOptions.filter(obj => obj.id !=selectedVersion.id).map((option) => (
-                                <li key="version-lists" className='relative w-full'>
-                                  <div
-                                    className=' flex items-center ps-2 rounded hover:bg-gray-200 dark:hover:bg-gray-800 cursor-pointer'
-                                    onClick={() => handleVersionSelect(option)}
-                                  >
-                                    <p className='w-full p-3 ms-2 text-md font-medium text-gray-900 rounded dark:text-gray-300'>
-                                      {option.version}
-                                    </p>
-                                  </div>
-                                </li>
-                              ))
-                            )
-                          : (
-                            <li>
-                              <div className='flex items-center ps-2 rounded'>
-                                <span className='w-full py-2 ms-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300'>
-                                  No matched versions
-                                </span>
-                              </div>
-                            </li>
-                            )}
-                      </ul>
                     </div>
                   </div>
-                )}
-              </div>
 
-              <div className='w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0'>
-                <motion.button
-                  whilehover={{ scale: 1.1 }}
-                  onClick={() => setCreatePageGroupModal(true)}
-                  type='button'
-                  className='flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800'
-                >
-                  <span className=' px-1 text-left items-center dark:text-white text-md '>
-                    New Group
-                  </span>
-                  <Icon icon='ei:plus' className='w-6 h-6 dark:text-white' />
-                </motion.button>
+                  <div className='relative inline-block border-black'>
+                    <div
+                      id='dropdownSelect'
+                      className='flex items-center border gap-2 border-gray-400 hover:bg-gray-200 px-3 py-1.5 rounded-lg cursor-pointer dark:bg-gray-600 dark:border-gray-700 dark:hover:bg-gray-800 dark:text-white'
+                      onClick={toggleDropdown}
+                    >
+                      {selectedVersion.version} {/* Display the selected version */}
+                      <Icon icon='mingcute:down-fill' className='h-6 w-6' />
+                    </div>
 
-                <motion.button whilehover={{ scale: 1.1 }}>
-                  <Link
-                    to={`/dashboard/documentation/create-page?id=${docId}&dir=true&versionId=${selectedVersion.id}&version=${selectedVersion.version}`}
-                    className='flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800'
-                  >
-                    <span className='px-1 text-left items-center dark:text-white text-md'>
-                      New Page
-                    </span>
-                    <Icon icon='ei:plus' className='w-6 h-6 dark:text-white' />
-                  </Link>
-                </motion.button>
-              </div>
-            </div>
+                    {showVersionDropdown && (
+                      <div
+                        id='dropdownSearch'
+                        className='z-10  absolute bg-white rounded-lg shadow w-52 dark:bg-gray-700'
+                      >
+                        <div className='p-1 h-auto w-full'>
 
-            {filteredItems && 
-              <div className='overflow-x-auto h-auto'>
-                <DragDropContext onDragEnd={handleDragEnd}>
-                  <Droppable droppableId='table' type='TABLE'>
-                    {(provided) => (
-                      <table className='w-full text-sm text-left text-gray-500 dark:text-gray-400'>
-                        <thead className='text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400'>
-                          <tr>
-                            <th />
-                            <th scope='col' className='px-4 py-3'>
-                              Title
-                            </th>
-                            <th
-                              scope='col'
-                              className='px-4 py-3 whitespace-nowrap'
-                            >
-                              Author / Editor
-                            </th>
-                            <th
-                              scope='col'
-                              className='px-4 py-3 whitespace-nowrap'
-                            >
-                              Create / update
-                            </th>
-                            <th scope='col' className='px-4 py-3' />
-                          </tr>
-                        </thead>
-
-                        <tbody
-                          {...provided.droppableProps}
-                          ref={provided.innerRef}
-                        >
-                          {pageGroupLoading
+                          <label htmlFor='input-group-search' className='sr-only'>
+                            Search
+                          </label>
+                          {filteredOptions.length !== 1
                             ? (
-                              <tr className='border-b dark:border-gray-700'>
-                                <td colSpan='12' className='p-8'>
-                                  <div className='flex flex-col items-center justify-center'>
-                                    {pageGroupLoading && (
-                                      <Icon
-                                        icon='line-md:loading-twotone-loop'
-                                        className='w-32 h-32'
-                                      />
-                                    )}
-                                  </div>
-                                </td>
-                              </tr>
+                              <div className='relative'>
+                                <input
+                                  type='text'
+                                  id='input-group-search'
+                                  className='block w-full p-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
+                                  placeholder='Search version'
+                                  value={searchQuery}
+                                  onChange={handleSearchVersionChange}
+                                />
+                              </div>
                               )
-                            : !filteredItems === null ||
-                            filteredItems.length <= 0
-                                ? (
-                                  <motion.tr
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    className='border-b dark:bg-gray-700'
-                                    key="no-pages-found-message"
-                                  >
-                                    <td colSpan='12' className='text-center p-8'>
-                                      <h1 className='text-center text-gray-600 sm:text-lg font-semibold'>
-                                        No Pages Found
-                                      </h1>
-                                    </td>
-                                  </motion.tr>
-                                  )
-                                : (
-                                    filteredItems.map((obj, index) => (
-                                      <Draggable
-                                        key={
-                                  obj.name
-                                    ? `pageGroup-${obj.id}`
-                                    : `page-${obj.id}`
-                                }
-                                        draggableId={
-                                  obj.name
-                                    ? `pageGroup-${obj.id}`
-                                    : `page-${obj.id}`
-                                }
-                                        index={index}
+                            : (
+                              <div className='flex items-center ps-2 rounded'>
+                                <span className='w-full py-2 ms-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300'>
+                                  No versions found
+                                </span>
+                              </div>)}
+                          <ul
+                            className='h-auto w-full mt-2 overflow-y-auto text-sm text-gray-700 dark:text-gray-200'
+                            aria-labelledby='dropdownSelect'
+                          >
+                            {filteredOptions.length > 0
+                              ? (
+                                  filteredOptions.filter(obj => obj.id !== selectedVersion.id).map((option) => (
+                                    <li key='version-lists' className='relative w-full'>
+                                      <div
+                                        className=' flex items-center ps-2 rounded hover:bg-gray-200 dark:hover:bg-gray-800 cursor-pointer'
+                                        onClick={() => handleVersionSelect(option)}
                                       >
-                                        {(provided, snapshot) => (
-                                          <Table
-                                            provided={provided}
-                                            snapshot={snapshot}
-                                            obj={obj}
-                                            index={index}
-                                            docId={selectedVersion.id}
-                                            pageGroupId={obj.id}
+                                        <p className='w-full p-3 ms-2 text-md font-medium text-gray-900 rounded dark:text-gray-300'>
+                                          {option.version}
+                                        </p>
+                                      </div>
+                                    </li>
+                                  ))
+                                )
+                              : (
+                                <li>
+                                  <div className='flex items-center ps-2 rounded'>
+                                    <span className='w-full py-2 ms-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300'>
+                                      No matched versions
+                                    </span>
+                                  </div>
+                                </li>
+                                )}
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className='w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0'>
+                    <motion.button
+                      whilehover={{ scale: 1.1 }}
+                      onClick={() => setCreatePageGroupModal(true)}
+                      type='button'
+                      className='flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800'
+                    >
+                      <span className=' px-1 text-left items-center dark:text-white text-md '>
+                        New Group
+                      </span>
+                      <Icon icon='ei:plus' className='w-6 h-6 dark:text-white' />
+                    </motion.button>
+
+                    <motion.button whilehover={{ scale: 1.1 }}>
+                      <Link
+                        to={`/dashboard/documentation/create-page?id=${docId}&dir=true&versionId=${selectedVersion.id}&version=${selectedVersion.version}`}
+                        className='flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800'
+                      >
+                        <span className='px-1 text-left items-center dark:text-white text-md'>
+                          New Page
+                        </span>
+                        <Icon icon='ei:plus' className='w-6 h-6 dark:text-white' />
+                      </Link>
+                    </motion.button>
+                  </div>
+                </div>
+
+                {filteredItems &&
+                  <div className='overflow-x-auto h-auto'>
+                    <DragDropContext onDragEnd={handleDragEnd}>
+                      <Droppable droppableId='table' type='TABLE'>
+                        {(provided) => (
+                          <table className='w-full text-sm text-left text-gray-500 dark:text-gray-400'>
+                            <thead className='text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400'>
+                              <tr>
+                                <th />
+                                <th scope='col' className='px-4 py-3'>
+                                  Title
+                                </th>
+                                <th
+                                  scope='col'
+                                  className='px-4 py-3 whitespace-nowrap'
+                                >
+                                  Author / Editor
+                                </th>
+                                <th
+                                  scope='col'
+                                  className='px-4 py-3 whitespace-nowrap'
+                                >
+                                  Create / update
+                                </th>
+                                <th scope='col' className='px-4 py-3' />
+                              </tr>
+                            </thead>
+
+                            <tbody
+                              {...provided.droppableProps}
+                              ref={provided.innerRef}
+                            >
+                              {pageGroupLoading
+                                ? (
+                                  <tr className='border-b dark:border-gray-700'>
+                                    <td colSpan='12' className='p-8'>
+                                      <div className='flex flex-col items-center justify-center'>
+                                        {pageGroupLoading && (
+                                          <Icon
+                                            icon='line-md:loading-twotone-loop'
+                                            className='w-32 h-32'
                                           />
                                         )}
-                                      </Draggable>
-                                    ))
-                                  )}
-                          {provided.placeholder}
-                        </tbody>
-                      </table>
-                    )}
-                  </Droppable>
-                </DragDropContext>
-              </div>
-            }
+                                      </div>
+                                    </td>
+                                  </tr>
+                                  )
+                                : !filteredItems === null ||
+                            filteredItems.length <= 0
+                                    ? (
+                                      <motion.tr
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className='border-b dark:bg-gray-700'
+                                        key='no-pages-found-message'
+                                      >
+                                        <td colSpan='12' className='text-center p-8'>
+                                          <h1 className='text-center text-gray-600 sm:text-lg font-semibold'>
+                                            No Pages Found
+                                          </h1>
+                                        </td>
+                                      </motion.tr>
+                                      )
+                                    : (
+                                        filteredItems.map((obj, index) => (
+                                          <Draggable
+                                            key={
+                                  obj.name
+                                    ? `pageGroup-${obj.id}`
+                                    : `page-${obj.id}`
+                                }
+                                            draggableId={
+                                  obj.name
+                                    ? `pageGroup-${obj.id}`
+                                    : `page-${obj.id}`
+                                }
+                                            index={index}
+                                          >
+                                            {(provided, snapshot) => (
+                                              <Table
+                                                provided={provided}
+                                                snapshot={snapshot}
+                                                obj={obj}
+                                                index={index}
+                                                docId={selectedVersion.id}
+                                                pageGroupId={obj.id}
+                                                version={selectedVersion.version}
+                                              />
+                                            )}
+                                          </Draggable>
+                                        ))
+                                      )}
+                              {provided.placeholder}
+                            </tbody>
+                          </table>
+                        )}
+                      </Droppable>
+                    </DragDropContext>
+                  </div>}
 
-            {/* Edit Component */}
-            {editModal && (
-              <EditDocumentModal
-                heading={
+                {/* Edit Component */}
+                {editModal && (
+                  <EditDocumentModal
+                    heading={
                   currentItem ? 'Rename Page Group' : 'Edit Documentation'
                 }
-                title={currentItem ? currentItem.name : documentData[0]?.name}
-                description={currentItem ? '' : documentData[0]?.description}
-                id={currentItem ? currentItem.id : documentData[0]?.id}
-                updateData={currentItem ? handlePageGroupUpdate : handleUpdate}
+                    title={currentItem ? currentItem.name : documentData[0]?.name}
+                    description={currentItem ? '' : documentData[0]?.description}
+                    id={currentItem ? currentItem.id : documentData[0]?.id}
+                    updateData={currentItem ? handlePageGroupUpdate : handleUpdate}
+                  />
+                )}
 
-              />
-            )}
-
-            {deleteModal && (
-              <DeleteModal
-                deleteDoc={
+                {deleteModal && (
+                  <DeleteModal
+                    deleteDoc={
                   currentItem
                     ? () => handleDeletePageGroup(currentItem.id, deleteItem)
                     : handleDelete
                 }
-                id={currentItem ? currentItem.id : documentData[0]?.id}
-                title='Are you sure?'
-                message={`You're permanently deleting "${currentItem
+                    id={currentItem ? currentItem.id : documentData[0]?.id}
+                    title='Are you sure?'
+                    message={`You're permanently deleting "${currentItem
                   ? currentItem.name || currentItem.title
                   : documentData[0]?.name
                   }`}
-              />
-            )}
-          </div>
-        </motion.div>
+                  />
+                )}
+              </div>
+            </motion.div>
 
-        </motion.div>
-      )}
+          </motion.div>
+          )}
       {/* Create pageGroup resusable component */}
       {createPageGroupModal && (
         <CreatePageGroup

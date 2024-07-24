@@ -10,7 +10,7 @@ import { createDocumentation } from '../../api/Requests';
 export default function CreateDocModal () {
   const navigate = useNavigate();
   const { refreshData, setCreateDocumentationModal } = useContext(AuthContext);
-  
+
   const [searchParam] = useSearchParams();
   const docId = searchParam.get('id');
 
@@ -55,8 +55,8 @@ export default function CreateDocModal () {
 
     if (result.status === 'success') {
       setCreateDocumentationModal(false);
-      if(!docId){
-        navigate('/')
+      if (!docId) {
+        navigate('/');
       }
       refreshData();
       toastMessage('Document created successfully', 'success');

@@ -89,6 +89,7 @@ export default function EditPage () {
   const dir = searchParams.get('dir');
   const pageId = searchParams.get('pageId');
   const pageGroupId = searchParams.get('pageGroupId');
+  const version = searchParams.get('version');
   const { refreshData, deleteModal, setDeleteModal } = useContext(AuthContext);
 
   const navigate = useNavigate();
@@ -174,7 +175,7 @@ export default function EditPage () {
       if (dir === 'true') {
         navigate(`/dashboard/documentation?id=${docId}`);
       } else {
-        navigate(`/dashboard/documentation/page-group?id=${docId}&pageGroupId=${pageGroupId}`);
+        navigate(`/dashboard/documentation/page-group?id=${docId}&pageGroupId=${pageGroupId}&versionId=${docId}&version=${version}`);
       }
     }
   };

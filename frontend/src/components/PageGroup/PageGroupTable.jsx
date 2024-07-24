@@ -24,6 +24,9 @@ export default function PageGroupTable () {
   const [searchParams] = useSearchParams();
   const docId = searchParams.get('id');
   const pageGroupId = searchParams.get('pageGroupId');
+  const version = searchParams.get('version');
+  const versionId = searchParams.get('versionId');
+
   const [groupDetail, setGroupDetail] = useState([]);
   const [data, setData] = useState([]);
   const {
@@ -58,10 +61,10 @@ export default function PageGroupTable () {
       }
     };
 
-    if(docId){
+    if (docId) {
       fetchData();
     }
-  }, [pageGroupId, navigate, refresh]);
+  }, [docId, pageGroupId, navigate, refresh]);
 
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -123,7 +126,7 @@ export default function PageGroupTable () {
     }
   };
 
-  const handlePageGroupUpdate = async (editTitle, editDescription, id) => {
+  const handlePageGroupUpdate = async (editTitle, editDescription, version, id) => {
     const result = await updatePageGroup({
       id: Number(id),
       name: editTitle,
@@ -241,6 +244,14 @@ export default function PageGroupTable () {
                 </div>
               </form>
             </div>
+
+            <div
+              className='flex items-center border gap-2 border-gray-400  px-3 py-1.5 rounded-lg dark:bg-gray-600 dark:border-gray-700 dark:text-white'
+            >
+              <span>Version </span>
+              {version}
+            </div>
+
             <div className='w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0'>
               <motion.button
                 whilehover={{ scale: 1.1 }}
@@ -256,7 +267,7 @@ export default function PageGroupTable () {
 
               <motion.button whilehover={{ scale: 1.1 }}>
                 <Link
-                  to={`/dashboard/documentation/create-page?id=${docId}&dir=false&pageGroupId=${pageGroupId}`}
+                  to={`/dashboard/documentation/create-page?id=${docId}&dir=false&pageGroupId=${pageGroupId}&versionId=${versionId}&version=${version}`}
                   className='flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800'
                 >
                   <span className=' px-1 text-left items-center dark:text-white text-md '>
@@ -315,7 +326,8 @@ export default function PageGroupTable () {
                               snapshot={snapshot}
                               obj={obj}
                               index={index}
-                              docId={docId}
+                              docId={versionId}
+                              version={version}
                               pageGroupId={obj.id}
                             />
                           )}

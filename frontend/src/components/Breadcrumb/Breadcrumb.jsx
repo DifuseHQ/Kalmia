@@ -88,8 +88,9 @@ export default function Breadcrumb () {
           });
         }
       } else {
-        const smallestId =await documentations.reduce((min, doc) => (doc.id < min ? doc.id : min), documentations[0]?.id);
-        navigate(smallestId ? `/dashboard/documentation?id=${smallestId}` : '/dashboard/documentation')}
+        const smallestId = await documentations.reduce((min, doc) => (doc.id < min ? doc.id : min), documentations[0]?.id);
+        navigate(smallestId ? `/dashboard/documentation?id=${smallestId}` : '/dashboard/documentation');
+      }
 
       if (isCreatePage) {
         if (pageGroupId) {

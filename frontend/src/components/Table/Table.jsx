@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { getFormattedDate } from '../../utils/Common';
 import { AuthContext } from '../../context/AuthContext';
 
-export default function Table ({ provided, snapshot, docId, pageGroupId, obj, index, openEditPageGroup }) {
+export default function Table ({ provided, snapshot, docId, pageGroupId, obj, index, version }) {
   const { setCurrentItem, setDeleteModal, setEditModal, setDeleteItem } = useContext(AuthContext);
   return (
     <tr
@@ -35,8 +35,8 @@ export default function Table ({ provided, snapshot, docId, pageGroupId, obj, in
           className='flex items-center gap-1'
           to={
             obj.name
-              ? `/dashboard/documentation/page-group?id=${docId}&pageGroupId=${obj.id}&groupName=${obj.name}`
-              : `/dashboard/documentation/edit-page?id=${docId}&dir=false&pageGroupId=${pageGroupId}&pageId=${obj.id}&pageName=${obj.title}`
+              ? `/dashboard/documentation/page-group?id=${docId}&pageGroupId=${obj.id}&versionId=${docId}&version=${version}`
+              : `/dashboard/documentation/edit-page?id=${docId}&dir=false&pageGroupId=${pageGroupId}&pageId=${obj.id}&versionId=${docId}&version=${version}`
           }
         >
           {obj.name
@@ -141,7 +141,7 @@ export default function Table ({ provided, snapshot, docId, pageGroupId, obj, in
               className='inline-flex items-center gap-2 p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100'
               type='button'
             >
-              <Link to={`/dashboard/documentation/edit-page?id=${docId}&dir=false&pageGroupId=${pageGroupId}&pageId=${obj.id}&pageName=${obj.title}`}>
+              <Link to={`/dashboard/documentation/edit-page?id=${docId}&dir=false&pageGroupId=${pageGroupId}&pageId=${obj.id}&versionId=${docId}&version=${version}`}>
                 <Icon
                   icon='material-symbols:edit-outline'
                   className='w-6 h-6 text-yellow-500 dark:text-yellow-400'

@@ -23,7 +23,7 @@ export default function CreatePageModal () {
   const dir = searchParam.get('dir');
   const pageGroupId = searchParam.get('pageGroupId');
   const versionId = searchParam.get('versionId');
-  const version = searchParam.get("version")
+  const version = searchParam.get('version');
 
   const inputRef = useRef(null);
 
@@ -59,7 +59,7 @@ export default function CreatePageModal () {
       if (dir === 'true') {
         navigate(`/dashboard/documentation?id=${docId}&versionId=${versionId}&version=${version}`);
       } else {
-        navigate(`/dashboard/documentation/page-group?id=${docId}&pageGroupId=${pageGroupId}`);
+        navigate(`/dashboard/documentation/page-group?id=${docId}&pageGroupId=${pageGroupId}&versionId=${versionId}&version=${version}`);
       }
     } else {
       handleError(result, navigate);
