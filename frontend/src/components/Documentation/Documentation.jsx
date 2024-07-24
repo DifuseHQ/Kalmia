@@ -48,8 +48,8 @@ export default function Documentation () {
   const docId = searchParam.get('id');
   const versionId = searchParam.get('versionId');
 
-  const [loading, setLoading] = useState(true);
-  const [pageGroupLoading, setPageGroupLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [pageGroupLoading, setPageGroupLoading] = useState(false);
 
   // Documentation CRUD
   const [documentData, setDocumentData] = useState([]);
@@ -76,6 +76,7 @@ export default function Documentation () {
   };
 
   useEffect(() => {
+
     const fetchData = async () => {
       setLoading(true);
       const documentationsResult = await getDocumentations();
@@ -96,7 +97,7 @@ export default function Documentation () {
           setSelectedVersion(currentVersion);
         } else {
           const latestVersion = await getClosestVersion(clonedData);
-          setSelectedVersion(latestVersion);
+          setSelectedVersion(latestVersion || "");
         }
       }
       setLoading(false);
@@ -268,7 +269,6 @@ export default function Documentation () {
     newItems.splice(result.destination.index, 0, reorderedItem);
 
     setGroupsAndPageData(newItems);
-    console.log(newItems);
 
     const updateOrder = async (item, index) => {
       try {
@@ -289,7 +289,7 @@ export default function Documentation () {
         }
         toastMessage(err?.response?.data?.message, 'error');
       }
-    };
+    }; 
 
     await Promise.all(newItems.map((item, index) => updateOrder(item, index)));
     refreshData();
@@ -298,25 +298,27 @@ export default function Documentation () {
   const filteredOptions = documentData.filter((version) =>
     version.version.toLowerCase().includes(searchQuery.toLowerCase())
   );
-  console.log('select version', selectedVersion);
+
   return (
     <AnimatePresence className='bg-gray-50 dark:bg-gray-900 p-3 sm:p-5'>
       <Breadcrumb />
 
-      {!loading &&
-      documentData.length <= 0 ? (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className='flex justify-center'
-          key='no-documentation-found-message'
-        >
-          <h1 className='text-gray-600 text-3xl p-10'>no documentations found</h1>
-        </motion.div>
-          )
-        : (
-          <motion.div
+      {loading ? (
+       
+       <div>
+       <Icon icon="eos-icons:three-dots-loading" className='text-black dark:text-white  w-20 h-10'/>
+       </div>
+      ): documentData.length === 0 ? (
+
+        <div
+        className='flex justify-center'
+        key='no-documentation-found-message'
+      >
+        <h1 className='text-gray-600 text-3xl p-10'>no documentations found</h1>
+      </div>
+      ):(
+
+<motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -661,7 +663,7 @@ export default function Documentation () {
             </motion.div>
 
           </motion.div>
-          )}
+      )}
       {/* Create pageGroup resusable component */}
       {createPageGroupModal && (
         <CreatePageGroup
