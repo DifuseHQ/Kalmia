@@ -58,7 +58,9 @@ export default function PageGroupTable () {
       }
     };
 
-    fetchData();
+    if(docId){
+      fetchData();
+    }
   }, [pageGroupId, navigate, refresh]);
 
   const [searchTerm, setSearchTerm] = useState('');

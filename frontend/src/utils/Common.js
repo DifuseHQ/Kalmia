@@ -88,3 +88,33 @@ export const sortGroupAndPage = (filteredGroups, filteredPages) => {
 
   return combinedPages;
 };
+
+
+export function getClosestVersion(cloneData) {
+  const now = new Date();
+
+  return cloneData.reduce((closest, obj) => {
+      const createdAt = new Date(obj.createdAt);
+      const timeDifference = Math.abs(now - createdAt);
+
+      if (!closest || timeDifference < Math.abs(now - new Date(closest.createdAt))) {
+          return {
+              id:obj.id,
+              version: obj.version,
+              createdAt: obj.createdAt
+          };
+      }
+      return closest;
+  }, null);
+}
+
+export function getVersion(cloneData, versionId) {
+  const matchingObj = cloneData.find(obj => obj.id === Number(versionId)); 
+
+
+  return matchingObj ? {
+    id: matchingObj.id,
+    version: matchingObj.version,
+    createdAt: matchingObj.createdAt
+  } : null;
+}

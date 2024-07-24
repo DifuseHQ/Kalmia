@@ -10,13 +10,12 @@ import DeleteModal from '../DeleteModal/DeleteModal';
 import CreatePageGroup from '../CreatePageGroup/CreatePageGroup';
 import { toastMessage } from '../../utils/Toast';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
-import { combinePages, handleError } from '../../utils/Common';
+import { combinePages, getClosestVersion, getVersion, handleError } from '../../utils/Common';
 import Cookies from 'js-cookie';
 import {
   getPageGroups,
   getPages,
   getDocumentations,
-  getDocumentation,
   deleteDocumentation,
   updateDocumentation,
   deletePageGroup,
@@ -48,22 +47,43 @@ export default function Documentation () {
 
   const [searchParam] = useSearchParams();
   const docId = searchParam.get('id');
+  const versionId = searchParam.get('versionId');
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [pageGroupLoading, setPageGroupLoading] = useState(true);
 
   // Documentation CRUD
   const [documentData, setDocumentData] = useState([]);
 
   // pageGroup CRUD
   const [groupsAndPageData, setGroupsAndPageData] = useState([]);
-  const [smallestId, setSmallestId] = useState([]);
 
   const token = Cookies.get('accessToken');
   const par = JSON.parse(token);
   // console.log(par.token);
 
+
+  const [showVersionDropdown, setShowVersionDropdown] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedVersion, setSelectedVersion] = useState("");
+
+
+  const toggleDropdown = () => {
+    setShowVersionDropdown(!showVersionDropdown);
+  };
+
+  const handleSearchVersionChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+  const handleVersionSelect = (version) => {
+    setSelectedVersion(version);
+    setShowVersionDropdown(false); 
+    navigate(`/dashboard/documentation?id=13&versionId=${version.id}&version=${version.version}`)
+  };
+
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true)
       const documentationsResult = await getDocumentations();
 
       if (handleError(documentationsResult, navigate)) {
@@ -73,36 +93,30 @@ export default function Documentation () {
       if (documentationsResult.status === 'success') {
         const data = documentationsResult.data;
 
-        const clonedData = data.filter((obj) => obj.clonedFrom === Number(docId));
-
-        const smallestId = data.reduce(
-          (min, doc) => (doc.id < min ? doc.id : min),
-          data[0]?.id
-        );
-        setSmallestId(smallestId);
-
-        const idToFetch = docId ? Number(docId) : smallestId;
-
-        if(idToFetch){
-          const documentationResult = await getDocumentation(Number(idToFetch));
-          if (handleError(documentationResult, navigate)) {
-            return;
-          }
-          if (documentationResult.status === 'success') {
-            setDocumentData(documentationResult.data);
-            setLoading(false);
-          }
-        }
+        const clonedData = data.filter((obj) =>obj.id ===Number(docId) || obj.clonedFrom === Number(docId));
        
+        setDocumentData(clonedData);
+
+        if(versionId){
+          const currentVersion = getVersion(clonedData, versionId)
+          setSelectedVersion(currentVersion)
+        }else{
+          const latestVersion =await getClosestVersion(clonedData)
+          setSelectedVersion(latestVersion)
+        }
+
       }
+      setLoading(false)
     };
     if(docId){
       fetchData();
     }
   }, [docId, refresh, user, navigate]);
 
+
   useEffect(() => {
     const fetchData = async () => {
+      setPageGroupLoading(true)
       const [pageGroupsResult, pagesResult] = await Promise.all([
         getPageGroups(),
         getPages()
@@ -121,6 +135,7 @@ export default function Documentation () {
         );
         setGroupsAndPageData(combinedData);
       }
+      setPageGroupLoading(false)
     };
     if(docId){
       fetchData();
@@ -130,16 +145,13 @@ export default function Documentation () {
 
   const [searchTerm, setSearchTerm] = useState('');
 
-  console.log("documentdata ", documentData);
-  console.log("groupsAndPage" , groupsAndPageData);
-
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
   };
 
   const filteredItems = groupsAndPageData.filter(
     (obj) =>
-      obj.documentationId === (docId ? Number(docId) : smallestId) &&
+      obj.documentationId === (Number(selectedVersion.id)) &&
       (obj.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         obj.title?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
@@ -211,7 +223,7 @@ export default function Documentation () {
     const result = await updatePageGroup({
       id: Number(id),
       name: editTitle,
-      documentationId: Number(docId)
+      documentationId: Number(selectedVersion.id)
     });
 
     if (handleError(result, navigate)) {
@@ -236,7 +248,7 @@ export default function Documentation () {
 
     const result = await createPageGroup({
       name: title,
-      documentationId: Number(docId)
+      documentationId: Number(selectedVersion.id)
     });
 
     if (handleError(result, navigate)) {
@@ -255,12 +267,18 @@ export default function Documentation () {
       return;
     }
 
-    const newItems = Array.from(groupsAndPageData);
+      const newItems = Array.from(groupsAndPageData.filter(
+        (obj) =>
+          obj.documentationId === Number(selectedVersion.id)
+      ));
+
+
     const [reorderedItem] = newItems.splice(result.source.index, 1);
 
     newItems.splice(result.destination.index, 0, reorderedItem);
 
     setGroupsAndPageData(newItems);
+    console.log(newItems);
 
     const updateOrder = async (item, index) => {
       try {
@@ -269,7 +287,7 @@ export default function Documentation () {
           : '/docs/page/reorder';
         await instance.post(endpoint, {
           id: item.id,
-          documentationId: docId,
+          documentationId: selectedVersion.id,
           order: index
         });
       } catch (err) {
@@ -287,54 +305,32 @@ export default function Documentation () {
     refreshData();
   };
 
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedVersion, setSelectedVersion] = useState('Version 1.0'); // Default version
-  const versions = [
-    'Version 1.0',
-    'Version 1.1',
-    'Version 1.2',
-    'Version 2.0',
-    'Version 2.1'
-  ];
-
-  const toggleDropdown = () => {
-    setShowDropdown(!showDropdown);
-  };
-
-  const handleSearchVersionChange = (e) => {
-    setSearchQuery(e.target.value);
-  };
-
-  const handleVersionSelect = (version) => {
-    setSelectedVersion(version);
-    setShowDropdown(false); // Close dropdown after selection
-  };
-
-  const filteredOptions = versions.filter((version) =>
-    version.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  console.log("filterItems" , filteredItems);
+  const filteredOptions = documentData.filter((version) =>
+    version.version.toLowerCase().includes(searchQuery.toLowerCase())
+  ); 
+console.log("select version" , selectedVersion);
   return (
     <AnimatePresence className='bg-gray-50 dark:bg-gray-900 p-3 sm:p-5'>
       <Breadcrumb />
 
-   
-
-      {documentData.length <=0 ? (
+{!loading && documentData.length <= 0 ? ( 
           <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className='flex justify-center'
-          key="no-documentation-div"
+          key="no-documentation-found-message"
           >
           <h1 className='text-gray-600 text-3xl p-10'>no documentations found</h1>
         </motion.div>
       ):
       (
-        <>
+        <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        key='documentation-component'
+        >
         <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -347,9 +343,10 @@ export default function Documentation () {
           onClick={() => {
             setCloneDocument(true);
             setCurrentItem(null);
-            setEditModal(true);
+            setEditModal(true);            
           }}
           title='Clone Documentation'
+          key='clone-button'
         >
           <Icon
             icon='clarity:clone-line'
@@ -365,6 +362,7 @@ export default function Documentation () {
             setEditModal(true);
           }}
           title='Edit Documentation'
+           key='edit-document-button'
         >
           <Icon
             icon='material-symbols:edit-outline'
@@ -378,6 +376,7 @@ export default function Documentation () {
             setCurrentItem(null);
             setDeleteModal(true);
           }}
+          key="delete-document-button"
           title='Delete Documentation'
         >
           <Icon
@@ -396,10 +395,10 @@ export default function Documentation () {
       >
         <div className='mr-auto place-self-center lg:col-span-7'>
           <h1 className='max-w-xl mb-4 text-4xl font-bold tracking-tight leading-none md:text-4xl xl:text-4xl dark:text-white'>
-            {documentData.name}
+            {documentData[0]?.name}
           </h1>
           <p className='max-w-2xl mb-6 font-light text-gray-700 lg:mb-8 md:text-lg lg:text-xl dark:text-gray-400'>
-            {documentData.description}
+            {documentData[0]?.description}
           </p>
         </div>
       </motion.div>
@@ -441,36 +440,24 @@ export default function Documentation () {
               <div className='relative inline-block border-black'>
                 <div
                   id='dropdownSelect'
-                  className='flex items-center border border-gray-400 hover:bg-gray-200 px-3 py-1.5 rounded-lg cursor-pointer dark:bg-gray-600 dark:border-gray-700 dark:hover:bg-gray-800 dark:text-white'
+                  className='flex items-center border gap-2 border-gray-400 hover:bg-gray-200 px-3 py-1.5 rounded-lg cursor-pointer dark:bg-gray-600 dark:border-gray-700 dark:hover:bg-gray-800 dark:text-white'
                   onClick={toggleDropdown}
                 >
-                  {selectedVersion} {/* Display the selected version */}
-                  <svg
-                    className='w-2.5 h-2.5 ms-3'
-                    aria-hidden='true'
-                    xmlns='http://www.w3.org/2000/svg'
-                    fill='none'
-                    viewBox='0 0 10 6'
-                  >
-                    <path
-                      stroke='currentColor'
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth='2'
-                      d='m1 1 4 4 4-4'
-                    />
-                  </svg>
+                  {selectedVersion.version} {/* Display the selected version */}
+                  <Icon icon="mingcute:down-fill" className='h-6 w-6'/>
                 </div>
 
-                {showDropdown && (
+                {showVersionDropdown && (
                   <div
                     id='dropdownSearch'
                     className='z-10  absolute bg-white rounded-lg shadow w-52 dark:bg-gray-700'
                   >
                     <div className='p-1 h-auto w-full'>
+                    
                       <label htmlFor='input-group-search' className='sr-only'>
                         Search
                       </label>
+                      {filteredOptions.length !== 1 ? (
                       <div className='relative'>
                         <input
                           type='text'
@@ -481,21 +468,25 @@ export default function Documentation () {
                           onChange={handleSearchVersionChange}
                         />
                       </div>
-
+                ):( <div className='flex items-center ps-2 rounded'>
+                  <span className='w-full py-2 ms-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300'>
+                    No versions found
+                  </span>
+                </div>)}
                       <ul
                         className='h-auto w-full mt-2 overflow-y-auto text-sm text-gray-700 dark:text-gray-200'
                         aria-labelledby='dropdownSelect'
                       >
                         {filteredOptions.length > 0
                           ? (
-                              filteredOptions.map((option, index) => (
-                                <li key={index} className='relative w-full'>
+                              filteredOptions.filter(obj => obj.id !=selectedVersion.id).map((option) => (
+                                <li key="version-lists" className='relative w-full'>
                                   <div
                                     className=' flex items-center ps-2 rounded hover:bg-gray-200 dark:hover:bg-gray-800 cursor-pointer'
                                     onClick={() => handleVersionSelect(option)}
                                   >
                                     <p className='w-full p-3 ms-2 text-md font-medium text-gray-900 rounded dark:text-gray-300'>
-                                      {option}
+                                      {option.version}
                                     </p>
                                   </div>
                                 </li>
@@ -505,7 +496,7 @@ export default function Documentation () {
                             <li>
                               <div className='flex items-center ps-2 rounded'>
                                 <span className='w-full py-2 ms-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300'>
-                                  No options found
+                                  No matched versions
                                 </span>
                               </div>
                             </li>
@@ -531,7 +522,7 @@ export default function Documentation () {
 
                 <motion.button whilehover={{ scale: 1.1 }}>
                   <Link
-                    to={`/dashboard/documentation/create-page?id=${docId}&dir=true`}
+                    to={`/dashboard/documentation/create-page?id=${docId}&dir=true&versionId=${selectedVersion.id}&version=${selectedVersion.version}`}
                     className='flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800'
                   >
                     <span className='px-1 text-left items-center dark:text-white text-md'>
@@ -543,7 +534,7 @@ export default function Documentation () {
               </div>
             </div>
 
-            {filteredItems && (
+            {filteredItems && 
               <div className='overflow-x-auto h-auto'>
                 <DragDropContext onDragEnd={handleDragEnd}>
                   <Droppable droppableId='table' type='TABLE'>
@@ -575,12 +566,12 @@ export default function Documentation () {
                           {...provided.droppableProps}
                           ref={provided.innerRef}
                         >
-                          {loading
+                          {pageGroupLoading
                             ? (
                               <tr className='border-b dark:border-gray-700'>
                                 <td colSpan='12' className='p-8'>
                                   <div className='flex flex-col items-center justify-center'>
-                                    {loading && (
+                                    {pageGroupLoading && (
                                       <Icon
                                         icon='line-md:loading-twotone-loop'
                                         className='w-32 h-32'
@@ -598,6 +589,7 @@ export default function Documentation () {
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
                                     className='border-b dark:bg-gray-700'
+                                    key="no-pages-found-message"
                                   >
                                     <td colSpan='12' className='text-center p-8'>
                                       <h1 className='text-center text-gray-600 sm:text-lg font-semibold'>
@@ -627,7 +619,7 @@ export default function Documentation () {
                                             snapshot={snapshot}
                                             obj={obj}
                                             index={index}
-                                            docId={docId}
+                                            docId={selectedVersion.id}
                                             pageGroupId={obj.id}
                                           />
                                         )}
@@ -641,7 +633,7 @@ export default function Documentation () {
                   </Droppable>
                 </DragDropContext>
               </div>
-            )}
+            }
 
             {/* Edit Component */}
             {editModal && (
@@ -649,9 +641,9 @@ export default function Documentation () {
                 heading={
                   currentItem ? 'Rename Page Group' : 'Edit Documentation'
                 }
-                title={currentItem ? currentItem.name : documentData.name}
-                description={currentItem ? '' : documentData.description}
-                id={currentItem ? currentItem.id : documentData.id}
+                title={currentItem ? currentItem.name : documentData[0]?.name}
+                description={currentItem ? '' : documentData[0]?.description}
+                id={currentItem ? currentItem.id : documentData[0]?.id}
                 updateData={currentItem ? handlePageGroupUpdate : handleUpdate}
 
               />
@@ -664,18 +656,18 @@ export default function Documentation () {
                     ? () => handleDeletePageGroup(currentItem.id, deleteItem)
                     : handleDelete
                 }
-                id={currentItem ? currentItem.id : documentData.id}
+                id={currentItem ? currentItem.id : documentData[0]?.id}
                 title='Are you sure?'
                 message={`You're permanently deleting "${currentItem
                   ? currentItem.name || currentItem.title
-                  : documentData.name
+                  : documentData[0]?.name
                   }`}
               />
             )}
           </div>
         </motion.div>
 
-        </>
+        </motion.div>
       )}
       {/* Create pageGroup resusable component */}
       {createPageGroupModal && (

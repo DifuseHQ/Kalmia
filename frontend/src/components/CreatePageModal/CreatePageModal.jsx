@@ -22,6 +22,8 @@ export default function CreatePageModal () {
   const docId = searchParam.get('id');
   const dir = searchParam.get('dir');
   const pageGroupId = searchParam.get('pageGroupId');
+  const versionId = searchParam.get('versionId');
+  const version = searchParam.get("version")
 
   const inputRef = useRef(null);
 
@@ -41,7 +43,7 @@ export default function CreatePageModal () {
       title,
       slug,
       content: JSON.stringify(content),
-      documentationId: Number(docId)
+      documentationId: Number(versionId)
     };
 
     if (dir === 'false') {
@@ -55,7 +57,7 @@ export default function CreatePageModal () {
       toastMessage('Page created successfully', 'success');
 
       if (dir === 'true') {
-        navigate(`/dashboard/documentation?id=${docId}`);
+        navigate(`/dashboard/documentation?id=${docId}&versionId=${versionId}&version=${version}`);
       } else {
         navigate(`/dashboard/documentation/page-group?id=${docId}&pageGroupId=${pageGroupId}`);
       }
