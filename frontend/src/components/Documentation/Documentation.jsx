@@ -52,8 +52,7 @@ export default function Documentation () {
   const [searchParam] = useSearchParams();
   const docId = searchParam.get('id');
   const versionId = searchParam.get('versionId');
-
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [pageGroupLoading, setPageGroupLoading] = useState(false);
 
   // Documentation CRUD
@@ -88,6 +87,7 @@ export default function Documentation () {
       const documentationsResult = await getDocumentations();
 
       if (handleError(documentationsResult, navigate)) {
+        setLoading(false);
         return;
       }
 
@@ -112,6 +112,8 @@ export default function Documentation () {
     };
     if (docId) {
       fetchData();
+    } else {
+      setLoading(false);
     }
   }, [docId, refresh, user, navigate, versionId]);
 
@@ -343,30 +345,13 @@ export default function Documentation () {
   const filteredOptions = documentData.filter((version) =>
     version.version.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
   return (
     <AnimatePresence className="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5">
       <Breadcrumb />
 
-      {loading ? (
-        <div key="documentation-loading-spinner">
-          <Icon
-            icon="eos-icons:three-dots-loading"
-            className="text-black dark:text-white  w-20 h-10"
-          />
-        </div>
-      ) : documentData.length === 0 ? (
-        <div
-          className="flex justify-center"
-          key="no-documentation-found-message"
-        >
-          {' '}
-          <h1 className="text-gray-600 text-3xl p-10">
-            no documentations found
-          </h1>{' '}
-        </div>
-      ) : (
-        <motion.div
+      {!loading ? (
+        documentData.length !== 0 ? (
+          <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -723,6 +708,26 @@ export default function Documentation () {
             )}
           </motion.div>
         </motion.div>
+        ) : (
+          <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="flex justify-center"
+          key="no-documentation-found-message"
+        >
+          {' '}
+          <h1 className="text-gray-600 text-3xl p-10">
+            no documentations found
+          </h1>{' '}
+        </motion.div>
+        )) : (
+          <div key="documentation-loading-spinner">
+          <Icon
+            icon="eos-icons:three-dots-loading"
+            className="text-black dark:text-white  w-20 h-10"
+          />
+        </div>
       )}
 
       {/* Create pageGroup resusable component */}
