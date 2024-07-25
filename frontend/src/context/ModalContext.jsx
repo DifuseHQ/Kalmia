@@ -10,6 +10,7 @@ export const ModalProvider = ({ children }) => {
   const [deleteModal, setDeleteModal] = useState(false);
   const [cloneDocumentModal, setCloneDocumentModal] = useState(false);
   const [currentModalItem, setCurrentModalItem] = useState(null);
+  const [pageSizeDropdown, setpageSizeDropdown] = useState(false);
 
   const openModal = (modalName, item = null) => {
     setCurrentModalItem(item);
@@ -31,6 +32,9 @@ export const ModalProvider = ({ children }) => {
         break;
       case 'cloneDocument':
         setCloneDocumentModal(true);
+        break;
+      case 'pageSizeDropdown':
+        setpageSizeDropdown(true);
         break;
       default:
         console.warn(`Unknown modal: ${modalName}`);
@@ -58,6 +62,9 @@ export const ModalProvider = ({ children }) => {
       case 'cloneDocument':
         setCloneDocumentModal(false);
         break;
+      case 'pageSizeDropdown':
+        setpageSizeDropdown(false);
+        break;
       default:
         console.warn(`Unknown modal: ${modalName}`);
     }
@@ -74,6 +81,7 @@ export const ModalProvider = ({ children }) => {
         cloneDocumentModal,
         currentModalItem,
         setCurrentModalItem,
+        pageSizeDropdown,
         openModal,
         closeModal
       }}>
