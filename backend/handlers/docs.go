@@ -159,6 +159,7 @@ func EditDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		ID          uint   `json:"id" validate:"required"`
 		Name        string `json:"name" validate:"required"`
 		Description string `json:"description" validate:"required"`
+		Version     string `json:"version"`
 	}
 
 	var req Request
@@ -208,6 +209,10 @@ func EditDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 
 	documentation.Name = req.Name
 	documentation.Description = req.Description
+
+	if req.Version != "" {
+		documentation.Version = req.Version
+	}
 
 	if err := db.Save(&documentation).Error; err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to update documentation"})
