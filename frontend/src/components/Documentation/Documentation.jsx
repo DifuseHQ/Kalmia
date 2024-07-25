@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd';
 import { Icon } from '@iconify/react';
@@ -27,6 +27,7 @@ import {
   handleError
 } from '../../utils/Common';
 import { toastMessage } from '../../utils/Toast';
+import { pageSize } from '../../utils/Utils';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
 import EditDocumentModal from '../CreateDocumentModal/EditDocumentModal';
 import CreatePageGroup from '../CreatePageGroup/CreatePageGroup';
@@ -56,7 +57,7 @@ export default function Documentation () {
   const [loading, setLoading] = useState(true);
   const [pageGroupLoading, setPageGroupLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectPageSize, setSelectPageSize] = useState(1);
+  const [selectPageSize, setSelectPageSize] = useState(10);
 
   // Documentation CRUD
   const [documentData, setDocumentData] = useState([]);
@@ -252,6 +253,7 @@ export default function Documentation () {
   };
 
   const handleCreatePageGroup = async (title) => {
+    console.log('clicked');
     if (title === '') {
       toastMessage(
         'Title is required. Please Enter PageGroup title',
@@ -351,7 +353,6 @@ export default function Documentation () {
   );
 
   const itemsPerPage = selectPageSize;
-  const pageSizes = [1, 2, 3, 40, 60, 80, 100, 150];
   const startIdx = (currentPage - 1) * itemsPerPage;
   const endIdx = startIdx + itemsPerPage;
   const totalItems = filteredItems.length;
@@ -370,6 +371,21 @@ export default function Documentation () {
     setSelectPageSize(value);
     closeModal('pageSizeDropdown');
   };
+
+  const handleClickOutside = useCallback((event) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      setShowVersionDropdown(false);
+      closeModal('pageSizeDropdown');
+    }
+  }, [closeModal]);
+
+  const dropdownRef = useRef(null);
+  useEffect(() => {
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [handleClickOutside]);
 
   return (
     <AnimatePresence className="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5">
@@ -456,7 +472,7 @@ export default function Documentation () {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ delay: 0.1 }}
-                className="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden"
+                className="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg"
                 key="documentation-table"
               >
                 <div className="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
@@ -493,6 +509,7 @@ export default function Documentation () {
 
                       {showVersionDropdown && (
                         <div
+                        ref={dropdownRef}
                           id="dropdownSearch"
                           className="absolute bg-white rounded-lg shadow w-52 dark:bg-gray-700 z-30"
                         >
@@ -519,7 +536,7 @@ export default function Documentation () {
                               </div>
                             )}
                             <ul
-                              className="h-auto w-full mt-2 overflow-y-auto text-sm text-gray-700 dark:text-gray-200"
+                              className="min-h-10 h-auto w-full mt-2 overflow-y-auto text-sm text-gray-700 dark:text-gray-200"
                               aria-labelledby="dropdownSelect"
                             >
                               {filteredVersions.length > 0 ? (
@@ -530,10 +547,10 @@ export default function Documentation () {
                                       className="relative w-full"
                                     >
                                       <div
-                                        className={`flex items-center ps-2 rounded hover:bg-gray-200 cursor-pointer ${selectedVersion.version === option.version ? 'bg-gray-900 cursor-text dark:hover:bg-gray-900' : 'dark:hover:bg-gray-800'}`}
+                                        className={`flex items-center ps-2 rounded hover:bg-gray-200 cursor-pointer ${selectedVersion.version === option.version ? 'bg-gray-400 hover:bg-gray-400 dark:bg-gray-900 cursor-text dark:hover:bg-gray-900' : 'dark:hover:bg-gray-800'}`}
                                         onClick={() => handleVersionSelect(option)}
                                       >
-                                        <p className="w-full p-3 ms-2 text-md font-medium text-gray-900 rounded dark:text-gray-300">
+                                        <p className="w-full p-2.5 ms-2 text-md font-medium text-gray-900 rounded dark:text-gray-300">
                                           {option.version}
                                         </p>
                                       </div>
@@ -708,12 +725,14 @@ export default function Documentation () {
                           <Icon icon="mingcute:down-fill" className="h-5 w-5" />
                         </button>
                         {pageSizeDropdown && (
-                          <div className="absolute w-28 bg-white border border-gray-300 rounded-md shadow-lg z-10 dark:bg-gray-800 dark:border-gray-600 bottom-full mb-1 max-h-36 overflow-y-auto" >
-                            {pageSizes.map((option) => (
+                          <div
+                          ref={dropdownRef}
+                          className="absolute w-28 bg-white border border-gray-300 rounded-md shadow-lg z-10 dark:bg-gray-800 dark:border-gray-600 bottom-full mb-1 max-h-36 overflow-y-auto" >
+                            {pageSize().map((option) => (
                               <div
                                 key={option}
                                 onClick={() => handlePageSizeSelect(option)}
-                                className="py-2 px-4 cursor-pointer dark:text-white hover:bg-gray-300 dark:hover:bg-gray-900 "
+                                className={`py-2 px-4 cursor-pointer dark:text-white ${selectPageSize === option ? 'bg-gray-400 hover:bg-gray-400 dark:hover:bg-gray-700 dark:bg-gray-700 cursor-text' : 'hover:bg-gray-200 dark:hover:bg-gray-900'}`}
                               >
                                 {option}
                               </div>
@@ -831,7 +850,7 @@ export default function Documentation () {
       {createPageGroupModal && (
         <CreatePageGroup
           handleCreate={handleCreatePageGroup}
-          key="create-page-group-0"
+          key="create-page-group-01"
         />
       )}
 
