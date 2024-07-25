@@ -82,8 +82,10 @@ export default function Sidebar () {
         id='drawer-navigation'
         key="sidebar-aside-container"
       >
-        <div className='overflow-y-auto py-5 px-3 h-full bg-white dark:bg-gray-800'>
-          <ul className='space-y-2'>
+        <div className='overflow-y-auto py-5 px-3 h-full bg-white dark:bg-gray-800'
+        key="sidebar-wrapper">
+          <ul className='space-y-2'
+          key="documentation-sidebar-list">
             <li>
               <motion.button
                 whilehover={{ scale: 1.05 }}
@@ -132,7 +134,8 @@ export default function Sidebar () {
           </ul>
 
           {userDetails && userDetails.admin && (
-            <ul className='pt-5 mt-5 space-y-2 border-t border-gray-200 dark:border-gray-700'>
+            <ul className='pt-5 mt-5 space-y-2 border-t border-gray-200 dark:border-gray-700'
+            key="user-management-lists">
               <li>
                 <NavLink
                   to='/dashboard/admin/user-list'

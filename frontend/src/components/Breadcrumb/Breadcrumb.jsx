@@ -99,7 +99,7 @@ export default function Breadcrumb () {
         const doc = documentations.find(d => parseInt(d.id) === parseInt(versionId));
         newBreadcrumb.push({
           title: doc.name,
-          path: `/dashboard/documentation?id=${parentDoc.id}&versionId=${doc.id}&version=${doc.version}`,
+          path: `/dashboard/documentation?id=${parentDoc?.id}&versionId=${doc?.id}&version=${doc?.version}`,
           icon: 'uiw:document'
         });
       } else {
@@ -190,9 +190,10 @@ export default function Breadcrumb () {
       aria-label='Breadcrumb'
       key='breadcrumb-fin'
     >
-      <ol className='flex flex-wrap items-center gap-y-2'>
+      <ol className='flex flex-wrap items-center gap-y-2'
+      key="breadcrum-list">
         {breadcrumb.map((crumb, index) => (
-          <li key={index} className='flex items-center'>
+          <li key={`breadcrumb-${index}`} className='flex items-center'>
             <Link
               to={crumb.path}
               className='flex items-center text-sm md:text-base font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white whitespace-nowrap py-1'

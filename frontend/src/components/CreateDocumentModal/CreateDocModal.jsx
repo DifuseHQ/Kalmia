@@ -4,13 +4,15 @@ import { Icon } from '@iconify/react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 import { createDocumentation } from '../../api/Requests';
+import { AuthContext } from '../../context/AuthContext';
 import { ModalContext } from '../../context/ModalContext';
 import { handleError } from '../../utils/Common';
 import { toastMessage } from '../../utils/Toast';
 
 export default function CreateDocModal () {
   const navigate = useNavigate();
-  const { openModal, closeModal } = useContext(ModalContext);
+  const { closeModal } = useContext(ModalContext);
+  const { refreshData } = useContext(AuthContext);
 
   const [searchParam] = useSearchParams();
   const docId = searchParam.get('id');
@@ -55,11 +57,11 @@ export default function CreateDocModal () {
     });
 
     if (result.status === 'success') {
-      openModal('createDocumentation');
+      closeModal('createDocumentation');
       if (!docId) {
         navigate('/');
       }
-      // refreshData();
+      refreshData();
       toastMessage('Document created successfully', 'success');
     } else {
       handleError(result, navigate);

@@ -142,6 +142,8 @@ export default function Documentation () {
     };
     if (docId) {
       fetchData();
+    } else {
+      setPageGroupLoading(false);
     }
   }, [docId, user, navigate, refresh]);
 
@@ -159,7 +161,7 @@ export default function Documentation () {
   );
 
   const handleDelete = async () => {
-    const result = await deleteDocumentation(Number(docId));
+    const result = await deleteDocumentation(Number(selectedVersion.id));
 
     if (handleError(result, navigate)) {
       return;
@@ -173,7 +175,7 @@ export default function Documentation () {
     }
   };
 
-  const handleUpdate = async (editTitle, editDescription, version) => {
+  const handleUpdate = async (editTitle, editDescription, editVersion, version) => {
     let result;
 
     if (cloneDocumentModal) {
@@ -183,9 +185,10 @@ export default function Documentation () {
       });
     } else {
       result = await updateDocumentation({
-        id: Number(docId),
+        id: Number(selectedVersion.id),
         name: editTitle,
-        description: editDescription
+        description: editDescription,
+        version: editVersion
       });
     }
 
@@ -222,10 +225,10 @@ export default function Documentation () {
       refreshData();
     }
   };
-
   const handlePageGroupUpdate = async (
     editTitle,
     editDescription,
+    editVersion,
     version,
     id
   ) => {
@@ -349,8 +352,9 @@ export default function Documentation () {
     <AnimatePresence className="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5">
       <Breadcrumb />
 
-      {!loading ? (
-        documentData.length !== 0 ? (
+      {!loading &&
+        <>
+        {documentData.length !== 0 ? (
           <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -665,11 +669,10 @@ export default function Documentation () {
                     ? currentModalItem.name
                     : documentData[0]?.name
                 }
-                description={
-                  currentModalItem ? '' : documentData[0]?.description
-                }
+                documentVersion={!currentModalItem && selectedVersion.version}
+                description={!currentModalItem && documentData[0]?.description}
                 id={
-                  currentModalItem ? currentModalItem.id : documentData[0]?.id
+                  currentModalItem ? currentModalItem.id : selectedVersion.id
                 }
                 updateData={
                   currentModalItem ? handlePageGroupUpdate : handleUpdate
@@ -703,7 +706,7 @@ export default function Documentation () {
                   currentModalItem ? currentModalItem.id : documentData[0]?.id
                 }
                 title="Are you sure?"
-                message={`You're permanently deleting "${currentModalItem ? currentModalItem.name || currentModalItem.title : documentData[0]?.name}"`}
+                message={`You're permanently deleting ${currentModalItem ? `"${currentModalItem.name || currentModalItem.title}"` : `"${documentData[0]?.name}" version ${selectedVersion.version}`}`}
               />
             )}
           </motion.div>
@@ -721,14 +724,9 @@ export default function Documentation () {
             no documentations found
           </h1>{' '}
         </motion.div>
-        )) : (
-          <div key="documentation-loading-spinner">
-          <Icon
-            icon="eos-icons:three-dots-loading"
-            className="text-black dark:text-white  w-20 h-10"
-          />
-        </div>
-      )}
+        )}
+        </>
+        }
 
       {/* Create pageGroup resusable component */}
       {createPageGroupModal && (
