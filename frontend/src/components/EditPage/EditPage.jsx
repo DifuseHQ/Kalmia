@@ -1,29 +1,29 @@
+import React, { useContext, useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { BlockNoteSchema, defaultBlockSpecs, filterSuggestionItems } from '@blocknote/core';
-import { useCreateBlockNote, SuggestionMenuController, getDefaultReactSlashMenuItems } from '@blocknote/react';
-
 import {
   BlockNoteView,
   darkDefaultTheme,
   lightDefaultTheme
 } from '@blocknote/mantine';
+import { getDefaultReactSlashMenuItems, SuggestionMenuController, useCreateBlockNote } from '@blocknote/react';
+import warnIcon from '@iconify/icons-mdi/alert';
+import { Icon } from '@iconify/react/dist/iconify';
+import { AnimatePresence, motion } from 'framer-motion';
+
+import { deletePage, getPage, updatePage } from '../../api/Requests';
+import { AuthContext } from '../../context/AuthContext';
+import { ThemeContext } from '../../context/ThemeContext';
+import { handleError } from '../../utils/Common';
+import { toastMessage } from '../../utils/Toast';
+import Breadcrumb from '../Breadcrumb/Breadcrumb';
+import DeleteModal from '../DeleteModal/DeleteModal';
+
+import { Alert } from './EditorCustomTools';
+
 import '@blocknote/core/fonts/inter.css';
 import '@blocknote/mantine/style.css';
 import './EditorCustomTool.css';
-import { Alert } from './EditorCustomTools';
-
-import React, { useContext, useEffect, useState } from 'react';
-import { Icon } from '@iconify/react/dist/iconify';
-import warnIcon from '@iconify/icons-mdi/alert';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
-import { AuthContext } from '../../context/AuthContext';
-import DeleteModal from '../DeleteModal/DeleteModal';
-import { toastMessage } from '../../utils/Toast';
-import Breadcrumb from '../Breadcrumb/Breadcrumb';
-
-import { getPage, updatePage, deletePage } from '../../api/Requests';
-import { handleError } from '../../utils/Common';
-import { ThemeContext } from '../../context/ThemeContext';
 
 const schema = BlockNoteSchema.create({
   blockSpecs: {

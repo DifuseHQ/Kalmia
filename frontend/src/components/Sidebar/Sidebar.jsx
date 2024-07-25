@@ -1,17 +1,20 @@
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
-import { AuthContext } from '../../context/AuthContext';
-import { toastMessage } from '../../utils/Toast';
+import { AnimatePresence, motion } from 'framer-motion';
+
 import { getDocumentations } from '../../api/Requests';
+import { AuthContext } from '../../context/AuthContext';
+import { ModalContext } from '../../context/ModalContext';
+import { toastMessage } from '../../utils/Toast';
 
 export default function Sidebar () {
   const [documentation, setDocumentation] = useState([]);
   const [openDropdowns, setOpenDropdowns] = useState([]);
   const [searchParam] = useSearchParams();
   const docId = searchParam.get('id');
-  const { refresh, userDetails, setCreateDocumentationModal, isSidebarOpen, setIsSidebarOpen } = useContext(AuthContext);
+  const { refresh, userDetails, isSidebarOpen, setIsSidebarOpen } = useContext(AuthContext);
+  const { openModal } = useContext(ModalContext);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -36,7 +39,7 @@ export default function Sidebar () {
   };
 
   const handleCreateDocument = () => {
-    setCreateDocumentationModal(true);
+    openModal('createDocumentation');
   };
 
   const location = useLocation();

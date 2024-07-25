@@ -1,15 +1,16 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
-import { AuthContext } from '../../context/AuthContext';
+import { AnimatePresence, motion } from 'framer-motion';
+
+import { createDocumentation } from '../../api/Requests';
+import { ModalContext } from '../../context/ModalContext';
 import { handleError } from '../../utils/Common';
 import { toastMessage } from '../../utils/Toast';
-import { createDocumentation } from '../../api/Requests';
 
 export default function CreateDocModal () {
   const navigate = useNavigate();
-  const { refreshData, setCreateDocumentationModal } = useContext(AuthContext);
+  const { openModal, closeModal } = useContext(ModalContext);
 
   const [searchParam] = useSearchParams();
   const docId = searchParam.get('id');
@@ -54,11 +55,11 @@ export default function CreateDocModal () {
     });
 
     if (result.status === 'success') {
-      setCreateDocumentationModal(false);
+      openModal('createDocumentation');
       if (!docId) {
         navigate('/');
       }
-      refreshData();
+      // refreshData();
       toastMessage('Document created successfully', 'success');
     } else {
       handleError(result, navigate);
@@ -90,7 +91,7 @@ export default function CreateDocModal () {
                 </h3>
               </div>
               <button
-                onClick={() => setCreateDocumentationModal(false)}
+                onClick={() => closeModal('createDocumentation')}
                 type='button'
                 className='text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white'
               >

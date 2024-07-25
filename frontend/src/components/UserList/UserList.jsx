@@ -1,13 +1,15 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
-import { AuthContext } from '../../context/AuthContext';
+import { AnimatePresence, motion } from 'framer-motion';
+
 import instance from '../../api/AxiosInstance';
-import DeleteModal from '../DeleteModal/DeleteModal';
+import { AuthContext } from '../../context/AuthContext';
+import { ModalContext } from '../../context/ModalContext';
+import { getFormattedDate } from '../../utils/Common';
 import { toastMessage } from '../../utils/Toast';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
-import { getFormattedDate } from '../../utils/Common';
+import DeleteModal from '../DeleteModal/DeleteModal';
 
 export default function UserList () {
   const [userList, setUserList] = useState([]);
@@ -18,9 +20,8 @@ export default function UserList () {
   const itemsPerPage = 7;
 
   const navigate = useNavigate();
-  const [currentItem, setCurrentItem] = useState(null);
-  const [isDeleteModal, setIsDeleteModal] = useState(false);
   const { refresh, refreshData } = useContext(AuthContext);
+  const { openModal, closeModal, deleteModal, currentModalItem } = useContext(ModalContext);
 
   useEffect(() => {
     setLoading(true);
@@ -55,20 +56,13 @@ export default function UserList () {
     setCurrentPage(1);
   };
 
-  const openDeleteModal = (item) => {
-    setCurrentItem(item);
-    setIsDeleteModal(true);
-  };
-
-  const handleCancelDelete = () => {
-    setIsDeleteModal(false);
-    setCurrentItem(null);
-  };
+  const handleDeleteClick = useCallback((user) => {
+    return () => openModal('delete', user);
+  }, [openModal]);
 
   const handleDeleteUser = async (username) => {
     if (!username) {
       toastMessage('Something went wrong, try again', 'error');
-      setCurrentItem(null);
       return;
     }
 
@@ -79,7 +73,7 @@ export default function UserList () {
       if (response?.status === 200) {
         refreshData();
         toastMessage('User deleted successfully', 'success');
-        setIsDeleteModal(false);
+        closeModal('delete');
         navigate('/dashboard/admin/user-list');
       }
     } catch (err) {
@@ -104,6 +98,16 @@ export default function UserList () {
     },
     [totalPages]
   );
+
+  const memoizedUserHandlers = useMemo(() => {
+    return filterUser.reduce((acc, user) => {
+      acc[user.id] = {
+        handleDeleteClick: handleDeleteClick(user),
+        handleEditClick: () => navigate(`/dashboard/admin/edit-user/${user.id}`)
+      };
+      return acc;
+    }, {});
+  }, [filterUser, handleDeleteClick, navigate]);
 
   const renderTableContent = () => {
     if (loading) {
@@ -173,25 +177,19 @@ export default function UserList () {
                   </span>
                 </div>
               </td>
-              <td className='px-4 py-3'>
-                <Link
-                  to='/dashboard/admin/edit-user'
-                  id={`edit-delete-${user.id}`}
-                  data-dropdown-toggle={`edit-delete-${user.id}`}
-                  className='inline-flex items-center gap-3 p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100'
-                  type='button'
-                >
+              <td className='px-4 py-3 cursor-pointer relative'>
+                <div className='inline-flex items-center gap-2 p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100'>
                   <Icon
-                    icon='material-symbols:edit-outline' className='w-6 h-6 text-yellow-500 dark:text-yellow-400'
+                    icon='material-symbols:edit-outline'
+                    className='w-6 h-6 text-yellow-500 dark:text-yellow-400'
+                    onClick={memoizedUserHandlers[user.id].handleEditClick}
                   />
                   <Icon
                     icon='material-symbols:delete'
                     className='w-6 h-6 text-red-600 dark:text-red-500'
-                    onClick={() => {
-                      openDeleteModal(user);
-                    }}
+                    onClick={memoizedUserHandlers[user.id].handleDeleteClick}
                   />
-                </Link>
+                </div>
               </td>
             </motion.tr>
           ))}
@@ -327,13 +325,14 @@ export default function UserList () {
             </nav>
           )}
         </div>
-        {isDeleteModal && currentItem && (
+
+        {deleteModal && currentModalItem && (
           <DeleteModal
-            cancelModal={handleCancelDelete}
-            deleteDoc={() => handleDeleteUser(currentItem.username)}
-            id={currentItem.id}
+            cancelModal={() => closeModal('delete')}
+            deleteDoc={() => handleDeleteUser(currentModalItem.username)}
+            id={currentModalItem.id}
             title='Are you sure?'
-            message={`You're permanently deleting "${currentItem.username}" `}
+            message={`You're permanently deleting "${currentModalItem.username}" `}
           />
         )}
       </motion.div>

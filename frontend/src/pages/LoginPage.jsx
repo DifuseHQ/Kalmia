@@ -1,6 +1,7 @@
 import React, { useContext, useState } from 'react';
-import { AuthContext } from '../context/AuthContext';
+
 import Navbar from '../components/Navbar/Navbar';
+import { AuthContext } from '../context/AuthContext';
 
 export default function LoginPage () {
   const [username, setUsername] = useState(null);

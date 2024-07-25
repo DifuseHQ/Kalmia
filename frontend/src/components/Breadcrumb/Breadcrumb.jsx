@@ -1,16 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation, useSearchParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import React, { useContext, useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Icon } from '@iconify/react/dist/iconify.js';
-import { getDocumentations, getPageGroups, getPages } from '../../api/Requests';
+import { motion } from 'framer-motion';
+
+import { getDocumentations, getPageGroups, getPages, getUser } from '../../api/Requests';
+import { AuthContext } from '../../context/AuthContext';
 import { toastMessage } from '../../utils/Toast';
 
 export default function Breadcrumb () {
+  const { id: userIdFromParam } = useParams();
   const [breadcrumb, setBreadcrumb] = useState([]);
   const [searchParams] = useSearchParams();
 
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
     async function updateBreadcrumb () {
@@ -46,6 +50,15 @@ export default function Breadcrumb () {
             path: '/dashboard/admin/user-list',
             icon: 'mdi:table-user'
           });
+        } else if (location.pathname.includes('/edit-user')) {
+          if (user.admin) {
+            const user = await getUser(parseInt(userIdFromParam));
+            newBreadcrumb.push({
+              title: `${user.data.username}`,
+              path: location.pathname + location.search,
+              icon: 'mdi:account-edit'
+            });
+          }
         }
 
         setBreadcrumb(newBreadcrumb);
@@ -153,7 +166,7 @@ export default function Breadcrumb () {
     }
 
     updateBreadcrumb();
-  }, [location.search, navigate, location.pathname, searchParams]);
+  }, [location.search, navigate, location.pathname, searchParams, user, userIdFromParam]);
 
   return (
     <motion.nav

@@ -1,11 +1,11 @@
 import { defaultProps } from '@blocknote/core';
 import { createReactBlockSpec } from '@blocknote/react';
-import { Menu } from '@mantine/core';
 import warnIcon from '@iconify/icons-mdi/alert';
 import errorIcon from '@iconify/icons-mdi/alert-circle';
-import infoIcon from '@iconify/icons-mdi/information';
 import successIcon from '@iconify/icons-mdi/check-circle';
+import infoIcon from '@iconify/icons-mdi/information';
 import { Icon } from '@iconify/react/dist/iconify.js';
+import { Menu } from '@mantine/core';
 
 // The types of alerts that users can choose from.
 export const alertTypes = [

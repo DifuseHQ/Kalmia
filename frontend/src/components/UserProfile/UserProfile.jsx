@@ -1,11 +1,12 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
+import AvatarEditor from 'react-avatar-editor';
 import { useNavigate } from 'react-router-dom';
 import { Icon } from '@iconify/react';
-import AvatarEditor from 'react-avatar-editor';
-import { AuthContext } from '../../context/AuthContext';
-import { toastMessage } from '../../utils/Toast';
+
 import { getUsers, updateUser, uploadPhoto } from '../../api/Requests';
+import { AuthContext } from '../../context/AuthContext';
 import { handleError } from '../../utils/Common';
+import { toastMessage } from '../../utils/Toast';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
 
 export default function UserProfile () {
@@ -36,7 +37,7 @@ export default function UserProfile () {
       if (users.status === 'success') {
         const data = users.data;
         const filterUser = data.find(
-          (obj) => obj.id.toString() === user.user_id
+          (obj) => obj.id.toString() === user.userId
         );
         setUserData(filterUser);
         setUsername(filterUser.username);

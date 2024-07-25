@@ -1,29 +1,33 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import { ThemeProvider } from './context/ThemeContext';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
+
+import CreateDocModal from '../src/components/CreateDocumentModal/CreateDocModal';
+import CreatePageModal from '../src/components/CreatePageModal/CreatePageModal';
+import CreateUser from '../src/components/CreateUser/CreateUser';
+import Documentation from '../src/components/Documentation/Documentation';
+import EditPage from '../src/components/EditPage/EditPage';
+import Error from '../src/components/error/Error';
+import Error500 from '../src/components/error500/Error500';
+import PageGroupTable from '../src/components/PageGroup/PageGroupTable';
+import UserList from '../src/components/UserList/UserList';
+import DashboardPage from '../src/pages/DashboardPage';
+import LoginPage from '../src/pages/LoginPage';
+
+import UserForm from './components/UserForm/UserForm';
+import { AuthProvider } from './context/AuthContext';
+import { ModalProvider } from './context/ModalContext';
+import { ThemeProvider } from './context/ThemeContext';
+import AdminAuth from './protected/AdminAuth';
 import LoginAuth from './protected/LoginAuth';
 import RequireAuth from './protected/RequireAuth';
-import AdminAuth from './protected/AdminAuth';
+
 import 'react-toastify/dist/ReactToastify.css';
-import LoginPage from '../src/pages/LoginPage';
-import DashboardPage from '../src/pages/DashboardPage';
-import CreateDocModal from '../src/components/CreateDocumentModal/CreateDocModal';
-import Documentation from '../src/components/Documentation/Documentation';
-import PageGroupTable from '../src/components/PageGroup/PageGroupTable';
-import CreatePageModal from '../src/components/CreatePageModal/CreatePageModal';
-import EditPage from '../src/components/EditPage/EditPage';
-import UserProfile from '../src/components/UserProfile/UserProfile';
-import UserList from '../src/components/UserList/UserList';
-import CreateUser from '../src/components/CreateUser/CreateUser';
-import Error500 from '../src/components/error500/Error500';
-import Error from '../src/components/error/Error';
-import EditUser from './components/EditUser/EditUser';
 
 function App () {
   return (
     <Router>
       <ThemeProvider>
+      <ModalProvider>
         <AuthProvider>
           <ToastContainer />
           <Routes>
@@ -42,15 +46,13 @@ function App () {
                 <Route path='documentation/page-group' element={<PageGroupTable />} />
                 <Route path='documentation/create-page' element={<CreatePageModal />} />
                 <Route path='documentation/edit-page' element={<EditPage />} />
-                <Route path='user-profile' element={<UserProfile />} />
+                <Route path='user-profile' element={<UserForm />} />
 
                 <Route element={<AdminAuth />}>
                   <Route path='admin/user-list' element={<UserList />} />
-                  <Route path='admin/edit-user' element={<EditUser />} />
+                  <Route path='admin/edit-user/:id' element={<UserForm />} />
                   <Route path='admin/create-user' element={<CreateUser />} />
-
                 </Route>
-
               </Route>
             </Route>
 
@@ -59,6 +61,7 @@ function App () {
 
           </Routes>
         </AuthProvider>
+        </ModalProvider>
       </ThemeProvider>
     </Router>
   );

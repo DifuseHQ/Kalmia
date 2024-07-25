@@ -1,10 +1,12 @@
 import React, { useContext } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
-import { AuthContext } from '../../context/AuthContext';
+import { AnimatePresence, motion } from 'framer-motion';
+
+import { ModalContext } from '../../context/ModalContext';
 
 export default function DeleteModal ({ title, deleteDoc, message }) {
-  const { setDeleteModal, setCurrentItem, setDeleteItem } = useContext(AuthContext);
+  // const { setDeleteModal, setCurrentItem, setDeleteItem } = useContext(AuthContext);
+  const { closeModal } = useContext(ModalContext);
   return (
     <AnimatePresence>
       <motion.div
@@ -43,9 +45,7 @@ export default function DeleteModal ({ title, deleteDoc, message }) {
               </button>
               <button
                 onClick={() => {
-                  setDeleteItem(null);
-                  setDeleteModal(false);
-                  setCurrentItem(null);
+                  closeModal('delete');
                 }}
                 type='button'
                 className='px-5 py-2.5 text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:ring-gray-300 rounded-lg border border-gray-200 text-sm font-medium dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:bg-gray-600 dark:focus:ring-gray-600 transition duration-300 ease-in-out'

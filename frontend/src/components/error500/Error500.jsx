@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icon } from '@iconify/react';
+
 import { AuthContext } from '../../context/AuthContext';
 
 export default function Error500 () {

@@ -1,28 +1,32 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd';
 import { Icon } from '@iconify/react';
-import { AuthContext } from '../../context/AuthContext';
+import { AnimatePresence, motion } from 'framer-motion';
+
 import instance from '../../api/AxiosInstance';
-import EditDocumentModal from '../CreateDocumentModal/EditDocumentModal';
-import DeleteModal from '../DeleteModal/DeleteModal';
-import CreatePageGroup from '../CreatePageGroup/CreatePageGroup';
-import { toastMessage } from '../../utils/Toast';
-import Breadcrumb from '../Breadcrumb/Breadcrumb';
-import { combinePages, getClosestVersion, getVersion, handleError } from '../../utils/Common';
 import {
+  createDocumentationVersion,
+  createPage as createPageAPI,
+  createPageGroup,
+  deleteDocumentation,
+  deletePage,
+  deletePageGroup,
+  getDocumentations,
   getPageGroups,
   getPages,
-  getDocumentations,
-  deleteDocumentation,
   updateDocumentation,
-  deletePageGroup,
-  updatePageGroup,
-  createPageGroup,
-  deletePage,
-  createDocumentationVersion
+  updatePageGroup
 } from '../../api/Requests';
+import { AuthContext } from '../../context/AuthContext';
+import { ModalContext } from '../../context/ModalContext';
+import { combinePages, getClosestVersion, getVersion, handleError } from '../../utils/Common';
+import { toastMessage } from '../../utils/Toast';
+import Breadcrumb from '../Breadcrumb/Breadcrumb';
+import EditDocumentModal from '../CreateDocumentModal/EditDocumentModal';
+import CreatePageGroup from '../CreatePageGroup/CreatePageGroup';
+import CreatePage from '../CreatePageModal/CreatePageModal';
+import DeleteModal from '../DeleteModal/DeleteModal';
 import Table from '../Table/Table';
 
 export default function Documentation () {
@@ -30,19 +34,19 @@ export default function Documentation () {
   const {
     refresh,
     refreshData,
-    user,
-    createPageGroupModal,
-    setCreatePageGroupModal,
-    deleteModal,
-    setDeleteModal,
-    deleteItem,
-    currentItem,
-    setCurrentItem,
-    editModal,
-    setEditModal,
-    cloneDocument,
-    setCloneDocument
+    user
   } = useContext(AuthContext);
+
+  const {
+    openModal,
+    closeModal,
+    createPageGroupModal,
+    createPageModal,
+    deleteModal,
+    editModal,
+    cloneDocumentModal,
+    currentModalItem
+  } = useContext(ModalContext);
 
   const [searchParam] = useSearchParams();
   const docId = searchParam.get('id');
@@ -72,11 +76,10 @@ export default function Documentation () {
   const handleVersionSelect = (version) => {
     setSelectedVersion(version);
     setShowVersionDropdown(false);
-    navigate(`/dashboard/documentation?id=13&versionId=${version.id}&version=${version.version}`);
+    navigate(`/dashboard/documentation?id=${docId}&versionId=${version.id}&version=${version.version}`);
   };
 
   useEffect(() => {
-
     const fetchData = async () => {
       setLoading(true);
       const documentationsResult = await getDocumentations();
@@ -97,7 +100,7 @@ export default function Documentation () {
           setSelectedVersion(currentVersion);
         } else {
           const latestVersion = await getClosestVersion(clonedData);
-          setSelectedVersion(latestVersion || "");
+          setSelectedVersion(latestVersion || '');
         }
       }
       setLoading(false);
@@ -156,7 +159,7 @@ export default function Documentation () {
     }
 
     if (result.status === 'success') {
-      setDeleteModal(false);
+      closeModal('delete');
       toastMessage(result.data.message, 'success');
       refreshData();
       navigate('/');
@@ -166,7 +169,7 @@ export default function Documentation () {
   const handleUpdate = async (editTitle, editDescription, version) => {
     let result;
 
-    if (cloneDocument) {
+    if (cloneDocumentModal) {
       result = await createDocumentationVersion({
         originalDocId: Number(docId),
         version
@@ -182,21 +185,23 @@ export default function Documentation () {
     if (handleError(result, navigate)) return;
 
     if (result.status === 'success') {
-      if (cloneDocument) {
-        setCloneDocument(null);
+      if (cloneDocumentModal) {
+        closeModal('cloneDocument');
       }
-      setEditModal(false);
+      closeModal('edit');
       refreshData();
       toastMessage(result.data.message, 'success');
     }
   };
 
   const handleDeletePageGroup = async (id, path) => {
+    const type = 'slug' in path ? 'page' : 'pageGroup';
+
     let result;
 
-    if (path === 'pageGroup') {
+    if (type === 'pageGroup') {
       result = await deletePageGroup(Number(id));
-    } else if (path === 'page') {
+    } else if (type === 'page') {
       result = await deletePage(Number(id));
     }
 
@@ -205,7 +210,7 @@ export default function Documentation () {
     }
 
     if (result.status === 'success') {
-      setDeleteModal(false);
+      closeModal('delete');
       toastMessage(result.data.message, 'success');
       refreshData();
     }
@@ -223,7 +228,7 @@ export default function Documentation () {
     }
 
     if (result.status === 'success') {
-      setEditModal(false);
+      closeModal('edit');
       refreshData();
       toastMessage(result.data.message, 'success');
     }
@@ -248,7 +253,36 @@ export default function Documentation () {
     }
 
     if (result.status === 'success') {
-      setCreatePageGroupModal(false);
+      closeModal('createPageGroup');
+      refreshData();
+      toastMessage(result.data.message, 'success');
+    }
+  };
+
+  const handleCreatePage = async (title, slug) => {
+    if (title === '' || slug === '') {
+      toastMessage(
+        'Title and Slug are required. Please Enter Page title and slug',
+        'warning'
+      );
+      return;
+    }
+
+    const docIdOrVersionId = (selectedVersion.id) ? selectedVersion.id : docId;
+
+    const result = await createPageAPI({
+      title,
+      slug,
+      content: JSON.stringify([]),
+      documentationId: parseInt(docIdOrVersionId)
+    });
+
+    if (handleError(result, navigate)) {
+      return;
+    }
+
+    if (result.status === 'success') {
+      closeModal('createPage');
       refreshData();
       toastMessage(result.data.message, 'success');
     }
@@ -289,7 +323,7 @@ export default function Documentation () {
         }
         toastMessage(err?.response?.data?.message, 'error');
       }
-    }; 
+    };
 
     await Promise.all(newItems.map((item, index) => updateOrder(item, index)));
     refreshData();
@@ -303,22 +337,12 @@ export default function Documentation () {
     <AnimatePresence className='bg-gray-50 dark:bg-gray-900 p-3 sm:p-5'>
       <Breadcrumb />
 
-      {loading ? (
-       
-       <div>
-       <Icon icon="eos-icons:three-dots-loading" className='text-black dark:text-white  w-20 h-10'/>
-       </div>
-      ): documentData.length === 0 ? (
-
-        <div
-        className='flex justify-center'
-        key='no-documentation-found-message'
-      >
-        <h1 className='text-gray-600 text-3xl p-10'>no documentations found</h1>
-      </div>
-      ):(
-
-<motion.div
+      {loading
+        ? (<div><Icon icon="eos-icons:three-dots-loading" className='text-black dark:text-white  w-20 h-10'/></div>)
+        : documentData.length === 0
+          ? (<div className='flex justify-center' key='no-documentation-found-message'> <h1 className='text-gray-600 text-3xl p-10'>no documentations found</h1> </div>)
+          : (
+        <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -334,9 +358,7 @@ export default function Documentation () {
               <motion.button
                 whilehover={{ scale: 1.3 }}
                 onClick={() => {
-                  setCloneDocument(true);
-                  setCurrentItem(null);
-                  setEditModal(true);
+                  openModal('cloneDocument', null);
                 }}
                 title='Clone Documentation'
                 key='clone-button'
@@ -350,9 +372,7 @@ export default function Documentation () {
               <motion.button
                 whilehover={{ scale: 1.3 }}
                 onClick={() => {
-                  setCloneDocument(false);
-                  setCurrentItem(null);
-                  setEditModal(true);
+                  openModal('edit', null);
                 }}
                 title='Edit Documentation'
                 key='edit-document-button'
@@ -366,8 +386,7 @@ export default function Documentation () {
               <motion.button
                 whilehover={{ scale: 1.3 }}
                 onClick={() => {
-                  setCurrentItem(null);
-                  setDeleteModal(true);
+                  openModal('delete');
                 }}
                 key='delete-document-button'
                 title='Delete Documentation'
@@ -404,131 +423,128 @@ export default function Documentation () {
               className=''
               key='documentation-table'
             >
-              <div className='bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden'>
-                <div className='flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4'>
-                  <div className='w-full md:w-1/3'>
-                    <div className='flex items-center'>
-                      <label htmlFor='simple-search' className='sr-only'>
-                        Search
-                      </label>
-                      <div className='relative w-full'>
-                        <div className='absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none'>
-                          <Icon
-                            icon='material-symbols:search'
-                            className='w-6 h-6 text-gray-400 dark:text-gray-500'
-                          />
-                        </div>
-                        <input
-                          type='text'
-                          id='simple-search'
-                          value={searchTerm}
-                          onChange={handleSearchChange}
-                          className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
-                          placeholder='Search'
-                        />
-                      </div>
-                    </div>
-                  </div>
+<div className='bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden'>
+  <div className='flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4'>
+    <div className='flex items-center w-full md:w-auto space-x-2'>
+      <div className='relative w-full md:w-64'>
+        <div className='absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none'>
+          <Icon
+            icon='material-symbols:search'
+            className='w-6 h-6 text-gray-400 dark:text-gray-500'
+          />
+        </div>
+        <input
+          type='text'
+          id='simple-search'
+          value={searchTerm}
+          onChange={handleSearchChange}
+          className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
+          placeholder='Search'
+        />
+      </div>
 
-                  <div className='relative inline-block border-black'>
-                    <div
-                      id='dropdownSelect'
-                      className='flex items-center border gap-2 border-gray-400 hover:bg-gray-200 px-3 py-1.5 rounded-lg cursor-pointer dark:bg-gray-600 dark:border-gray-700 dark:hover:bg-gray-800 dark:text-white'
-                      onClick={toggleDropdown}
-                    >
-                      {selectedVersion.version} {/* Display the selected version */}
-                      <Icon icon='mingcute:down-fill' className='h-6 w-6' />
-                    </div>
+      <div className='relative inline-block'>
+        <div
+          id='dropdownSelect'
+          className='flex items-center border gap-2 border-gray-400 hover:bg-gray-200 px-3 py-1.5 rounded-lg cursor-pointer dark:bg-gray-600 dark:border-gray-700 dark:hover:bg-gray-800 dark:text-white'
+          onClick={toggleDropdown}
+        >
+          {selectedVersion.version}
+          <Icon icon='mingcute:down-fill' className='h-6 w-6' />
+        </div>
 
-                    {showVersionDropdown && (
-                      <div
-                        id='dropdownSearch'
-                        className='z-10  absolute bg-white rounded-lg shadow w-52 dark:bg-gray-700'
-                      >
-                        <div className='p-1 h-auto w-full'>
-
-                          <label htmlFor='input-group-search' className='sr-only'>
-                            Search
-                          </label>
-                          {filteredOptions.length !== 1
-                            ? (
-                              <div className='relative'>
-                                <input
-                                  type='text'
-                                  id='input-group-search'
-                                  className='block w-full p-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
-                                  placeholder='Search version'
-                                  value={searchQuery}
-                                  onChange={handleSearchVersionChange}
-                                />
-                              </div>
-                              )
-                            : (
-                              <div className='flex items-center ps-2 rounded'>
-                                <span className='w-full py-2 ms-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300'>
-                                  No versions found
-                                </span>
-                              </div>)}
-                          <ul
-                            className='h-auto w-full mt-2 overflow-y-auto text-sm text-gray-700 dark:text-gray-200'
-                            aria-labelledby='dropdownSelect'
-                          >
-                            {filteredOptions.length > 0
-                              ? (
-                                  filteredOptions.filter(obj => obj.id !== selectedVersion.id).map((option) => (
-                                    <li key='version-lists' className='relative w-full'>
-                                      <div
-                                        className=' flex items-center ps-2 rounded hover:bg-gray-200 dark:hover:bg-gray-800 cursor-pointer'
-                                        onClick={() => handleVersionSelect(option)}
-                                      >
-                                        <p className='w-full p-3 ms-2 text-md font-medium text-gray-900 rounded dark:text-gray-300'>
-                                          {option.version}
-                                        </p>
-                                      </div>
-                                    </li>
-                                  ))
-                                )
-                              : (
-                                <li>
-                                  <div className='flex items-center ps-2 rounded'>
-                                    <span className='w-full py-2 ms-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300'>
-                                      No matched versions
-                                    </span>
-                                  </div>
-                                </li>
-                                )}
-                          </ul>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className='w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0'>
-                    <motion.button
-                      whilehover={{ scale: 1.1 }}
-                      onClick={() => setCreatePageGroupModal(true)}
-                      type='button'
-                      className='flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800'
-                    >
-                      <span className=' px-1 text-left items-center dark:text-white text-md '>
-                        New Group
-                      </span>
-                      <Icon icon='ei:plus' className='w-6 h-6 dark:text-white' />
-                    </motion.button>
-
-                    <motion.button whilehover={{ scale: 1.1 }}>
-                      <Link
-                        to={`/dashboard/documentation/create-page?id=${docId}&dir=true&versionId=${selectedVersion.id}&version=${selectedVersion.version}`}
-                        className='flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800'
-                      >
-                        <span className='px-1 text-left items-center dark:text-white text-md'>
-                          New Page
-                        </span>
-                        <Icon icon='ei:plus' className='w-6 h-6 dark:text-white' />
-                      </Link>
-                    </motion.button>
-                  </div>
+        {showVersionDropdown && (
+          <div
+            id='dropdownSearch'
+            className='z-10 absolute bg-white rounded-lg shadow w-52 dark:bg-gray-700'
+          >
+            <div className='p-1 h-auto w-full'>
+              <label htmlFor='input-group-search' className='sr-only'>
+                Search
+              </label>
+              {filteredOptions.length !== 1
+                ? (
+                <div className='relative'>
+                  <input
+                    type='text'
+                    id='input-group-search'
+                    className='block w-full p-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
+                    placeholder='Search version'
+                    value={searchQuery}
+                    onChange={handleSearchVersionChange}
+                  />
                 </div>
+                  )
+                : (
+                <div className='flex items-center ps-2 rounded'>
+                  <span className='w-full py-2 ms-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300'>
+                    No versions found
+                  </span>
+                </div>
+                  )}
+              <ul
+                className='h-auto w-full mt-2 overflow-y-auto text-sm text-gray-700 dark:text-gray-200'
+                aria-labelledby='dropdownSelect'
+              >
+                {filteredOptions.length > 0
+                  ? (
+                      filteredOptions
+                        .filter((obj) => obj.id !== selectedVersion.id)
+                        .map((option) => (
+                      <li key={`version-${option.id}`} className='relative w-full'>
+                        <div
+                          className='flex items-center ps-2 rounded hover:bg-gray-200 dark:hover:bg-gray-800 cursor-pointer'
+                          onClick={() => handleVersionSelect(option)}
+                        >
+                          <p className='w-full p-3 ms-2 text-md font-medium text-gray-900 rounded dark:text-gray-300'>
+                            {option.version}
+                          </p>
+                        </div>
+                      </li>
+                        ))
+                    )
+                  : (
+                  <li>
+                    <div className='flex items-center ps-2 rounded'>
+                      <span className='w-full py-2 ms-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300'>
+                        No matched versions
+                      </span>
+                    </div>
+                  </li>
+                    )}
+              </ul>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+
+            <div className='flex items-center space-x-2'>
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                onClick={() => openModal('createPageGroup')}
+                type='button'
+                className='flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800'
+              >
+                <span className='px-1 text-left items-center dark:text-white text-md'>
+                  New Group
+                </span>
+                <Icon icon='ei:plus' className='w-6 h-6 dark:text-white' />
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                onClick={() => openModal('createPage')}
+                type='button'
+                className='flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800'
+              >
+                <span className='px-1 text-left items-center dark:text-white text-md'>
+                  New Page
+                </span>
+                <Icon icon='ei:plus' className='w-6 h-6 dark:text-white' />
+              </motion.button>
+            </div>
+          </div>
 
                 {filteredItems &&
                   <div className='overflow-x-auto h-auto'>
@@ -577,8 +593,7 @@ export default function Documentation () {
                                     </td>
                                   </tr>
                                   )
-                                : !filteredItems === null ||
-                            filteredItems.length <= 0
+                                : !filteredItems === null || filteredItems.length <= 0
                                     ? (
                                       <motion.tr
                                         initial={{ opacity: 0 }}
@@ -634,41 +649,51 @@ export default function Documentation () {
                 {/* Edit Component */}
                 {editModal && (
                   <EditDocumentModal
-                    heading={
-                  currentItem ? 'Rename Page Group' : 'Edit Documentation'
-                }
-                    title={currentItem ? currentItem.name : documentData[0]?.name}
-                    description={currentItem ? '' : documentData[0]?.description}
-                    id={currentItem ? currentItem.id : documentData[0]?.id}
-                    updateData={currentItem ? handlePageGroupUpdate : handleUpdate}
+                    heading={currentModalItem ? 'Rename Page Group' : 'Edit Documentation'}
+                    title={currentModalItem ? currentModalItem.name : documentData[0]?.name}
+                    description={currentModalItem ? '' : documentData[0]?.description}
+                    id={currentModalItem ? currentModalItem.id : documentData[0]?.id}
+                    updateData={currentModalItem ? handlePageGroupUpdate : handleUpdate}
+                  />
+                )}
+
+                {/* Version Modal */}
+                {cloneDocumentModal && (
+                  <EditDocumentModal
+                    heading='New Document Version'
+                    title={documentData[0]?.name}
+                    description={documentData[0]?.description}
+                    id={documentData[0]?.id}
+                    updateData={handleUpdate}
                   />
                 )}
 
                 {deleteModal && (
                   <DeleteModal
-                    deleteDoc={
-                  currentItem
-                    ? () => handleDeletePageGroup(currentItem.id, deleteItem)
-                    : handleDelete
-                }
-                    id={currentItem ? currentItem.id : documentData[0]?.id}
+                    deleteDoc={currentModalItem ? () => handleDeletePageGroup(currentModalItem.id, currentModalItem) : handleDelete}
+                    id={currentModalItem ? currentModalItem.id : documentData[0]?.id}
                     title='Are you sure?'
-                    message={`You're permanently deleting "${currentItem
-                  ? currentItem.name || currentItem.title
-                  : documentData[0]?.name
-                  }`}
+                    message={`You're permanently deleting "${currentModalItem ? currentModalItem.name || currentModalItem.title : documentData[0]?.name}"`}
                   />
                 )}
               </div>
             </motion.div>
 
           </motion.div>
-      )}
+            )}
+
       {/* Create pageGroup resusable component */}
       {createPageGroupModal && (
         <CreatePageGroup
           handleCreate={handleCreatePageGroup}
           key='create-page-group-0'
+        />
+      )}
+
+      {createPageModal && (
+        <CreatePage
+          handleCreate={handleCreatePage}
+          key='create-page-0'
         />
       )}
     </AnimatePresence>

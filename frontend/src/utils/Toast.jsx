@@ -1,5 +1,6 @@
-import 'react-toastify/dist/ReactToastify.css';
 import { toast } from 'react-toastify';
+
+import 'react-toastify/dist/ReactToastify.css';
 
 export const toastMessage = (message, type) => {
   toast[type](message, {

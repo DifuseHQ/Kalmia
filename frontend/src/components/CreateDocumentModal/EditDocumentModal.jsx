@@ -1,7 +1,8 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { Icon } from '@iconify/react';
-import { AuthContext } from '../../context/AuthContext';
+import { AnimatePresence, motion } from 'framer-motion';
+
+import { ModalContext } from '../../context/ModalContext';
 
 export default function EditDocumentModal ({
   title,
@@ -13,7 +14,7 @@ export default function EditDocumentModal ({
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [version, setVersion] = useState('');
-  const { setCurrentItem, setEditModal, cloneDocument } = useContext(AuthContext);
+  const { closeModal, cloneDocumentModal } = useContext(ModalContext);
 
   const titleRef = useRef(null);
 
@@ -27,6 +28,14 @@ export default function EditDocumentModal ({
     setEditTitle(title || '');
     setEditDescription(description || '');
   }, [title, description]);
+
+  const handleCloseClick = useCallback(() => {
+    if (cloneDocumentModal) {
+      closeModal('cloneDocument');
+    } else {
+      closeModal('edit');
+    }
+  }, [cloneDocumentModal, closeModal]);
 
   return (
     <AnimatePresence>
@@ -42,15 +51,12 @@ export default function EditDocumentModal ({
               {heading && (
                 <div className='flex-grow text-center'>
                   <h3 className='text-lg  font-semibold text-gray-900 dark:text-white'>
-                    {cloneDocument ? 'New Document Version' : heading}
+                    {cloneDocumentModal ? 'New Document Version' : heading}
                   </h3>
                 </div>
               )}
               <button
-                onClick={() => {
-                  setEditModal(false);
-                  setCurrentItem(null);
-                }}
+                onClick={handleCloseClick}
                 type='button'
                 className='text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white'
               >
@@ -59,7 +65,7 @@ export default function EditDocumentModal ({
               </button>
             </div>
 
-            {cloneDocument
+            {cloneDocumentModal
               ? (
 
                 <div className='grid gap-4 mb-4'>

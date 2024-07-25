@@ -1,41 +1,25 @@
-import React, { createContext, useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import React, { createContext, useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode';
+import axios from 'axios';
 import Cookies from 'js-cookie';
-import { toastMessage } from '../utils/Toast';
-import { getUsers, refreshJWT, signOut, validateJWT } from '../api/Requests';
+
+import { refreshJWT, signOut, validateJWT } from '../api/Requests';
+import { useToken } from '../hooks/useToken';
+import { useUser } from '../hooks/useUser';
+import { useUserDetails } from '../hooks/useUserDetails';
 import { handleError, isTokenExpiringSoon } from '../utils/Common';
+import { toastMessage } from '../utils/Toast';
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(() => {
-    if (Cookies.get('accessToken')) {
-      const tokenData = JSON.parse(Cookies.get('accessToken'));
-      const accessToken = tokenData.token;
-      return accessToken;
-    }
-    return null;
-  });
+  const [token, setToken] = useToken();
+  const [user, setUser] = useUser();
+  const [userDetails, setUserDetails] = useUserDetails(user);
 
-  const [user, setUser] = useState(() => {
-    if (Cookies.get('accessToken')) {
-      const tokenData = JSON.parse(Cookies.get('accessToken'));
-      const accessToken = jwtDecode(tokenData.token);
-      return accessToken;
-    }
-    return null;
-  });
-
-  const [userDetails, setUserDetails] = useState(null);
-  const [createDocumentationModal, setCreateDocumentationModal] = useState(false);
   const [cloneDocument, setCloneDocument] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const [createPageGroupModal, setCreatePageGroupModal] = useState(false);
-  const [editModal, setEditModal] = useState(false);
-  const [deleteModal, setDeleteModal] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);
   const [deleteItem, setDeleteItem] = useState(null);
 
@@ -55,8 +39,7 @@ export const AuthProvider = ({ children }) => {
       });
       if (response?.status === 200) {
         setToken(response.data.token);
-        const decodedUser = jwtDecode(response?.data?.token);
-        setUser(decodedUser);
+        setUser(response?.data?.token);
         Cookies.set('accessToken', JSON.stringify(response?.data), {
           expires: 1,
           secure: !(window.location.href.includes('http://'))
@@ -74,35 +57,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  useEffect(() => {
-    const fetchUserDetails = async (user) => {
-      const result = await getUsers();
-      if (handleError(result, navigate)) return;
-
-      if (result.status === 'success') {
-        const data = result.data;
-        const filterUser = data.find(
-          (obj) => obj?.id.toString() === user?.user_id
-        );
-        setUserDetails(filterUser);
-      }
-    };
-
-    if (user) {
-      fetchUserDetails(user);
-    }
-  }, [user, navigate, refresh]);
-
   const logout = async () => {
     const result = await signOut(token);
 
     if (handleError(result, navigate)) return;
 
     if (result.status === 'success') {
-      Cookies.remove('accessToken');
-      toastMessage('Logged Out', 'success');
+      setToken(null);
       setUser(null);
       setUserDetails(null);
+      toastMessage('Logged Out', 'success');
     }
   };
 
@@ -162,16 +126,8 @@ export const AuthProvider = ({ children }) => {
         refreshData,
         userDetails,
         setUserDetails,
-        createDocumentationModal,
-        setCreateDocumentationModal,
         isSidebarOpen,
         setIsSidebarOpen,
-        createPageGroupModal,
-        setCreatePageGroupModal,
-        editModal,
-        setEditModal,
-        deleteModal,
-        setDeleteModal,
         currentItem,
         setCurrentItem,
         deleteItem,

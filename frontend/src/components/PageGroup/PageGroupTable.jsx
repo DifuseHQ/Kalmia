@@ -1,24 +1,26 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd';
 import { Icon } from '@iconify/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+
 import instance from '../../api/AxiosInstance';
-import CreatePageGroup from '../CreatePageGroup/CreatePageGroup';
-import EditDocumentModal from '../CreateDocumentModal/EditDocumentModal';
-import DeleteModal from '../DeleteModal/DeleteModal';
-import Breadcrumb from '../Breadcrumb/Breadcrumb';
-import { toastMessage } from '../../utils/Toast';
-import { handleError, sortGroupAndPage } from '../../utils/Common';
 import {
-  getPageGroup,
   createPageGroup,
+  deletePage,
   deletePageGroup,
-  updatePageGroup,
-  deletePage
+  getPageGroup,
+  updatePageGroup
 } from '../../api/Requests';
-import Table from '../Table/Table';
 import { AuthContext } from '../../context/AuthContext';
+import { ModalContext } from '../../context/ModalContext';
+import { handleError, sortGroupAndPage } from '../../utils/Common';
+import { toastMessage } from '../../utils/Toast';
+import Breadcrumb from '../Breadcrumb/Breadcrumb';
+import EditDocumentModal from '../CreateDocumentModal/EditDocumentModal';
+import CreatePageGroup from '../CreatePageGroup/CreatePageGroup';
+import DeleteModal from '../DeleteModal/DeleteModal';
+import Table from '../Table/Table';
 
 export default function PageGroupTable () {
   const [searchParams] = useSearchParams();
@@ -30,17 +32,20 @@ export default function PageGroupTable () {
   const [groupDetail, setGroupDetail] = useState([]);
   const [data, setData] = useState([]);
   const {
-    createPageGroupModal,
-    setCreatePageGroupModal,
     deleteItem,
-    deleteModal,
-    setDeleteModal,
-    currentItem,
     refresh,
-    refreshData,
-    editModal,
-    setEditModal
+    refreshData
   } = useContext(AuthContext);
+
+  const {
+    openModal,
+    closeModal,
+    createPageGroupModal,
+    deleteModal,
+    editModal,
+    currentModalItem
+  } = useContext(ModalContext);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -100,7 +105,7 @@ export default function PageGroupTable () {
     }
 
     if (result.status === 'success') {
-      setCreatePageGroupModal(false);
+      closeModal('createPageGroup');
       refreshData();
       toastMessage(result.data.message, 'success');
     }
@@ -121,7 +126,7 @@ export default function PageGroupTable () {
 
     if (result.status === 'success') {
       toastMessage(result.data.message, 'success');
-      setDeleteModal(false);
+      closeModal('delete');
       refreshData();
     }
   };
@@ -139,7 +144,7 @@ export default function PageGroupTable () {
     }
 
     if (result.status === 'success') {
-      setEditModal(false);
+      closeModal('edit');
       refreshData();
       toastMessage(result.data.message, 'success');
     }
@@ -211,155 +216,148 @@ export default function PageGroupTable () {
       </motion.div>
 
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ delay: 0.1 }}
-        className=''
-        key='pageGroupTable'
-      >
-        <div className='bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden'>
-          <div className='flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4'>
-            <div className='w-full md:w-1/3'>
-              <form className='flex items-center'>
-                <label htmlFor='simple-search' className='sr-only'>
-                  Search
-                </label>
-                <div className='relative w-full'>
-                  <div className='absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none'>
-                    <Icon
-                      icon='material-symbols:search'
-                      className='w-6 h-6 text-gray-400 dark:text-gray-500'
-                    />
-                  </div>
-                  <input
-                    type='text'
-                    id='simple-search'
-                    value={searchTerm}
-                    onChange={handleSearchChange}
-                    className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
-                    placeholder='Search'
-                    required=''
-                  />
-                </div>
-              </form>
-            </div>
-
-            <div
-              className='flex items-center border gap-2 border-gray-400  px-3 py-1.5 rounded-lg dark:bg-gray-600 dark:border-gray-700 dark:text-white'
-            >
-              <span>Version </span>
-              {version}
-            </div>
-
-            <div className='w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0'>
-              <motion.button
-                whilehover={{ scale: 1.1 }}
-                onClick={() => setCreatePageGroupModal(true)}
-                type='button'
-                className='flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800'
-              >
-                <span className=' px-1 text-left items-center dark:text-white text-md '>
-                  New Group
-                </span>
-                <Icon icon='ei:plus' className='w-6 h-6 dark:text-white' />
-              </motion.button>
-
-              <motion.button whilehover={{ scale: 1.1 }}>
-                <Link
-                  to={`/dashboard/documentation/create-page?id=${docId}&dir=false&pageGroupId=${pageGroupId}&versionId=${versionId}&version=${version}`}
-                  className='flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800'
-                >
-                  <span className=' px-1 text-left items-center dark:text-white text-md '>
-                    New Page
-                  </span>
-                  <Icon icon='ei:plus' className='w-6 h-6 dark:text-white' />
-                </Link>
-              </motion.button>
-            </div>
+  initial={{ opacity: 0 }}
+  animate={{ opacity: 1 }}
+  exit={{ opacity: 0 }}
+  transition={{ delay: 0.1 }}
+  className=''
+  key='pageGroupTable'
+>
+  <div className='bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden'>
+    <div className='flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4'>
+      <div className='flex items-center w-full md:w-auto space-x-2'>
+        <div className='relative w-full md:w-64'>
+          <div className='absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none'>
+            <Icon
+              icon='material-symbols:search'
+              className='w-6 h-6 text-gray-400 dark:text-gray-500'
+            />
           </div>
-
-          <div className='overflow-x-auto h-auto'>
-            <DragDropContext onDragEnd={handleDragEnd}>
-              <Droppable droppableId='table' type='TABLE'>
-                {(provided) => (
-                  <table className='w-full text-sm text-left text-gray-500 dark:text-gray-400'>
-                    <thead className='text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400'>
-                      <tr>
-                        <th scope='col' className='px-4 py-3' />
-                        <th scope='col' className='px-4 py-3'>
-                          Title
-                        </th>
-                        <th scope='col' className='px-4 py-3'>
-                          Author / Editor
-                        </th>
-                        <th scope='col' className='px-4 py-3'>
-                          Create / Update
-                        </th>
-                        <th scope='col' className='px-4 py-3' />
-                      </tr>
-                    </thead>
-                    <tbody {...provided.droppableProps} ref={provided.innerRef}>
-                      {filteredItems.length <= 0 && (
-                        <tr className='border-b dark:border-gray-700'>
-                          <td colSpan='4' className='text-center p-8'>
-                            <h1 className='text-center text-gray-600 sm:text-lg font-semibold'>
-                              No Pages Found
-                            </h1>
-                          </td>
-                        </tr>
-                      )}
-
-                      {filteredItems.map((obj, index) => (
-                        <Draggable
-                          key={
-                            obj.name ? `pageGroup-${obj.id}` : `page-${obj.id}`
-                          }
-                          draggableId={
-                            obj.name ? `pageGroup-${obj.id}` : `page-${obj.id}`
-                          }
-                          index={index}
-                        >
-                          {(provided, snapshot) => (
-                            <Table
-                              provided={provided}
-                              snapshot={snapshot}
-                              obj={obj}
-                              index={index}
-                              docId={versionId}
-                              version={version}
-                              pageGroupId={obj.id}
-                            />
-                          )}
-                        </Draggable>
-                      ))}
-
-                      {provided.placeholder}
-                    </tbody>
-                  </table>
-                )}
-              </Droppable>
-            </DragDropContext>
-          </div>
+          <input
+            type='text'
+            id='simple-search'
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
+            placeholder='Search'
+            required=''
+          />
         </div>
-      </motion.div>
 
-      {editModal && currentItem && (
+        <div className='px-5 py-1.5 rounded-lg font-semibold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300' title='Version'>
+          {version}
+        </div>
+      </div>
+
+      <div className='flex items-center space-x-2'>
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          onClick={() => openModal('createPageGroup')}
+          type='button'
+          className='flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800'
+        >
+          <span className='px-1 text-left items-center dark:text-white text-md'>
+            New Group
+          </span>
+          <Icon icon='ei:plus' className='w-6 h-6 dark:text-white' />
+        </motion.button>
+
+        <motion.button whileHover={{ scale: 1.1 }}>
+          <Link
+            to={`/dashboard/documentation/create-page?id=${docId}&dir=false&pageGroupId=${pageGroupId}&versionId=${versionId}&version=${version}`}
+            className='flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800'
+          >
+            <span className='px-1 text-left items-center dark:text-white text-md'>
+              New Page
+            </span>
+            <Icon icon='ei:plus' className='w-6 h-6 dark:text-white' />
+          </Link>
+        </motion.button>
+      </div>
+    </div>
+
+    <div className='overflow-x-auto h-auto'>
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Droppable droppableId='table' type='TABLE'>
+          {(provided) => (
+            <table className='w-full text-sm text-left text-gray-500 dark:text-gray-400'>
+              <thead className='text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400'>
+                <tr>
+                  <th scope='col' className='px-4 py-3' />
+                  <th scope='col' className='px-4 py-3'>
+                    Title
+                  </th>
+                  <th scope='col' className='px-4 py-3'>
+                    Author / Editor
+                  </th>
+                  <th scope='col' className='px-4 py-3'>
+                    Create / Update
+                  </th>
+                  <th scope='col' className='px-4 py-3' />
+                </tr>
+              </thead>
+              <tbody {...provided.droppableProps} ref={provided.innerRef}>
+                {filteredItems.length <= 0 && (
+                  <tr className='border-b dark:border-gray-700'>
+                    <td colSpan='4' className='text-center p-8'>
+                      <h1 className='text-center text-gray-600 sm:text-lg font-semibold'>
+                        No Pages Found
+                      </h1>
+                    </td>
+                  </tr>
+                )}
+
+                {filteredItems.map((obj, index) => (
+                  <Draggable
+                    key={
+                      obj.name ? `pageGroup-${obj.id}` : `page-${obj.id}`
+                    }
+                    draggableId={
+                      obj.name ? `pageGroup-${obj.id}` : `page-${obj.id}`
+                    }
+                    index={index}
+                  >
+                    {(provided, snapshot) => (
+                      <Table
+                        provided={provided}
+                        snapshot={snapshot}
+                        obj={obj}
+                        index={index}
+                        docId={versionId}
+                        version={version}
+                        pageGroupId={obj.id}
+                      />
+                    )}
+                  </Draggable>
+                ))}
+
+                {provided.placeholder}
+              </tbody>
+            </table>
+          )}
+        </Droppable>
+      </DragDropContext>
+    </div>
+  </div>
+</motion.div>
+
+      {editModal && currentModalItem && (
         <EditDocumentModal
           heading='Rename Page Group'
-          title={currentItem.name}
-          id={currentItem.id}
+          title={currentModalItem.name}
+          id={currentModalItem.id}
           updateData={handlePageGroupUpdate}
+          key='editPageGroup'
         />
       )}
 
-      {/* PageGroup delete Component */}
-      {deleteModal && currentItem && (
+      {deleteModal && currentModalItem && (
         <DeleteModal
-          deleteDoc={() => handleDeletePageGroup(currentItem.id, deleteItem)}
-          id={currentItem.id}
-          title='Are you sure? '
-          message={`You're permanently deleting "${currentItem.name}"`}
+          deleteDoc={() => handleDeletePageGroup(currentModalItem.id, deleteItem)}
+          id={currentModalItem.id}
+          title='Are you sure?'
+          message={`You're permanently deleting "${currentModalItem.name || currentModalItem.title}"`}
+          key='deletePageGroup'
         />
       )}
     </AnimatePresence>

@@ -1,11 +1,12 @@
-import { Icon } from '@iconify/react/dist/iconify.js';
 import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
+import { Icon } from '@iconify/react/dist/iconify.js';
+
+import { ModalContext } from '../../context/ModalContext';
 import { getFormattedDate } from '../../utils/Common';
-import { AuthContext } from '../../context/AuthContext';
 
 export default function Table ({ provided, snapshot, docId, pageGroupId, obj, index, version }) {
-  const { setCurrentItem, setDeleteModal, setEditModal, setDeleteItem } = useContext(AuthContext);
+  const { openModal } = useContext(ModalContext);
   return (
     <tr
       ref={provided.innerRef}
@@ -73,9 +74,17 @@ export default function Table ({ provided, snapshot, docId, pageGroupId, obj, in
             className='w-4 h-4 text-gray-500 dark:text-white'
           />
           <span className=' px-1 text-left items-center dark:text-white text-md whitespace-nowrap'>
-            {
-              (obj.editors).filter((editor) => editor.id === obj.lastEditorId)[0]?.username || obj.editors[0]?.username
+          {(() => {
+            if (obj.editors && Array.isArray(obj.editors)) {
+              if (obj.lastEditorId != null) {
+                const editor = obj.editors.find(editor => parseInt(editor.id) === parseInt(obj.lastEditorId));
+                return editor ? editor.username : 'None';
+              } else {
+                return obj.editors[0]?.username || 'None';
+              }
             }
+            return 'None';
+          })()}
           </span>
         </div>
       </td>
@@ -117,17 +126,15 @@ export default function Table ({ provided, snapshot, docId, pageGroupId, obj, in
                 icon='material-symbols:edit-outline'
                 className='w-6 h-6 text-yellow-500 dark:text-yellow-400'
                 onClick={() => {
-                  setCurrentItem(obj);
-                  setEditModal(true);
+                  console.log(obj);
+                  openModal('edit', obj);
                 }}
               />
               <Icon
                 icon='material-symbols:delete'
                 className='w-6 h-6 text-red-600 dark:text-red-500'
                 onClick={() => {
-                  setDeleteItem('pageGroup');
-                  setCurrentItem(obj);
-                  setDeleteModal(true);
+                  openModal('delete', obj);
                 }}
               />
             </button>
@@ -152,9 +159,7 @@ export default function Table ({ provided, snapshot, docId, pageGroupId, obj, in
                 icon='material-symbols:delete'
                 className='w-6 h-6 text-red-600 dark:text-red-500'
                 onClick={() => {
-                  setDeleteItem('page');
-                  setCurrentItem(obj);
-                  setDeleteModal(true);
+                  openModal('delete', obj);
                 }}
               />
             </button>

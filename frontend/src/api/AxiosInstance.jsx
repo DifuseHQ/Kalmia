@@ -1,5 +1,6 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
+
 import { toastMessage } from '../utils/Toast';
 
 const instance = axios.create({

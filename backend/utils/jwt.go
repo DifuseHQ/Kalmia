@@ -9,13 +9,14 @@ import (
 type JWTData struct {
 	jwt.RegisteredClaims
 	CustomClaims map[string]string `json:"custom_claims"`
-	UserId       string            `json:"user_id"`
+	UserId       string            `json:"userId"`
 	Username     string            `json:"username"`
 	Email        string            `json:"email"`
 	Photo        string            `json:"photo"`
+	IsAdmin      bool              `json:"admin"`
 }
 
-func GenerateJWTAccessToken(dbUserId uint, userId string, email string, photo string) (string, int64, error) {
+func GenerateJWTAccessToken(dbUserId uint, userId string, email string, photo string, isAdmin bool) (string, int64, error) {
 	claims := JWTData{
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
@@ -28,6 +29,7 @@ func GenerateJWTAccessToken(dbUserId uint, userId string, email string, photo st
 		Username: userId,
 		Email:    email,
 		Photo:    photo,
+		IsAdmin:  isAdmin,
 	}
 
 	tokenString := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

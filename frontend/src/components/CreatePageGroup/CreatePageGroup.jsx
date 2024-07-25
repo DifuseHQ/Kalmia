@@ -1,9 +1,10 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
-import { AuthContext } from '../../context/AuthContext';
+import { AnimatePresence, motion } from 'framer-motion';
 
-export default function CreatePageGroup ({ closeModal, handleCreate }) {
+import { ModalContext } from '../../context/ModalContext';
+
+export default function CreatePageGroup ({ handleCreate }) {
   const [title, setTitle] = useState('');
   const handleKeyDown = (event) => {
     if (event.key === 'Enter') {
@@ -11,7 +12,8 @@ export default function CreatePageGroup ({ closeModal, handleCreate }) {
       handleCreate(title);
     }
   };
-  const { setCreatePageGroupModal } = useContext(AuthContext);
+
+  const { closeModal } = useContext(ModalContext);
 
   const inputRef = useRef(null);
 
@@ -39,7 +41,7 @@ export default function CreatePageGroup ({ closeModal, handleCreate }) {
                 </h3>
               </div>
               <button
-                onClick={() => setCreatePageGroupModal(false)}
+                onClick={() => closeModal('createPageGroup')}
                 type='button'
                 className='text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white'
               >

@@ -39,14 +39,27 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "lint": "semistandard .",
-    "lint:fix": "semistandard . --fix"
+    "lint": "eslint 'src/**/*.{js,jsx,ts,tsx}'",
+    "lint:fix": "eslint 'src/**/*.{js,jsx,ts,tsx}' --fix",
+    "prepare": "husky"
   },
   "eslintConfig": {
     "extends": [
       "react-app",
-      "react-app/jest"
-    ]
+      "react-app/jest",
+      "semistandard"
+    ],
+    "plugins": [
+      "simple-import-sort",
+      "import"
+    ],
+    "rules": {
+      "simple-import-sort/imports": "error",
+      "simple-import-sort/exports": "error",
+      "import/first": "error",
+      "import/newline-after-import": "error",
+      "import/no-duplicates": "error"
+    }
   },
   "browserslist": {
     "production": [
@@ -65,6 +78,9 @@
     "autoprefixer": "^10.4.19",
     "editorjs-hyperlink": "^1.0.6",
     "editorjs-undo": "^2.0.28",
+    "eslint-config-semistandard": "^17.0.0",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "husky": "^9.1.1",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.4"
   }

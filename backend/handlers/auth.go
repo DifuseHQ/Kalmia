@@ -16,7 +16,7 @@ import (
 
 func CreateUser(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	type Request struct {
-		Username string `json:"username" validate:"required,alpha"`
+		Username string `json:"username" validate:"required,alphanum"`
 		Email    string `json:"email" validate:"required,email"`
 		Password string `json:"password" validate:"required"`
 		Admin    bool   `json:"admin"`
@@ -298,7 +298,7 @@ func CreateJWT(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenString, expiry, err := utils.GenerateJWTAccessToken(user.ID, user.Username, user.Email, user.Photo)
+	tokenString, expiry, err := utils.GenerateJWTAccessToken(user.ID, user.Username, user.Email, user.Photo, user.Admin)
 	if err != nil {
 		logger.Error(err.Error())
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to generate JWT"})
@@ -322,7 +322,7 @@ func CreateJWT(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	SendJSONResponse(http.StatusOK, w, map[string]string{
+	SendJSONResponse(http.StatusOK, w, map[string]interface{}{
 		"status":   "success",
 		"token":    tokenString,
 		"expiry":   claims.ExpiresAt.Time.String(),
@@ -330,6 +330,7 @@ func CreateJWT(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		"username": claims.Username,
 		"photo":    claims.Photo,
 		"userId":   claims.UserId,
+		"admin":    user.Admin,
 	})
 }
 
@@ -357,7 +358,7 @@ func RefreshJWT(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newToken, expiry, err := utils.GenerateJWTAccessToken(userId, claims.Username, claims.Email, claims.Photo)
+	newToken, expiry, err := utils.GenerateJWTAccessToken(userId, claims.Username, claims.Email, claims.Photo, claims.IsAdmin)
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to generate new JWT"})
 		return

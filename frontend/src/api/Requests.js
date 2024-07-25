@@ -59,6 +59,7 @@ export const createPage = (data) => makeRequest('/docs/page/create', 'post', dat
 export const deletePage = (id) => makeRequest('/docs/page/delete', 'post', { id });
 
 export const getUsers = () => makeRequest('/auth/users');
+export const getUser = (id) => makeRequest('/auth/user', 'post', { id: parseInt(id) });
 export const createUser = (data) => makeRequest('/auth/user/create', 'post', data);
 export const updateUser = (data) => makeRequest('/auth/user/edit', 'post', data);
 export const uploadPhoto = (data) => makeRequest('auth/user/upload-photo', 'post', data);

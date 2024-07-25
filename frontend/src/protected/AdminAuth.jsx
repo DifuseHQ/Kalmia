@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
-import { toastMessage } from '../utils/Toast';
+
 import instance from '../api/AxiosInstance';
 import Loading from '../components/Loading/Loading';
+import { toastMessage } from '../utils/Toast';
 
 export default function AdminAuth () {
   const location = useLocation();
@@ -24,7 +25,7 @@ export default function AdminAuth () {
         const response = await instance.get('/auth/users');
         if (response?.status === 200) {
           const foundUser = response?.data.find(
-            (obj) => obj.id.toString() === user?.user_id
+            (obj) => obj.id.toString() === user?.userId
           );
           if (foundUser && foundUser?.admin === true) {
             setIsAdmin(true);

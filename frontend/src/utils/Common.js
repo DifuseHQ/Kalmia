@@ -1,5 +1,6 @@
-import { toastMessage } from './Toast';
 import { DateTime } from 'luxon';
+
+import { toastMessage } from './Toast';
 
 export const handleError = (result, navigate = null) => {
   if (result.status === 'error') {
