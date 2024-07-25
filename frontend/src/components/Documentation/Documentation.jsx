@@ -736,7 +736,7 @@ export default function Documentation () {
                       <span className='font-semibold text-gray-900 dark:text-white mx-1'>
                         {totalItems}
                       </span>{' '}
-                      users
+                      items
                     </span>
 
                     <div className='flex items-center gap-3'>
@@ -766,6 +766,7 @@ export default function Documentation () {
                         )}
                       </div>
                     </div>
+
                     <ul className='inline-flex items-stretch -space-x-px'>
                       <li>
                         <button

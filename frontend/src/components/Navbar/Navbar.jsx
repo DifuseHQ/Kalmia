@@ -53,7 +53,7 @@ export default function Navbar () {
           <div className='flex justify-start items-center'>
             <NavLink to='/dashboard'>
               {/* <h1 className='text-blue-500 font-bold hidden sm:block'>CMS</h1> */}
-              <img src='/assets/cropped.png' alt='logo' className='w-42 h-8 dark:invert' />
+              <img src='/assets/images/cropped.png' alt='logo' className='w-42 h-8 dark:invert' />
             </NavLink>
             <button
               onClick={toggleSidebar}
@@ -111,7 +111,7 @@ export default function Navbar () {
 
                     <img
                       className='w-8 h-8 rounded-full object-cover'
-                      src={userDetails?.photo || '/assets/noProfile.png'}
+                      src={userDetails?.photo || '/assets/images/no-profile.png'}
                       alt='user'
                     />
                   </button>
