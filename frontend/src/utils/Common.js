@@ -77,8 +77,8 @@ export const combinePages = (pageGroups, pages) => {
 export const sortGroupAndPage = (filteredGroups, filteredPages) => {
   const combinedPages = [...filteredGroups, ...filteredPages];
   combinedPages.sort((a, b) => {
-    const orderA = a.order !== null ? a.order : Infinity;
-    const orderB = b.order !== null ? b.order : Infinity;
+    const orderA = (a.order !== null && a.order !== undefined) ? a.order : Infinity;
+    const orderB = (b.order !== null && b.order !== undefined) ? b.order : Infinity;
 
     if (orderA !== orderB) {
       return orderA - orderB;
