@@ -727,12 +727,12 @@ export default function Documentation () {
                         {pageSizeDropdown && (
                           <div
                           ref={dropdownRef}
-                          className="absolute w-28 bg-white border border-gray-300 rounded-md shadow-lg z-10 dark:bg-gray-800 dark:border-gray-600 bottom-full mb-1 max-h-36 overflow-y-auto" >
+                          className="absolute w-28 bg-white border border-gray-300 rounded-md shadow-lg z-10 dark:bg-gray-700 dark:border-gray-600 bottom-full mb-1 max-h-36 overflow-y-auto" >
                             {pageSize().map((option) => (
                               <div
                                 key={option}
                                 onClick={() => handlePageSizeSelect(option)}
-                                className={`py-2 px-4 cursor-pointer dark:text-white ${selectPageSize === option ? 'bg-gray-400 hover:bg-gray-400 dark:hover:bg-gray-700 dark:bg-gray-700 cursor-text' : 'hover:bg-gray-200 dark:hover:bg-gray-900'}`}
+                                className={`py-2 px-4 cursor-pointer dark:text-white ${selectPageSize === option ? 'bg-gray-400 hover:bg-gray-400 dark:hover:bg-gray-900 dark:bg-gray-900 cursor-text' : 'hover:bg-gray-200 dark:hover:bg-gray-800'}`}
                               >
                                 {option}
                               </div>
