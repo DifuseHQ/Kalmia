@@ -19,19 +19,19 @@ func GetDocumentations(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}).Preload("Editors", func(db *gorm.DB) *gorm.DB {
 		return db.Select("ID", "Username", "Email", "Photo")
 	}).Preload("PageGroups", func(db *gorm.DB) *gorm.DB {
-		return db.Select("ID", "DocumentationID", "Name", "CreatedAt", "UpdatedAt", "AuthorID")
+		return db.Select("ID", "DocumentationID", "Name", "CreatedAt", "UpdatedAt", "AuthorID", "Order")
 	}).Preload("PageGroups.Author", func(db *gorm.DB) *gorm.DB {
 		return db.Select("ID", "Username", "Email", "Photo")
 	}).Preload("PageGroups.Editors", func(db *gorm.DB) *gorm.DB {
 		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
 	}).Preload("PageGroups.Pages", func(db *gorm.DB) *gorm.DB {
-		return db.Select("ID", "PageGroupID", "Title", "Slug", "CreatedAt", "UpdatedAt", "AuthorID")
+		return db.Select("ID", "PageGroupID", "Title", "Slug", "CreatedAt", "UpdatedAt", "AuthorID", "Order")
 	}).Preload("PageGroups.Pages.Author", func(db *gorm.DB) *gorm.DB {
 		return db.Select("ID", "Username", "Email", "Photo")
 	}).Preload("PageGroups.Pages.Editors", func(db *gorm.DB) *gorm.DB {
 		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
 	}).Preload("Pages", func(db *gorm.DB) *gorm.DB {
-		return db.Select("ID", "DocumentationID", "Title", "Slug", "CreatedAt", "UpdatedAt", "AuthorID").Where("page_group_id IS NULL")
+		return db.Select("ID", "DocumentationID", "Title", "Slug", "CreatedAt", "UpdatedAt", "AuthorID", "Order").Where("page_group_id IS NULL")
 	}).Preload("Pages.Author", func(db *gorm.DB) *gorm.DB {
 		return db.Select("ID", "Username", "Email", "Photo")
 	}).Preload("Pages.Editors", func(db *gorm.DB) *gorm.DB {
@@ -159,6 +159,7 @@ func EditDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		ID          uint   `json:"id" validate:"required"`
 		Name        string `json:"name" validate:"required"`
 		Description string `json:"description" validate:"required"`
+		Version     string `json:"version"`
 	}
 
 	var req Request
@@ -208,6 +209,10 @@ func EditDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 
 	documentation.Name = req.Name
 	documentation.Description = req.Description
+
+	if req.Version != "" {
+		documentation.Version = req.Version
+	}
 
 	if err := db.Save(&documentation).Error; err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to update documentation"})

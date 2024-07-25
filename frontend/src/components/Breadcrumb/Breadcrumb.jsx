@@ -90,19 +90,32 @@ export default function Breadcrumb () {
       const pageId = searchParams.get('pageId');
       const pageGroupId = searchParams.get('pageGroupId');
       const isCreatePage = location.pathname.includes('/create-page');
+      const versionId = searchParams.get('versionId');
+      const version = searchParams.get('version');
+      const clonedFrom = (versionId && version) ? (documentations.find(d => parseInt(d.id) === parseInt(versionId))).clonedFrom : null;
 
-      if (docId) {
-        const doc = documentations.find(d => d.id === parseInt(docId));
-        if (doc) {
-          newBreadcrumb.push({
-            title: doc.name,
-            path: `/dashboard/documentation?id=${doc.id}`,
-            icon: 'uiw:document'
-          });
-        }
+      if (clonedFrom !== null) {
+        const parentDoc = documentations.find(d => parseInt(d.id) === parseInt(clonedFrom));
+        const doc = documentations.find(d => parseInt(d.id) === parseInt(versionId));
+        newBreadcrumb.push({
+          title: doc.name,
+          path: `/dashboard/documentation?id=${parentDoc.id}&versionId=${doc.id}&version=${doc.version}`,
+          icon: 'uiw:document'
+        });
       } else {
-        const smallestId = await documentations.reduce((min, doc) => (doc.id < min ? doc.id : min), documentations[0]?.id);
-        navigate(smallestId ? `/dashboard/documentation?id=${smallestId}` : '/dashboard/documentation');
+        if (docId) {
+          const doc = documentations.find(d => d.id === parseInt(docId));
+          if (doc) {
+            newBreadcrumb.push({
+              title: doc.name,
+              path: `/dashboard/documentation?id=${doc.id}`,
+              icon: 'uiw:document'
+            });
+          }
+        } else {
+          const smallestId = await documentations.reduce((min, doc) => (doc.id < min ? doc.id : min), documentations[0]?.id);
+          navigate(smallestId ? `/dashboard/documentation?id=${smallestId}` : '/dashboard/documentation');
+        }
       }
 
       if (isCreatePage) {
