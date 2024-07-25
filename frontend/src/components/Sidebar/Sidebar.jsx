@@ -80,6 +80,7 @@ export default function Sidebar () {
         } md:translate-x-0`}
         aria-label='Sidenav'
         id='drawer-navigation'
+        key="sidebar-aside-container"
       >
         <div className='overflow-y-auto py-5 px-3 h-full bg-white dark:bg-gray-800'>
           <ul className='space-y-2'>
