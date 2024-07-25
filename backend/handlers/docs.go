@@ -19,19 +19,19 @@ func GetDocumentations(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}).Preload("Editors", func(db *gorm.DB) *gorm.DB {
 		return db.Select("ID", "Username", "Email", "Photo")
 	}).Preload("PageGroups", func(db *gorm.DB) *gorm.DB {
-		return db.Select("ID", "DocumentationID", "Name", "CreatedAt", "UpdatedAt", "AuthorID")
+		return db.Select("ID", "DocumentationID", "Name", "CreatedAt", "UpdatedAt", "AuthorID", "Order")
 	}).Preload("PageGroups.Author", func(db *gorm.DB) *gorm.DB {
 		return db.Select("ID", "Username", "Email", "Photo")
 	}).Preload("PageGroups.Editors", func(db *gorm.DB) *gorm.DB {
 		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
 	}).Preload("PageGroups.Pages", func(db *gorm.DB) *gorm.DB {
-		return db.Select("ID", "PageGroupID", "Title", "Slug", "CreatedAt", "UpdatedAt", "AuthorID")
+		return db.Select("ID", "PageGroupID", "Title", "Slug", "CreatedAt", "UpdatedAt", "AuthorID", "Order")
 	}).Preload("PageGroups.Pages.Author", func(db *gorm.DB) *gorm.DB {
 		return db.Select("ID", "Username", "Email", "Photo")
 	}).Preload("PageGroups.Pages.Editors", func(db *gorm.DB) *gorm.DB {
 		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
 	}).Preload("Pages", func(db *gorm.DB) *gorm.DB {
-		return db.Select("ID", "DocumentationID", "Title", "Slug", "CreatedAt", "UpdatedAt", "AuthorID").Where("page_group_id IS NULL")
+		return db.Select("ID", "DocumentationID", "Title", "Slug", "CreatedAt", "UpdatedAt", "AuthorID", "Order").Where("page_group_id IS NULL")
 	}).Preload("Pages.Author", func(db *gorm.DB) *gorm.DB {
 		return db.Select("ID", "Username", "Email", "Photo")
 	}).Preload("Pages.Editors", func(db *gorm.DB) *gorm.DB {
