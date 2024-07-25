@@ -92,7 +92,7 @@ export default function Breadcrumb () {
       const isCreatePage = location.pathname.includes('/create-page');
       const versionId = searchParams.get('versionId');
       const version = searchParams.get('version');
-      const clonedFrom = (versionId && version) ? (documentations.find(d => parseInt(d.id) === parseInt(versionId))).clonedFrom : null;
+      const clonedFrom = (versionId && version) ? (documentations.find(d => parseInt(d.id) === parseInt(versionId)))?.clonedFrom : null;
 
       if (clonedFrom !== null) {
         const parentDoc = documentations.find(d => parseInt(d.id) === parseInt(clonedFrom));
@@ -108,7 +108,7 @@ export default function Breadcrumb () {
           if (doc) {
             newBreadcrumb.push({
               title: doc.name,
-              path: `/dashboard/documentation?id=${doc.id}`,
+              path: `/dashboard/documentation?id=${doc.id}&versionId=${doc.id}&version=${doc.version}`,
               icon: 'uiw:document'
             });
           }
@@ -120,7 +120,7 @@ export default function Breadcrumb () {
 
       if (isCreatePage) {
         if (pageGroupId) {
-          addPageGroupsBreadcrumb(parseInt(pageGroupId), pageGroups, newBreadcrumb);
+          addPageGroupsBreadcrumb(parseInt(pageGroupId), pageGroups, newBreadcrumb, versionId, version);
         }
         newBreadcrumb.push({
           title: 'Create Page',
@@ -131,22 +131,22 @@ export default function Breadcrumb () {
         const page = pages.find(p => p.id === parseInt(pageId));
         if (page) {
           if (page.pageGroupId != null && page.pageGroupId !== undefined) {
-            addPageGroupsBreadcrumb(page.pageGroupId, pageGroups, newBreadcrumb);
+            addPageGroupsBreadcrumb(page.pageGroupId, pageGroups, newBreadcrumb, versionId, version);
           }
           newBreadcrumb.push({
             title: page.title,
-            path: `/dashboard/documentation/edit-page?id=${page.documentationId}&pageId=${page.id}&pageName=${page.name}`,
+            path: `/dashboard/documentation/edit-page?id=${page.documentationId}&pageId=${page.id}&versionId=${versionId}&version=${version}`,
             icon: 'iconoir:page'
           });
         }
       } else if (location.pathname.includes('/page-group') && pageGroupId) {
-        addPageGroupsBreadcrumb(parseInt(pageGroupId), pageGroups, newBreadcrumb);
+        addPageGroupsBreadcrumb(parseInt(pageGroupId), pageGroups, newBreadcrumb, versionId, version);
       }
 
       setBreadcrumb(newBreadcrumb);
     }
 
-    function addPageGroupsBreadcrumb (pageGroupId, pageGroups, newBreadcrumb) {
+    function addPageGroupsBreadcrumb (pageGroupId, pageGroups, newBreadcrumb, versionId, version) {
       function findPageGroup (groups, id) {
         for (const group of groups) {
           if (group.id === id) return group;
@@ -158,14 +158,14 @@ export default function Breadcrumb () {
         return null;
       }
 
-      function buildBreadcrumb (group) {
+      function buildBreadcrumb (group, versionId, version) {
         if (group.parentId) {
           const parent = findPageGroup(pageGroups, group.parentId);
-          if (parent) buildBreadcrumb(parent);
+          if (parent) buildBreadcrumb(parent, versionId, version);
         }
         newBreadcrumb.push({
           title: group.name,
-          path: `/dashboard/documentation/page-group?id=${group.documentationId}&pageGroupId=${group.id}&groupName=${group.name}`,
+          path: `/dashboard/documentation/page-group?id=${group.documentationId}&pageGroupId=${group.id}&versionId=${versionId}&version=${version}`,
           icon: 'clarity:folder-solid'
         });
       }
@@ -175,7 +175,7 @@ export default function Breadcrumb () {
         return;
       }
 
-      buildBreadcrumb(pageGroup);
+      buildBreadcrumb(pageGroup, versionId, version);
     }
 
     updateBreadcrumb();
