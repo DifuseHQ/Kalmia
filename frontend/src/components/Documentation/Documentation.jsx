@@ -389,7 +389,7 @@ export default function Documentation () {
 
   return (
     <AnimatePresence className="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5">
-      <Breadcrumb key="breadcrumb-container"/>
+      <Breadcrumb key="breadcrumb-container" />
 
       {!loading &&
         <>
@@ -509,7 +509,7 @@ export default function Documentation () {
 
                       {showVersionDropdown && (
                         <div
-                        ref={dropdownRef}
+                          ref={dropdownRef}
                           id="dropdownSearch"
                           className="absolute bg-white rounded-lg shadow w-52 dark:bg-gray-700 z-30"
                         >
@@ -726,8 +726,8 @@ export default function Documentation () {
                         </button>
                         {pageSizeDropdown && (
                           <div
-                          ref={dropdownRef}
-                          className="absolute w-28 bg-white border border-gray-300 rounded-md shadow-lg z-10 dark:bg-gray-700 dark:border-gray-600 bottom-full mb-1 max-h-36 overflow-y-auto" >
+                            ref={dropdownRef}
+                            className="absolute w-28 bg-white border border-gray-300 rounded-md shadow-lg z-10 dark:bg-gray-700 dark:border-gray-600 bottom-full mb-1 max-h-36 overflow-y-auto" >
                             {pageSize().map((option) => (
                               <div
                                 key={option}
@@ -757,8 +757,8 @@ export default function Documentation () {
                           <button
                             onClick={() => handlePageChange(i + 1)}
                             className={`flex items-center justify-center text-sm py-2 px-3 leading-tight ${currentPage === i + 1
-                                ? 'text-primary-600 bg-primary-50 border border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white'
-                                : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'
+                              ? 'text-primary-600 bg-primary-50 border border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white'
+                              : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'
                               }`}
                           >
                             {i + 1}
@@ -843,20 +843,19 @@ export default function Documentation () {
               </h1>
             </motion.div>
           )}
+          {/* Create pageGroup resusable component */}
+          {createPageGroupModal && (
+            <CreatePageGroup
+              handleCreate={handleCreatePageGroup}
+              key="create-page-group-01"
+            />
+          )}
+          {createPageModal && (
+            <CreatePage handleCreate={handleCreatePage} key="create-page-0" />
+          )}
         </>
       }
 
-      {/* Create pageGroup resusable component */}
-      {createPageGroupModal && (
-        <CreatePageGroup
-          handleCreate={handleCreatePageGroup}
-          key="create-page-group-01"
-        />
-      )}
-
-      {createPageModal && (
-        <CreatePage handleCreate={handleCreatePage} key="create-page-0" />
-      )}
     </AnimatePresence>
   );
 }
