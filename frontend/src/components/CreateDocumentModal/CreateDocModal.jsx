@@ -1,27 +1,101 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 import { createDocumentation } from '../../api/Requests';
-import { AuthContext } from '../../context/AuthContext';
-import { ModalContext } from '../../context/ModalContext';
 import { handleError } from '../../utils/Common';
 import { toastMessage } from '../../utils/Toast';
 
+const LabelAndCommunityComponent = ({
+  index,
+  labelId,
+  communityId,
+  data,
+  onLabelChange,
+  onCommunityChange
+}) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="grid gap-4 sm:grid-cols-2 my-2"
+      key={`footer-more-field-${index}`}
+    >
+      <div>
+        <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Label
+        </span>
+        <input
+          type="text"
+          id={labelId}
+          value={data?.label}
+          name={index}
+          onChange={(e) => onLabelChange(index, e.target.value)}
+          placeholder="Enter label text"
+          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+        />
+      </div>
+      <div>
+        <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Community
+        </span>
+        <input
+          type="text"
+          value={data?.community}
+          id={communityId}
+          name={index}
+          onChange={(e) => onCommunityChange(index, e.target.value)}
+          placeholder="Paste the community link"
+          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+        />
+      </div>
+    </motion.div>
+  );
+};
+
 export default function CreateDocModal () {
   const navigate = useNavigate();
-  const { closeModal } = useContext(ModalContext);
-  const { refreshData } = useContext(AuthContext);
 
-  const [searchParam] = useSearchParams();
-  const docId = searchParam.get('id');
+  // const [searchParam] = useSearchParams();
+  // const docId = searchParam.get("id");
 
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    version: ''
+    version: '',
+    customCSS: '',
+    favicon: '',
+    navImage: '',
+    copyrightText: '',
+    metaImage: ''
   });
+
+  const [footerField, setFooterField] = useState([
+    { label: '', community: '' }
+  ]);
+  const [moreField, setMoreField] = useState([{ label: '', community: '' }]);
+
+  const addRow = (fieldType) => {
+    if (fieldType === 'footer') {
+      setFooterField([...footerField, { label: '', community: '' }]);
+    } else if (fieldType === 'more') {
+      setMoreField([...moreField, { label: '', community: '' }]);
+    }
+  };
+
+  const deleteRow = (fieldType) => {
+    if (fieldType === 'footer') {
+      if (footerField.length > 1) {
+        setFooterField(footerField.slice(0, -1));
+      }
+    } else if (fieldType === 'more') {
+      if (moreField.length > 1) {
+        setMoreField(moreField.slice(0, -1));
+      }
+    }
+  };
 
   const titleRef = useRef(null);
 
@@ -41,136 +115,323 @@ export default function CreateDocModal () {
 
   const handleCreateDocument = async () => {
     if (formData.title === '') {
-      toastMessage('Title is required. Please enter a new Document Title.', 'warning');
+      toastMessage(
+        'Title is required. Please enter a new Document Title.',
+        'warning'
+      );
       return;
     }
 
     if (formData.description === '') {
-      toastMessage('Description is required. Please enter a new Document Description.', 'warning');
+      toastMessage(
+        'Description is required. Please enter a new Document Description.',
+        'warning'
+      );
+      return;
+    }
+
+    if (formData.version === '') {
+      toastMessage('Version is required. Please enter a new.', 'warning');
       return;
     }
 
     const result = await createDocumentation({
       name: formData.title,
       description: formData.description,
-      version: formData.version
+      version: formData.version,
+      customCSS: formData.customCSS,
+      favicon: formData.favicon,
+      navImage: formData.navImage,
+      copyrightText: formData.copyrightText,
+      metaImage: formData.metaImage,
+      footerLabelLinks: JSON.stringify(footerField),
+      moreLabelLinks: JSON.stringify(moreField)
     });
 
     if (result.status === 'success') {
-      closeModal('createDocumentation');
-      if (!docId) {
-        navigate('/');
-      }
-      refreshData();
+      navigate('/');
       toastMessage('Document created successfully', 'success');
     } else {
       handleError(result, navigate);
     }
   };
 
+  const handleFooterLabelChange = (index, newValue) => {
+    const updatedFields = footerField.map((field, i) =>
+      i === index ? { ...field, label: newValue } : field
+    );
+    setFooterField(updatedFields);
+  };
+
+  const handleFooterCommunityChange = (index, newValue) => {
+    const updatedFields = footerField.map((field, i) =>
+      i === index ? { ...field, community: newValue } : field
+    );
+    setFooterField(updatedFields);
+  };
+
+  const handleMoreLabelChange = (index, newValue) => {
+    const updatedFields = moreField.map((field, i) =>
+      i === index ? { ...field, label: newValue } : field
+    );
+    setMoreField(updatedFields);
+  };
+
+  const handleMoreCommunityChange = (index, newValue) => {
+    const updatedFields = moreField.map((field, i) =>
+      i === index ? { ...field, community: newValue } : field
+    );
+    setMoreField(updatedFields);
+  };
+
   return (
     <AnimatePresence>
-
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className='fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-50'
-        key='create-documentation'
+        key="create-documentation-conatiner"
+        className=" overflow-y-auto overflow-x-hidden  justify-center items-center w-full md:inset-0 md:h-full"
       >
-        <motion.div
-          initial={{ scale: 0.8 }}
-          animate={{ scale: 1 }}
-          exit={{ scale: 0.8 }}
-          className='relative p-4 w-full max-w-xl'
-          key='create-documentation-2'
-        >
-          <div className='relative p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5'>
-            <div className='flex justify-between items-center mb-4 sm:mb-5 dark:border-gray-600'>
-              <div className='flex-grow text-center'>
-                <h3 className='text-lg font-semibold text-gray-900 dark:text-white'>
-                  New Documentation
-                </h3>
-              </div>
-              <button
-                onClick={() => closeModal('createDocumentation')}
-                type='button'
-                className='text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white'
-              >
-                <Icon icon='material-symbols:close' className='w-6 h-6' />
-                <span className='sr-only'>Close modal</span>
-              </button>
-            </div>
+        <div className="relative w-full max-w-5xl h-full md:h-auto mx-auto">
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-400">
+              New Documentation
+            </h3>
+          </div>
 
-            <div className='grid gap-4 mb-4'>
-              <div>
-                <label
-                  htmlFor='title'
-                  className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
-                >
-                  Title
-                </label>
-                <input
-                  ref={titleRef}
-                  onChange={handleChange}
-                  type='text'
-                  name='title'
-                  id='title'
-                  className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
-                  placeholder='Enter new document title'
-                  required
-                />
-              </div>
+          <div className="relative bg-white rounded-lg shadow dark:bg-gray-800 sm:p-3">
+            <div className="overflow-auto p-1">
+              <div className="space-y-6">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Title
+                    </span>
+                    <input
+                      ref={titleRef}
+                      onChange={handleChange}
+                      type="text"
+                      name="title"
+                      id="title"
+                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                      placeholder="Enter new document title"
+                      required
+                    />
+                  </div>
 
-              <div>
-                <label
-                  htmlFor='version'
-                  className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
-                >
-                  Version
-                </label>
-                <input
-                  onChange={handleChange}
-                  type='text'
-                  name='version'
-                  id='version'
-                  className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
-                  placeholder='Enter document version'
-                  required
-                />
-              </div>
+                  <div>
+                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Version
+                    </span>
+                    <input
+                      onChange={handleChange}
+                      type="text"
+                      name="version"
+                      id="version"
+                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                      placeholder="Enter document version"
+                      required
+                    />
+                  </div>
+                </div>
 
-              <div>
-                <label
-                  htmlFor='description'
-                  className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
-                >
-                  Description
-                </label>
-                <div className='py-2'>
-                  <textarea
-                    onChange={handleChange}
-                    name='description'
-                    id='description'
-                    className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
-                    placeholder='Description about your new document'
-                    rows='3'
-                  />
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Description
+                    </span>
+                    <div>
+                      <textarea
+                        onChange={handleChange}
+                        name="description"
+                        id="description"
+                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                        placeholder="Description about your new document"
+                        rows="3"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Custom CSS
+                    </span>
+                    <div>
+                      <textarea
+                        onChange={handleChange}
+                        name="customCSS"
+                        id="customCSS"
+                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                        placeholder="Enter custom css styles"
+                        rows="3"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Fav Icon
+                    </span>
+                    <input
+                      type="url"
+                      onChange={handleChange}
+                      name="favicon"
+                      placeholder="Paste your fav icon link"
+                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                    />
+                  </div>
+
+                  <div>
+                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Navbar Icon
+                    </span>
+                    <input
+                      onChange={handleChange}
+                      type="url"
+                      name="navImage"
+                      placeholder="Paste your navbar icon link"
+                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Copyright Text
+                    </span>
+                    <input
+                      onChange={handleChange}
+                      type="text"
+                      name="copyrightText"
+                      placeholder="Enter copy wright text"
+                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                    />
+                  </div>
+
+                  <div>
+                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Social Card Image
+                    </span>
+                    <input
+                      onChange={handleChange}
+                      type="url"
+                      name="metaImage"
+                      placeholder="Paste social card image link"
+                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                    />
+                  </div>
                 </div>
               </div>
-              <button
-                onClick={handleCreateDocument}
-                type='button'
-                className='flex justify-center items-center text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800'
-              >
-                <span>New Documentation</span>
-                <Icon icon='ei:plus' className='w-6 h-6' />
-              </button>
+
+              <div className="grid gap-1 mb-4 sm:mb-3 mt-6">
+                <div>
+                  <div className="flex justify-between items-center">
+                    <p className="block text-md font-medium text-gray-700 dark:text-gray-300 ">
+                      Footer
+                    </p>
+                    <div className="flex justify-center gap-3">
+                      <button
+                        onClick={() => addRow('footer')}
+                        title="add new field"
+                        className="flex items-center gap-1 text-blue-600 rounded-lg text-sm"
+                      >
+                        <Icon
+                          icon="ei:plus"
+                          className="w-8 h-8 hover:text-blue-400"
+                        />
+                      </button>
+
+                      <button
+                        onClick={() => deleteRow('footer')}
+                        title="delete field"
+                        className="flex items-center gap-1 rounded-lg text-sm "
+                      >
+                        <Icon
+                          icon="material-symbols:delete"
+                          className="text-red-500 dark:text-red-600 hover:text-red-800 h-7 w-7"
+                        />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <hr className="mt-2 mb-4 border-t-1 dark:border-gray-500" />
+                {footerField.map((obj, index) => (
+                  <div key={`footer-label-${index}`}>
+                    <LabelAndCommunityComponent
+                      labelId={`footer-label-${index}`}
+                      communityId={`footer-community-${index}`}
+                      index={index}
+                      data={obj}
+                      onLabelChange={handleFooterLabelChange}
+                      onCommunityChange={handleFooterCommunityChange}
+                    />
+                  </div>
+                ))}
+
+                <div>
+                  <div className="flex justify-between items-center">
+                    <span className="block text-md font-medium text-gray-700 dark:text-gray-300 ">
+                      More
+                    </span>
+                    <div className="flex justify-center gap-3">
+                      <button
+                        onClick={() => addRow('more')}
+                        title="add new field"
+                        className="flex items-center gap-1 text-blue-600 rounded-lg text-sm  py-1.5  mb-2 "
+                      >
+                        <Icon
+                          icon="ei:plus"
+                          className="w-8 h-8  hover:text-blue-400"
+                        />
+                      </button>
+
+                      <button
+                        onClick={() => deleteRow('more')}
+                        title="delete field"
+                        className="flex items-center gap-1 rounded-lg text-sm  py-1.5  mb-2 "
+                      >
+                        <Icon
+                          icon="material-symbols:delete"
+                          className="text-red-500 dark:text-red-600 hover:text-red-800  h-7 w-7"
+                        />
+                      </button>
+                    </div>
+                  </div>
+
+                  <hr className="mt-2 mb-4 border-t-1 dark:border-gray-500" />
+                  {moreField.map((obj, index) => (
+                    <div key={`more-label-${index}`}>
+                      <LabelAndCommunityComponent
+                        labelId={`more-label-${index}`}
+                        communityId={`more-community-${index}`}
+                        index={index}
+                        data={obj}
+                        onLabelChange={handleMoreLabelChange}
+                        onCommunityChange={handleMoreCommunityChange}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex justify-center items-center mt-7">
+                <button
+                  onClick={handleCreateDocument}
+                  type="button"
+                  className="flex justify-center items-center text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+                >
+                  <span>New Documentation</span>
+                  <Icon icon="ei:plus" className="w-6 h-6" />
+                </button>
+              </div>
             </div>
           </div>
-        </motion.div>
+        </div>
       </motion.div>
-
     </AnimatePresence>
   );
 }
