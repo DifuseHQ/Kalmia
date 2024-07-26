@@ -68,7 +68,7 @@ export default function CreateDocModal () {
     customCSS: '',
     favicon: '',
     navImage: '',
-    copyWrightText: '',
+    copyrightText: '',
     metaImage: ''
   });
 
@@ -142,7 +142,7 @@ export default function CreateDocModal () {
       customCSS: formData.customCSS,
       favicon: formData.favicon,
       navImage: formData.navImage,
-      copyWrightText: formData.copyWrightText,
+      copyrightText: formData.copyrightText,
       metaImage: formData.metaImage,
       footerLabelLinks: JSON.stringify(footerField),
       moreLabelLinks: JSON.stringify(moreField)
@@ -301,12 +301,12 @@ export default function CreateDocModal () {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Copy Wright Text
+                      Copyright Text
                     </span>
                     <input
                       onChange={handleChange}
                       type="text"
-                      name="copyWrightText"
+                      name="copyrightText"
                       placeholder="Enter copy wright text"
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     />
