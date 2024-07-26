@@ -36,7 +36,7 @@ func GetDocumentations(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		return db.Select("ID", "Username", "Email", "Photo")
 	}).Preload("Pages.Editors", func(db *gorm.DB) *gorm.DB {
 		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
-	}).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID", "Version", "ClonedFrom", "LastEditorID").
+	}).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID", "Version", "ClonedFrom", "LastEditorID", "Favicon", "MetaImage", "NavImage", "CustomCSS", "FooterLabelLinks", "MoreLabelLinks").
 		Find(&documentations).Error; err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{
 			"status":  "error",
@@ -89,7 +89,7 @@ func GetDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		return db.Select("ID", "Username", "Email", "Photo")
 	}).Preload("Pages.Editors", func(db *gorm.DB) *gorm.DB {
 		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
-	}).Where("id = ?", req.ID).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID", "Version", "LastEditorID").
+	}).Where("id = ?", req.ID).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID", "Version", "LastEditorID", "Favicon", "MetaImage", "NavImage", "CustomCSS", "FooterLabelLinks", "MoreLabelLinks").
 		Find(&documentation).Error; err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{
 			"status":  "error",
