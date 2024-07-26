@@ -1,8 +1,8 @@
 import React, { createContext, useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import Cookies from 'js-cookie';
 
+import instance from '../api/AxiosInstance';
 import { refreshJWT, signOut, validateJWT } from '../api/Requests';
 import { useToken } from '../hooks/useToken';
 import { useUser } from '../hooks/useUser';
@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      const response = await axios.post('http://[::1]:2727/auth/jwt/create', {
+      const response = await instance.post('auth/jwt/create', {
         username,
         password
       });
