@@ -72,6 +72,7 @@ export default function Navbar () {
               <label className='relative inline-flex items-center cursor-pointer'>
                 <input
                   type='checkbox'
+                  name="darkModeSwitch"
                   className='sr-only peer'
                   checked={darkMode}
                   onChange={toggleDarkMode}
