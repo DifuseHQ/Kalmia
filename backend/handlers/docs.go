@@ -9,6 +9,7 @@ import (
 	"git.difuse.io/Difuse/kalmia/db/models"
 	"git.difuse.io/Difuse/kalmia/logger"
 	"git.difuse.io/Difuse/kalmia/services"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -166,7 +167,30 @@ func CreateDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	introPage := models.Page{
+		Title:           "Introduction",
+		Slug:            "/",
+		Content:         `[{"id":"fa01e096-3187-4628-8f1e-77728cee3aa6","type":"paragraph","props":{"textColor":"default","backgroundColor":"default","textAlignment":"left"},"content":[{"type":"text","text":"Welcome to the difuse documentation!","styles":{}}],"children":[]},{"id":"90f28c74-6195-4074-8861-35b82b9bfb1c","type":"paragraph","props":{"textColor":"default","backgroundColor":"default","textAlignment":"left"},"content":[],"children":[]}]`,
+		DocumentationID: documentation.ID,
+		AuthorID:        user.ID,
+		Author:          user,
+		Editors:         []models.User{user},
+		LastEditorID:    &user.ID,
+	}
+
+	if err := db.Create(&introPage).Error; err != nil {
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Failed to create documentation", "reason": err.Error()})
+		return
+	}
+
 	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "Documentation created successfully"})
+
+	go func() {
+		err := services.InitDocusaurus(db, documentation.ID)
+		if err != nil {
+			logger.Error("Failed to initialize docsaurus for documentation", zap.Error(err))
+		}
+	}()
 }
 
 func EditDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {

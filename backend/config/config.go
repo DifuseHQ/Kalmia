@@ -69,5 +69,12 @@ func SetupDataPath() error {
 		}
 	}
 
+	if _, err := os.Stat(ParsedConfig.DataPath + "/docusaurus_data"); os.IsNotExist(err) {
+		err := os.Mkdir(ParsedConfig.DataPath+"/docusaurus_data", 0755)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

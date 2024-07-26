@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"fmt"
 	"net/http"
 	"os"
@@ -15,6 +16,9 @@ import (
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 )
+
+//go:embed embedded/docusaurus
+var docusaurusFS embed.FS
 
 func main() {
 	cmd.AsciiArt()
