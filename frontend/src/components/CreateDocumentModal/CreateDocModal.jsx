@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { AnimatePresence, motion } from 'framer-motion';
 
-import { createDocumentation } from '../../api/Requests';
+import { createDocumentation, getDocumentation, updateDocumentation } from '../../api/Requests';
 import { handleError } from '../../utils/Common';
 import { toastMessage } from '../../utils/Toast';
 
@@ -57,12 +57,12 @@ const LabelAndCommunityComponent = ({
 
 export default function CreateDocModal () {
   const navigate = useNavigate();
-
-  // const [searchParam] = useSearchParams();
-  // const docId = searchParam.get("id");
+  const [searchParam] = useSearchParams();
+  const docId = searchParam.get('id');
+  const mode = searchParam.get('mode');
 
   const [formData, setFormData] = useState({
-    title: '',
+    name: '',
     description: '',
     version: '',
     customCSS: '',
@@ -76,6 +76,42 @@ export default function CreateDocModal () {
     { label: '', community: '' }
   ]);
   const [moreField, setMoreField] = useState([{ label: '', community: '' }]);
+
+  useEffect(() => {
+    if (mode === 'edit') {
+      const fetchDoc = async () => {
+        const result = await getDocumentation(Number(docId));
+        if (result.status === 'success') {
+          setFormData(result?.data);
+          const footerLabelLinks = result?.data?.footerLabelLinks;
+          const moreLabelLinks = result?.data?.moreLabelLinks;
+
+          setFooterField(
+            footerLabelLinks ? JSON.parse(footerLabelLinks) : [{ label: '', community: '' }]
+          );
+          setMoreField(
+            moreLabelLinks ? JSON.parse(moreLabelLinks) : [{ label: '', community: '' }]
+          );
+        } else {
+          handleError(result, navigate);
+        }
+      };
+      fetchDoc();
+    } else {
+      setFormData({
+        name: '',
+        description: '',
+        version: '',
+        customCSS: '',
+        favicon: '',
+        navImage: '',
+        copyrightText: '',
+        metaImage: ''
+      });
+      setFooterField([{ label: '', community: '' }]);
+      setMoreField([{ label: '', community: '' }]);
+    }
+  }, [docId, mode, navigate]);
 
   const addRow = (fieldType) => {
     if (fieldType === 'footer') {
@@ -109,12 +145,12 @@ export default function CreateDocModal () {
     const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: value
+      [name]: value || ''
     });
   };
 
   const handleCreateDocument = async () => {
-    if (formData.title === '') {
+    if (formData.name === '') {
       toastMessage(
         'Title is required. Please enter a new Document Title.',
         'warning'
@@ -135,21 +171,33 @@ export default function CreateDocModal () {
       return;
     }
 
-    const result = await createDocumentation({
-      name: formData.title,
-      description: formData.description,
-      version: formData.version,
-      customCSS: formData.customCSS,
-      favicon: formData.favicon,
-      navImage: formData.navImage,
-      copyrightText: formData.copyrightText,
-      metaImage: formData.metaImage,
-      footerLabelLinks: JSON.stringify(footerField),
-      moreLabelLinks: JSON.stringify(moreField)
-    });
+    const payload = {
+      id: Number(docId),
+      name: formData.name || '',
+      description: formData.description || '',
+      version: formData.version || '',
+      customCSS: formData.customCSS || '',
+      favicon: formData.favicon || '',
+      navImage: formData.navImage || '',
+      copyrightText: formData.copyrightText || '',
+      metaImage: formData.metaImage || '',
+      footerLabelLinks: footerField ? JSON.stringify(footerField) : [{ label: '', community: '' }],
+      moreLabelLinks: moreField ? JSON.stringify(moreField) : [{ label: '', community: '' }]
+    };
+    let result;
+    if (mode === 'edit') {
+      result = await updateDocumentation(payload);
+    } else {
+      result = await createDocumentation(payload);
+    }
 
     if (result.status === 'success') {
-      navigate('/');
+      if (docId) {
+        navigate(`/dashboard/documentation?id=${docId}`);
+      } else {
+        navigate('/');
+      }
+
       toastMessage('Document created successfully', 'success');
     } else {
       handleError(result, navigate);
@@ -196,7 +244,7 @@ export default function CreateDocModal () {
         <div className="relative w-full max-w-5xl h-full md:h-auto mx-auto">
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-400">
-              New Documentation
+            {mode === 'edit' ? 'Edit Documentation' : 'New Documentation'}
             </h3>
           </div>
 
@@ -212,10 +260,11 @@ export default function CreateDocModal () {
                       ref={titleRef}
                       onChange={handleChange}
                       type="text"
-                      name="title"
-                      id="title"
+                      value={formData?.name || ''}
+                      name="name"
+                      id="name"
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                      placeholder="Enter new document title"
+                      placeholder="Enter new document name"
                       required
                     />
                   </div>
@@ -226,6 +275,7 @@ export default function CreateDocModal () {
                     </span>
                     <input
                       onChange={handleChange}
+                      value={formData?.version}
                       type="text"
                       name="version"
                       id="version"
@@ -244,6 +294,7 @@ export default function CreateDocModal () {
                     <div>
                       <textarea
                         onChange={handleChange}
+                        value={formData?.description}
                         name="description"
                         id="description"
                         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
@@ -260,6 +311,7 @@ export default function CreateDocModal () {
                     <div>
                       <textarea
                         onChange={handleChange}
+                        value={formData?.customCSS}
                         name="customCSS"
                         id="customCSS"
                         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
@@ -278,6 +330,7 @@ export default function CreateDocModal () {
                     <input
                       type="url"
                       onChange={handleChange}
+                      value={formData?.favicon}
                       name="favicon"
                       placeholder="Paste your fav icon link"
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
@@ -290,6 +343,7 @@ export default function CreateDocModal () {
                     </span>
                     <input
                       onChange={handleChange}
+                      value={formData?.navImage}
                       type="url"
                       name="navImage"
                       placeholder="Paste your navbar icon link"
@@ -305,6 +359,7 @@ export default function CreateDocModal () {
                     </span>
                     <input
                       onChange={handleChange}
+                      value={formData?.copyrightText}
                       type="text"
                       name="copyrightText"
                       placeholder="Enter copy wright text"
@@ -318,6 +373,7 @@ export default function CreateDocModal () {
                     </span>
                     <input
                       onChange={handleChange}
+                      value={formData?.metaImage}
                       type="url"
                       name="metaImage"
                       placeholder="Paste social card image link"
@@ -424,8 +480,8 @@ export default function CreateDocModal () {
                   type="button"
                   className="flex justify-center items-center text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
                 >
-                  <span>New Documentation</span>
-                  <Icon icon="ei:plus" className="w-6 h-6" />
+                  <span>{mode === 'edit' ? 'Update Documentation' : 'New Documentation'}</span>
+                  {!mode && <Icon icon="ei:plus" className="w-6 h-6" />}
                 </button>
               </div>
             </div>

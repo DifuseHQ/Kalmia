@@ -131,7 +131,7 @@ export default function PageGroupTable () {
     }
   };
 
-  const handlePageGroupUpdate = async (editTitle, editDescription, version, id) => {
+  const handlePageGroupUpdate = async (editTitle, version, id) => {
     const result = await updatePageGroup({
       id: Number(id),
       name: editTitle,

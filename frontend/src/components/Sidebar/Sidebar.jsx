@@ -1,10 +1,11 @@
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 import { getDocumentations } from '../../api/Requests';
 import { AuthContext } from '../../context/AuthContext';
+import { ModalContext } from '../../context/ModalContext';
 import { toastMessage } from '../../utils/Toast';
 
 export default function Sidebar () {
@@ -13,6 +14,7 @@ export default function Sidebar () {
   const [searchParam] = useSearchParams();
   const docId = searchParam.get('id');
   const { refresh, userDetails, isSidebarOpen, setIsSidebarOpen } = useContext(AuthContext);
+  const { openModal } = useContext(ModalContext);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -81,15 +83,17 @@ export default function Sidebar () {
           <ul className='space-y-2'
           key="documentation-sidebar-list">
             <li>
-              <Link to='/dashboard/create-documentation'>
               <motion.button
+              onClick={() => {
+                openModal('createDocumentation');
+                navigate('/dashboard/create-documentation');
+              }}
                 whilehover={{ scale: 1.05 }}
                 className='flex w-full py-2 px-5 my-5 justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-md  text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800'
               >
                 <span className=' px-1 pt-1 text-left items-center dark:text-white text-md text-sm'>New Documentation</span>
                 <Icon icon='ei:plus' className='w-7 h-7 dark:text-white' />
               </motion.button>
-              </Link>
             </li>
             {!documentation || documentation.length <= 0
               ? (

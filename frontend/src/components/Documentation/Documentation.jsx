@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd';
 import { Icon } from '@iconify/react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -15,7 +15,6 @@ import {
   getDocumentations,
   getPageGroups,
   getPages,
-  updateDocumentation,
   updatePageGroup
 } from '../../api/Requests';
 import { AuthContext } from '../../context/AuthContext';
@@ -204,19 +203,12 @@ export default function Documentation () {
     }
   };
 
-  const handleUpdate = async (editTitle, editDescription, editVersion, version) => {
+  const handleUpdate = async (editTitle, version, id) => {
     let result;
     if (cloneDocumentModal) {
       result = await createDocumentationVersion({
         originalDocId: Number(selectedVersion.id),
         version
-      });
-    } else {
-      result = await updateDocumentation({
-        id: Number(selectedVersion.id),
-        name: editTitle,
-        description: editDescription,
-        version: editVersion
       });
     }
 
@@ -226,7 +218,6 @@ export default function Documentation () {
       if (cloneDocumentModal) {
         closeModal('cloneDocument');
       }
-      closeModal('edit');
       refreshData();
       toastMessage(result.data.message, 'success');
     }
@@ -255,8 +246,6 @@ export default function Documentation () {
   };
   const handlePageGroupUpdate = async (
     editTitle,
-    editDescription,
-    editVersion,
     version,
     id
   ) => {
@@ -448,16 +437,15 @@ export default function Documentation () {
 
                 <motion.button
                   whilehover={{ scale: 1.3 }}
-                  onClick={() => {
-                    openModal('edit', null);
-                  }}
                   title="Edit Documentation"
                   key="edit-document-button"
                 >
+                  <Link to={`/dashboard/edit-documentation?id=${selectedVersion.id}&mode=edit`}>
                   <Icon
                     icon="material-symbols:edit-outline"
                     className="w-6 h-6 text-yellow-500 dark:text-yellow-400 hover:text-yellow-600 dark:hover:text-yellow-600"
                   />
+                   </Link>
                 </motion.button>
 
                 <motion.button
@@ -807,22 +795,10 @@ export default function Documentation () {
                 {/* Edit Component */}
                 {editModal && (
                   <EditDocumentModal
-                    heading={
-                      currentModalItem ? 'Rename Page Group' : 'Edit Documentation'
-                    }
-                    title={
-                      currentModalItem
-                        ? currentModalItem.name
-                        : documentData[0]?.name
-                    }
-                    documentVersion={!currentModalItem && selectedVersion.version}
-                    description={!currentModalItem && documentData[0]?.description}
-                    id={
-                      currentModalItem ? currentModalItem.id : selectedVersion.id
-                    }
-                    updateData={
-                      currentModalItem ? handlePageGroupUpdate : handleUpdate
-                    }
+                    heading={'Rename Page Group'}
+                    title={ currentModalItem.name}
+                    id={currentModalItem.id }
+                    updateData={handlePageGroupUpdate}
                   />
                 )}
 
@@ -830,8 +806,6 @@ export default function Documentation () {
                 {cloneDocumentModal && (
                   <EditDocumentModal
                     heading="New Document Version"
-                    title={documentData[0]?.name}
-                    description={documentData[0]?.description}
                     id={documentData[0]?.id}
                     updateData={handleUpdate}
                   />

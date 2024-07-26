@@ -6,15 +6,11 @@ import { ModalContext } from '../../context/ModalContext';
 
 export default function EditDocumentModal ({
   title,
-  description,
   updateData,
-  documentVersion,
   heading,
   id
 }) {
   const [editTitle, setEditTitle] = useState('');
-  const [editDescription, setEditDescription] = useState('');
-  const [editVersion, setEditVerson] = useState('');
   const [version, setVersion] = useState('');
   const { closeModal, cloneDocumentModal } = useContext(ModalContext);
 
@@ -28,9 +24,7 @@ export default function EditDocumentModal ({
 
   useEffect(() => {
     setEditTitle(title || '');
-    setEditDescription(description || '');
-    setEditVerson(documentVersion || '');
-  }, [title, description, documentVersion]);
+  }, [title, id]);
 
   const handleCloseClick = useCallback(() => {
     if (cloneDocumentModal) {
@@ -94,7 +88,7 @@ export default function EditDocumentModal ({
                     />
                   </div>
                   <button
-                    onClick={() => updateData(editTitle, editDescription, editVersion, version, id)}
+                    onClick={() => updateData(editTitle, version, id)}
                     type='button'
                     className='flex justify-center items-center text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800'
                   >
@@ -128,51 +122,8 @@ export default function EditDocumentModal ({
                     </div>
                   )}
 
-              {documentVersion && (
-              <div>
-                <label
-                  htmlFor='version'
-                  className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
-                >
-                  Version
-                </label>
-                <input
-                  onChange={(e) => setEditVerson(e.target.value)}
-                  value={editVersion}
-                  type='text'
-                  name='version'
-                  id='version'
-                  className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
-                  placeholder='Enter document version'
-                  required
-                />
-              </div>
-              )}
-                  {description && (
-                    <div>
-                      <label
-                        htmlFor='description'
-                        className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
-                      >
-                        Description
-                      </label>
-
-                      <div className='py-2'>
-                        <textarea
-                          value={editDescription}
-                          onChange={(e) => setEditDescription(e.target.value)}
-                          name='description'
-                          id='description'
-                          className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
-                          placeholder='Description about your new document'
-                          rows='3'
-                        />
-                      </div>
-                    </div>
-                  )}
-
                   <button
-                    onClick={() => updateData(editTitle, editDescription, editVersion, version, id)}
+                    onClick={() => updateData(editTitle, version, id)}
                     type='button'
                     className='flex justify-center items-center text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800'
                   >
