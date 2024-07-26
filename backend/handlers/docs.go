@@ -126,6 +126,7 @@ func CreateDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		CustomCSS        string `json:"customCSS"`
 		FooterLabelLinks string `json:"footerLabelLinks"`
 		MoreLabelLinks   string `json:"moreLabelLinks"`
+		CopyrightText    string `json:"copyrightText"`
 	}
 
 	var req Request
@@ -156,6 +157,7 @@ func CreateDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		CustomCSS:        req.CustomCSS,
 		FooterLabelLinks: req.FooterLabelLinks,
 		MoreLabelLinks:   req.MoreLabelLinks,
+		CopyrightText:    req.CopyrightText,
 	}
 
 	if err := db.Create(&documentation).Error; err != nil {
@@ -178,6 +180,7 @@ func EditDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		CustomCSS        string `json:"customCSS"`
 		FooterLabelLinks string `json:"footerLabelLinks"`
 		MoreLabelLinks   string `json:"moreLabelLinks"`
+		CopyrightText    string `json:"copyrightText"`
 	}
 
 	var req Request
@@ -254,6 +257,10 @@ func EditDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 
 	if req.MoreLabelLinks != "" {
 		documentation.MoreLabelLinks = req.MoreLabelLinks
+	}
+
+	if req.CopyrightText != "" {
+		documentation.CopyrightText = req.CopyrightText
 	}
 
 	if err := db.Save(&documentation).Error; err != nil {
