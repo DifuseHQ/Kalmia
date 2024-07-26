@@ -429,7 +429,7 @@ export default function Documentation () {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className=" lg:mt-0 lg:col-span-5 flex justify-end mr-5 gap-3"
+                className=" lg:mt-0 lg:col-span-5 flex justify-end mr-5 mb-4 gap-3"
                 key="documentation-actions-buttons"
               >
                 <motion.button
@@ -483,10 +483,10 @@ export default function Documentation () {
                 key="documentation-info"
               >
                 <div className="mr-auto place-self-center lg:col-span-7">
-                  <h1 className="max-w-xl mb-4 text-4xl font-bold tracking-tight leading-none md:text-4xl xl:text-4xl dark:text-white">
+                  <h1 className="max-w-xl mb-4 text-2xl font-bold tracking-tight leading-none md:text-3xl xl:text-4xl dark:text-white">
                     {documentData[0]?.name}
                   </h1>
-                  <p className="max-w-2xl mb-6 font-light text-gray-700 lg:mb-8 md:text-lg lg:text-xl dark:text-gray-400">
+                  <p className="max-w-2xl mb-6 font-light text-sm text-gray-700 lg:mb-8 md:text-md lg:text-xl dark:text-gray-400">
                     {documentData[0]?.description}
                   </p>
                 </div>
