@@ -58,6 +58,7 @@ type Documentation struct {
 	CustomCSS        string      `json:"customCSS,omitempty"`
 	FooterLabelLinks string      `json:"footerLabelLinks,omitempty"`
 	MoreLabelLinks   string      `json:"moreLabelLinks,omitempty"`
+	CopyrightText    string      `json:"copyrightText,omitempty"`
 	AuthorID         uint        `json:"authorId,omitempty"`
 	Author           User        `gorm:"foreignKey:AuthorID" json:"author,omitempty"`
 	CreatedAt        *time.Time  `gorm:"autoCreateTime" json:"createdAt,omitempty"`
