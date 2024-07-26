@@ -117,9 +117,15 @@ func CreateDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 
 	type Request struct {
-		Name        string `json:"name" validate:"required"`
-		Description string `json:"description"`
-		Version     string `json:"version" validate:"required"`
+		Name             string `json:"name" validate:"required"`
+		Description      string `json:"description"`
+		Version          string `json:"version" validate:"required"`
+		Favicon          string `json:"favicon"`
+		MetaImage        string `json:"metaImage"`
+		NavImage         string `json:"navImage"`
+		CustomCSS        string `json:"customCSS"`
+		FooterLabelLinks string `json:"footerLabelLinks"`
+		MoreLabelLinks   string `json:"moreLabelLinks"`
 	}
 
 	var req Request
@@ -137,13 +143,19 @@ func CreateDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	}
 
 	documentation := models.Documentation{
-		Name:         req.Name,
-		Description:  req.Description,
-		AuthorID:     user.ID,
-		Author:       user,
-		Editors:      []models.User{user},
-		LastEditorID: &user.ID,
-		Version:      req.Version,
+		Name:             req.Name,
+		Description:      req.Description,
+		AuthorID:         user.ID,
+		Author:           user,
+		Editors:          []models.User{user},
+		LastEditorID:     &user.ID,
+		Version:          req.Version,
+		Favicon:          req.Favicon,
+		MetaImage:        req.MetaImage,
+		NavImage:         req.NavImage,
+		CustomCSS:        req.CustomCSS,
+		FooterLabelLinks: req.FooterLabelLinks,
+		MoreLabelLinks:   req.MoreLabelLinks,
 	}
 
 	if err := db.Create(&documentation).Error; err != nil {
@@ -156,10 +168,16 @@ func CreateDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 
 func EditDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 	type Request struct {
-		ID          uint   `json:"id" validate:"required"`
-		Name        string `json:"name" validate:"required"`
-		Description string `json:"description" validate:"required"`
-		Version     string `json:"version"`
+		ID               uint   `json:"id" validate:"required"`
+		Name             string `json:"name" validate:"required"`
+		Description      string `json:"description" validate:"required"`
+		Version          string `json:"version"`
+		Favicon          string `json:"favicon"`
+		MetaImage        string `json:"metaImage"`
+		NavImage         string `json:"navImage"`
+		CustomCSS        string `json:"customCSS"`
+		FooterLabelLinks string `json:"footerLabelLinks"`
+		MoreLabelLinks   string `json:"moreLabelLinks"`
 	}
 
 	var req Request
@@ -212,6 +230,30 @@ func EditDocumentation(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 
 	if req.Version != "" {
 		documentation.Version = req.Version
+	}
+
+	if req.Favicon != "" {
+		documentation.Favicon = req.Favicon
+	}
+
+	if req.MetaImage != "" {
+		documentation.MetaImage = req.MetaImage
+	}
+
+	if req.NavImage != "" {
+		documentation.NavImage = req.NavImage
+	}
+
+	if req.CustomCSS != "" {
+		documentation.CustomCSS = req.CustomCSS
+	}
+
+	if req.FooterLabelLinks != "" {
+		documentation.FooterLabelLinks = req.FooterLabelLinks
+	}
+
+	if req.MoreLabelLinks != "" {
+		documentation.MoreLabelLinks = req.MoreLabelLinks
 	}
 
 	if err := db.Save(&documentation).Error; err != nil {

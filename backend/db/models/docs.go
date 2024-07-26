@@ -47,19 +47,25 @@ func (s PageGroup) MarshalJSON() ([]byte, error) {
 }
 
 type Documentation struct {
-	ID           uint        `gorm:"primarykey" json:"id,omitempty"`
-	Name         string      `gorm:"index:idx_name_version,unique:true,composite:true" json:"name,omitempty"`
-	Version      string      `gorm:"index:idx_name_version,unique:true,composite:true;index:idx_cloned_version,unique:true,composite:true" json:"version,omitempty"`
-	ClonedFrom   *uint       `gorm:"default:null;index:idx_cloned_version,unique:true,composite:true" json:"clonedFrom"`
-	Description  string      `json:"description,omitempty"`
-	AuthorID     uint        `json:"authorId,omitempty"`
-	Author       User        `gorm:"foreignKey:AuthorID" json:"author,omitempty"`
-	CreatedAt    *time.Time  `gorm:"autoCreateTime" json:"createdAt,omitempty"`
-	UpdatedAt    *time.Time  `gorm:"autoUpdateTime" json:"updatedAt,omitempty"`
-	Editors      []User      `gorm:"many2many:documentation_editors;" json:"editors,omitempty"`
-	LastEditorID *uint       `json:"lastEditorId,omitempty"`
-	PageGroups   []PageGroup `gorm:"foreignKey:DocumentationID;constraint:OnDelete:CASCADE" json:"pageGroups,omitempty"`
-	Pages        []Page      `gorm:"foreignKey:DocumentationID;constraint:OnDelete:CASCADE" json:"pages,omitempty"`
+	ID               uint        `gorm:"primarykey" json:"id,omitempty"`
+	Name             string      `gorm:"index:idx_name_version,unique:true,composite:true" json:"name,omitempty"`
+	Version          string      `gorm:"index:idx_name_version,unique:true,composite:true;index:idx_cloned_version,unique:true,composite:true" json:"version,omitempty"`
+	ClonedFrom       *uint       `gorm:"default:null;index:idx_cloned_version,unique:true,composite:true" json:"clonedFrom"`
+	Description      string      `json:"description,omitempty"`
+	Favicon          string      `json:"favicon,omitempty"`
+	MetaImage        string      `json:"metaImage,omitempty"`
+	NavImage         string      `json:"navImage,omitempty"`
+	CustomCSS        string      `json:"customCSS,omitempty"`
+	FooterLabelLinks string      `json:"footerLabelLinks,omitempty"`
+	MoreLabelLinks   string      `json:"moreLabelLinks,omitempty"`
+	AuthorID         uint        `json:"authorId,omitempty"`
+	Author           User        `gorm:"foreignKey:AuthorID" json:"author,omitempty"`
+	CreatedAt        *time.Time  `gorm:"autoCreateTime" json:"createdAt,omitempty"`
+	UpdatedAt        *time.Time  `gorm:"autoUpdateTime" json:"updatedAt,omitempty"`
+	Editors          []User      `gorm:"many2many:documentation_editors;" json:"editors,omitempty"`
+	LastEditorID     *uint       `json:"lastEditorId,omitempty"`
+	PageGroups       []PageGroup `gorm:"foreignKey:DocumentationID;constraint:OnDelete:CASCADE" json:"pageGroups,omitempty"`
+	Pages            []Page      `gorm:"foreignKey:DocumentationID;constraint:OnDelete:CASCADE" json:"pages,omitempty"`
 }
 
 func (s Documentation) MarshalJSON() ([]byte, error) {
