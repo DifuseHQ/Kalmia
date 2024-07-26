@@ -3,6 +3,6 @@ export function nullOrUndefined (a) {
 }
 
 export function pageSize () {
-  const pages = [5, 10, 15, 25, 35, 45, 55, 100];
+  const pages = [10, 50, 100, 1000];
   return pages;
 }

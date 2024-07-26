@@ -714,34 +714,36 @@ export default function Documentation () {
                       users
                     </span>
 
-                    <div className='flex items-center gap-3'>
-                      <span className='dark:text-white '>Page size</span>
-                      <div className="relative inline-block w-64">
-                        <button
-                          onClick={() => openModal('pageSizeDropdown')}
-                          className="flex items-center justify-between w-20 py-2 px-4 bg-white border dark:text-white border-gray-300 rounded-md shadow-sm hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-600 dark:hover:bg-gray-700 text-left"
-                        >
-                          <span>{selectPageSize}</span>
-                          <Icon icon="mingcute:down-fill" className="h-5 w-5" />
-                        </button>
-                        {pageSizeDropdown && (
-                          <div
-                            ref={dropdownRef}
-                            className="absolute w-28 bg-white border border-gray-300 rounded-md shadow-lg z-10 dark:bg-gray-700 dark:border-gray-600 bottom-full mb-1 max-h-36 overflow-y-auto" >
-                            {pageSize().map((option) => (
-                              <div
-                                key={option}
-                                onClick={() => handlePageSizeSelect(option)}
-                                className={`py-2 px-4 cursor-pointer dark:text-white ${selectPageSize === option ? 'bg-gray-400 hover:bg-gray-400 dark:hover:bg-gray-900 dark:bg-gray-900 cursor-text' : 'hover:bg-gray-200 dark:hover:bg-gray-800'}`}
-                              >
-                                {option}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
                     <ul className='inline-flex items-stretch -space-x-px'>
+                      <li>
+                          <div className='flex items-center sm:mx-3 gap-3'>
+                          <span className='text-sm font-normal text-gray-500 dark:text-gray-400'>Page size</span>
+                          <div className="relative inline-block">
+                            <button
+                              onClick={() => openModal('pageSizeDropdown')}
+                              className="flex items-center justify-between sm:w-16 py-1 px-1 bg-white border dark:text-white border-gray-300 rounded-md shadow-sm hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-600 dark:hover:bg-gray-700 text-left"
+                            >
+                              <span>{selectPageSize}</span>
+                              <Icon icon="mingcute:down-fill" className="h-5 w-5" />
+                            </button>
+                            {pageSizeDropdown && (
+                              <div
+                                ref={dropdownRef}
+                                className="absolute w-28 bg-white border border-gray-300 rounded-md shadow-lg z-10 dark:bg-gray-700 dark:border-gray-600 bottom-full mb-1 max-h-36 overflow-y-auto" >
+                                {pageSize().map((option) => (
+                                  <div
+                                    key={option}
+                                    onClick={() => handlePageSizeSelect(option)}
+                                    className={`py-2 px-4 cursor-pointer dark:text-white ${selectPageSize === option ? 'bg-gray-400 hover:bg-gray-400 dark:hover:bg-gray-900 dark:bg-gray-900 cursor-text' : 'hover:bg-gray-200 dark:hover:bg-gray-800'}`}
+                                  >
+                                    {option}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </li>
                       <li>
                         <button
                           onClick={() => handlePageChange(currentPage - 1)}
