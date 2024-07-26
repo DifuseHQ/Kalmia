@@ -19,7 +19,7 @@ export default function UserProfile () {
   const [imageFile, setImageFile] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
-  const [profileImage, setProfileImage] = useState('/assets/noProfile.png');
+  const [profileImage, setProfileImage] = useState('/assets/images/no-profile.png');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -42,7 +42,7 @@ export default function UserProfile () {
         setUserData(filterUser);
         setUsername(filterUser.username);
         setEmail(filterUser.email);
-        setProfileImage(filterUser.photo || '/assets/noProfile.png');
+        setProfileImage(filterUser.photo || '/assets/images/no-profile.png');
       }
     };
     fetchData();
@@ -199,7 +199,7 @@ export default function UserProfile () {
                 : (
                   <img
                     className='h-48 w-48 rounded-full border-4 border-gray-200 dark:border-gray-700 object-cover'
-                    src={profileImage || '/assets/noProfile.png'}
+                    src={profileImage || '/assets/images/no-profile.png'}
                     alt='Profile'
                   />
                   )}

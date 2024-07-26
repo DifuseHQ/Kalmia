@@ -98,10 +98,35 @@ export default function Documentation () {
       if (documentationsResult.status === 'success') {
         const data = documentationsResult.data;
 
-        const pDoc = data.filter((obj) => parseInt(obj.id) === parseInt(docId));
-        const cDocs = data.filter((obj) => (obj.clonedFrom !== null && obj.clonedFrom !== undefined) && (parseInt(obj.clonedFrom) === parseInt(docId)));
+        const getAllVersions = (data, startId) => {
+          const versions = [];
 
-        const clonedData = [...pDoc, ...cDocs];
+          const addVersion = (doc) => {
+            versions.push(doc);
+            const children = data.filter(item => item.clonedFrom === doc.id);
+            children.forEach(addVersion);
+          };
+
+          const startDoc = data.find(doc => doc.id === startId);
+          if (startDoc) {
+            if (startDoc.clonedFrom !== null && startDoc.clonedFrom !== undefined) {
+              const parent = data.find(doc => doc.id === startDoc.clonedFrom);
+              if (parent) {
+                addVersion(parent);
+              } else {
+                addVersion(startDoc);
+              }
+            } else {
+              addVersion(startDoc);
+            }
+          }
+
+          return versions.sort((a, b) => {
+            return a.version.localeCompare(b.version, undefined, { numeric: true, sensitivity: 'base' });
+          });
+        };
+
+        const clonedData = getAllVersions(data, Number(docId));
         setDocumentData(clonedData);
 
         if (versionId) {
@@ -711,7 +736,7 @@ export default function Documentation () {
                       <span className='font-semibold text-gray-900 dark:text-white mx-1'>
                         {totalItems}
                       </span>{' '}
-                      users
+                      items
                     </span>
 
                     <ul className='inline-flex items-stretch -space-x-px'>

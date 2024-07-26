@@ -20,7 +20,7 @@ export default function UserProfile () {
   const [imageFile, setImageFile] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
-  const [profileImage, setProfileImage] = useState('/assets/noProfile.png');
+  const [profileImage, setProfileImage] = useState('/assets/images/no-profile.png');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -38,14 +38,14 @@ export default function UserProfile () {
           setUserData(response.data);
           setUsername(response.data.username);
           setEmail(response.data.email);
-          setProfileImage(response.data.photo || '/assets/noProfile.png');
+          setProfileImage(response.data.photo || '/assets/images/no-profile.png');
         } else {
           setUserData(currentUser);
           setUsername(currentUser.username);
           setEmail(currentUser.email);
           setPassword('');
           setConfirmPassword('');
-          setProfileImage(currentUser.photo || '/assets/noProfile.png');
+          setProfileImage(currentUser.photo || '/assets/images/no-profile.png');
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -205,7 +205,7 @@ export default function UserProfile () {
               : (
               <img
                 className='h-48 w-48 rounded-full border-4 border-gray-200 dark:border-gray-700 object-cover'
-                src={profileImage || '/assets/noProfile.png'}
+                src={profileImage || '/assets/images/no-profile.png'}
                 alt='Profile'
               />
                 )}

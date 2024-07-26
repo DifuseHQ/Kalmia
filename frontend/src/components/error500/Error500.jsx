@@ -15,7 +15,6 @@ export default function Error500 () {
   return (
     <section
       style={{
-        backgroundImage: 'url(\'/assets/server_down.jpg\')',
         backgroundPosition: 'center center',
         backgroundsSize: 'cover'
       }}
