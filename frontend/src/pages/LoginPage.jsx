@@ -26,12 +26,11 @@ export default function LoginPage () {
               </h1>
               <div className='space-y-4 md:space-y-6'>
                 <div>
-                  <label
-                    htmlFor='email'
+                  <span
                     className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
                   >
                     Username
-                  </label>
+                  </span>
                   <input
                     type='text'
                     name='username'
@@ -42,12 +41,11 @@ export default function LoginPage () {
                   />
                 </div>
                 <div>
-                  <label
-                    htmlFor='password'
+                  <span
                     className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
                   >
                     Password
-                  </label>
+                  </span>
                   <input
                     type='password'
                     name='password'
@@ -69,12 +67,12 @@ export default function LoginPage () {
                       />
                     </div>
                     <div className="ml-3 text-sm">
-                      <label
+                      <span
                         for="remember"
                         className="text-gray-500 dark:text-gray-300"
                       >
                         Remember me
-                      </label>
+                      </span>
                     </div>
                   </div>
                   <a

@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { Icon } from '@iconify/react/dist/iconify.js';
+import { motion } from 'framer-motion';
 
 import { ModalContext } from '../../context/ModalContext';
 import { getFormattedDate } from '../../utils/Common';
@@ -8,7 +9,10 @@ import { getFormattedDate } from '../../utils/Common';
 export default function Table ({ provided, snapshot, docId, pageGroupId, obj, index, version }) {
   const { openModal } = useContext(ModalContext);
   return (
-    <tr
+    <motion.tr
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
       ref={provided.innerRef}
       {...provided.draggableProps}
       {...provided.dragHandleProps}
@@ -18,19 +22,17 @@ export default function Table ({ provided, snapshot, docId, pageGroupId, obj, in
         } border dark:border-gray-700 h-16 `}
       key={`${obj.id}-${index}`}
     >
-      <th
-        scope='row'
-        className='items-center w-5 cursor-pointer gap-2 px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white'
+      <td
+        className='w-1/12 items-center cursor-pointer px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white'
       >
         <Icon
           icon='nimbus:drag-dots'
           className='w-6 h-6 text-gray-600 dark:text-white'
         />
-      </th>
+      </td>
 
-      <th
-        scope='row'
-        className='  cursor-pointer px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white'
+      <td
+        className='w-3/12  cursor-pointer px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white'
       >
         <Link
           className='flex items-center gap-1'
@@ -56,9 +58,9 @@ export default function Table ({ provided, snapshot, docId, pageGroupId, obj, in
 
           {obj.name || obj.title}
         </Link>
-      </th>
+      </td>
 
-      <td className='px-4 py-3 cursor-text'>
+      <td className='w-3/12 px-4 py-3 cursor-text'>
         <div className='flex justify-start items-center gap-2'>
           <Icon
             icon='mdi:user'
@@ -89,7 +91,7 @@ export default function Table ({ provided, snapshot, docId, pageGroupId, obj, in
         </div>
       </td>
 
-      <td className='px-4 py-3 cursor-text'>
+      <td className='w-2/12  px-4 py-3 cursor-text'>
         <div className='flex justify-start items-center gap-2' title='Creation Date'>
           <Icon
             icon='mdi:clock-plus-outline'
@@ -115,7 +117,7 @@ export default function Table ({ provided, snapshot, docId, pageGroupId, obj, in
 
       {obj.name
         ? (
-          <td className='px-4 py-3 cursor-pointer relative'>
+          <td className='w-3/12 px-4 py-3 cursor-pointer relative whitespace-nowrap'>
             <button
               id={`dropdown-button-${obj.id}`}
               data-dropdown-toggle={`dropdown-${obj.id}`}
@@ -126,7 +128,6 @@ export default function Table ({ provided, snapshot, docId, pageGroupId, obj, in
                 icon='material-symbols:edit-outline'
                 className='w-6 h-6 text-yellow-500 dark:text-yellow-400'
                 onClick={() => {
-                  console.log(obj);
                   openModal('edit', obj);
                 }}
               />
@@ -141,7 +142,7 @@ export default function Table ({ provided, snapshot, docId, pageGroupId, obj, in
           </td>
           )
         : (
-          <td className='px-4 py-3 cursor-pointer relative'>
+          <td className='px-4 py-3 cursor-pointer relative whitespace-nowrap'>
             <button
               id={`dropdown-button-${obj.id}`}
               data-dropdown-toggle={`dropdown-${obj.id}`}
@@ -166,6 +167,6 @@ export default function Table ({ provided, snapshot, docId, pageGroupId, obj, in
           </td>
 
           )}
-    </tr>
+    </motion.tr>
   );
 }

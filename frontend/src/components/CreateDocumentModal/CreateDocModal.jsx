@@ -30,7 +30,7 @@ const LabelAndCommunityComponent = ({
         <input
           type="text"
           id={labelId}
-          value={data?.label}
+          value={data?.label || ''}
           name={index}
           onChange={(e) => onLabelChange(index, e.target.value)}
           placeholder="Enter label text"
@@ -43,7 +43,7 @@ const LabelAndCommunityComponent = ({
         </span>
         <input
           type="text"
-          value={data?.community}
+          value={data?.community || ''}
           id={communityId}
           name={index}
           onChange={(e) => onCommunityChange(index, e.target.value)}
@@ -415,7 +415,7 @@ export default function CreateDocModal () {
                   </div>
                 </div>
                 <hr className="mt-2 mb-4 border-t-1 dark:border-gray-500" />
-                {footerField.map((obj, index) => (
+                {footerField && footerField.map((obj, index) => (
                   <div key={`footer-label-${index}`}>
                     <LabelAndCommunityComponent
                       labelId={`footer-label-${index}`}
@@ -459,7 +459,7 @@ export default function CreateDocModal () {
                   </div>
 
                   <hr className="mt-2 mb-4 border-t-1 dark:border-gray-500" />
-                  {moreField.map((obj, index) => (
+                  {moreField && moreField.map((obj, index) => (
                     <div key={`more-label-${index}`}>
                       <LabelAndCommunityComponent
                         labelId={`more-label-${index}`}

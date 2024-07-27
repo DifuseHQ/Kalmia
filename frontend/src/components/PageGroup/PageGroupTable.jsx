@@ -1,11 +1,12 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd';
 import { Icon } from '@iconify/react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 import instance from '../../api/AxiosInstance';
 import {
+  createPage as createPageAPI,
   createPageGroup,
   deletePage,
   deletePageGroup,
@@ -19,6 +20,7 @@ import { toastMessage } from '../../utils/Toast';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
 import EditDocumentModal from '../CreateDocumentModal/EditDocumentModal';
 import CreatePageGroup from '../CreatePageGroup/CreatePageGroup';
+import CreatePage from '../CreatePageModal/CreatePageModal';
 import DeleteModal from '../DeleteModal/DeleteModal';
 import Table from '../Table/Table';
 
@@ -32,7 +34,6 @@ export default function PageGroupTable () {
   const [groupDetail, setGroupDetail] = useState([]);
   const [data, setData] = useState([]);
   const {
-    deleteItem,
     refresh,
     refreshData
   } = useContext(AuthContext);
@@ -41,6 +42,7 @@ export default function PageGroupTable () {
     openModal,
     closeModal,
     createPageGroupModal,
+    createPageModal,
     deleteModal,
     editModal,
     currentModalItem
@@ -112,11 +114,11 @@ export default function PageGroupTable () {
   };
 
   const handleDeletePageGroup = async (id, path) => {
+    const type = 'slug' in path ? 'page' : 'pageGroup';
     let result;
-
-    if (path === 'pageGroup') {
+    if (type === 'pageGroup') {
       result = await deletePageGroup(Number(id));
-    } else if (path === 'page') {
+    } else if (type === 'page') {
       result = await deletePage(Number(id));
     }
 
@@ -145,6 +147,36 @@ export default function PageGroupTable () {
 
     if (result.status === 'success') {
       closeModal('edit');
+      refreshData();
+      toastMessage(result.data.message, 'success');
+    }
+  };
+
+  const handleCreatePage = async (title, slug) => {
+    if (title === '' || slug === '') {
+      toastMessage(
+        'Title and Slug are required. Please Enter Page title and slug',
+        'warning'
+      );
+      return;
+    }
+
+    const docIdOrVersionId = versionId || docId;
+
+    const result = await createPageAPI({
+      title,
+      slug,
+      content: JSON.stringify([]),
+      documentationId: parseInt(docIdOrVersionId),
+      pageGroupId: parseInt(pageGroupId)
+    });
+
+    if (handleError(result, navigate)) {
+      return;
+    }
+
+    if (result.status === 'success') {
+      closeModal('createPage');
       refreshData();
       toastMessage(result.data.message, 'success');
     }
@@ -198,8 +230,13 @@ export default function PageGroupTable () {
       {createPageGroupModal && (
         <CreatePageGroup
           handleCreate={handleCreatePageGroup}
+          key="create-nest-page=group"
         />
       )}
+
+          {createPageModal && (
+            <CreatePage handleCreate={handleCreatePage} key="create-nest-page-0" />
+          )}
 
       <motion.div
         initial={{ opacity: 0 }}
@@ -262,17 +299,18 @@ export default function PageGroupTable () {
           <Icon icon='ei:plus' className='w-6 h-6 dark:text-white' />
         </motion.button>
 
-        <motion.button whileHover={{ scale: 1.1 }}>
-          <Link
-            to={`/dashboard/documentation/create-page?id=${docId}&dir=false&pageGroupId=${pageGroupId}&versionId=${versionId}&version=${version}`}
-            className='flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800'
-          >
-            <span className='px-1 text-left items-center dark:text-white text-md'>
-              New Page
-            </span>
-            <Icon icon='ei:plus' className='w-6 h-6 dark:text-white' />
-          </Link>
-        </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      onClick={() => openModal('createPage')}
+                      type="button"
+                      className="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
+                      key="create-nest-page-button"
+                    >
+                      <span className="px-1 text-left items-center dark:text-white text-md">
+                        New Page
+                      </span>
+                      <Icon icon="ei:plus" className="w-6 h-6 dark:text-white" />
+                    </motion.button>
       </div>
     </div>
 
@@ -353,7 +391,7 @@ export default function PageGroupTable () {
 
       {deleteModal && currentModalItem && (
         <DeleteModal
-          deleteDoc={() => handleDeletePageGroup(currentModalItem.id, deleteItem)}
+          deleteDoc={() => handleDeletePageGroup(currentModalItem.id, currentModalItem)}
           id={currentModalItem.id}
           title='Are you sure?'
           message={`You're permanently deleting "${currentModalItem.name || currentModalItem.title}"`}

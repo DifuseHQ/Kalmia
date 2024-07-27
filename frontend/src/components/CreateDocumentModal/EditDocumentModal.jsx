@@ -69,12 +69,11 @@ export default function EditDocumentModal ({
 
                 <div className='grid gap-4 mb-4'>
                   <div>
-                    <label
-                      htmlFor='version'
+                    <span
                       className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
                     >
                       Version
-                    </label>
+                    </span>
                     <input
                       ref={titleRef}
                       value={version}
@@ -102,12 +101,11 @@ export default function EditDocumentModal ({
                 <div className='grid gap-4 mb-4'>
                   {title && (
                     <div>
-                      <label
-                        htmlFor='title'
+                      <span
                         className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
                       >
                         Title
-                      </label>
+                      </span>
                       <input
                         ref={titleRef}
                         value={editTitle}

@@ -52,12 +52,11 @@ export default function CreatePage ({ handleCreate }) {
             </div>
             <div className='grid gap-4 mb-4'>
               <div>
-                <label
-                  htmlFor='title'
+                <span
                   className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
                 >
                   Title
-                </label>
+                </span>
                 <input
                   ref={inputRef}
                   onChange={(e) => setTitle(e.target.value)}
@@ -71,12 +70,11 @@ export default function CreatePage ({ handleCreate }) {
                 />
               </div>
               <div>
-                <label
-                  htmlFor='slug'
+                <span
                   className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
                 >
                   Slug
-                </label>
+                </span>
                 <input
                   onChange={(e) => setSlug(e.target.value)}
                   onKeyDown={handleKeyDown}

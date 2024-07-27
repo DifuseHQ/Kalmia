@@ -292,9 +292,9 @@ export default function EditPage () {
             <div className='grid gap-4 mb-4 grid-cols-1'>
               <div>
                 <div className='mb-4'>
-                  <label htmlFor='title' className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'>
+                  <span className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'>
                     Title
-                  </label>
+                  </span>
                   <input
                     type='text'
                     required
@@ -308,9 +308,9 @@ export default function EditPage () {
                 </div>
 
                 <div>
-                  <label htmlFor='slug' className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'>
+                  <span className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'>
                     Slug
-                  </label>
+                  </span>
                   <input
                     type='text'
                     required
@@ -325,9 +325,9 @@ export default function EditPage () {
               </div>
 
               <div>
-                <label htmlFor='content' className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'>
+                <span className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'>
                   Content
-                </label>
+                </span>
 
                 {editor && (
                   <EditorWrapper

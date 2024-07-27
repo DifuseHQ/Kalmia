@@ -61,9 +61,9 @@ export default function CreateUser () {
 
         <form onSubmit={handleSubmit} className='space-y-6'>
           <div>
-            <label htmlFor='username' className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+            <span className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
               Username
-            </label>
+            </span>
             <input
               type='text'
               id='username'
@@ -76,9 +76,9 @@ export default function CreateUser () {
           </div>
 
           <div>
-            <label htmlFor='email' className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+            <span className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
               Email Address
-            </label>
+            </span>
             <input
               type='email'
               id='email'
@@ -90,9 +90,9 @@ export default function CreateUser () {
           </div>
 
           <div>
-            <label htmlFor='password' className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+            <span className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
               Password
-            </label>
+            </span>
             <input
               type='password'
               id='password'
@@ -104,9 +104,9 @@ export default function CreateUser () {
           </div>
 
           <div>
-            <label htmlFor='confirmPassword' className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+            <span className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
               Confirm Password
-            </label>
+            </span>
             <input
               type='password'
               id='confirmPassword'

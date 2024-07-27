@@ -203,8 +203,7 @@ export default function UserProfile () {
                     alt='Profile'
                   />
                   )}
-              <label
-                htmlFor='upload-button'
+              <span
                 className='absolute bottom-1 right-1 bg-blue-500 text-white rounded-full p-2 hover:bg-blue-600 cursor-pointer shadow-lg transition duration-300'
               >
                 <Icon icon='mdi:camera' className='w-5 h-5' />
@@ -214,18 +213,20 @@ export default function UserProfile () {
                   className='hidden'
                   onChange={handleUploadFile}
                 />
-              </label>
+              </span>
             </div>
           </div>
 
           {/* User Details Section */}
           <div className='md:w-2/3 md:pl-8'>
             <div className='mb-6'>
-              <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+              <span className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
                 Username
-              </label>
+              </span>
               <input
+              id='username'
                 type='text'
+                name='username'
                 onChange={(e) => setUsername(e.target.value)}
                 value={username}
                 ref={inputRef}
@@ -239,11 +240,13 @@ export default function UserProfile () {
             </div>
 
             <div className='mb-6'>
-              <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+              <span className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
                 Email Address
-              </label>
+              </span>
               <input
+              id='email'
                 type='email'
+                name='email'
                 onChange={(e) => setEmail(e.target.value)}
                 value={email}
                 className={`w-full px-3 py-2 border rounded-md ${
@@ -295,12 +298,12 @@ export default function UserProfile () {
           </h3>
           <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
             <div>
-              <label
+              <span
                 htmlFor='password'
                 className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'
               >
                 New Password
-              </label>
+              </span>
               <input
                 type='password'
                 onChange={(e) => setPassword(e.target.value)}
@@ -311,12 +314,11 @@ export default function UserProfile () {
               />
             </div>
             <div>
-              <label
-                htmlFor='confirm-password'
+              <span
                 className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'
               >
                 Confirm Password
-              </label>
+              </span>
               <input
                 type='password'
                 onChange={(e) => setConfirmPassword(e.target.value)}
@@ -356,9 +358,9 @@ export default function UserProfile () {
               />
             </div>
             <div className='mt-4'>
-              <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+              <span className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
                 Scale
-              </label>
+              </span>
               <input
                 type='range'
                 min='1'
