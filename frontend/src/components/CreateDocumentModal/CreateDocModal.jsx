@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { createDocumentation, getDocumentation, updateDocumentation } from '../../api/Requests';
 import { handleError } from '../../utils/Common';
 import { toastMessage } from '../../utils/Toast';
+import Breadcrumb from '../Breadcrumb/Breadcrumb';
 
 const LabelAndCommunityComponent = ({
   index,
@@ -234,6 +235,7 @@ export default function CreateDocModal () {
 
   return (
     <AnimatePresence>
+      <Breadcrumb/>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

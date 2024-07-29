@@ -102,6 +102,28 @@ export default function Breadcrumb () {
           path: `/dashboard/documentation?id=${parentDoc?.id}&versionId=${doc?.id}&version=${doc?.version}`,
           icon: 'uiw:document'
         });
+      } else if (location.pathname.includes('/create-documentation') || location.pathname.includes('/edit-documentation')) {
+        if (location.pathname.includes('/create-documentation')) {
+          newBreadcrumb.push({
+            title: 'Create Documentation',
+            path: '/dashboard/create-documentation',
+            icon: 'pajamas:doc-new'
+          });
+        } else {
+          const doc = documentations.find(d => d.id === parseInt(docId));
+          if (doc) {
+            newBreadcrumb.push({
+              title: doc.name,
+              path: `/dashboard/documentation?id=${doc.id}&versionId=${doc.id}&version=${doc.version}`,
+              icon: 'uiw:document'
+            });
+          }
+          newBreadcrumb.push({
+            title: 'Edit Documentation',
+            path: '/dashboard/edit-documentation',
+            icon: 'lucide:edit'
+          });
+        }
       } else {
         if (docId) {
           const doc = documentations.find(d => d.id === parseInt(docId));
