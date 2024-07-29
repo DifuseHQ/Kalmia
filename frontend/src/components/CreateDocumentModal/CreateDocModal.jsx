@@ -243,7 +243,7 @@ export default function CreateDocModal () {
         key="create-documentation-conatiner"
         className=" overflow-y-auto overflow-x-hidden  justify-center items-center w-full md:inset-0 md:h-full"
       >
-        <div className="relative w-full max-w-5xl h-full md:h-auto mx-auto">
+        <div className="relative w-full h-full md:h-auto">
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-400">
             {mode === 'edit' ? 'Edit Documentation' : 'New Documentation'}
