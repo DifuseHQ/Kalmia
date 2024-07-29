@@ -11,25 +11,26 @@ export default function Navbar () {
   const { darkMode, toggleDarkMode } = useContext(ThemeContext);
 
   const [isOpen, setIsOpen] = useState(false);
+  const [translateDropdown, setTranslateDropdown] = useState(false);
 
-  const toggleDropdown = () => {
-    setIsOpen((prevIsOpen) => !prevIsOpen);
-  };
+  const toggleTranslateDropdown = () => setTranslateDropdown(!translateDropdown);
 
+  const toggleDropdown = () => setIsOpen(!isOpen);
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
   const handleClickOutside = useCallback((event) => {
-    if (navbarRef.current && !navbarRef.current.contains(event.target)) {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
       setIsOpen(false);
+      setTranslateDropdown(false);
     }
-  }, [setIsOpen]);
+  }, [setIsOpen, setTranslateDropdown]);
 
-  const navbarRef = useRef(null);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen || translateDropdown) {
       document.addEventListener('mousedown', handleClickOutside);
     } else {
       document.removeEventListener('mousedown', handleClickOutside);
@@ -38,7 +39,7 @@ export default function Navbar () {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen, handleClickOutside]);
+  }, [isOpen, translateDropdown, handleClickOutside]);
 
   return (
     <AnimatePresence>
@@ -67,7 +68,36 @@ export default function Navbar () {
             </button>
           </div>
 
-          <div className='flex items-center lg:order-2'>
+          <div className='flex items-center sm:gap-2'>
+
+            <div className='relative '>
+              <button
+                type='button'
+                className='flex items-center gap-1 dark:text-white text-md hover:bg-gray-200 drak:bg-gray-800 rounded-md dark:hover:bg-gray-600 py-2 px-2'
+                onClick={toggleTranslateDropdown}
+              >
+                En
+                <Icon icon="mingcute:down-fill" className='w-6 h-6'/>
+              </button>
+
+              {translateDropdown && (
+                <motion.div
+                  ref={dropdownRef}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className='absolute top-9 left-0 z-50 my-4 overflow-hidden text-base list-none bg-white divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600 rounded-md'
+                  key='user-details-dropdown'
+                >
+                  <ul className="w-32  text-start text-sm font-medium text-gray-900 dark:text-white">
+                    <li className='w-full py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-800 cursor-pointer'>English</li>
+                    <li className='w-full py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-800 cursor-pointer'>Malayalam</li>
+                    <li className='w-full py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-800 cursor-pointer'>Arabic</li>
+                  </ul>
+                </motion.div>
+              )}
+            </div>
+
             <div className='flex items-center space-x-2'>
               <label className='relative inline-flex items-center cursor-pointer'>
                 <input
@@ -119,7 +149,7 @@ export default function Navbar () {
 
                   {isOpen && (
                     <motion.div
-                      ref={navbarRef}
+                      ref={dropdownRef}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
