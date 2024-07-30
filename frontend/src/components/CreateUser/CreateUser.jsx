@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 
@@ -8,6 +9,7 @@ import { toastMessage } from '../../utils/Toast';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
 
 export default function CreateUser () {
+  const { t } = useTranslation();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -56,13 +58,13 @@ export default function CreateUser () {
       <Breadcrumb />
       <div className='bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6'>
         <h2 className='text-2xl font-semibold text-gray-900 dark:text-white mb-6'>
-          Create New User
+          {t('create_new_user')}
         </h2>
 
         <form onSubmit={handleSubmit} className='space-y-6'>
           <div>
             <span className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
-              Username
+              {t('username')}
             </span>
             <input
               type='text'
@@ -77,7 +79,7 @@ export default function CreateUser () {
 
           <div>
             <span className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
-              Email Address
+              {t('email_address')}
             </span>
             <input
               type='email'
@@ -91,7 +93,7 @@ export default function CreateUser () {
 
           <div>
             <span className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
-              Password
+              {t('password')}
             </span>
             <input
               type='password'
@@ -105,7 +107,7 @@ export default function CreateUser () {
 
           <div>
             <span className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
-              Confirm Password
+              {t('confirm_password')}
             </span>
             <input
               type='password'
@@ -122,7 +124,7 @@ export default function CreateUser () {
               type='submit'
               className='bg-blue-500 text-white rounded-md px-4 py-2 hover:bg-blue-600 transition duration-300 flex items-center'
             >
-              <span className='mr-2'>Create User</span>
+              <span className='mr-2'>{t('create_user')}</span>
               <Icon icon='ei:plus' className='w-5 h-5' />
             </button>
             <button
@@ -130,7 +132,7 @@ export default function CreateUser () {
               onClick={() => navigate('/dashboard/admin/user-list')}
               className='bg-gray-500 text-white rounded-md px-4 py-2 hover:bg-gray-600 transition duration-300'
             >
-              Cancel
+              {t('cancel')}
             </button>
           </div>
         </form>

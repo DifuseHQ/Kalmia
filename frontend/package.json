@@ -15,6 +15,9 @@
     "axios": "^1.7.2",
     "class-variance-authority": "^0.7.0",
     "framer-motion": "^11.2.13",
+    "i18next": "^23.12.2",
+    "i18next-browser-languagedetector": "^8.0.0",
+    "i18next-http-backend": "^2.5.2",
     "js-cookie": "^3.0.5",
     "jwt-decode": "^4.0.0",
     "luxon": "^3.4.4",
@@ -26,6 +29,7 @@
     "react-avatar-editor": "^13.0.2",
     "react-beautiful-dnd": "^13.1.1",
     "react-dom": "^18.3.1",
+    "react-i18next": "^15.0.0",
     "react-router-dom": "^6.24.0",
     "react-scripts": "5.0.1",
     "react-toastify": "^10.0.5",
@@ -61,6 +65,17 @@
       "import/no-duplicates": "error"
     }
   },
+  "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "autoprefixer": "^10.4.19",
+    "editorjs-hyperlink": "^1.0.6",
+    "editorjs-undo": "^2.0.28",
+    "eslint-config-semistandard": "^17.0.0",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "husky": "^9.1.1",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.4"
+  },
   "browserslist": {
     "production": [
       ">0.2%",
@@ -72,16 +87,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-    "autoprefixer": "^10.4.19",
-    "editorjs-hyperlink": "^1.0.6",
-    "editorjs-undo": "^2.0.28",
-    "eslint-config-semistandard": "^17.0.0",
-    "eslint-plugin-simple-import-sort": "^12.1.1",
-    "husky": "^9.1.1",
-    "postcss": "^8.4.38",
-    "tailwindcss": "^3.4.4"
   }
 }

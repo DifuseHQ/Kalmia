@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd';
 import { Icon } from '@iconify/react';
@@ -30,6 +31,8 @@ export default function PageGroupTable () {
   const pageGroupId = searchParams.get('pageGroupId');
   const version = searchParams.get('version');
   const versionId = searchParams.get('versionId');
+
+  const { t } = useTranslation();
 
   const [groupDetail, setGroupDetail] = useState([]);
   const [data, setData] = useState([]);
@@ -276,7 +279,7 @@ export default function PageGroupTable () {
             value={searchTerm}
             onChange={handleSearchChange}
             className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
-            placeholder='Search'
+            placeholder={t('search_placeholder')}
             required=''
           />
         </div>
@@ -294,7 +297,7 @@ export default function PageGroupTable () {
           className='flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800'
         >
           <span className='px-1 text-left items-center dark:text-white text-md'>
-            New Group
+            {t('new_group')}
           </span>
           <Icon icon='ei:plus' className='w-6 h-6 dark:text-white' />
         </motion.button>
@@ -307,7 +310,7 @@ export default function PageGroupTable () {
                       key="create-nest-page-button"
                     >
                       <span className="px-1 text-left items-center dark:text-white text-md">
-                        New Page
+                        {t('new_page')}
                       </span>
                       <Icon icon="ei:plus" className="w-6 h-6 dark:text-white" />
                     </motion.button>
@@ -323,13 +326,13 @@ export default function PageGroupTable () {
                 <tr>
                   <th scope='col' className='px-4 py-3' />
                   <th scope='col' className='px-4 py-3'>
-                    Title
+                    {t('title')}
                   </th>
                   <th scope='col' className='px-4 py-3'>
-                    Author / Editor
+                    {t('author_editor')}
                   </th>
                   <th scope='col' className='px-4 py-3'>
-                    Create / Update
+                    {t('create_update')}
                   </th>
                   <th scope='col' className='px-4 py-3' />
                 </tr>
@@ -339,7 +342,7 @@ export default function PageGroupTable () {
                   <tr className='border-b dark:border-gray-700'>
                     <td colSpan='4' className='text-center p-8'>
                       <h1 className='text-center text-gray-600 sm:text-lg font-semibold'>
-                        No Pages Found
+                        {t('no_pages_found')}
                       </h1>
                     </td>
                   </tr>
@@ -393,8 +396,7 @@ export default function PageGroupTable () {
         <DeleteModal
           deleteDoc={() => handleDeletePageGroup(currentModalItem.id, currentModalItem)}
           id={currentModalItem.id}
-          title='Are you sure?'
-          message={`You're permanently deleting "${currentModalItem.name || currentModalItem.title}"`}
+          message={currentModalItem.name || currentModalItem.title}
           key='deletePageGroup'
         />
       )}

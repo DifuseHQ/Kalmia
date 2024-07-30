@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import AvatarEditor from 'react-avatar-editor';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 
@@ -10,6 +11,7 @@ import { toastMessage } from '../../utils/Toast';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
 
 export default function UserProfile () {
+  const { t } = useTranslation();
   const { user, refresh, refreshData } = useContext(AuthContext);
   const [isEdit, setIsEdit] = useState(false);
   const navigate = useNavigate();
@@ -221,7 +223,7 @@ export default function UserProfile () {
           <div className='md:w-2/3 md:pl-8'>
             <div className='mb-6'>
               <span className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
-                Username
+                {t('username')}
               </span>
               <input
               id='username'
@@ -241,7 +243,7 @@ export default function UserProfile () {
 
             <div className='mb-6'>
               <span className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
-                Email Address
+                {t('username')}
               </span>
               <input
               id='email'

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -16,6 +17,7 @@ const LabelAndCommunityComponent = ({
   onLabelChange,
   onCommunityChange
 }) => {
+  const { t } = useTranslation();
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -26,7 +28,7 @@ const LabelAndCommunityComponent = ({
     >
       <div>
         <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Label
+          {t('label')}
         </span>
         <input
           type="text"
@@ -34,13 +36,13 @@ const LabelAndCommunityComponent = ({
           value={data?.label || ''}
           name={index}
           onChange={(e) => onLabelChange(index, e.target.value)}
-          placeholder="Enter label text"
+          placeholder={t('label_placeholder')}
           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
         />
       </div>
       <div>
         <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Community
+          {t('community')}
         </span>
         <input
           type="text"
@@ -48,7 +50,7 @@ const LabelAndCommunityComponent = ({
           id={communityId}
           name={index}
           onChange={(e) => onCommunityChange(index, e.target.value)}
-          placeholder="Paste the community link"
+          placeholder={t('community_placeholder')}
           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
         />
       </div>
@@ -57,6 +59,7 @@ const LabelAndCommunityComponent = ({
 };
 
 export default function CreateDocModal () {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParam] = useSearchParams();
   const docId = searchParam.get('id');
@@ -246,7 +249,7 @@ export default function CreateDocModal () {
         <div className="relative w-full h-full md:h-auto">
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-400">
-            {mode === 'edit' ? 'Edit Documentation' : 'New Documentation'}
+            {mode === 'edit' ? t('edit_documentation') : t('new_documentation')}
             </h3>
           </div>
 
@@ -256,7 +259,7 @@ export default function CreateDocModal () {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Title
+                      {t('title_label')}
                     </span>
                     <input
                       ref={titleRef}
@@ -266,14 +269,14 @@ export default function CreateDocModal () {
                       name="name"
                       id="name"
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                      placeholder="Enter new document name"
+                      placeholder={t('title_placeholder')}
                       required
                     />
                   </div>
 
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Version
+                      {t('version')}
                     </span>
                     <input
                       onChange={handleChange}
@@ -282,7 +285,7 @@ export default function CreateDocModal () {
                       name="version"
                       id="version"
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                      placeholder="Enter document version"
+                      placeholder={t('version_placeholder')}
                       required
                     />
                   </div>
@@ -291,7 +294,7 @@ export default function CreateDocModal () {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Description
+                      {t('description')}
                     </span>
                     <div>
                       <textarea
@@ -300,7 +303,7 @@ export default function CreateDocModal () {
                         name="description"
                         id="description"
                         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                        placeholder="Description about your new document"
+                        placeholder={t('description_placeholder')}
                         rows="3"
                       />
                     </div>
@@ -308,7 +311,7 @@ export default function CreateDocModal () {
 
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Custom CSS
+                      {t('custom_css')}
                     </span>
                     <div>
                       <textarea
@@ -317,7 +320,7 @@ export default function CreateDocModal () {
                         name="customCSS"
                         id="customCSS"
                         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                        placeholder="Enter custom css styles"
+                        placeholder={t('custom_css_placeholder')}
                         rows="3"
                       />
                     </div>
@@ -327,28 +330,28 @@ export default function CreateDocModal () {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Fav Icon
+                      {t('fav_icon')}
                     </span>
                     <input
                       type="url"
                       onChange={handleChange}
                       value={formData?.favicon}
                       name="favicon"
-                      placeholder="Paste your fav icon link"
+                      placeholder={t('fav_icon_placeholder')}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     />
                   </div>
 
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Navbar Icon
+                      {t('navbar_icon')}
                     </span>
                     <input
                       onChange={handleChange}
                       value={formData?.navImage}
                       type="url"
                       name="navImage"
-                      placeholder="Paste your navbar icon link"
+                      placeholder={t('navbar_icon_placeholder')}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     />
                   </div>
@@ -357,28 +360,28 @@ export default function CreateDocModal () {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Copyright Text
+                      {t('copyright_text')}
                     </span>
                     <input
                       onChange={handleChange}
                       value={formData?.copyrightText}
                       type="text"
                       name="copyrightText"
-                      placeholder="Enter copy wright text"
+                      placeholder={t('copyright_text_placeholder')}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     />
                   </div>
 
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Social Card Image
+                      {t('social_card_image')}
                     </span>
                     <input
                       onChange={handleChange}
                       value={formData?.metaImage}
                       type="url"
                       name="metaImage"
-                      placeholder="Paste social card image link"
+                      placeholder={t('social_card_image_palceholder')}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     />
                   </div>
@@ -389,12 +392,12 @@ export default function CreateDocModal () {
                 <div>
                   <div className="flex justify-between items-center">
                     <p className="block text-md font-medium text-gray-700 dark:text-gray-300 ">
-                      Footer
+                      {t('footer')}
                     </p>
                     <div className="flex justify-center gap-3">
                       <button
                         onClick={() => addRow('footer')}
-                        title="add new field"
+                        title={t('add_new_field')}
                         className="flex items-center gap-1 text-blue-600 rounded-lg text-sm"
                       >
                         <Icon
@@ -405,7 +408,7 @@ export default function CreateDocModal () {
 
                       <button
                         onClick={() => deleteRow('footer')}
-                        title="delete field"
+                        title={t('delete_field')}
                         className="flex items-center gap-1 rounded-lg text-sm "
                       >
                         <Icon
@@ -433,12 +436,12 @@ export default function CreateDocModal () {
                 <div>
                   <div className="flex justify-between items-center">
                     <span className="block text-md font-medium text-gray-700 dark:text-gray-300 ">
-                      More
+                      {t('more')}
                     </span>
                     <div className="flex justify-center gap-3">
                       <button
                         onClick={() => addRow('more')}
-                        title="add new field"
+                        title={t('add_new_field')}
                         className="flex items-center gap-1 text-blue-600 rounded-lg text-sm  py-1.5  mb-2 "
                       >
                         <Icon
@@ -449,7 +452,7 @@ export default function CreateDocModal () {
 
                       <button
                         onClick={() => deleteRow('more')}
-                        title="delete field"
+                        title={t('delete_field')}
                         className="flex items-center gap-1 rounded-lg text-sm  py-1.5  mb-2 "
                       >
                         <Icon
@@ -482,7 +485,7 @@ export default function CreateDocModal () {
                   type="button"
                   className="flex justify-center items-center text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
                 >
-                  <span>{mode === 'edit' ? 'Update Documentation' : 'New Documentation'}</span>
+                  <span>{mode === 'edit' ? t('update_documentation') : t('new_documentation')}</span>
                   {!mode && <Icon icon="ei:plus" className="w-6 h-6" />}
                 </button>
               </div>

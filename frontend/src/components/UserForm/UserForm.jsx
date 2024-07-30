@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import AvatarEditor from 'react-avatar-editor';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 
@@ -9,7 +10,8 @@ import { handleError } from '../../utils/Common';
 import { toastMessage } from '../../utils/Toast';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
 
-export default function UserProfile () {
+export default function UserForm () {
+  const { t } = useTranslation();
   const { id: userId } = useParams();
   const { user: currentUser, refreshData, isLoggedInAdmin } = useContext(AuthContext);
   const [isEdit, setIsEdit] = useState(false);
@@ -225,10 +227,10 @@ export default function UserProfile () {
 
         {/* User Details Section */}
         <div className='mb-8'>
-          <h2 className='text-xl font-semibold text-gray-900 dark:text-white mb-4'>User Details</h2>
+          <h2 className='text-xl font-semibold text-gray-900 dark:text-white mb-4'>{t('user_details')}</h2>
           <div className='mb-6'>
             <span className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
-              Username
+              {t('email_address')}
             </span>
             <input
               type='text'
@@ -246,7 +248,7 @@ export default function UserProfile () {
 
           <div className='mb-6'>
             <span className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
-              Email Address
+              {t('email_address')}
             </span>
             <input
               type='email'
@@ -268,7 +270,7 @@ export default function UserProfile () {
                 className='bg-blue-500 text-white rounded-md px-4 py-2 hover:bg-blue-600 transition duration-300'
                 onClick={() => setIsEdit(!isEdit)}
               >
-                Edit Profile
+                {t('edit_profile')}
               </button>
                 )
               : (
@@ -277,7 +279,7 @@ export default function UserProfile () {
                   className='bg-green-500 text-white rounded-md px-4 py-2 hover:bg-green-600 transition duration-300'
                   onClick={handleSubmit}
                 >
-                  Update
+                  {t('update')}
                 </button>
                 <button
                   className='bg-gray-500 text-white rounded-md px-4 py-2 hover:bg-gray-600 transition duration-300'
@@ -286,7 +288,7 @@ export default function UserProfile () {
                     refreshData();
                   }}
                 >
-                  Cancel
+                  {t('cancel')}
                 </button>
               </>
                 )}
@@ -296,14 +298,14 @@ export default function UserProfile () {
         {/* Password Reset Section */}
         <div className='mt-12 border-t pt-8 dark:border-gray-700'>
           <h3 className='text-xl font-semibold text-gray-900 dark:text-white mb-6'>
-            Reset Password
+            {t('reset_password')}
           </h3>
           <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
             <div>
               <span
                 className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'
               >
-                New Password
+                {t('new_password')}
               </span>
               <input
                 type='password'
@@ -318,7 +320,7 @@ export default function UserProfile () {
               <span
                 className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'
               >
-                Confirm Password
+                {t('confirm_password')}
               </span>
               <input
                 type='password'
@@ -335,7 +337,7 @@ export default function UserProfile () {
               className='bg-blue-500 text-white rounded-md px-6 py-2 hover:bg-blue-600 transition duration-300'
               onClick={handleChangePassword}
             >
-              Update Password
+              {t('update_password')}
             </button>
           </div>
         </div>
@@ -360,7 +362,7 @@ export default function UserProfile () {
             </div>
             <div className='mt-4'>
               <span className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
-                Scale
+                {t('scale')}
               </span>
               <input
                 type='range'
@@ -377,13 +379,13 @@ export default function UserProfile () {
                 onClick={() => setShowModal(false)}
                 className='px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition duration-300'
               >
-                Cancel
+                {t('cancel')}
               </button>
               <button
                 onClick={handleSave}
                 className='px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300'
               >
-                Save
+                {t('save')}
               </button>
             </div>
           </div>

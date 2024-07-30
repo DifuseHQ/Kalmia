@@ -1,4 +1,5 @@
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd';
 import { Icon } from '@iconify/react';
@@ -37,6 +38,7 @@ import Table from '../Table/Table';
 export default function Documentation () {
   const navigate = useNavigate();
   const { refresh, refreshData, user } = useContext(AuthContext);
+  const { t } = useTranslation();
 
   const {
     openModal,
@@ -365,7 +367,7 @@ export default function Documentation () {
   const filteredVersions = documentData.filter((version) =>
     version.version.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
+  console.log(filteredVersions.length);
   const itemsPerPage = selectPageSize;
   const startIdx = (currentPage - 1) * itemsPerPage;
   const endIdx = startIdx + itemsPerPage;
@@ -426,7 +428,7 @@ export default function Documentation () {
                   onClick={() => {
                     openModal('cloneDocument', null);
                   }}
-                  title="Clone Documentation"
+                  title={t('clone_documentation')}
                   key="clone-button"
                 >
                   <Icon
@@ -437,7 +439,7 @@ export default function Documentation () {
 
                 <motion.button
                   whilehover={{ scale: 1.3 }}
-                  title="Edit Documentation"
+                  title={t('edit_documentation')}
                   key="edit-document-button"
                 >
                   <Link to={`/dashboard/edit-documentation?id=${selectedVersion.id}&mode=edit`}>
@@ -454,7 +456,7 @@ export default function Documentation () {
                     openModal('delete');
                   }}
                   key="delete-document-button"
-                  title="Delete Documentation"
+                  title={t('delete_documentation')}
                 >
                   <Icon
                     icon="material-symbols:delete"
@@ -506,7 +508,7 @@ export default function Documentation () {
                         value={searchTerm}
                         onChange={handleSearchChange}
                         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                        placeholder="Search"
+                        placeholder={t('search_placeholder')}
                       />
                     </div>
 
@@ -537,15 +539,15 @@ export default function Documentation () {
                         >
                           <div className="p-1 h-auto w-full">
                             <span className="sr-only">
-                              Search
+                              {t('search_placeholder')}
                             </span>
-                            {filteredVersions.length !== 2 ? (
+                            {filteredVersions.length >= 0 ? (
                               <div className="relative">
                                 <input
                                   type="text"
                                   id="input-group-search"
                                   className="block w-full p-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                  placeholder="Search version"
+                                  placeholder={t('search_version')}
                                   value={searchQuery}
                                   onChange={handleSearchVersionChange}
                                 />
@@ -553,7 +555,7 @@ export default function Documentation () {
                             ) : (
                               <div className="flex items-center ps-2 rounded">
                                 <span className="w-full py-2 ms-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300">
-                                  No versions found
+                                  {t('no_versions_found')}
                                 </span>
                               </div>
                             )}
@@ -594,7 +596,7 @@ export default function Documentation () {
                                 >
                                   <div className="flex items-center ps-2 rounded">
                                     <span className="w-full py-2 ms-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300">
-                                      No matched versions
+                                      {t('no_matched_versions')}
                                     </span>
                                   </div>
                                 </motion.li>
@@ -615,7 +617,7 @@ export default function Documentation () {
                       key="create-page-group-button"
                     >
                       <span className="px-1 text-left items-center dark:text-white text-md">
-                        New Group
+                        {t('new_group')}
                       </span>
                       <Icon icon="ei:plus" className="w-6 h-6 dark:text-white" />
                     </motion.button>
@@ -628,7 +630,7 @@ export default function Documentation () {
                       key="create-page-button"
                     >
                       <span className="px-1 text-left items-center dark:text-white text-md">
-                        New Page
+                        {t('new_page')}
                       </span>
                       <Icon icon="ei:plus" className="w-6 h-6 dark:text-white" />
                     </motion.button>
@@ -659,9 +661,9 @@ export default function Documentation () {
                             className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                               <tr>
                                 <th className="w-1/12 whitespace-nowrap" />
-                                <th className="w-3/12 px-4 py-3 whitespace-nowrap">Title</th>
-                                <th className="w-3/12 px-4 py-3 whitespace-nowrap">Author / Editor</th>
-                                <th className="w-2/12 px-4 py-3 whitespace-nowrap">Create / Update</th>
+                                <th className="w-3/12 px-4 py-3 whitespace-nowrap">{t('title')}</th>
+                                <th className="w-3/12 px-4 py-3 whitespace-nowrap">{t('author_editor')}</th>
+                                <th className="w-2/12 px-4 py-3 whitespace-nowrap">{t('create_update')}</th>
                                 <th className="w-3/12 px-4 py-3 whitespace-nowrap" />
                               </tr>
                             </motion.thead>
@@ -745,21 +747,21 @@ export default function Documentation () {
                     aria-label='Table navigation'
                   >
                     <span className='text-sm font-normal text-gray-500 dark:text-gray-400'>
-                      Showing{' '}
+                      {t('showing')}
                       <span className='font-semibold text-gray-900 dark:text-white mx-1'>
                         {startIdx + 1}-{Math.min(endIdx, totalItems)}
                       </span>{' '}
-                      of{' '}
+                      {t('of')}
                       <span className='font-semibold text-gray-900 dark:text-white mx-1'>
                         {totalItems}
                       </span>{' '}
-                      items
+                      {t('items')}
                     </span>
 
                     <ul className='inline-flex items-stretch -space-x-px'>
                       <li>
                           <div className='flex items-center sm:mx-3 gap-3'>
-                          <span className='text-sm font-normal text-gray-500 dark:text-gray-400'>Page size</span>
+                          <span className='text-sm font-normal text-gray-500 dark:text-gray-400'>{t('page_size')}</span>
                           <div className="relative inline-block">
                             <button
                               onClick={() => openModal('pageSizeDropdown')}
@@ -824,7 +826,6 @@ export default function Documentation () {
                 {/* Edit Component */}
                 {editModal && (
                   <EditDocumentModal
-                    heading={'Rename Page Group'}
                     title={ currentModalItem.name}
                     id={currentModalItem.id }
                     updateData={handlePageGroupUpdate}
@@ -834,7 +835,6 @@ export default function Documentation () {
                 {/* Version Modal */}
                 {cloneDocumentModal && (
                   <EditDocumentModal
-                    heading="New Document Version"
                     id={documentData[0]?.id}
                     updateData={handleUpdate}
                   />
@@ -854,8 +854,7 @@ export default function Documentation () {
                     id={
                       currentModalItem ? currentModalItem.id : documentData[0]?.id
                     }
-                    title="Are you sure?"
-                    message={`You're permanently deleting ${currentModalItem ? `"${currentModalItem.name || currentModalItem.title}"` : `"${documentData[0]?.name}" version ${selectedVersion.version}`}`}
+                    message={`${currentModalItem ? `"${currentModalItem.name || currentModalItem.title}"` : `"${documentData[0]?.name}" version ${selectedVersion.version}`}`}
                   />
                 )}
               </motion.div>
@@ -869,7 +868,7 @@ export default function Documentation () {
               key="no-documentation-found-message-conatiner"
             >
               <h1 className="text-gray-600 text-3xl p-10">
-                no documentations found
+              {t('no_documentations_found')}
               </h1>
             </motion.div>
           )}

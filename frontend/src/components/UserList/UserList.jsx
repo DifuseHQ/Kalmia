@@ -1,4 +1,5 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -12,6 +13,7 @@ import Breadcrumb from '../Breadcrumb/Breadcrumb';
 import DeleteModal from '../DeleteModal/DeleteModal';
 
 export default function UserList () {
+  const { t } = useTranslation();
   const [userList, setUserList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -135,7 +137,7 @@ export default function UserList () {
         >
           <td colSpan='4' className='text-center p-8'>
             <h1 className='text-center text-gray-600 sm:text-lg font-semibold'>
-              No user found
+              {t('no_user_found')}
             </h1>
           </td>
         </motion.tr>
@@ -216,7 +218,7 @@ export default function UserList () {
             <div className='w-full md:w-1/2'>
               <form className='flex items-center'>
                 <label htmlFor='simple-search' className='sr-only'>
-                  Search
+                  {t('search_placeholder')}
                 </label>
                 <div className='relative w-full'>
                   <div className='absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none'>
@@ -231,7 +233,7 @@ export default function UserList () {
                     value={searchTerm}
                     onChange={handleSearchChange}
                     className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
-                    placeholder='Search'
+                    placeholder= {t('search_placeholder')}
                     required=''
                   />
                 </div>
@@ -244,7 +246,7 @@ export default function UserList () {
                 className='flex text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800'
               >
                 <span className=' px-1 pt-0.5 text-left items-center dark:text-white text-md'>
-                  Add User
+                  {t('add_user')}
                 </span>
                 <Icon icon='ei:plus' className='w-6 h-6 dark:text-white' />
               </Link>
@@ -256,13 +258,13 @@ export default function UserList () {
               <thead className='text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400'>
                 <tr>
                   <th scope='col' className='px-4 py-3'>
-                    Username
+                  {t('username')}
                   </th>
                   <th scope='col' className='px-4 py-3'>
-                    Email
+                    {t('email')}
                   </th>
                   <th scope='col' className='px-4 py-3'>
-                    Create / Update
+                    {t('create_update')}
                   </th>
                   <th scope='col' className='px-4 py-3' />
                 </tr>
@@ -277,15 +279,15 @@ export default function UserList () {
               aria-label='Table navigation'
             >
               <span className='text-sm font-normal text-gray-500 dark:text-gray-400'>
-                Showing{' '}
+                {t('showing')}
                 <span className='font-semibold text-gray-900 dark:text-white mx-1'>
                   {startIdx + 1}-{Math.min(endIdx, totalItems)}
                 </span>{' '}
-                of{' '}
+                {t('of')}
                 <span className='font-semibold text-gray-900 dark:text-white mx-1'>
                   {totalItems}
                 </span>{' '}
-                users
+                {t('users')}
               </span>
               <ul className='inline-flex items-stretch -space-x-px'>
                 <li>
@@ -331,8 +333,7 @@ export default function UserList () {
             cancelModal={() => closeModal('delete')}
             deleteDoc={() => handleDeleteUser(currentModalItem.username)}
             id={currentModalItem.id}
-            title='Are you sure?'
-            message={`You're permanently deleting "${currentModalItem.username}" `}
+            message={currentModalItem.username}
           />
         )}
       </motion.div>

@@ -1,4 +1,5 @@
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -9,6 +10,8 @@ import { ModalContext } from '../../context/ModalContext';
 import { toastMessage } from '../../utils/Toast';
 
 export default function Sidebar () {
+  const { t } = useTranslation();
+
   const [documentation, setDocumentation] = useState([]);
   const [openDropdowns, setOpenDropdowns] = useState([]);
   const [searchParam] = useSearchParams();
@@ -91,7 +94,7 @@ export default function Sidebar () {
                 whilehover={{ scale: 1.05 }}
                 className='flex w-full py-2 px-5 my-5 justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-md  text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800'
               >
-                <span className=' px-1 pt-1 text-left items-center dark:text-white text-md text-sm'>New Documentation</span>
+                <span className=' px-1 pt-1 text-left items-center dark:text-white text-md text-sm'>{t('new_documentation')}</span>
                 <Icon icon='ei:plus' className='w-7 h-7 dark:text-white' />
               </motion.button>
             </li>
@@ -100,7 +103,7 @@ export default function Sidebar () {
                 <li whilehover={{ scale: 1.08, originx: 0 }}>
                   <p className='flex cursor-default items-center p-5 w-full text-base font-normal text-gray-600 rounded-lg transition duration-75 group '>
                     <span className='flex-1 ml-3 text-left whitespace-nowrap'>
-                      No documentations
+                      {t('no_documentations')}
                     </span>
                   </p>
                 </li>
@@ -144,11 +147,11 @@ export default function Sidebar () {
                       : 'text-gray-900'}
                     `}
                   aria-controls=''
-                  title='User management'
+                  title={t('user_management')}
                 >
                   <Icon icon='mdi:users' className='w-8 h-8 dark:text-white' />
-                  <span className='flex-1 px-1 text-left whitespace-nowrap text-md'>
-                    User Management
+                  <span className='flex-1 px-1 text-left overflow-hidden text-md whitespace-nowrap overflow-ellipsis'>
+                    {t('user_management')}
                   </span>
                 </NavLink>
               </li>

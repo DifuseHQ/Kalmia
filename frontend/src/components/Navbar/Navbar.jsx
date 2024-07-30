@@ -1,12 +1,15 @@
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, NavLink } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 import { AuthContext } from '../../context/AuthContext';
 import { ThemeContext } from '../../context/ThemeContext';
+import { languages } from '../../utils/Utils';
 
 export default function Navbar () {
+  const { t } = useTranslation();
   const { userDetails, logout, isSidebarOpen, setIsSidebarOpen } = useContext(AuthContext);
   const { darkMode, toggleDarkMode } = useContext(ThemeContext);
 
@@ -41,6 +44,12 @@ export default function Navbar () {
     };
   }, [isOpen, translateDropdown, handleClickOutside]);
 
+  const changeLanguage = (lng) => {
+    i18n.changeLanguage(lng);
+    setTranslateDropdown(false);
+  };
+
+  const { i18n } = useTranslation();
   return (
     <AnimatePresence>
       <motion.nav
@@ -76,7 +85,7 @@ export default function Navbar () {
                 className='flex items-center gap-1 dark:text-white text-md hover:bg-gray-200 drak:bg-gray-800 rounded-md dark:hover:bg-gray-600 py-2 px-2'
                 onClick={toggleTranslateDropdown}
               >
-                En
+                {i18n.language}
                 <Icon icon="mingcute:down-fill" className='w-6 h-6'/>
               </button>
 
@@ -90,10 +99,11 @@ export default function Navbar () {
                   key='user-details-dropdown'
                 >
                   <ul className="w-32  text-start text-sm font-medium text-gray-900 dark:text-white">
-                    <li className='w-full py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-800 cursor-pointer'>English</li>
-                    <li className='w-full py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-800 cursor-pointer'>Malayalam</li>
-                    <li className='w-full py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-800 cursor-pointer'>Arabic</li>
-                  </ul>
+                    {languages.map((lng) => (
+                      <li key={lng.code} onClick={() => changeLanguage(lng.code)}
+                      className={`w-full py-2 px-3 hover:bg-gray-200 dark:hover:bg-gray-800 cursor-pointer ${lng.code === i18n.language ? 'bg-gray-800' : ''}`}>
+                        {lng.lang}</li>
+                    ))}</ul>
                 </motion.div>
               )}
             </div>
@@ -173,7 +183,7 @@ export default function Navbar () {
                           onClick={() => logout()}
                           className='block text-md py-3 font-semibold text-gray-900 dark:text-white'
                         >
-                          Sign Out
+                          {t('sign_out')}
                         </span>
                       </div>
 

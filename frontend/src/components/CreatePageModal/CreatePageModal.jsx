@@ -1,10 +1,13 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Icon } from '@iconify/react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 import { ModalContext } from '../../context/ModalContext';
 
 export default function CreatePage ({ handleCreate }) {
+  const { t } = useTranslation();
+
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
 
@@ -38,7 +41,7 @@ export default function CreatePage ({ handleCreate }) {
             <div className='flex justify-between items-center mb-4 sm:mb-5 dark:border-gray-600'>
               <div className='flex-grow text-center'>
                 <h3 className='text-lg font-semibold text-gray-900 dark:text-white'>
-                  New Page
+                  {t('new_page')}
                 </h3>
               </div>
               <button
@@ -55,7 +58,7 @@ export default function CreatePage ({ handleCreate }) {
                 <span
                   className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
                 >
-                  Title
+                  {t('title_label')}
                 </span>
                 <input
                   ref={inputRef}
@@ -65,7 +68,7 @@ export default function CreatePage ({ handleCreate }) {
                   name='title'
                   id='title'
                   className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
-                  placeholder='Enter page title'
+                  placeholder={t('title_page_placeholder')}
                   required
                 />
               </div>
@@ -73,7 +76,7 @@ export default function CreatePage ({ handleCreate }) {
                 <span
                   className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
                 >
-                  Slug
+                  {t('slug')}
                 </span>
                 <input
                   onChange={(e) => setSlug(e.target.value)}
@@ -82,7 +85,7 @@ export default function CreatePage ({ handleCreate }) {
                   name='slug'
                   id='slug'
                   className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
-                  placeholder='Enter page slug'
+                  placeholder={t('slug_placeholder')}
                   required
                 />
               </div>
@@ -91,7 +94,7 @@ export default function CreatePage ({ handleCreate }) {
                 type='button'
                 className='flex justify-center items-center gap-1 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 w-full dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800'
               >
-                <span>Create Page</span>
+                <span>{t('new_page')}</span>
                 <Icon icon='ei:plus' className='w-6 h-6' />
               </button>
             </div>

@@ -1,11 +1,14 @@
 import React, { useContext } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Icon } from '@iconify/react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 import { ModalContext } from '../../context/ModalContext';
 
-export default function DeleteModal ({ title, deleteDoc, message }) {
+export default function DeleteModal ({ deleteDoc, message }) {
   // const { setDeleteModal, setCurrentItem, setDeleteItem } = useContext(AuthContext);
+  const { t } = useTranslation();
+
   const { closeModal } = useContext(ModalContext);
   return (
     <AnimatePresence>
@@ -25,14 +28,12 @@ export default function DeleteModal ({ title, deleteDoc, message }) {
             <div className='mb-6'>
               <Icon icon='carbon:warning' className='text-yellow-400 w-24 h-24 mx-auto' />
             </div>
-            {title && (
               <h3 className='mb-4 text-2xl font-bold text-gray-900 dark:text-white'>
-                {title}
+                {t('are_you_sure')}?
               </h3>
-            )}
             {message && (
               <p className='mb-6 text-lg text-gray-500 dark:text-gray-300'>
-                {message}
+                {t('you_are_permanently_deleting')} {message}
               </p>
             )}
             <div className='flex justify-center items-center space-x-4'>
@@ -41,7 +42,7 @@ export default function DeleteModal ({ title, deleteDoc, message }) {
                 type='button'
                 className='px-5 py-2.5 text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm dark:bg-red-500 dark:hover:bg-red-600 dark:focus:ring-red-900 transition duration-300 ease-in-out'
               >
-                Yes, delete it!
+                {t('yes_delete_it')}!
               </button>
               <button
                 onClick={() => {
