@@ -8,6 +8,6 @@ i18n
   .use(initReactI18next)
   .use(Backend)
   .init({
-    fallbackLng: 'eng',
+    fallbackLng: 'English',
     returnObjects: true
   });

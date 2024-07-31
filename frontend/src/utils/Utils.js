@@ -8,7 +8,7 @@ export function pageSize () {
 }
 
 export const languages = [
-  { code: 'eng', lang: 'English' },
-  { code: 'mal', lang: 'Malayalam' },
-  { code: 'hin', lang: 'Hindi' }
+  { code: 'English', lang: 'English' },
+  { code: 'Malayalam', lang: 'Malayalam' },
+  { code: 'Hindi', lang: 'Hindi' }
 ];
