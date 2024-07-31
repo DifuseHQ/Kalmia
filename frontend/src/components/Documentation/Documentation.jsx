@@ -86,7 +86,6 @@ export default function Documentation () {
     );
   };
 
-  /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -146,7 +145,7 @@ export default function Documentation () {
     } else {
       setLoading(false);
     }
-  }, [docId, refresh, user, navigate]);
+  }, [docId, refresh, user, navigate]); //eslint-disable-line
 
   useEffect(() => {
     const fetchData = async () => {
@@ -402,7 +401,6 @@ export default function Documentation () {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [handleClickOutside]);
-
   return (
     <AnimatePresence className="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5">
       <Breadcrumb key="breadcrumb-container" />
