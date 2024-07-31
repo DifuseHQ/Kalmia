@@ -61,7 +61,7 @@ export default function Navbar () {
       >
         <div className='flex flex-wrap justify-between items-center'>
           <div className='flex justify-start items-center'>
-            <NavLink to='/dashboard'>
+            <NavLink to='/dashboard' className="hidden md:block">
               {/* <h1 className='text-blue-500 font-bold hidden sm:block'>CMS</h1> */}
               <img src='/assets/images/cropped.png' alt='logo' className='w-42 h-8 dark:invert' />
             </NavLink>

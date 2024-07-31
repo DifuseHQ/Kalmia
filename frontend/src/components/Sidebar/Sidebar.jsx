@@ -85,6 +85,12 @@ export default function Sidebar () {
         key="sidebar-wrapper">
           <ul className='space-y-2'
           key="documentation-sidebar-list">
+            <li className='md:hidden'>
+            <NavLink to='/dashboard' className="">
+              {/* <h1 className='text-blue-500 font-bold hidden sm:block'>CMS</h1> */}
+              <img src='/assets/images/cropped.png' alt='logo' className='w-48 h-10 dark:invert' />
+            </NavLink>
+            </li>
             <li>
               <motion.button
               onClick={() => {
