@@ -132,12 +132,13 @@ export default function EditPage () {
           slug: result.data.slug || ''
         }));
         const parsed = parsedContent(result.data.content);
-        setEditorContent(parsed.length > 0 ? parsed : []);
+        const blocksFromMarkdown = await editor.tryParseMarkdownToBlocks(parsed);
+        setEditorContent(blocksFromMarkdown.length > 0 ? blocksFromMarkdown : []);
       }
     };
 
     fetchData();
-  }, [pageId, navigate]);
+  }, [pageId, navigate, editor]);
 
   useEffect(() => {
     if (editor && editorContent.length > 0) {
@@ -146,10 +147,11 @@ export default function EditPage () {
   }, [editor, editorContent]);
 
   const handleEdit = async () => {
+    const markdownFromBlocks = await editor.blocksToMarkdownLossy(editor.topLevelBlocks);
     const result = await updatePage({
       title: pageData?.title,
       slug: pageData?.slug,
-      content: JSON.stringify(editor.topLevelBlocks),
+      content: JSON.stringify(markdownFromBlocks),
       id: Number(pageId)
     });
 
