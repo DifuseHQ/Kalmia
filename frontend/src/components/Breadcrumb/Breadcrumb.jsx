@@ -201,7 +201,15 @@ export default function Breadcrumb () {
     }
 
     updateBreadcrumb();
-  }, [location.search, navigate, location.pathname, searchParams, user, userIdFromParam]);
+  }, [location.search, navigate, location.pathname, searchParams, user, userIdFromParam, setBreadcrumb]);
+
+  useEffect(() => {
+    const firstTitle = breadcrumb[0]?.title || 'Kalmia';
+    const lastTitle = breadcrumb[breadcrumb.length - 1]?.title || '';
+    document.title = breadcrumb.length === 1
+      ? `Kalmia - ${firstTitle}`
+      : `${firstTitle} - ${lastTitle}`;
+  }, [breadcrumb]);
 
   return (
     <motion.nav

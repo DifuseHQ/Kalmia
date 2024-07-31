@@ -35,6 +35,7 @@ export default function PageGroupTable () {
   const { t } = useTranslation();
 
   const [groupDetail, setGroupDetail] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [data, setData] = useState([]);
   const {
     refresh,
@@ -75,8 +76,6 @@ export default function PageGroupTable () {
       fetchData();
     }
   }, [docId, pageGroupId, navigate, refresh]);
-
-  const [searchTerm, setSearchTerm] = useState('');
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);

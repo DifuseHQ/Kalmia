@@ -59,6 +59,7 @@ export default function Documentation () {
   const [pageGroupLoading, setPageGroupLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectPageSize, setSelectPageSize] = useState(10);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Documentation CRUD
   const [documentData, setDocumentData] = useState([]);
@@ -176,8 +177,6 @@ export default function Documentation () {
       setPageGroupLoading(false);
     }
   }, [docId, user, navigate, refresh, versionId]);
-
-  const [searchTerm, setSearchTerm] = useState('');
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);

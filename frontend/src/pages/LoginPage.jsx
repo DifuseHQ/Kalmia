@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import Navbar from '../components/Navbar/Navbar';
@@ -10,6 +10,10 @@ export default function LoginPage () {
   const [password, setPassword] = useState(null);
 
   const { login } = useContext(AuthContext);
+
+  useEffect(() => {
+    document.title = 'Kalmia - Login';
+  }, []);
 
   const handleSubmit = async () => {
     await login(username, password);
