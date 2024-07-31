@@ -77,6 +77,12 @@ export default function EditDocumentModal ({
                       ref={titleRef}
                       value={version}
                       onChange={(e) => setVersion(e.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') {
+                          event.preventDefault();
+                          updateData(editTitle, version, id);
+                        }
+                      }}
                       type='text'
                       name='version'
                       id='version'
@@ -109,6 +115,12 @@ export default function EditDocumentModal ({
                         ref={titleRef}
                         value={editTitle}
                         onChange={(e) => setEditTitle(e.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter') {
+                            event.preventDefault();
+                            updateData(editTitle, version, id);
+                          }
+                        }}
                         type='text'
                         name='title'
                         id='title'
