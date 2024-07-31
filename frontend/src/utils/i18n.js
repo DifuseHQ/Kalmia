@@ -8,7 +8,6 @@ i18n
   .use(initReactI18next)
   .use(Backend)
   .init({
-    debug: true,
-    fallbackLng: 'En',
+    fallbackLng: 'eng',
     returnObjects: true
   });

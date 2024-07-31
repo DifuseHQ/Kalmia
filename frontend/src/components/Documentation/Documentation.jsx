@@ -366,7 +366,6 @@ export default function Documentation () {
   const filteredVersions = documentData.filter((version) =>
     version.version.toLowerCase().includes(searchQuery.toLowerCase())
   );
-  console.log(filteredVersions.length);
   const itemsPerPage = selectPageSize;
   const startIdx = (currentPage - 1) * itemsPerPage;
   const endIdx = startIdx + itemsPerPage;
@@ -488,12 +487,12 @@ export default function Documentation () {
                 className="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg"
                 key="documentation-table"
               >
-                <div className="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
+                <div className="flex flex-col lg:flex-row items-center justify-between space-y-3 lg:space-y-0 md:space-x-4 p-4">
                   <div
-                    className="flex items-center w-full md:w-auto space-x-2"
+                    className="flex items-center w-full lg:w-auto space-x-2"
                     key="versioning-container"
                   >
-                    <div className="relative w-full md:w-64">
+                    <div className="relative w-full lg:w-64">
                       <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                         <Icon
                           icon="material-symbols:search"
@@ -533,7 +532,7 @@ export default function Documentation () {
                         key="documettaion-table-version-dropdown"
                           ref={dropdownRef}
                           id="dropdownSearch"
-                          className="absolute bg-white rounded-lg shadow w-52 dark:bg-gray-700 z-30"
+                          className="absolute right-0 lg:left-0 bg-white rounded-lg shadow w-52 dark:bg-gray-700 z-30"
                         >
                           <div className="p-1 h-auto w-full">
                             <span className="sr-only">
