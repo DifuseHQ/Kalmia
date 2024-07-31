@@ -45,14 +45,14 @@ export default function EditDocumentModal ({
         key="edit-documentation-container"
       >
         <div className='relative p-4 w-full max-w-xl'
-        key="edit-documentation-container-0">
+          key="edit-documentation-container-0">
           <div className='relative p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5'>
             <div className='flex justify-between items-center mb-4 sm:mb-5 dark:border-gray-600'>
-                <div className='flex-grow text-center'>
-                  <h3 className='text-lg  font-semibold text-gray-900 dark:text-white'>
-                    {cloneDocumentModal ? t('new_document_version') : t('rename_page_group')}
-                  </h3>
-                </div>
+              <div className='flex-grow text-center'>
+                <h3 className='text-lg  font-semibold text-gray-900 dark:text-white'>
+                  {cloneDocumentModal ? t('new_document_version') : t('rename_page_group')}
+                </h3>
+              </div>
               <button
                 onClick={handleCloseClick}
                 type='button'

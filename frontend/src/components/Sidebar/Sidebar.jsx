@@ -74,29 +74,28 @@ export default function Sidebar () {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ delay: 0.1 }}
-        className={`fixed top-0 left-0 z-40 w-64 h-screen pt-14 transition-transform bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700 ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } md:translate-x-0`}
+        className={`fixed top-0 left-0 z-40 w-64 h-screen pt-14 transition-transform bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          } md:translate-x-0`}
         aria-label='Sidenav'
         id='drawer-navigation'
         key="sidebar-aside-container"
       >
         <div className='overflow-y-auto py-5 px-3 h-full bg-white dark:bg-gray-800'
-        key="sidebar-wrapper">
+          key="sidebar-wrapper">
           <ul className='space-y-2'
-          key="documentation-sidebar-list">
+            key="documentation-sidebar-list">
             <li className='md:hidden'>
-            <NavLink to='/dashboard' className="">
-              {/* <h1 className='text-blue-500 font-bold hidden sm:block'>CMS</h1> */}
-              <img src='/assets/images/cropped.png' alt='logo' className='w-48 h-10 dark:invert' />
-            </NavLink>
+              <NavLink to='/dashboard' className="">
+                {/* <h1 className='text-blue-500 font-bold hidden sm:block'>CMS</h1> */}
+                <img src='/assets/images/cropped.png' alt='logo' className='w-48 h-10 dark:invert' />
+              </NavLink>
             </li>
             <li>
               <motion.button
-              onClick={() => {
-                openModal('createDocumentation');
-                navigate('/dashboard/create-documentation');
-              }}
+                onClick={() => {
+                  openModal('createDocumentation');
+                  navigate('/dashboard/create-documentation');
+                }}
                 whilehover={{ scale: 1.05 }}
                 className='flex w-full py-2 px-5 my-5 justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-md  text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800'
               >
@@ -116,34 +115,33 @@ export default function Sidebar () {
                 )
               : (
                   documentation.filter((obj) => obj.clonedFrom === null).map((val, index) => (
-                    <motion.li
-                      key={`sidebar-${val.id}-${index}`}
-                      whilehover={{ scale: 1.08, originx: 0 }}
+                  <motion.li
+                    key={`sidebar-${val.id}-${index}`}
+                    whilehover={{ scale: 1.08, originx: 0 }}
+                  >
+                    <NavLink
+                      to={`/dashboard/documentation?id=${val.id}`}
+                      onClick={() => toggleDropdown(index)}
+                      className={`flex items-center p-2 w-full text-base font-normal rounded-lg transition duration-75 group hover:bg-gray-200 dark:text-white dark:hover:bg-gray-700 ${(location.pathname === '/dashboard' && val.id === smallestId) || val.id === Number(docId)
+                          ? 'text-black-500 bg-gray-300 dark:bg-gray-600'
+                          : 'text-gray-900'
+                        }`}
+                      aria-controls={`${val.name}`}
+                      title={val.name}
                     >
-                      <NavLink
-                        to={`/dashboard/documentation?id=${val.id}`}
-                        onClick={() => toggleDropdown(index)}
-                        className={`flex items-center p-2 w-full text-base font-normal rounded-lg transition duration-75 group hover:bg-gray-200 dark:text-white dark:hover:bg-gray-700 ${
-                            (location.pathname === '/dashboard' && val.id === smallestId) || val.id === Number(docId)
-                              ? 'text-black-500 bg-gray-300 dark:bg-gray-600'
-                              : 'text-gray-900'
-                          }`}
-                        aria-controls={`${val.name}`}
-                        title={val.name}
-                      >
-                        <Icon icon='uiw:document' className='w-8 h-8 dark:text-white' />
-                        <span className='flex-1 px-1 text-left overflow-hidden text-md whitespace-nowrap overflow-ellipsis'>
-                          {val.name}
-                        </span>
-                      </NavLink>
-                    </motion.li>
+                      <Icon icon='uiw:document' className='w-8 h-8 dark:text-white' />
+                      <span className='flex-1 px-1 text-left overflow-hidden text-md whitespace-nowrap overflow-ellipsis'>
+                        {val.name}
+                      </span>
+                    </NavLink>
+                  </motion.li>
                   ))
                 )}
           </ul>
 
           {userDetails && userDetails.admin && (
             <ul className='pt-5 mt-5 space-y-2 border-t border-gray-200 dark:border-gray-700'
-            key="user-management-lists">
+              key="user-management-lists">
               <li>
                 <NavLink
                   to='/dashboard/admin/user-list'

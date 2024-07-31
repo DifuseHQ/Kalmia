@@ -236,9 +236,9 @@ export default function PageGroupTable () {
         />
       )}
 
-          {createPageModal && (
-            <CreatePage handleCreate={handleCreatePage} key="create-nest-page-0" />
-          )}
+      {createPageModal && (
+        <CreatePage handleCreate={handleCreatePage} key="create-nest-page-0" />
+      )}
 
       <motion.div
         initial={{ opacity: 0 }}
@@ -255,131 +255,132 @@ export default function PageGroupTable () {
       </motion.div>
 
       <motion.div
-  initial={{ opacity: 0 }}
-  animate={{ opacity: 1 }}
-  exit={{ opacity: 0 }}
-  transition={{ delay: 0.1 }}
-  className=''
-  key='pageGroupTable'
->
-  <div className='bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden'>
-    <div className='flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4'>
-      <div className='flex items-center w-full md:w-auto space-x-2'>
-        <div className='relative w-full md:w-64'>
-          <div className='absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none'>
-            <Icon
-              icon='material-symbols:search'
-              className='w-6 h-6 text-gray-400 dark:text-gray-500'
-            />
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ delay: 0.1 }}
+        className=''
+        key='pageGroupTable'
+      >
+        <div className='bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden'>
+          <div className='flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4'>
+            <div className='flex items-center w-full md:w-auto space-x-2'>
+              <div className='relative w-full md:w-64'>
+                <div className='absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none'>
+                  <Icon
+                    icon='material-symbols:search'
+                    className='w-6 h-6 text-gray-400 dark:text-gray-500'
+                  />
+                </div>
+                <input
+                  type='text'
+                  id='simple-search'
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
+                  placeholder={t('search_placeholder')}
+                  required=''
+                />
+              </div>
+
+              <div className='px-5 py-1.5 rounded-lg font-semibold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300' title='Version'>
+                {version}
+              </div>
+            </div>
+
+            <div className='flex items-center space-x-2'>
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                onClick={() => openModal('createPageGroup')}
+                type='button'
+                className='flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800'
+              >
+                <span className='px-1 text-left items-center dark:text-white text-md'>
+                  {t('new_group')}
+                </span>
+                <Icon icon='ei:plus' className='w-6 h-6 dark:text-white' />
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                onClick={() => openModal('createPage')}
+                type="button"
+                className="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
+                key="create-nest-page-button"
+              >
+                <span className="px-1 text-left items-center dark:text-white text-md">
+                  {t('new_page')}
+                </span>
+                <Icon icon="ei:plus" className="w-6 h-6 dark:text-white" />
+              </motion.button>
+            </div>
           </div>
-          <input
-            type='text'
-            id='simple-search'
-            value={searchTerm}
-            onChange={handleSearchChange}
-            className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
-            placeholder={t('search_placeholder')}
-            required=''
-          />
-        </div>
 
-        <div className='px-5 py-1.5 rounded-lg font-semibold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300' title='Version'>
-          {version}
-        </div>
-      </div>
+          <div className='overflow-x-auto h-auto'>
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <Droppable droppableId='table' type='TABLE'>
+                {(provided) => (
+                  <table className='w-full text-sm text-left text-gray-500 dark:text-gray-400'>
+                    <thead className='text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400'>
+                      <tr>
+                        <th scope='col' className='px-4 py-3' />
+                        <th scope='col' className='px-4 py-3'>
+                          {t('title')}
+                        </th>
+                        <th scope='col' className='px-4 py-3'>
+                          {t('author_editor')}
+                        </th>
+                        <th scope='col' className='px-4 py-3'>
+                          {t('create_update')}
+                        </th>
+                        <th scope='col' className='px-4 py-3' />
+                      </tr>
+                    </thead>
+                    <tbody {...provided.droppableProps} ref={provided.innerRef}>
+                      {filteredItems.length <= 0 && (
+                        <tr className='border-b dark:border-gray-700'>
+                          <td colSpan='4' className='text-center p-8'>
+                            <h1 className='text-center text-gray-600 sm:text-lg font-semibold'>
+                              {t('no_pages_found')}
+                            </h1>
+                          </td>
+                        </tr>
+                      )}
 
-      <div className='flex items-center space-x-2'>
-        <motion.button
-          whileHover={{ scale: 1.1 }}
-          onClick={() => openModal('createPageGroup')}
-          type='button'
-          className='flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800'
-        >
-          <span className='px-1 text-left items-center dark:text-white text-md'>
-            {t('new_group')}
-          </span>
-          <Icon icon='ei:plus' className='w-6 h-6 dark:text-white' />
-        </motion.button>
+                      {filteredItems.map((obj, index) => (
+                        <Draggable
+                          key={
+                            obj.name ? `pageGroup-${obj.id}` : `page-${obj.id}`
+                          }
+                          draggableId={
+                            obj.name ? `pageGroup-${obj.id}` : `page-${obj.id}`
+                          }
+                          index={index}
+                        >
+                          {(provided, snapshot) => (
+                            <Table
+                              provided={provided}
+                              snapshot={snapshot}
+                              obj={obj}
+                              index={index}
+                              dir="false"
+                              docId={versionId}
+                              version={version}
+                              pageGroupId={pageGroupId}
+                            />
+                          )}
+                        </Draggable>
+                      ))}
 
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      onClick={() => openModal('createPage')}
-                      type="button"
-                      className="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
-                      key="create-nest-page-button"
-                    >
-                      <span className="px-1 text-left items-center dark:text-white text-md">
-                        {t('new_page')}
-                      </span>
-                      <Icon icon="ei:plus" className="w-6 h-6 dark:text-white" />
-                    </motion.button>
-      </div>
-    </div>
-
-    <div className='overflow-x-auto h-auto'>
-      <DragDropContext onDragEnd={handleDragEnd}>
-        <Droppable droppableId='table' type='TABLE'>
-          {(provided) => (
-            <table className='w-full text-sm text-left text-gray-500 dark:text-gray-400'>
-              <thead className='text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400'>
-                <tr>
-                  <th scope='col' className='px-4 py-3' />
-                  <th scope='col' className='px-4 py-3'>
-                    {t('title')}
-                  </th>
-                  <th scope='col' className='px-4 py-3'>
-                    {t('author_editor')}
-                  </th>
-                  <th scope='col' className='px-4 py-3'>
-                    {t('create_update')}
-                  </th>
-                  <th scope='col' className='px-4 py-3' />
-                </tr>
-              </thead>
-              <tbody {...provided.droppableProps} ref={provided.innerRef}>
-                {filteredItems.length <= 0 && (
-                  <tr className='border-b dark:border-gray-700'>
-                    <td colSpan='4' className='text-center p-8'>
-                      <h1 className='text-center text-gray-600 sm:text-lg font-semibold'>
-                        {t('no_pages_found')}
-                      </h1>
-                    </td>
-                  </tr>
+                      {provided.placeholder}
+                    </tbody>
+                  </table>
                 )}
-
-                {filteredItems.map((obj, index) => (
-                  <Draggable
-                    key={
-                      obj.name ? `pageGroup-${obj.id}` : `page-${obj.id}`
-                    }
-                    draggableId={
-                      obj.name ? `pageGroup-${obj.id}` : `page-${obj.id}`
-                    }
-                    index={index}
-                  >
-                    {(provided, snapshot) => (
-                      <Table
-                        provided={provided}
-                        snapshot={snapshot}
-                        obj={obj}
-                        index={index}
-                        docId={versionId}
-                        version={version}
-                        pageGroupId={obj.id}
-                      />
-                    )}
-                  </Draggable>
-                ))}
-
-                {provided.placeholder}
-              </tbody>
-            </table>
-          )}
-        </Droppable>
-      </DragDropContext>
-    </div>
-  </div>
-</motion.div>
+              </Droppable>
+            </DragDropContext>
+          </div>
+        </div>
+      </motion.div>
 
       {editModal && currentModalItem && (
         <EditDocumentModal

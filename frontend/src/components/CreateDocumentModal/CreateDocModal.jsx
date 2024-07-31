@@ -238,7 +238,7 @@ export default function CreateDocModal () {
 
   return (
     <AnimatePresence>
-      <Breadcrumb/>
+      <Breadcrumb />
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -249,7 +249,7 @@ export default function CreateDocModal () {
         <div className="relative w-full h-full md:h-auto">
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-400">
-            {mode === 'edit' ? t('edit_documentation') : t('new_documentation')}
+              {mode === 'edit' ? t('edit_documentation') : t('new_documentation')}
             </h3>
           </div>
 

@@ -221,7 +221,7 @@ export default function Breadcrumb () {
       key='breadcrumb-fin'
     >
       <ol className='flex flex-wrap items-center gap-y-2'
-      key="breadcrum-list">
+        key="breadcrum-list">
         {breadcrumb.map((crumb, index) => (
           <li key={`breadcrumb-${index}`} className='flex items-center'>
             <Link

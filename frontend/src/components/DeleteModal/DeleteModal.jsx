@@ -28,9 +28,9 @@ export default function DeleteModal ({ deleteDoc, message }) {
             <div className='mb-6'>
               <Icon icon='carbon:warning' className='text-yellow-400 w-24 h-24 mx-auto' />
             </div>
-              <h3 className='mb-4 text-2xl font-bold text-gray-900 dark:text-white'>
-                {t('are_you_sure')}?
-              </h3>
+            <h3 className='mb-4 text-2xl font-bold text-gray-900 dark:text-white'>
+              {t('are_you_sure')}?
+            </h3>
             {message && (
               <p className='mb-6 text-lg text-gray-500 dark:text-gray-300'>
                 {t('you_are_permanently_deleting')} {message}

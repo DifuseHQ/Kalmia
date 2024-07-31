@@ -200,16 +200,16 @@ export default function UserForm () {
           <div className='relative'>
             {isLoading
               ? (
-              <div className='flex items-center justify-center h-48 w-48 rounded-full border-4 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800'>
-                <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500' />
-              </div>
+                <div className='flex items-center justify-center h-48 w-48 rounded-full border-4 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800'>
+                  <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500' />
+                </div>
                 )
               : (
-              <img
-                className='h-48 w-48 rounded-full border-4 border-gray-200 dark:border-gray-700 object-cover'
-                src={profileImage || '/assets/images/no-profile.png'}
-                alt='Profile'
-              />
+                <img
+                  className='h-48 w-48 rounded-full border-4 border-gray-200 dark:border-gray-700 object-cover'
+                  src={profileImage || '/assets/images/no-profile.png'}
+                  alt='Profile'
+                />
                 )}
             <span
               className='absolute bottom-1 right-1 bg-blue-500 text-white rounded-full p-2 hover:bg-blue-600 cursor-pointer shadow-lg transition duration-300'
@@ -237,11 +237,10 @@ export default function UserForm () {
               onChange={(e) => setUsername(e.target.value)}
               value={username}
               ref={inputRef}
-              className={`w-full px-3 py-2 border rounded-md ${
-                isEdit
+              className={`w-full px-3 py-2 border rounded-md ${isEdit
                   ? 'border-blue-500 focus:ring-2 focus:ring-blue-500'
                   : 'border-gray-300 dark:border-gray-600'
-              } bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                } bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
               readOnly={!isEdit}
             />
           </div>
@@ -254,11 +253,10 @@ export default function UserForm () {
               type='email'
               onChange={(e) => setEmail(e.target.value)}
               value={email}
-              className={`w-full px-3 py-2 border rounded-md ${
-                isEdit
+              className={`w-full px-3 py-2 border rounded-md ${isEdit
                   ? 'border-blue-500 focus:ring-2 focus:ring-blue-500'
                   : 'border-gray-300 dark:border-gray-600'
-              } bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
+                } bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
               readOnly={!isEdit}
             />
           </div>
@@ -266,31 +264,31 @@ export default function UserForm () {
           <div className='flex justify-start space-x-4'>
             {!isEdit
               ? (
-              <button
-                className='bg-blue-500 text-white rounded-md px-4 py-2 hover:bg-blue-600 transition duration-300'
-                onClick={() => setIsEdit(!isEdit)}
-              >
-                {t('edit_profile')}
-              </button>
+                <button
+                  className='bg-blue-500 text-white rounded-md px-4 py-2 hover:bg-blue-600 transition duration-300'
+                  onClick={() => setIsEdit(!isEdit)}
+                >
+                  {t('edit_profile')}
+                </button>
                 )
               : (
-              <>
-                <button
-                  className='bg-green-500 text-white rounded-md px-4 py-2 hover:bg-green-600 transition duration-300'
-                  onClick={handleSubmit}
-                >
-                  {t('update')}
-                </button>
-                <button
-                  className='bg-gray-500 text-white rounded-md px-4 py-2 hover:bg-gray-600 transition duration-300'
-                  onClick={() => {
-                    setIsEdit(!isEdit);
-                    refreshData();
-                  }}
-                >
-                  {t('cancel')}
-                </button>
-              </>
+                <>
+                  <button
+                    className='bg-green-500 text-white rounded-md px-4 py-2 hover:bg-green-600 transition duration-300'
+                    onClick={handleSubmit}
+                  >
+                    {t('update')}
+                  </button>
+                  <button
+                    className='bg-gray-500 text-white rounded-md px-4 py-2 hover:bg-gray-600 transition duration-300'
+                    onClick={() => {
+                      setIsEdit(!isEdit);
+                      refreshData();
+                    }}
+                  >
+                    {t('cancel')}
+                  </button>
+                </>
                 )}
           </div>
         </div>

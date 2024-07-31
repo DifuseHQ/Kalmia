@@ -14,6 +14,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 
 import { deletePage, getPage, updatePage } from '../../api/Requests';
 import { AuthContext } from '../../context/AuthContext';
+import { ModalContext } from '../../context/ModalContext';
 import { ThemeContext } from '../../context/ThemeContext';
 import { handleError } from '../../utils/Common';
 import { toastMessage } from '../../utils/Toast';
@@ -81,6 +82,7 @@ export default function EditPage () {
   const { t } = useTranslation();
   const { darkMode } = useContext(ThemeContext);
   const [themeKey, setThemeKey] = useState(0);
+  const { openModal, closeModal, deleteModal } = useContext(ModalContext);
 
   useEffect(() => {
     setThemeKey(prev => prev + 1);
@@ -92,7 +94,7 @@ export default function EditPage () {
   const pageId = searchParams.get('pageId');
   const pageGroupId = searchParams.get('pageGroupId');
   const version = searchParams.get('version');
-  const { refreshData, deleteModal, setDeleteModal } = useContext(AuthContext);
+  const { refreshData } = useContext(AuthContext);
 
   const navigate = useNavigate();
   const [pageData, setPageData] = useState({ title: '', slug: '', content: {} });
@@ -173,6 +175,7 @@ export default function EditPage () {
     }
 
     if (result.status === 'success') {
+      closeModal('delete');
       toastMessage(result.data.message, 'success');
       refreshData();
 
@@ -356,7 +359,9 @@ export default function EditPage () {
               </button>
 
               <button
-                onClick={() => setDeleteModal(true)}
+                onClick={() => {
+                  openModal('delete');
+                }}
                 className='inline-flex items-center gap-1 bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-900 text-white font-medium rounded-lg text-sm px-5 py-2.5 text-center'
               >
                 <Icon icon='material-symbols:delete' className='w-5 h-5' />

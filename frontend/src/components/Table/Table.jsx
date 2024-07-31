@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { ModalContext } from '../../context/ModalContext';
 import { getFormattedDate } from '../../utils/Common';
 
-export default function Table ({ provided, snapshot, docId, pageGroupId, obj, index, version }) {
+export default function Table ({ provided, snapshot, docId, pageGroupId, obj, index, version, dir }) {
   const { openModal } = useContext(ModalContext);
   return (
     <motion.tr
@@ -39,7 +39,7 @@ export default function Table ({ provided, snapshot, docId, pageGroupId, obj, in
           to={
             obj.name
               ? `/dashboard/documentation/page-group?id=${docId}&pageGroupId=${obj.id}&versionId=${docId}&version=${version}`
-              : `/dashboard/documentation/edit-page?id=${docId}&dir=false&pageGroupId=${pageGroupId}&pageId=${obj.id}&versionId=${docId}&version=${version}`
+              : `/dashboard/documentation/edit-page?id=${docId}&dir=${dir}&pageGroupId=${pageGroupId}&pageId=${obj.id}&versionId=${docId}&version=${version}`
           }
         >
           {obj.name
@@ -76,17 +76,17 @@ export default function Table ({ provided, snapshot, docId, pageGroupId, obj, in
             className='w-4 h-4 text-gray-500 dark:text-white'
           />
           <span className=' px-1 text-left items-center dark:text-white text-md whitespace-nowrap'>
-          {(() => {
-            if (obj.editors && Array.isArray(obj.editors)) {
-              if (obj.lastEditorId != null) {
-                const editor = obj.editors.find(editor => parseInt(editor.id) === parseInt(obj.lastEditorId));
-                return editor ? editor.username : 'None';
-              } else {
-                return obj.editors[0]?.username || 'None';
+            {(() => {
+              if (obj.editors && Array.isArray(obj.editors)) {
+                if (obj.lastEditorId != null) {
+                  const editor = obj.editors.find(editor => parseInt(editor.id) === parseInt(obj.lastEditorId));
+                  return editor ? editor.username : 'None';
+                } else {
+                  return obj.editors[0]?.username || 'None';
+                }
               }
-            }
-            return 'None';
-          })()}
+              return 'None';
+            })()}
           </span>
         </div>
       </td>
@@ -149,7 +149,7 @@ export default function Table ({ provided, snapshot, docId, pageGroupId, obj, in
               className='inline-flex items-center gap-2 p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100'
               type='button'
             >
-              <Link to={`/dashboard/documentation/edit-page?id=${docId}&dir=false&pageGroupId=${pageGroupId}&pageId=${obj.id}&versionId=${docId}&version=${version}`}>
+              <Link to={`/dashboard/documentation/edit-page?id=${docId}&dir=${dir}&pageGroupId=${pageGroupId}&pageId=${obj.id}&versionId=${docId}&version=${version}`}>
                 <Icon
                   icon='material-symbols:edit-outline'
                   className='w-6 h-6 text-yellow-500 dark:text-yellow-400'

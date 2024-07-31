@@ -439,11 +439,11 @@ export default function Documentation () {
                   key="edit-document-button"
                 >
                   <Link to={`/dashboard/edit-documentation?id=${selectedVersion.id}&mode=edit`}>
-                  <Icon
-                    icon="material-symbols:edit-outline"
-                    className="w-6 h-6 text-yellow-500 dark:text-yellow-400 hover:text-yellow-600 dark:hover:text-yellow-600"
-                  />
-                   </Link>
+                    <Icon
+                      icon="material-symbols:edit-outline"
+                      className="w-6 h-6 text-yellow-500 dark:text-yellow-400 hover:text-yellow-600 dark:hover:text-yellow-600"
+                    />
+                  </Link>
                 </motion.button>
 
                 <motion.button
@@ -509,11 +509,11 @@ export default function Documentation () {
                     </div>
 
                     <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    key="documentation-version-listing-container"
-                    className="relative inline-block z-20">
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      key="documentation-version-listing-container"
+                      className="relative inline-block z-20">
                       <div
                         id="dropdownSelect"
                         className="flex items-center border gap-2 border-gray-400 hover:bg-gray-200 px-3 py-1.5 rounded-lg cursor-pointer dark:bg-gray-600 dark:border-gray-700 dark:hover:bg-gray-800 dark:text-white"
@@ -525,10 +525,10 @@ export default function Documentation () {
 
                       {showVersionDropdown && (
                         <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        key="documettaion-table-version-dropdown"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          key="documettaion-table-version-dropdown"
                           ref={dropdownRef}
                           id="dropdownSearch"
                           className="absolute right-0 lg:left-0 bg-white rounded-lg shadow w-52 dark:bg-gray-700 z-30"
@@ -556,10 +556,10 @@ export default function Documentation () {
                               </div>
                             )}
                             <motion.ul
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            key="documentaion-version-listing"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              key="documentaion-version-listing"
                               className="min-h-10 h-auto w-full mt-2 overflow-y-auto text-sm text-gray-700 dark:text-gray-200"
                               aria-labelledby="dropdownSelect"
                             >
@@ -567,9 +567,9 @@ export default function Documentation () {
                                 filteredVersions
                                   .map((option) => (
                                     <motion.li
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
+                                      initial={{ opacity: 0 }}
+                                      animate={{ opacity: 1 }}
+                                      exit={{ opacity: 0 }}
                                       key={`version-${option.id}`}
                                       className="relative w-full"
                                     >
@@ -585,9 +585,9 @@ export default function Documentation () {
                                   ))
                               ) : (
                                 <motion.li
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
+                                  initial={{ opacity: 0 }}
+                                  animate={{ opacity: 1 }}
+                                  exit={{ opacity: 0 }}
                                   key='no-version-found-message'
                                 >
                                   <div className="flex items-center ps-2 rounded">
@@ -635,26 +635,26 @@ export default function Documentation () {
 
                 {filteredItems && (
                   <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  key="documentation-table-container"
-                  className="overflow-x-auto h-auto">
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    key="documentation-table-container"
+                    className="overflow-x-auto h-auto">
                     <DragDropContext onDragEnd={handleDragEnd}>
                       <Droppable droppableId="table" type="TABLE">
                         {(provided) => (
                           <motion.table
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          key="table-documentation-table-tag"
-                          className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                            <motion.thead
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            key="table-documentation-head"
-                            className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                            key="table-documentation-table-tag"
+                            className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                            <motion.thead
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              key="table-documentation-head"
+                              className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                               <tr>
                                 <th className="w-1/12 whitespace-nowrap" />
                                 <th className="w-3/12 px-4 py-3 whitespace-nowrap">{t('title')}</th>
@@ -665,66 +665,67 @@ export default function Documentation () {
                             </motion.thead>
 
                             <motion.tbody
-                            key="table-documentation-body"
-                             initial={{ opacity: 0 }}
-                             animate={{ opacity: 1 }}
-                             exit={{ opacity: 0 }}
+                              key="table-documentation-body"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
                               {...provided.droppableProps}
                               ref={provided.innerRef}
                             >
                               {!pageGroupLoading ? (
                                 filteredItems &&
-                                filteredItems.length <= 0 ? (
+                                  filteredItems.length <= 0 ? (
+                                  <motion.tr
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="border-b dark:bg-gray-700"
+                                    key="no-pages-found-message"
+                                  >
+                                    <td colSpan="5" className="w-12/12 text-center py-12">No Pages Found</td>
+                                  </motion.tr>
+                                    ) : (
+                                      filteredItems.slice(startIdx, endIdx).map((obj, index) => (
+                                    <Draggable
+                                      key={
+                                        obj.name
+                                          ? `pageGroup-${obj.id}`
+                                          : `page-${obj.id}`
+                                      }
+                                      draggableId={
+                                        obj.name
+                                          ? `pageGroup-${obj.id}`
+                                          : `page-${obj.id}`
+                                      }
+                                      index={index}
+                                    >
+                                      {(provided, snapshot) => (
+                                        <Table
+                                          provided={provided}
+                                          snapshot={snapshot}
+                                          obj={obj}
+                                          index={index}
+                                          dir="true"
+                                          docId={selectedVersion.id}
+                                          pageGroupId={obj.id}
+                                          version={selectedVersion.version}
+                                        />
+                                      )}
+                                    </Draggable>
+                                      ))
+                                    )
+                              ) : (
+                                // Optional: Show a loading spinner or message while data is loading
                                 <motion.tr
                                   initial={{ opacity: 0 }}
                                   animate={{ opacity: 1 }}
                                   exit={{ opacity: 0 }}
-                                  className="border-b dark:bg-gray-700"
-                                  key="no-pages-found-message"
+                                  key="documentation-data-loading-message"
                                 >
-                                   <td colSpan="5" className="w-12/12 text-center py-12">No Pages Found</td>
+                                  <td colSpan="5" className="text-center py-12">Loading...</td>
                                 </motion.tr>
-                                    ) : (
-                                      filteredItems.slice(startIdx, endIdx).map((obj, index) => (
-                                  <Draggable
-                                    key={
-                                      obj.name
-                                        ? `pageGroup-${obj.id}`
-                                        : `page-${obj.id}`
-                                    }
-                                    draggableId={
-                                      obj.name
-                                        ? `pageGroup-${obj.id}`
-                                        : `page-${obj.id}`
-                                    }
-                                    index={index}
-                                  >
-                                    {(provided, snapshot) => (
-                                      <Table
-                                        provided={provided}
-                                        snapshot={snapshot}
-                                        obj={obj}
-                                        index={index}
-                                        docId={selectedVersion.id}
-                                        pageGroupId={obj.id}
-                                        version={selectedVersion.version}
-                                      />
-                                    )}
-                                  </Draggable>
-                                      ))
-                                    )
-                              ) : (
-                              // Optional: Show a loading spinner or message while data is loading
-                              <motion.tr
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              key="documentation-data-loading-message"
-                              >
-                                <td colSpan="5" className="text-center py-12">Loading...</td>
-                              </motion.tr>
                               )}
-                            {provided.placeholder}
+                              {provided.placeholder}
                             </motion.tbody>
                           </motion.table>
                         )}
@@ -735,9 +736,9 @@ export default function Documentation () {
 
                 {filteredItems.length > 0 &&
                   <motion.section
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
                     key="documnetation-table-pagination"
                     className='flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4'
                     aria-label='Table navigation'
@@ -756,7 +757,7 @@ export default function Documentation () {
 
                     <ul className='inline-flex items-stretch -space-x-px'>
                       <li>
-                          <div className='flex items-center sm:mx-3 gap-3'>
+                        <div className='flex items-center sm:mx-3 gap-3'>
                           <span className='text-sm font-normal text-gray-500 dark:text-gray-400'>{t('page_size')}</span>
                           <div className="relative inline-block">
                             <button
@@ -822,8 +823,8 @@ export default function Documentation () {
                 {/* Edit Component */}
                 {editModal && (
                   <EditDocumentModal
-                    title={ currentModalItem.name}
-                    id={currentModalItem.id }
+                    title={currentModalItem.name}
+                    id={currentModalItem.id}
                     updateData={handlePageGroupUpdate}
                   />
                 )}
@@ -864,7 +865,7 @@ export default function Documentation () {
               key="no-documentation-found-message-conatiner"
             >
               <h1 className="text-gray-600 text-3xl p-10">
-              {t('no_documentations_found')}
+                {t('no_documentations_found')}
               </h1>
             </motion.div>
           )}

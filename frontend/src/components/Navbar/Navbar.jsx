@@ -85,9 +85,9 @@ export default function Navbar () {
                 className='flex items-center gap-1 dark:text-white hover:bg-gray-200 drak:bg-gray-800 rounded-md dark:hover:bg-gray-600 py-2 px-2'
                 onClick={toggleTranslateDropdown}
               >
-              <Icon icon="material-symbols:translate"/>
+                <Icon icon="material-symbols:translate" />
                 <span className='text-md'>{i18n.language}</span>
-                <Icon icon="mingcute:down-line" className='w-6 h-6'/>
+                <Icon icon="mingcute:down-line" className='w-6 h-6' />
               </button>
 
               {translateDropdown && (
@@ -102,7 +102,7 @@ export default function Navbar () {
                   <ul className="w-32  text-start text-sm font-medium text-gray-900 dark:text-white">
                     {languages.map((lng) => (
                       <li key={lng.code} onClick={() => changeLanguage(lng.code)}
-                      className={`w-full py-2 px-3  cursor-pointer ${lng.code === i18n.language ? 'bg-gray-800 cursor-text' : 'dark:hover:bg-gray-600 hover:bg-gray-200'}`}>
+                        className={`w-full py-2 px-3  cursor-pointer ${lng.code === i18n.language ? 'bg-gray-800 cursor-text' : 'dark:hover:bg-gray-600 hover:bg-gray-200'}`}>
                         {lng.lang}</li>
                     ))}</ul>
                 </motion.div>

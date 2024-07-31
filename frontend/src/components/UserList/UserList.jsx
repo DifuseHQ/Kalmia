@@ -233,7 +233,7 @@ export default function UserList () {
                     value={searchTerm}
                     onChange={handleSearchChange}
                     className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
-                    placeholder= {t('search_placeholder')}
+                    placeholder={t('search_placeholder')}
                     required=''
                   />
                 </div>
@@ -258,7 +258,7 @@ export default function UserList () {
               <thead className='text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400'>
                 <tr>
                   <th scope='col' className='px-4 py-3'>
-                  {t('username')}
+                    {t('username')}
                   </th>
                   <th scope='col' className='px-4 py-3'>
                     {t('email')}
@@ -304,11 +304,10 @@ export default function UserList () {
                   <li key={i}>
                     <button
                       onClick={() => handlePageChange(i + 1)}
-                      className={`flex items-center justify-center text-sm py-2 px-3 leading-tight ${
-                        currentPage === i + 1
+                      className={`flex items-center justify-center text-sm py-2 px-3 leading-tight ${currentPage === i + 1
                           ? 'text-primary-600 bg-primary-50 border border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white'
                           : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'
-                      }`}
+                        }`}
                     >
                       {i + 1}
                     </button>
