@@ -1,7 +1,6 @@
 package main
 
 import (
-	"embed"
 	"fmt"
 	"net/http"
 	"os"
@@ -18,9 +17,6 @@ import (
 	"go.uber.org/zap"
 )
 
-//go:embed embedded/docusaurus
-var docusaurusFS embed.FS
-
 func main() {
 	cmd.AsciiArt()
 	cfgPath := cmd.ParseFlags()
@@ -34,6 +30,12 @@ func main() {
 	serviceRegistry := services.NewServiceRegistry(d)
 	aS := serviceRegistry.AuthService
 	dS := serviceRegistry.DocService
+
+	/* Let's do some startup stuff */
+
+	go func() {
+		dS.StartupCheck()
+	}()
 
 	/* Setup router */
 	r := mux.NewRouter()
