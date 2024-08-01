@@ -4,14 +4,20 @@ import { DateTime } from 'luxon';
 import { toastMessage } from './Toast';
 
 export const handleError = (result, navigate = null, t) => {
-  console.log('error result', result);
+  console.log('result', result);
   if (result.status === 'error') {
     if (result.status.code === '401') {
+      toastMessage(t(result.message), 'error');
       Cookies.remove('accessToken');
-      navigate('/');
-      return;
+      navigate('/login');
+    } else {
+      if (result?.data) {
+        toastMessage(t(result?.data?.message), 'error');
+      } else {
+        toastMessage(t(result.message), 'error');
+        navigate('/server-down');
+      }
     }
-    toastMessage(t(result.data.message), 'error');
     return true;
   }
 

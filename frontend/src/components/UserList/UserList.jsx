@@ -4,10 +4,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { AnimatePresence, motion } from 'framer-motion';
 
-import instance from '../../api/AxiosInstance';
+import { deleteUser, getUsers } from '../../api/Requests';
 import { AuthContext } from '../../context/AuthContext';
 import { ModalContext } from '../../context/ModalContext';
-import { getFormattedDate } from '../../utils/Common';
+import { getFormattedDate, handleError } from '../../utils/Common';
 import { toastMessage } from '../../utils/Toast';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
 import DeleteModal from '../DeleteModal/DeleteModal';
@@ -28,19 +28,16 @@ export default function UserList () {
   useEffect(() => {
     setLoading(true);
     const fetchData = async () => {
-      try {
-        const response = await instance.get('/auth/users');
-        if (response?.status === 200) {
-          setUserList(response?.data || []);
-          setLoading(false);
-        }
-      } catch (err) {
+      const response = await getUsers();
+
+      if (handleError(response, navigate, t)) {
         setLoading(false);
-        if (!err.response) {
-          toastMessage(t(err?.message), 'error');
-          navigate('/server-down');
-        }
-        toastMessage(t(err?.response?.data?.message), 'error');
+        return;
+      }
+
+      if (response?.status === 'success') {
+        setUserList(response?.data || []);
+        setLoading(false);
       }
     };
     fetchData();
@@ -68,22 +65,15 @@ export default function UserList () {
       return;
     }
 
-    try {
-      const response = await instance.post('/auth/user/delete', {
-        username
-      });
-      if (response?.status === 200) {
-        refreshData();
-        toastMessage(t('user_deleted_successfully'), 'success');
-        closeModal('delete');
-        navigate('/dashboard/admin/user-list');
-      }
-    } catch (err) {
-      if (!err.response) {
-        toastMessage(t(err?.message), 'error');
-        navigate('/server-down');
-      }
-      toastMessage(t(err?.response?.data?.message), 'error');
+    const response = await deleteUser(username);
+
+    if (handleError(response, navigate, t)) return;
+
+    if (response?.status === 'success') {
+      refreshData();
+      toastMessage(t('user_deleted_successfully'), 'success');
+      closeModal('delete');
+      navigate('/dashboard/admin/user-list');
     }
   };
 

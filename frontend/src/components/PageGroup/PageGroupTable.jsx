@@ -5,13 +5,14 @@ import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd';
 import { Icon } from '@iconify/react';
 import { AnimatePresence, motion } from 'framer-motion';
 
-import instance from '../../api/AxiosInstance';
 import {
   createPage as createPageAPI,
   createPageGroup,
   deletePage,
   deletePageGroup,
   getPageGroup,
+  pageGroupReorder,
+  pageReorder,
   updatePageGroup
 } from '../../api/Requests';
 import { AuthContext } from '../../context/AuthContext';
@@ -124,7 +125,7 @@ export default function PageGroupTable () {
       result = await deletePage(Number(id));
     }
 
-    if ((result, navigate)) {
+    if (handleError(result, navigate, t)) {
       return;
     }
 
@@ -143,7 +144,7 @@ export default function PageGroupTable () {
       parentId: Number(pageGroupId)
     });
 
-    if ((result, navigate)) {
+    if (handleError(result, navigate, t)) {
       return;
     }
 
@@ -199,37 +200,38 @@ export default function PageGroupTable () {
 
     const newItems = Array.from(data);
     const [reorderedItem] = newItems.splice(result.source.index, 1);
+    const dragItem = reorderedItem;
     newItems.splice(result.destination.index, 0, reorderedItem);
     setData(newItems);
 
     const updateOrder = async (item, index) => {
-      try {
-        if (item?.name) {
-          await instance.post('/docs/page-group/reorder', {
-            id: item.id,
-            documentationId: Number(docId),
-            parentId: Number(pageGroupId),
-            order: index
-          });
-        } else {
-          await instance.post('/docs/page/reorder', {
-            id: item.id,
-            documentationId: Number(docId),
-            pageGroupId: Number(pageGroupId),
-            order: index
-          });
-        }
-      } catch (err) {
-        if (!err.response) {
-          toastMessage(t(err?.message), 'error');
-          navigate('/server-down');
-          return;
-        }
-        toastMessage(t(err?.response?.data?.message), 'error');
+      const payload = {
+        id: item.id,
+        documentationId: Number(docId),
+        order: index
+      };
+
+      if (item?.name) {
+        payload.parentId = Number(pageGroupId);
+      } else {
+        payload.pageGroupId = Number(pageGroupId);
       }
+
+      const endpoint = item?.name
+        ? pageGroupReorder
+        : pageReorder;
+
+      const result = await endpoint(payload);
+
+      if (handleError(result, navigate, t)) return; //eslint-disable-line
     };
 
-    await Promise.all(newItems.map((item, index) => updateOrder(item, index)));
+    try {
+      await Promise.all(newItems.map((item, index) => updateOrder(item, index)));
+      toastMessage(t(`${dragItem.slug ? 'page_reordered' : 'page_group_reordered'}`), 'success');
+    } catch (err) {
+      console.error('Error in Promise.all:', err);
+    }
     refreshData();
   };
 

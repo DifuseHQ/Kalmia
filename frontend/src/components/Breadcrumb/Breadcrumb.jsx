@@ -129,7 +129,7 @@ export default function Breadcrumb () {
         }
       } else {
         if (docId) {
-          const doc = documentations.find(d => d.id === parseInt(docId));
+          const doc = documentations?.find(d => d.id === parseInt(docId));
           if (doc) {
             newBreadcrumb.push({
               title: doc.name,
@@ -138,7 +138,7 @@ export default function Breadcrumb () {
             });
           }
         } else {
-          const smallestId = await documentations.reduce((min, doc) => (doc.id < min ? doc.id : min), documentations[0]?.id);
+          const smallestId = await documentations?.reduce((min, doc) => (doc.id < min ? doc.id : min), documentations[0]?.id);
           navigate(smallestId ? `/dashboard/documentation?id=${smallestId}` : '/dashboard/documentation');
         }
       }

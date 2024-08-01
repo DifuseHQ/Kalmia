@@ -83,7 +83,7 @@ export const AuthProvider = ({ children }) => {
         if (!token) {
           Cookies.remove('accessToken');
           setUser(null);
-          navigate('/');
+          navigate('/login');
           clearInterval(interval);
           return;
         }

@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { getDocumentations } from '../../api/Requests';
 import { AuthContext } from '../../context/AuthContext';
 import { ModalContext } from '../../context/ModalContext';
-import { toastMessage } from '../../utils/Toast';
+import { handleError } from '../../utils/Common';
 
 export default function Sidebar () {
   const { t } = useTranslation();
@@ -23,12 +23,12 @@ export default function Sidebar () {
   useEffect(() => {
     const fetchData = async () => {
       const documentations = await getDocumentations();
+
+      if (handleError(documentations, navigate, t)) return;
+
       if (documentations.status === 'success') {
         const data = documentations.data;
         setDocumentation(data);
-      } else {
-        toastMessage(t(documentations.message), 'error');
-        navigate('/server-down');
       }
     };
 

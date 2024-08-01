@@ -48,7 +48,7 @@ export default function UserProfile () {
       }
     };
     fetchData();
-  }, [user, refresh, navigate]);
+  }, [user, refresh, navigate, t]);
 
   useEffect(() => {
     if (isEdit) {

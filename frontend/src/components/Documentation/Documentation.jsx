@@ -5,7 +5,6 @@ import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd';
 import { Icon } from '@iconify/react';
 import { AnimatePresence, motion } from 'framer-motion';
 
-import instance from '../../api/AxiosInstance';
 import {
   createDocumentationVersion,
   createPage as createPageAPI,
@@ -16,6 +15,8 @@ import {
   getDocumentations,
   getPageGroups,
   getPages,
+  pageGroupReorder,
+  pageReorder,
   updatePageGroup
 } from '../../api/Requests';
 import { AuthContext } from '../../context/AuthContext';
@@ -340,32 +341,29 @@ export default function Documentation () {
     );
 
     const [reorderedItem] = newItems.splice(result.source.index, 1);
-
+    const dragItem = reorderedItem;
     newItems.splice(result.destination.index, 0, reorderedItem);
     setGroupsAndPageData(newItems);
 
     const updateOrder = async (item, index) => {
-      try {
-        const endpoint = item?.name
-          ? '/docs/page-group/reorder'
-          : '/docs/page/reorder';
-        await instance.post(endpoint, {
-          id: item.id,
-          documentationId: selectedVersion.id,
-          order: index
-        });
-      } catch (err) {
-        console.error(err);
-        if (!err.response || err?.response?.status === 500) {
-          toastMessage(err?.message, 'error');
-          navigate('/server-down');
-          return;
-        }
-        toastMessage(t(err?.response?.data?.message), 'error');
-      }
+      const endpoint = item?.name
+        ? pageGroupReorder
+        : pageReorder;
+      const result = await endpoint({
+        id: item.id,
+        documentationId: selectedVersion.id,
+        order: index
+      });
+
+        if (handleError(result, navigate, t)) return; //eslint-disable-line
     };
 
-    await Promise.all(newItems.map((item, index) => updateOrder(item, index)));
+    try {
+      await Promise.all(newItems.map((item, index) => updateOrder(item, index)));
+      toastMessage(t(`${dragItem.slug ? 'page_reordered' : 'page_group_reordered'}`), 'success');
+    } catch (err) {
+      console.error('Error in Promise.all:', err);
+    }
     refreshData();
   };
 

@@ -4,9 +4,9 @@ import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
 
-import instance from '../api/AxiosInstance';
+import { getUsers } from '../api/Requests';
 import Loading from '../components/Loading/Loading';
-import { toastMessage } from '../utils/Toast';
+import { handleError } from '../utils/Common';
 
 export default function AdminAuth () {
   const { t } = useTranslation();
@@ -23,23 +23,20 @@ export default function AdminAuth () {
         const accessToken = jwtDecode(tokenData.token);
         user = accessToken;
       }
-      try {
-        const response = await instance.get('/auth/users');
-        if (response?.status === 200) {
-          const foundUser = response?.data.find(
-            (obj) => obj.id.toString() === user?.userId
-          );
-          if (foundUser && foundUser?.admin === true) {
-            setIsAdmin(true);
-          }
+
+      const response = await getUsers();
+      if (handleError(response, navigate, t)) {
+        setIsLoading(false);
+        return;
+      }
+
+      if (response?.status === 'success') {
+        const foundUser = response?.data.find(
+          (obj) => obj.id.toString() === user?.userId
+        );
+        if (foundUser && foundUser?.admin === true) {
+          setIsAdmin(true);
         }
-      } catch (err) {
-        if (!err.response) {
-          toastMessage(t(err?.message), 'error');
-          navigate('/server-down');
-        }
-        toastMessage(t(err?.response?.data?.message), 'error');
-      } finally {
         setIsLoading(false);
       }
     };
