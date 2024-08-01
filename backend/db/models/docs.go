@@ -1,8 +1,9 @@
 package models
 
 import (
-	jsonx "github.com/clarketm/json"
 	"time"
+
+	jsonx "github.com/clarketm/json"
 )
 
 type Page struct {
@@ -48,9 +49,9 @@ func (s PageGroup) MarshalJSON() ([]byte, error) {
 
 type Documentation struct {
 	ID               uint        `gorm:"primarykey" json:"id,omitempty"`
-	Name             string      `gorm:"index:idx_name_version,unique:true,composite:true" json:"name,omitempty"`
-	Version          string      `gorm:"index:idx_name_version,unique:true,composite:true;index:idx_cloned_version,unique:true,composite:true" json:"version,omitempty"`
-	ClonedFrom       *uint       `gorm:"default:null;index:idx_cloned_version,unique:true,composite:true" json:"clonedFrom"`
+	Name             string      `gorm:"index:idx_name_root" json:"name,omitempty"`
+	Version          string      `json:"version,omitempty"`
+	ClonedFrom       *uint       `gorm:"default:null" json:"clonedFrom"`
 	Description      string      `json:"description,omitempty"`
 	Favicon          string      `json:"favicon,omitempty"`
 	MetaImage        string      `json:"metaImage,omitempty"`

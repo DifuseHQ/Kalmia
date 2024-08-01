@@ -1,14 +1,14 @@
 package middleware
 
 import (
-	"git.difuse.io/Difuse/kalmia/handlers"
-	"git.difuse.io/Difuse/kalmia/services"
-	"gorm.io/gorm"
 	"net/http"
 	"strings"
+
+	"git.difuse.io/Difuse/kalmia/handlers"
+	"git.difuse.io/Difuse/kalmia/services"
 )
 
-func EnsureAuthenticated(db *gorm.DB) func(http.Handler) http.Handler {
+func EnsureAuthenticated(authService *services.AuthService) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path == "/auth/jwt/create" || r.URL.Path == "/user/edit" {
@@ -24,14 +24,14 @@ func EnsureAuthenticated(db *gorm.DB) func(http.Handler) http.Handler {
 			}
 
 			if strings.HasPrefix(r.URL.Path, "/user") && !strings.Contains(r.URL.Path, "/upload-photo") {
-				if !services.VerifyTokenInDb(db, token, true) {
-					handlers.SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"error": "Invalid Token"})
+				if !authService.VerifyTokenInDb(token, true) {
+					handlers.SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"error": "invalid_token"})
 					return
 				}
 			}
 
-			if !services.VerifyTokenInDb(db, token, false) {
-				handlers.SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"error": "Invalid token"})
+			if !authService.VerifyTokenInDb(token, false) {
+				handlers.SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"error": "invalid_token"})
 				return
 			}
 
