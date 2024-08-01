@@ -1,17 +1,17 @@
+import Cookies from 'js-cookie';
 import { DateTime } from 'luxon';
 
 import { toastMessage } from './Toast';
 
 export const handleError = (result, navigate = null, t) => {
+  console.log('error result', result);
   if (result.status === 'error') {
-    if (result.code === 500) {
-      if (navigate) {
-        navigate(result.path);
-      }
-    } else {
-      toastMessage(t(result.message), 'error');
+    if (result.status.code === '401') {
+      Cookies.remove('accessToken');
+      navigate('/');
+      return;
     }
-
+    toastMessage(t(result.data.message), 'error');
     return true;
   }
 

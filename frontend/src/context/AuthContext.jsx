@@ -3,8 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 
-import instance from '../api/AxiosInstance';
-import { refreshJWT, signOut, validateJWT } from '../api/Requests';
+import { createJWT, refreshJWT, signOut, validateJWT } from '../api/Requests';
 import { useToken } from '../hooks/useToken';
 import { useUser } from '../hooks/useUser';
 import { useUserDetails } from '../hooks/useUserDetails';
@@ -34,28 +33,19 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (username, password) => {
-    try {
-      const response = await instance.post('auth/jwt/create', {
-        username,
-        password
+    const response = await createJWT({ username, password });
+
+    if (handleError(response, navigate, t)) return;
+
+    if (response.status === 'success') {
+      const data = response.data.token;
+      setToken(data);
+      setUser(data);
+      Cookies.set('accessToken', JSON.stringify(response?.data), {
+        expires: 1,
+        secure: !(window.location.href.includes('http://'))
       });
-      if (response?.status === 200) {
-        setToken(response.data.token);
-        setUser(response?.data?.token);
-        Cookies.set('accessToken', JSON.stringify(response?.data), {
-          expires: 1,
-          secure: !(window.location.href.includes('http://'))
-        });
-        navigate('/dashboard', { replace: true });
-      }
-    } catch (err) {
-      console.error(err);
-      if (!err.response || err?.response?.status === 500) {
-        toastMessage(t(err?.message), 'error');
-        navigate('/server-down');
-        return;
-      }
-      toastMessage(t(err?.response?.data?.message), 'error');
+      navigate('/dashboard', { replace: true });
     }
   };
 

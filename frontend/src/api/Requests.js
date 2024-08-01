@@ -34,6 +34,7 @@ async function makeRequest (url, method = 'get', data = null) {
   }
 }
 
+export const createJWT = (data) => makeRequest('/auth/jwt/create', 'post', data);
 export const refreshJWT = (token) => makeRequest('/auth/jwt/refresh', 'post', { token });
 export const validateJWT = (token) => makeRequest('/auth/jwt/validate', 'post', { token });
 export const signOut = (token) => makeRequest('/auth/jwt/revoke', 'post', { token });
