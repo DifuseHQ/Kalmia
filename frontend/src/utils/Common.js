@@ -2,14 +2,14 @@ import { DateTime } from 'luxon';
 
 import { toastMessage } from './Toast';
 
-export const handleError = (result, navigate = null) => {
+export const handleError = (result, navigate = null, t) => {
   if (result.status === 'error') {
     if (result.code === 500) {
       if (navigate) {
         navigate(result.path);
       }
     } else {
-      toastMessage(result.message, 'error');
+      toastMessage(t(result.message), 'error');
     }
 
     return true;

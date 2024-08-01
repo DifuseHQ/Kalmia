@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { BlockNoteSchema, defaultBlockSpecs, filterSuggestionItems } from '@blocknote/core';
@@ -112,20 +112,19 @@ export default function EditPage () {
     initialContent: editorContent
   });
 
-  function parsedContent (data) {
+  const parsedContent = useCallback((data) => {
     try {
       return JSON.parse(data);
     } catch (e) {
-      console.error('Error parsing page content:', e);
-      toastMessage('Error parsing page content', 'error');
+      toastMessage(t('error_parsing_page_content'), 'error');
       return {};
     }
-  }
+  }, [t]);
 
   useEffect(() => {
     const fetchData = async () => {
       const result = await getPage(Number(pageId));
-      if (handleError(result, navigate)) return;
+      if (handleError(result, navigate, t)) return;
 
       if (result.status === 'success') {
         setPageData(prev => ({
@@ -140,7 +139,7 @@ export default function EditPage () {
     };
 
     fetchData();
-  }, [pageId, navigate, editor]);
+  }, [pageId, navigate, editor, t, parsedContent]);
 
   useEffect(() => {
     if (editor && editorContent.length > 0) {
@@ -157,12 +156,12 @@ export default function EditPage () {
       id: Number(pageId)
     });
 
-    if (handleError(result, navigate)) {
+    if (handleError(result, navigate, t)) {
       return;
     }
 
     if (result.status === 'success') {
-      toastMessage(result.data.message, 'success');
+      toastMessage(t(result.data.message), 'success');
       refreshData();
     }
   };
@@ -170,13 +169,13 @@ export default function EditPage () {
   const handleDelete = async () => {
     const result = await deletePage(Number(pageId));
 
-    if (handleError(result, navigate)) {
+    if (handleError(result, navigate, t)) {
       return;
     }
 
     if (result.status === 'success') {
       closeModal('delete');
-      toastMessage(result.data.message, 'success');
+      toastMessage(t(result.data.message), 'success');
       refreshData();
 
       if (dir === 'true') {

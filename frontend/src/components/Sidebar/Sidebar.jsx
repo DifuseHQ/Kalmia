@@ -27,13 +27,13 @@ export default function Sidebar () {
         const data = documentations.data;
         setDocumentation(data);
       } else {
-        toastMessage(documentations.message, 'error');
+        toastMessage(t(documentations.message), 'error');
         navigate('/server-down');
       }
     };
 
     fetchData();
-  }, [refresh, navigate]);
+  }, [refresh, navigate, t]);
 
   const toggleDropdown = (index) => {
     const updatedDropdowns = [...openDropdowns];

@@ -37,14 +37,14 @@ export default function UserList () {
       } catch (err) {
         setLoading(false);
         if (!err.response) {
-          toastMessage(err?.message, 'error');
+          toastMessage(t(err?.message), 'error');
           navigate('/server-down');
         }
-        toastMessage(err?.response?.data?.message, 'error');
+        toastMessage(t(err?.response?.data?.message), 'error');
       }
     };
     fetchData();
-  }, [refresh, navigate]);
+  }, [refresh, navigate, t]);
 
   const filterUser = userList.filter(
     (user) =>
@@ -64,7 +64,7 @@ export default function UserList () {
 
   const handleDeleteUser = async (username) => {
     if (!username) {
-      toastMessage('Something went wrong, try again', 'error');
+      toastMessage(t('something_went_wrong_try_again'), 'error');
       return;
     }
 
@@ -74,16 +74,16 @@ export default function UserList () {
       });
       if (response?.status === 200) {
         refreshData();
-        toastMessage('User deleted successfully', 'success');
+        toastMessage(t('user_deleted_successfully'), 'success');
         closeModal('delete');
         navigate('/dashboard/admin/user-list');
       }
     } catch (err) {
       if (!err.response) {
-        toastMessage(err?.message, 'error');
+        toastMessage(t(err?.message), 'error');
         navigate('/server-down');
       }
-      toastMessage(err?.response?.data?.message, 'error');
+      toastMessage(t(err?.response?.data?.message), 'error');
     }
   };
 

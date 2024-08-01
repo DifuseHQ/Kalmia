@@ -11,3 +11,5 @@ i18n
     fallbackLng: 'English',
     returnObjects: true
   });
+
+export default i18n;

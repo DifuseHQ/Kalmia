@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Icon } from '@iconify/react/dist/iconify.js';
 import { motion } from 'framer-motion';
@@ -15,6 +16,8 @@ export default function Breadcrumb () {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
+
+  const { t } = useTranslation();
 
   useEffect(() => {
     async function updateBreadcrumb () {
@@ -76,7 +79,7 @@ export default function Breadcrumb () {
         }
         return result.data;
       })).catch(error => {
-        toastMessage('error', error.message);
+        toastMessage(t(error.message), 'error');
         return [null, null, null];
       });
 
@@ -201,13 +204,13 @@ export default function Breadcrumb () {
     }
 
     updateBreadcrumb();
-  }, [location.search, navigate, location.pathname, searchParams, user, userIdFromParam, setBreadcrumb]);
+  }, [location.search, navigate, location.pathname, searchParams, user, userIdFromParam, setBreadcrumb, t]);
 
   useEffect(() => {
     const firstTitle = breadcrumb[0]?.title || 'Kalmia';
     const lastTitle = breadcrumb[breadcrumb.length - 1]?.title || '';
     document.title = breadcrumb.length === 1
-      ? `Kalmia - ${firstTitle}`
+      ? `Kalmia ${`- ${firstTitle}`}`
       : `${firstTitle} - ${lastTitle}`;
   }, [breadcrumb]);
 

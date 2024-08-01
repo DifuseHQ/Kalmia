@@ -93,7 +93,7 @@ export default function Documentation () {
       const versionId = searchParam.get('versionId');
       const documentationsResult = await getDocumentations();
 
-      if (handleError(documentationsResult, navigate)) {
+      if (handleError(documentationsResult, navigate, t)) {
         setLoading(false);
         return;
       }
@@ -156,8 +156,8 @@ export default function Documentation () {
         getPages()
       ]);
 
-      handleError(pageGroupsResult, navigate);
-      handleError(pagesResult, navigate);
+      handleError(pageGroupsResult, navigate, t);
+      handleError(pagesResult, navigate, t);
 
       if (
         pageGroupsResult.status === 'success' &&
@@ -176,7 +176,7 @@ export default function Documentation () {
     } else {
       setPageGroupLoading(false);
     }
-  }, [docId, user, navigate, refresh, versionId]);
+  }, [docId, user, navigate, refresh, versionId, t]);
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
@@ -192,13 +192,13 @@ export default function Documentation () {
   const handleDelete = async () => {
     const result = await deleteDocumentation(Number(selectedVersion.id));
 
-    if (handleError(result, navigate)) {
+    if (handleError(result, navigate, t)) {
       return;
     }
 
     if (result.status === 'success') {
       closeModal('delete');
-      toastMessage(result.data.message, 'success');
+      toastMessage(t(result.data.message), 'success');
       refreshData();
       navigate('/');
     }
@@ -213,14 +213,14 @@ export default function Documentation () {
       });
     }
 
-    if (handleError(result, navigate)) return;
+    if (handleError(result, navigate, t)) return;
 
     if (result.status === 'success') {
       if (cloneDocumentModal) {
         closeModal('cloneDocument');
       }
       refreshData();
-      toastMessage(result.data.message, 'success');
+      toastMessage(t(result.data.message), 'success');
     }
   };
 
@@ -235,13 +235,13 @@ export default function Documentation () {
       result = await deletePage(Number(id));
     }
 
-    if (handleError(result, navigate)) {
+    if (handleError(result, navigate, t)) {
       return;
     }
 
     if (result.status === 'success') {
       closeModal('delete');
-      toastMessage(result.data.message, 'success');
+      toastMessage(t(result.data.message), 'success');
       refreshData();
     }
   };
@@ -256,21 +256,21 @@ export default function Documentation () {
       documentationId: Number(selectedVersion.id)
     });
 
-    if (handleError(result, navigate)) {
+    if (handleError(result, navigate, t)) {
       return;
     }
 
     if (result.status === 'success') {
       closeModal('edit');
       refreshData();
-      toastMessage(result.data.message, 'success');
+      toastMessage(t(result.data.message), 'success');
     }
   };
 
   const handleCreatePageGroup = async (title) => {
     if (title === '') {
       toastMessage(
-        'Title is required. Please Enter PageGroup title',
+        t('title_is_required'),
         'warning'
       );
       return;
@@ -281,21 +281,28 @@ export default function Documentation () {
       documentationId: Number(selectedVersion.id)
     });
 
-    if (handleError(result, navigate)) {
+    if (handleError(result, navigate, t)) {
       return;
     }
 
     if (result.status === 'success') {
       closeModal('createPageGroup');
       refreshData();
-      toastMessage(result.data.message, 'success');
+      toastMessage(t(result.data.message), 'success');
     }
   };
 
   const handleCreatePage = async (title, slug) => {
-    if (title === '' || slug === '') {
+    if (title === '') {
       toastMessage(
-        'Title and Slug are required. Please Enter Page title and slug',
+        t('title_is_required'),
+        'warning'
+      );
+      return;
+    }
+    if (slug === '') {
+      toastMessage(
+        t('slug_is_required'),
         'warning'
       );
       return;
@@ -310,14 +317,14 @@ export default function Documentation () {
       documentationId: parseInt(docIdOrVersionId)
     });
 
-    if (handleError(result, navigate)) {
+    if (handleError(result, navigate, t)) {
       return;
     }
 
     if (result.status === 'success') {
       closeModal('createPage');
       refreshData();
-      toastMessage(result.data.message, 'success');
+      toastMessage(t(result.data.message), 'success');
     }
   };
 
@@ -354,7 +361,7 @@ export default function Documentation () {
           navigate('/server-down');
           return;
         }
-        toastMessage(err?.response?.data?.message, 'error');
+        toastMessage(t(err?.response?.data?.message), 'error');
       }
     };
 

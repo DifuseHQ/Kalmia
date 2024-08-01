@@ -28,12 +28,12 @@ export default function CreateUser () {
     e.preventDefault();
 
     if (password.length < 8) {
-      toastMessage('Password must be at least 8 characters', 'warning');
+      toastMessage(t('password_must_be_at_least_8_characters'), 'warning');
       return;
     }
 
     if (password !== confirmPassword) {
-      toastMessage('Password and Confirm Password do not match', 'warning');
+      toastMessage(t('password_and_confirm_password_do_not_match'), 'warning');
       return;
     }
 
@@ -46,10 +46,10 @@ export default function CreateUser () {
     const result = await createUser(userData);
 
     if (result.status === 'success') {
-      toastMessage('User Created Successfully', 'success');
+      toastMessage(t('user_created_successfully'), 'success');
       navigate('/dashboard/admin/user-list');
     } else {
-      handleError(result, navigate);
+      handleError(result, navigate, t);
     }
   };
 

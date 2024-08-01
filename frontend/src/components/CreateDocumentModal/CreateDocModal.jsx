@@ -97,7 +97,7 @@ export default function CreateDocModal () {
             moreLabelLinks ? JSON.parse(moreLabelLinks) : [{ label: '', community: '' }]
           );
         } else {
-          handleError(result, navigate);
+          handleError(result, navigate, t);
         }
       };
       fetchDoc();
@@ -115,7 +115,7 @@ export default function CreateDocModal () {
       setFooterField([{ label: '', community: '' }]);
       setMoreField([{ label: '', community: '' }]);
     }
-  }, [docId, mode, navigate]);
+  }, [docId, mode, navigate, t]);
 
   const addRow = (fieldType) => {
     if (fieldType === 'footer') {
@@ -156,22 +156,22 @@ export default function CreateDocModal () {
   const handleCreateDocument = async () => {
     if (formData.name === '') {
       toastMessage(
-        'Title is required. Please enter a new Document Title.',
-        'warning'
-      );
-      return;
-    }
-
-    if (formData.description === '') {
-      toastMessage(
-        'Description is required. Please enter a new Document Description.',
+        t('title_is_required'),
         'warning'
       );
       return;
     }
 
     if (formData.version === '') {
-      toastMessage('Version is required. Please enter a new.', 'warning');
+      toastMessage(t('version_is_required'), 'warning');
+      return;
+    }
+
+    if (formData.description === '') {
+      toastMessage(
+        t('description_is_required'),
+        'warning'
+      );
       return;
     }
 
@@ -202,9 +202,9 @@ export default function CreateDocModal () {
         navigate('/');
       }
 
-      toastMessage('Document created successfully', 'success');
+      toastMessage(t('document_created_successfully'), 'success');
     } else {
-      handleError(result, navigate);
+      handleError(result, navigate, t);
     }
   };
 

@@ -36,7 +36,7 @@ export default function UserForm () {
       try {
         if (userId && isLoggedInAdmin) {
           const response = await getUser(userId);
-          if (handleError(response, navigate)) return;
+          if (handleError(response, navigate, t)) return;
           setUserData(response.data);
           setUsername(response.data.username);
           setEmail(response.data.email);
@@ -51,12 +51,12 @@ export default function UserForm () {
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
-        handleError(error, navigate);
+        handleError(error, navigate, t);
       }
     };
 
     fetchUserData();
-  }, [userId, currentUser, isLoggedInAdmin, navigate]);
+  }, [userId, currentUser, isLoggedInAdmin, navigate, t]);
 
   useEffect(() => {
     if (isEdit) {
@@ -75,7 +75,7 @@ export default function UserForm () {
       };
       reader.readAsDataURL(file);
     } else {
-      toastMessage('Please upload a JPEG or PNG image', 'error');
+      toastMessage(t('please_upload_a_jpeg_or_png_image'), 'error');
     }
   };
 
@@ -92,7 +92,7 @@ export default function UserForm () {
 
           const photo = await uploadPhoto(formData);
 
-          if (handleError(photo, navigate)) {
+          if (handleError(photo, navigate, t)) {
             setIsLoading(false);
             return;
           }
@@ -107,14 +107,14 @@ export default function UserForm () {
               photo: image
             });
 
-            if (handleError(result, navigate)) {
+            if (handleError(result, navigate, t)) {
               setIsLoading(false);
               return;
             }
 
             if (result.status === 'success') {
               setIsLoading(false);
-              toastMessage('User photo updated', 'success');
+              toastMessage(t('user_photo_updated'), 'success');
               refreshData();
             }
           }
@@ -132,7 +132,7 @@ export default function UserForm () {
     e.preventDefault();
 
     if (userData.username === username && userData.email === email) {
-      toastMessage('No changes detected', 'warn');
+      toastMessage(t('no_changes_detected'), 'warn');
       return;
     }
 
@@ -142,10 +142,10 @@ export default function UserForm () {
       email
     });
 
-    if (handleError(result, navigate)) return;
+    if (handleError(result, navigate, t)) return;
 
     if (result.status === 'success') {
-      toastMessage('User Details Updated', 'success');
+      toastMessage(t('user_details_updated'), 'success');
       setIsEdit(!isEdit);
       refreshData();
     }
@@ -154,17 +154,17 @@ export default function UserForm () {
   const handleChangePassword = async (e) => {
     e.preventDefault();
     if (!password) {
-      toastMessage('Enter new password', 'warn');
+      toastMessage(t('enter_new_password'), 'warn');
       return;
     }
 
     if (password.length < 8) {
-      toastMessage('Password too weak', 'warn');
+      toastMessage(t('password_too_weak'), 'warn');
       return;
     }
 
     if (password !== confirmPasswod) {
-      toastMessage('Password and Confirm password miss match', 'warning');
+      toastMessage(t('password_and_confirm_password_miss_match'), 'warning');
       return;
     }
 
@@ -173,10 +173,10 @@ export default function UserForm () {
       password: password.toString()
     });
 
-    if (handleError(result, navigate)) return;
+    if (handleError(result, navigate, t)) return;
     if (result.status === 'success') {
       refreshData();
-      toastMessage('password change successfully', 'success');
+      toastMessage(t('password_change_successfully'), 'success');
       setPassword('');
       setConfirmPassword('');
     }

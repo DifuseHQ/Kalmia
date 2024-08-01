@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
@@ -8,6 +9,7 @@ import Loading from '../components/Loading/Loading';
 import { toastMessage } from '../utils/Toast';
 
 export default function AdminAuth () {
+  const { t } = useTranslation();
   const location = useLocation();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,17 +35,17 @@ export default function AdminAuth () {
         }
       } catch (err) {
         if (!err.response) {
-          toastMessage(err?.message, 'error');
+          toastMessage(t(err?.message), 'error');
           navigate('/server-down');
         }
-        toastMessage(err?.response?.data?.message, 'error');
+        toastMessage(t(err?.response?.data?.message), 'error');
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchData();
-  }, [navigate]);
+  }, [navigate, t]);
 
   // Render conditionally based on isAdmin and isLoading state
   if (isLoading) {

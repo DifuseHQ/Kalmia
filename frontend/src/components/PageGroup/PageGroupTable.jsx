@@ -58,7 +58,7 @@ export default function PageGroupTable () {
     const fetchData = async () => {
       const result = await getPageGroup(Number(pageGroupId));
 
-      if (handleError(result, navigate)) {
+      if (handleError(result, navigate, t)) {
         return;
       }
 
@@ -75,7 +75,7 @@ export default function PageGroupTable () {
     if (docId) {
       fetchData();
     }
-  }, [docId, pageGroupId, navigate, refresh]);
+  }, [docId, pageGroupId, navigate, refresh, t]);
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
@@ -92,7 +92,7 @@ export default function PageGroupTable () {
   const handleCreatePageGroup = async (title) => {
     if (title === '') {
       toastMessage(
-        'Title is required. Please Enter PageGroup title',
+        t('title_is_required'),
         'warning'
       );
       return;
@@ -104,14 +104,14 @@ export default function PageGroupTable () {
       parentId: Number(pageGroupId)
     });
 
-    if (handleError(result, navigate)) {
+    if (handleError(result, navigate, t)) {
       return;
     }
 
     if (result.status === 'success') {
       closeModal('createPageGroup');
       refreshData();
-      toastMessage(result.data.message, 'success');
+      toastMessage(t(result.data.message), 'success');
     }
   };
 
@@ -124,12 +124,12 @@ export default function PageGroupTable () {
       result = await deletePage(Number(id));
     }
 
-    if (handleError(result, navigate)) {
+    if ((result, navigate)) {
       return;
     }
 
     if (result.status === 'success') {
-      toastMessage(result.data.message, 'success');
+      toastMessage(t(result.data.message), 'success');
       closeModal('delete');
       refreshData();
     }
@@ -143,21 +143,29 @@ export default function PageGroupTable () {
       parentId: Number(pageGroupId)
     });
 
-    if (handleError(result, navigate)) {
+    if ((result, navigate)) {
       return;
     }
 
     if (result.status === 'success') {
       closeModal('edit');
       refreshData();
-      toastMessage(result.data.message, 'success');
+      toastMessage(t(result.data.message), 'success');
     }
   };
 
   const handleCreatePage = async (title, slug) => {
-    if (title === '' || slug === '') {
+    if (title === '') {
       toastMessage(
-        'Title and Slug are required. Please Enter Page title and slug',
+        t('title_is_required'),
+        'warning'
+      );
+      return;
+    }
+
+    if (slug === '') {
+      toastMessage(
+        t('slug_is_required'),
         'warning'
       );
       return;
@@ -173,14 +181,14 @@ export default function PageGroupTable () {
       pageGroupId: parseInt(pageGroupId)
     });
 
-    if (handleError(result, navigate)) {
+    if (handleError(result, navigate, t)) {
       return;
     }
 
     if (result.status === 'success') {
       closeModal('createPage');
       refreshData();
-      toastMessage(result.data.message, 'success');
+      toastMessage(t(result.data.message), 'success');
     }
   };
 
@@ -213,11 +221,11 @@ export default function PageGroupTable () {
         }
       } catch (err) {
         if (!err.response) {
-          toastMessage(err?.message, 'error');
+          toastMessage(t(err?.message), 'error');
           navigate('/server-down');
           return;
         }
-        toastMessage(err?.response?.data?.message, 'error');
+        toastMessage(t(err?.response?.data?.message), 'error');
       }
     };
 

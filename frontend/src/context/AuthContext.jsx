@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 
@@ -13,6 +14,7 @@ import { toastMessage } from '../utils/Toast';
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
+  const { t } = useTranslation();
   const [token, setToken] = useToken();
   const [user, setUser] = useUser();
   const [userDetails, setUserDetails] = useUserDetails(user);
@@ -49,31 +51,31 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       console.error(err);
       if (!err.response || err?.response?.status === 500) {
-        toastMessage(err?.message, 'error');
+        toastMessage(t(err?.message), 'error');
         navigate('/server-down');
         return;
       }
-      toastMessage(err?.response?.data?.message, 'error');
+      toastMessage(t(err?.response?.data?.message), 'error');
     }
   };
 
   const logout = async () => {
     const result = await signOut(token);
 
-    if (handleError(result, navigate)) return;
+    if (handleError(result, navigate, t)) return;
 
     if (result.status === 'success') {
       setToken(null);
       setUser(null);
       setUserDetails(null);
-      toastMessage('Logged Out', 'success');
+      toastMessage(t('logged_out'), 'success');
     }
   };
 
   const refreshToken = useCallback(async () => {
     const result = await refreshJWT(token);
 
-    if (handleError(result, navigate)) return;
+    if (handleError(result, navigate, t)) return;
 
     if (result.status === 'success') {
       const data = result.data;
@@ -83,7 +85,7 @@ export const AuthProvider = ({ children }) => {
       });
       window.location.reload();
     }
-  }, [navigate, token]);
+  }, [navigate, token, t]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -98,7 +100,7 @@ export const AuthProvider = ({ children }) => {
 
         const result = await validateJWT(token);
 
-        if (handleError(result, navigate)) return;
+        if (handleError(result, navigate, t)) return;
 
         if (result.status === 'success') {
           const data = result.data;
@@ -113,7 +115,7 @@ export const AuthProvider = ({ children }) => {
     }, 5 * 60 * 1000);
 
     return () => clearInterval(interval);
-  }, [navigate, refreshToken, setUser, token]);
+  }, [navigate, refreshToken, setUser, token, t]);
 
   return (
     <AuthContext.Provider

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import { getUsers } from '../api/Requests';
@@ -8,10 +9,12 @@ export const useUserDetails = (user, refresh) => {
   const [userDetails, setUserDetails] = useState(null);
   const navigate = useNavigate();
 
+  const { t } = useTranslation();
+
   useEffect(() => {
     const fetchUserDetails = async (user) => {
       const result = await getUsers();
-      if (handleError(result, navigate)) return;
+      if (handleError(result, navigate, t)) return;
 
       if (result.status === 'success') {
         const data = result.data;
@@ -25,7 +28,7 @@ export const useUserDetails = (user, refresh) => {
     if (user) {
       fetchUserDetails(user);
     }
-  }, [user, navigate, refresh]);
+  }, [user, navigate, refresh, t]);
 
   return [userDetails, setUserDetails];
 };
