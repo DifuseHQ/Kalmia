@@ -211,43 +211,45 @@ func (service *DocService) EditPageGroup(user models.User, id uint, name string,
 	return nil
 }
 
-func (service *DocService) DeletePageGroup(id uint) error {
-	tx := service.DB.Begin()
-	if tx.Error != nil {
-		return fmt.Errorf("failed_to_start_transaction")
-	}
-
+func (service *DocService) deletePageGroupRecursive(tx *gorm.DB, id uint) error {
 	var pageGroup models.PageGroup
 	if err := tx.Preload("Pages").Preload("Editors").First(&pageGroup, id).Error; err != nil {
-		tx.Rollback()
 		return fmt.Errorf("page_group_not_found")
 	}
 
 	if err := tx.Model(&pageGroup).Association("Editors").Clear(); err != nil {
-		tx.Rollback()
 		return fmt.Errorf("failed_to_clear_editors")
 	}
 
 	if err := tx.Where("page_group_id = ?", id).Delete(&models.Page{}).Error; err != nil {
-		tx.Rollback()
 		return fmt.Errorf("failed_to_delete_associated_pages")
 	}
 
-	if err := tx.Where("parent_id = ?", id).Delete(&models.PageGroup{}).Error; err != nil {
-		tx.Rollback()
-		return fmt.Errorf("failed_to_delete_child_page_groups")
+	var childGroups []models.PageGroup
+	if err := tx.Where("parent_id = ?", id).Find(&childGroups).Error; err != nil {
+		return fmt.Errorf("failed_to_find_child_page_groups")
+	}
+
+	for _, childGroup := range childGroups {
+		if err := service.deletePageGroupRecursive(tx, childGroup.ID); err != nil {
+			return err
+		}
 	}
 
 	if err := tx.Delete(&pageGroup).Error; err != nil {
-		tx.Rollback()
 		return fmt.Errorf("failed_to_delete_page_group")
 	}
 
-	if err := tx.Commit().Error; err != nil {
-		return fmt.Errorf("transaction_commit_failed")
-	}
-
 	return nil
+}
+
+func (service *DocService) DeletePageGroup(id uint) error {
+	return service.DB.Transaction(func(tx *gorm.DB) error {
+		if err := service.deletePageGroupRecursive(tx, id); err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
 func (service *DocService) ReorderPageGroup(id uint, order *uint, parentID *uint) error {
