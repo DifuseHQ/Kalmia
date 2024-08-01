@@ -44,7 +44,7 @@ export default function UserList () {
       }
     };
     fetchData();
-  }, [refresh, navigate, t]);
+  }, [refresh, navigate ]); //eslint-disable-line
 
   const filterUser = userList.filter(
     (user) =>

@@ -56,7 +56,7 @@ export default function UserForm () {
     };
 
     fetchUserData();
-  }, [userId, currentUser, isLoggedInAdmin, navigate, t]);
+  }, [userId, currentUser, isLoggedInAdmin, navigate ]); //eslint-disable-line
 
   useEffect(() => {
     if (isEdit) {

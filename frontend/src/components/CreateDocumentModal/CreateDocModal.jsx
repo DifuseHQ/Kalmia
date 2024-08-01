@@ -115,7 +115,7 @@ export default function CreateDocModal () {
       setFooterField([{ label: '', community: '' }]);
       setMoreField([{ label: '', community: '' }]);
     }
-  }, [docId, mode, navigate, t]);
+  }, [docId, mode, navigate ]); //eslint-disable-line
 
   const addRow = (fieldType) => {
     if (fieldType === 'footer') {

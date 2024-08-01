@@ -75,7 +75,7 @@ export default function PageGroupTable () {
     if (docId) {
       fetchData();
     }
-  }, [docId, pageGroupId, navigate, refresh, t]);
+  }, [docId, pageGroupId, navigate, refresh ]);//eslint-disable-line
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);

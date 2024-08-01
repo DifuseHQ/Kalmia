@@ -150,7 +150,7 @@
         "documentation_created":"Documentation Created",
         "documentation_updated":"Documentation Updated",
         "version_created":"Version Created",
-        "documentation_deleted":"documentation_deleted",
+        "documentation_deleted":"Documentation Deleted",
         "invalid_request_data":"Invalid request data",
         "failed_to_start_transaction":"Failed to start transaction",
         "page_created":"Page Created",

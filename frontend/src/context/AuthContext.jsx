@@ -115,7 +115,7 @@ export const AuthProvider = ({ children }) => {
     }, 5 * 60 * 1000);
 
     return () => clearInterval(interval);
-  }, [navigate, refreshToken, setUser, token, t]);
+  }, [navigate, refreshToken, setUser, token ]); //eslint-disable-line
 
   return (
     <AuthContext.Provider

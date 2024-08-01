@@ -176,7 +176,7 @@ export default function Documentation () {
     } else {
       setPageGroupLoading(false);
     }
-  }, [docId, user, navigate, refresh, versionId, t]);
+  }, [docId, user, navigate, refresh, versionId]); //eslint-disable-line
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);

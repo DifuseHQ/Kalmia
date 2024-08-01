@@ -28,7 +28,7 @@ export const useUserDetails = (user, refresh) => {
     if (user) {
       fetchUserDetails(user);
     }
-  }, [user, navigate, refresh, t]);
+  }, [user, navigate, refresh]); //eslint-disable-line
 
   return [userDetails, setUserDetails];
 };

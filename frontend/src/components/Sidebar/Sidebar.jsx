@@ -33,7 +33,7 @@ export default function Sidebar () {
     };
 
     fetchData();
-  }, [refresh, navigate, t]);
+  }, [refresh, navigate ]); //eslint-disable-line
 
   const toggleDropdown = (index) => {
     const updatedDropdowns = [...openDropdowns];
