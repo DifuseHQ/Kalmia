@@ -237,9 +237,13 @@ func (service *DocService) DeleteDocumentation(id uint) error {
 
 func (service *DocService) CreateDocumentationVersion(originalDocId uint, newVersion string) error {
 	var originalDoc models.Documentation
-
 	if err := service.DB.Preload("PageGroups.Pages").Preload("Pages").First(&originalDoc, originalDocId).Error; err != nil {
 		return fmt.Errorf("documentation_not_found")
+	}
+
+	ancestors, err := service.getAncestorDocuments(originalDoc.ID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch ancestor documents: %w", err)
 	}
 
 	newDoc := models.Documentation{
@@ -250,7 +254,7 @@ func (service *DocService) CreateDocumentationVersion(originalDocId uint, newVer
 		ClonedFrom:  &originalDocId,
 	}
 
-	err := service.DB.Transaction(func(tx *gorm.DB) error {
+	err = service.DB.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(&newDoc).Error; err != nil {
 			return fmt.Errorf("failed_to_create_documentation")
 		}
@@ -262,6 +266,17 @@ func (service *DocService) CreateDocumentationVersion(originalDocId uint, newVer
 		}
 
 		pageGroupMap := make(map[uint]uint)
+		existingPageGroups := make(map[uint]bool)
+
+		for _, pg := range originalDoc.PageGroups {
+			existingPageGroups[pg.ID] = true
+		}
+		for _, ancestor := range ancestors {
+			for _, pg := range ancestor.PageGroups {
+				existingPageGroups[pg.ID] = true
+			}
+		}
+
 		for _, pg := range originalDoc.PageGroups {
 			newPG := models.PageGroup{
 				DocumentationID: newDoc.ID,
@@ -270,11 +285,9 @@ func (service *DocService) CreateDocumentationVersion(originalDocId uint, newVer
 				Name:            pg.Name,
 				Order:           pg.Order,
 			}
-
 			if err := tx.Create(&newPG).Error; err != nil {
 				return fmt.Errorf("failed_to_create_page_group")
 			}
-
 			pageGroupMap[pg.ID] = newPG.ID
 
 			for _, editor := range pg.Editors {
@@ -293,11 +306,9 @@ func (service *DocService) CreateDocumentationVersion(originalDocId uint, newVer
 					Content:         page.Content,
 					Order:           page.Order,
 				}
-
 				if err := tx.Create(&newPage).Error; err != nil {
 					return fmt.Errorf("failed_to_create_page")
 				}
-
 				for _, editor := range page.Editors {
 					if err := tx.Model(&newPage).Association("Editors").Append(&editor); err != nil {
 						return fmt.Errorf("failed_to_add_editor")
@@ -315,17 +326,36 @@ func (service *DocService) CreateDocumentationVersion(originalDocId uint, newVer
 				}
 			}
 			if originalPageGroup == nil {
-				return fmt.Errorf("original page group not found for ID: %d", oldID)
-			}
-
-			if originalPageGroup.ParentID != nil {
-				parentID, ok := pageGroupMap[*originalPageGroup.ParentID]
-				if !ok {
-					return fmt.Errorf("parent page group not found for ID: %d", *originalPageGroup.ParentID)
+				for _, ancestor := range ancestors {
+					for _, pg := range ancestor.PageGroups {
+						if pg.ID == oldID {
+							originalPageGroup = &pg
+							break
+						}
+					}
+					if originalPageGroup != nil {
+						break
+					}
 				}
-				if err := tx.Model(&models.PageGroup{}).Where("id = ?", newID).
-					Update("parent_id", parentID).Error; err != nil {
-					return fmt.Errorf("failed to update parent ID: %w", err)
+			}
+			if originalPageGroup == nil {
+				continue
+			}
+			if originalPageGroup.ParentID != nil {
+				if !existingPageGroups[*originalPageGroup.ParentID] {
+					if err := tx.Model(&models.PageGroup{}).Where("id = ?", newID).
+						Update("parent_id", nil).Error; err != nil {
+						return fmt.Errorf("failed to update parent ID to nil: %w", err)
+					}
+				} else {
+					parentID, ok := pageGroupMap[*originalPageGroup.ParentID]
+					if !ok {
+						parentID = *originalPageGroup.ParentID
+					}
+					if err := tx.Model(&models.PageGroup{}).Where("id = ?", newID).
+						Update("parent_id", parentID).Error; err != nil {
+						return fmt.Errorf("failed to update parent ID: %w", err)
+					}
 				}
 			}
 		}
@@ -340,11 +370,9 @@ func (service *DocService) CreateDocumentationVersion(originalDocId uint, newVer
 					Content:         page.Content,
 					Order:           page.Order,
 				}
-
 				if err := tx.Create(&newPage).Error; err != nil {
 					return fmt.Errorf("failed to create new page without group: %w", err)
 				}
-
 				for _, editor := range page.Editors {
 					if err := tx.Model(&newPage).Association("Editors").Append(&editor); err != nil {
 						return fmt.Errorf("failed to append editor to page without group: %w", err)
@@ -359,6 +387,29 @@ func (service *DocService) CreateDocumentationVersion(originalDocId uint, newVer
 	if err != nil {
 		return err
 	}
-
 	return nil
+}
+
+func (service *DocService) getAncestorDocuments(docID uint) ([]models.Documentation, error) {
+	var ancestors []models.Documentation
+	currentID := docID
+
+	for {
+		var doc models.Documentation
+		if err := service.DB.Preload("PageGroups").First(&doc, currentID).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				break
+			}
+			return nil, err
+		}
+
+		if doc.ClonedFrom == nil {
+			break
+		}
+
+		ancestors = append(ancestors, doc)
+		currentID = *doc.ClonedFrom
+	}
+
+	return ancestors, nil
 }
