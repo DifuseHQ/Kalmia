@@ -201,9 +201,11 @@ export default function CreateDocModal () {
       } else {
         navigate('/');
       }
+      console.log('t');
 
       toastMessage(t('document_created_successfully'), 'success');
     } else {
+      console.log('te');
       handleError(result, navigate, t);
     }
   };
@@ -482,7 +484,7 @@ export default function CreateDocModal () {
               <div className="flex justify-center items-center mt-7">
                 <button
                   onClick={handleCreateDocument}
-                  type="button"
+                  type="submit"
                   className="flex justify-center items-center text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
                 >
                   <span>{mode === 'edit' ? t('update_documentation') : t('new_documentation')}</span>

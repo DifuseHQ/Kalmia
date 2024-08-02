@@ -4,6 +4,10 @@
     opacity: .5;
 }
 
+.bn-block-outer {
+    margin-bottom: 10px;
+}
+
 .bn-container {
     border-radius: 10px;
 }

@@ -4,6 +4,8 @@ import { DateTime } from 'luxon';
 import { toastMessage } from './Toast';
 
 export const handleError = (result, navigate = null, t) => {
+  console.log(result, 'error');
+
   if (result.status === 'error') {
     if (result.status.code === '401') {
       toastMessage(t(result.message), 'error');
