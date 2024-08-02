@@ -155,7 +155,7 @@ export default function Table ({ provided, snapshot, docId, pageGroupId, obj, in
                   className='w-6 h-6 text-yellow-500 dark:text-yellow-400'
                 />
               </Link>
-
+            {!obj.isIntroPage &&
               <Icon
                 icon='material-symbols:delete'
                 className='w-6 h-6 text-red-600 dark:text-red-500'
@@ -163,6 +163,7 @@ export default function Table ({ provided, snapshot, docId, pageGroupId, obj, in
                   openModal('delete', obj);
                 }}
               />
+            }
             </button>
           </td>
 

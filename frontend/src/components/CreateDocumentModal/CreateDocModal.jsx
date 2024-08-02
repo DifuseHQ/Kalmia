@@ -153,8 +153,6 @@ export default function CreateDocModal () {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    console.log(name, value);
-
     setFormData({
       ...formData,
       [name]: value || ''
@@ -173,7 +171,6 @@ export default function CreateDocModal () {
       toastMessage(t(validateCommunity.message), 'error');
       return;
     }
-    console.log(formData);
 
     const payload = {
       id: Number(docId),
@@ -192,7 +189,6 @@ export default function CreateDocModal () {
       moreLabelLinks: moreField ? JSON.stringify(moreField) : [{ label: '', community: '' }]
     };
     let result;
-    console.log(payload);
 
     if (mode === 'edit') {
       result = await updateDocumentation(payload);

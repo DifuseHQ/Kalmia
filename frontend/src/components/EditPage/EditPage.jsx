@@ -97,7 +97,7 @@ export default function EditPage () {
   const { refreshData } = useContext(AuthContext);
 
   const navigate = useNavigate();
-  const [pageData, setPageData] = useState({ title: '', slug: '', content: {} });
+  const [pageData, setPageData] = useState({ title: '', slug: '', content: {}, isIntroPage: false });
   const [editorContent, setEditorContent] = useState([{ type: 'paragraph', content: '' }]);
 
   const updateContent = (newContent, name) => {
@@ -130,7 +130,8 @@ export default function EditPage () {
         setPageData(prev => ({
           ...prev,
           title: result.data.title || '',
-          slug: result.data.slug || ''
+          slug: result.data.slug || '',
+          isIntroPage: result.data.isIntroPage || false
         }));
         const parsed = parsedContent(result.data.content);
         setEditorContent(parsed.length > 0 ? parsed : []);
@@ -321,6 +322,7 @@ export default function EditPage () {
                     onChange={(e) => updateContent(e.target.value, e.target.name)}
                     name='slug'
                     id='slug'
+                    disabled={pageData.isIntroPage}
                     className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
                     placeholder={t('slug_placeholder')}
                   />
@@ -355,6 +357,7 @@ export default function EditPage () {
                 {t('edit')}
               </button>
 
+              {!pageData.isIntroPage &&
               <button
                 onClick={() => {
                   openModal('delete');
@@ -364,6 +367,7 @@ export default function EditPage () {
                 <Icon icon='material-symbols:delete' className='w-5 h-5' />
                 {t('delete')}
               </button>
+              }
             </div>
 
           </div>
