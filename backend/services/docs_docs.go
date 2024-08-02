@@ -88,6 +88,26 @@ func (service *DocService) GetDocumentation(id uint) (models.Documentation, erro
 	return documentation, nil
 }
 
+func (service *DocService) GetChildrenOfDocumentation(id uint) ([]uint, error) {
+	docs, err := service.GetDocumentations()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var children []uint
+
+	for _, doc := range docs {
+		if doc.ClonedFrom != nil {
+			if *doc.ClonedFrom == id {
+				children = append(children, doc.ID)
+			}
+		}
+	}
+
+	return children, nil
+}
+
 func (service *DocService) CreateDocumentation(documentation *models.Documentation, user models.User) error {
 	db := service.DB
 
@@ -247,11 +267,21 @@ func (service *DocService) CreateDocumentationVersion(originalDocId uint, newVer
 	}
 
 	newDoc := models.Documentation{
-		Name:        originalDoc.Name,
-		Description: originalDoc.Description,
-		Version:     newVersion,
-		AuthorID:    originalDoc.AuthorID,
-		ClonedFrom:  &originalDocId,
+		Name:             originalDoc.Name,
+		Description:      originalDoc.Description,
+		Version:          newVersion,
+		ClonedFrom:       &originalDocId,
+		Favicon:          originalDoc.Favicon,
+		MetaImage:        originalDoc.MetaImage,
+		NavImage:         originalDoc.NavImage,
+		CustomCSS:        originalDoc.CustomCSS,
+		FooterLabelLinks: originalDoc.FooterLabelLinks,
+		MoreLabelLinks:   originalDoc.MoreLabelLinks,
+		CopyrightText:    originalDoc.CopyrightText,
+		AuthorID:         originalDoc.AuthorID,
+		Author:           originalDoc.Author,
+		Editors:          originalDoc.Editors,
+		LastEditorID:     originalDoc.LastEditorID,
 	}
 
 	err = service.DB.Transaction(func(tx *gorm.DB) error {

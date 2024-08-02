@@ -2,11 +2,12 @@ package logger
 
 import (
 	"fmt"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"os"
 	"path/filepath"
 	"time"
+
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 var Logger *zap.Logger
@@ -82,4 +83,8 @@ func Error(msg string, fields ...zap.Field) {
 
 func Fatal(msg string, fields ...zap.Field) {
 	Logger.Fatal(msg, fields...)
+}
+
+func Panic(msg string, fields ...zap.Field) {
+	Logger.Panic(msg, fields...)
 }

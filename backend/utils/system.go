@@ -19,3 +19,14 @@ func RunNpmCommand(dir string, command string, args ...string) error {
 
 	return nil
 }
+
+func NpmPing() bool {
+	cmd := exec.Command("npm", "ping")
+	output, err := cmd.CombinedOutput()
+
+	if !strings.Contains(string(output), "PONG") || err != nil {
+		return false
+	}
+
+	return true
+}

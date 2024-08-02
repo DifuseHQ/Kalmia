@@ -2,10 +2,11 @@ package utils
 
 import (
 	"fmt"
-	crypt "github.com/simia-tech/crypt"
-	"golang.org/x/crypto/bcrypt"
 	"strconv"
 	"strings"
+
+	crypt "github.com/simia-tech/crypt"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var secretKey = []byte("7snz7jkVnaLDGnfzcslcKJ6dwSOb4iGHMTe9S7Sj")
@@ -45,4 +46,8 @@ func StringToUint(input string) (uint, error) {
 	}
 
 	return uint(output), nil
+}
+
+func StringToFileString(input string) string {
+	return strings.ReplaceAll(input, " ", "_")
 }
