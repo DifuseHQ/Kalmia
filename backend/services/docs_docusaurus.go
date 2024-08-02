@@ -21,19 +21,6 @@ type Block struct {
 	Children []Block                `json:"children"`
 }
 
-type Props struct {
-	Level           int    `json:"level"`
-	TextColor       string `json:"textColor"`
-	BackgroundColor string `json:"backgroundColor"`
-	TextAlignment   string `json:"textAlignment"`
-}
-
-type TextContent struct {
-	Type   string                 `json:"type"`
-	Text   string                 `json:"text"`
-	Styles map[string]interface{} `json:"styles"`
-}
-
 func copyInitFiles(to string) error {
 	toCopy := []string{
 		"src/",
@@ -216,43 +203,84 @@ func CraftPage(position uint, title string, slug string, content string) (string
 
 	markdown := ""
 	for _, block := range blocks {
-		markdown += blockToMarkdown(block, 0)
+		markdown += blockToMarkdown(block, 0, nil)
 	}
 
 	return fmt.Sprintf("---\nsidebar_position: %d\ntitle: %s\nslug: %s\n---\n\n%s", position, title, slug, markdown), nil
 }
 
-func blockToMarkdown(block Block, depth int) string {
+func blockToMarkdown(block Block, depth int, numbering *[]int) string {
+	content := getTextContent(block.Content)
+	styledContent := applyBlockStyles(content, block.Props)
+
 	switch block.Type {
 	case "heading":
 		level, _ := block.Props["level"].(float64)
-		text := getTextContent(block.Content)
-		return fmt.Sprintf("%s %s\n\n", strings.Repeat("#", int(level)), text)
+		return fmt.Sprintf("%s %s\n\n", strings.Repeat("#", int(level)), styledContent)
 	case "paragraph":
-		return fmt.Sprintf("%s\n\n", getTextContent(block.Content))
+		return paragraphToMarkdown(styledContent)
 	case "numberedListItem":
-		return listItemToMarkdown(block, depth, "1. ")
+		return numberedListItemToMarkdown(block, depth, numbering, styledContent)
 	case "bulletListItem":
-		return listItemToMarkdown(block, depth, "- ")
+		return bulletListItemToMarkdown(block, depth, styledContent)
+	case "checkListItem":
+		return checkListItemToMarkdown(block, depth, styledContent)
 	default:
 		return ""
 	}
 }
 
-func listItemToMarkdown(block Block, depth int, prefix string) string {
-	indent := strings.Repeat("  ", depth)
-	content := getTextContent(block.Content)
-	markdown := fmt.Sprintf("%s%s%s\n", indent, prefix, content)
-
-	for _, child := range block.Children {
-		markdown += blockToMarkdown(child, depth+1)
+func numberedListItemToMarkdown(block Block, depth int, numbering *[]int, content string) string {
+	if numbering == nil {
+		numbering = &[]int{0}
 	}
 
-	if len(block.Children) > 0 || depth == 0 {
-		markdown += "\n"
+	if len(*numbering) < depth+1 {
+		*numbering = append(*numbering, 1)
+	} else {
+		(*numbering)[depth]++
+	}
+
+	indent := strings.Repeat("    ", depth)
+	markdown := fmt.Sprintf("%s%d. %s\n", indent, (*numbering)[depth], content)
+
+	for _, child := range block.Children {
+		markdown += blockToMarkdown(child, depth+1, numbering)
 	}
 
 	return markdown
+}
+
+func bulletListItemToMarkdown(block Block, depth int, content string) string {
+	indent := strings.Repeat("    ", depth)
+	markdown := fmt.Sprintf("%s* %s\n", indent, content)
+	for _, child := range block.Children {
+		markdown += blockToMarkdown(child, depth+1, nil)
+	}
+
+	return markdown
+}
+
+func checkListItemToMarkdown(block Block, depth int, content string) string {
+	indent := strings.Repeat("    ", depth)
+	checked := "[ ]" // default unchecked
+	if isChecked, ok := block.Props["checked"].(bool); ok && isChecked {
+		checked = "[x]" // checked
+	}
+
+	// Format the current checklist item
+	markdown := fmt.Sprintf("%s- %s %s\n", indent, checked, content)
+
+	// Recursively format child items
+	for _, child := range block.Children {
+		markdown += blockToMarkdown(child, depth+1, nil) // Passing 'nil' because checklists do not require numbering
+	}
+
+	return markdown
+}
+
+func paragraphToMarkdown(content string) string {
+	return fmt.Sprintf("%s\n\n", content)
 }
 
 func getTextContent(content interface{}) string {
@@ -266,7 +294,7 @@ func getTextContent(content interface{}) string {
 					text = t
 				}
 				if styles, ok := contentItem["styles"].(map[string]interface{}); ok {
-					text = applyStyles(text, styles)
+					text = applyTextStyles(text, styles)
 				}
 				texts = append(texts, text)
 			}
@@ -279,7 +307,7 @@ func getTextContent(content interface{}) string {
 	}
 }
 
-func applyStyles(text string, styles map[string]interface{}) string {
+func applyTextStyles(text string, styles map[string]interface{}) string {
 	if bold, ok := styles["bold"].(bool); ok && bold {
 		text = fmt.Sprintf("**%s**", text)
 	}
@@ -293,6 +321,30 @@ func applyStyles(text string, styles map[string]interface{}) string {
 		text = fmt.Sprintf("~~%s~~", text)
 	}
 	return text
+}
+
+func applyBlockStyles(content string, props map[string]interface{}) string {
+	style := make(map[string]string)
+	if textColor, ok := props["textColor"].(string); ok && textColor != "default" {
+		style["color"] = textColor
+	}
+	if bgColor, ok := props["backgroundColor"].(string); ok && bgColor != "default" {
+		style["backgroundColor"] = bgColor
+	}
+	if textAlignment, ok := props["textAlignment"].(string); ok && textAlignment != "left" {
+		style["textAlign"] = textAlignment
+	}
+
+	if len(style) > 0 {
+		styleString := "{"
+		for key, value := range style {
+			styleString += fmt.Sprintf("%s: '%s', ", key, value)
+		}
+		styleString = styleString[:len(styleString)-2] + "}"
+		return fmt.Sprintf("<div style={%s}>%s</div>", styleString, content)
+	}
+
+	return content
 }
 
 func (service *DocService) writePagesToDirectory(pages []models.Page, dirPath string) error {
