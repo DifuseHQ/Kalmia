@@ -5,6 +5,7 @@ import (
 
 	"git.difuse.io/Difuse/kalmia/db/models"
 	"git.difuse.io/Difuse/kalmia/logger"
+	"git.difuse.io/Difuse/kalmia/utils"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -136,6 +137,7 @@ func (service *DocService) CreateDocumentation(documentation *models.Documentati
 		Author:          user,
 		Editors:         []models.User{user},
 		LastEditorID:    &user.ID,
+		Order:           utils.UintPtr(0),
 	}
 
 	if err := db.Create(&introPage).Error; err != nil {
