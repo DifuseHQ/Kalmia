@@ -51,3 +51,7 @@ func StringToUint(input string) (uint, error) {
 func StringToFileString(input string) string {
 	return strings.ReplaceAll(input, " ", "_")
 }
+
+func UintPtr(v uint) *uint {
+	return &v
+}
