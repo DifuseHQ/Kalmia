@@ -565,7 +565,7 @@ export default function Documentation () {
                               animate={{ opacity: 1 }}
                               exit={{ opacity: 0 }}
                               key="documentaion-version-listing"
-                              className="min-h-10 h-auto w-full mt-2 overflow-y-auto text-sm text-gray-700 dark:text-gray-200"
+                              className="min-h-10 h-auto max-h-32 w-full mt-2 overflow-y-auto text-sm text-gray-700 dark:text-gray-200"
                               aria-labelledby="dropdownSelect"
                             >
                               {filteredVersions.length > 0 ? (
