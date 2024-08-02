@@ -69,6 +69,9 @@ export default function CreateDocModal () {
     name: '',
     description: '',
     version: '',
+    url: '',
+    organizationName: '',
+    projectName: '',
     customCSS: '',
     favicon: '',
     navImage: '',
@@ -106,6 +109,9 @@ export default function CreateDocModal () {
         name: '',
         description: '',
         version: '',
+        url: '',
+        organizationName: '',
+        projectName: '',
         customCSS: '',
         favicon: '',
         navImage: '',
@@ -147,6 +153,8 @@ export default function CreateDocModal () {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    console.log(name, value);
+
     setFormData({
       ...formData,
       [name]: value || ''
@@ -165,12 +173,16 @@ export default function CreateDocModal () {
       toastMessage(t(validateCommunity.message), 'error');
       return;
     }
+    console.log(formData);
 
     const payload = {
       id: Number(docId),
       name: formData.name || '',
       description: formData.description || '',
       version: formData.version || '',
+      url: formData.url || '',
+      organizationName: formData.organizationName || '',
+      projectName: formData.projectName || '',
       customCSS: formData.customCSS || '',
       favicon: formData.favicon || '',
       navImage: formData.navImage || '',
@@ -180,6 +192,8 @@ export default function CreateDocModal () {
       moreLabelLinks: moreField ? JSON.stringify(moreField) : [{ label: '', community: '' }]
     };
     let result;
+    console.log(payload);
+
     if (mode === 'edit') {
       result = await updateDocumentation(payload);
     } else {
@@ -259,7 +273,7 @@ export default function CreateDocModal () {
                       value={formData?.name || ''}
                       name="name"
                       id="name"
-                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
                       placeholder={t('title_placeholder')}
                       required
                     />
@@ -275,7 +289,7 @@ export default function CreateDocModal () {
                       type="text"
                       name="version"
                       id="version"
-                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
                       placeholder={t('version_placeholder')}
                       required
                     />
@@ -293,7 +307,7 @@ export default function CreateDocModal () {
                         value={formData?.description}
                         name="description"
                         id="description"
-                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
                         placeholder={t('description_placeholder')}
                         rows="3"
                       />
@@ -385,9 +399,9 @@ export default function CreateDocModal () {
                     </span>
                     <input
                       onChange={handleChange}
-                      value={formData?.copyrightText}
+                      value={formData?.organizationName}
                       type="text"
-                      name="copyrightText"
+                      name="organizationName"
                       placeholder={t('enter_organization_name')}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     />
@@ -399,9 +413,9 @@ export default function CreateDocModal () {
                     </span>
                     <input
                       onChange={handleChange}
-                      value={formData?.metaImage}
+                      value={formData?.projectName}
                       type="url"
-                      name="metaImage"
+                      name="projectName"
                       placeholder={t('enter_project_name')}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     />
@@ -413,9 +427,9 @@ export default function CreateDocModal () {
                     </span>
                     <input
                       onChange={handleChange}
-                      value={formData?.copyrightText}
+                      value={formData?.url}
                       type="text"
-                      name="copyrightText"
+                      name="url"
                       placeholder={t('paste_your_url')}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     />

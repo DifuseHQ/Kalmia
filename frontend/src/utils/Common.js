@@ -183,6 +183,12 @@ export const validateFormData = (formData) => {
     return errors;
   }
 
+  if (formData.url && !isValidURL(formData.url)) {
+    errors.status = true;
+    errors.message = 'valid_url_required';
+    return errors;
+  }
+
   return errors;
 };
 

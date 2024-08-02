@@ -124,6 +124,7 @@
         "enter_organization_name":"Enter Organization Name",
         "enter_project_name":"Enter Project Name",
         "paste_your_url":"Paste your url",
+        "valid_url_required":"Valid URL Required",
         
         "documentation_name_already_exists":"Documentation Name Already Exists",
         "invalid_request":"Invalid request",
