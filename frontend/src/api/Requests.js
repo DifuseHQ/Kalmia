@@ -21,7 +21,6 @@ async function makeRequest (url, method = 'get', data = null) {
       path: ''
     };
   } catch (error) {
-    console.log('error is', error);
     console.error(error);
     const statusCode = error?.response?.status || 500;
     const errorData = error?.response?.data || null;
