@@ -377,6 +377,51 @@ export default function CreateDocModal () {
                     />
                   </div>
                 </div>
+
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div>
+                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {t('organization_name')}
+                    </span>
+                    <input
+                      onChange={handleChange}
+                      value={formData?.copyrightText}
+                      type="text"
+                      name="copyrightText"
+                      placeholder={t('enter_organization_name')}
+                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                    />
+                  </div>
+
+                  <div>
+                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {t('project_name')}
+                    </span>
+                    <input
+                      onChange={handleChange}
+                      value={formData?.metaImage}
+                      type="url"
+                      name="metaImage"
+                      placeholder={t('enter_project_name')}
+                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                    />
+                  </div>
+
+                  <div>
+                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {t('url')}
+                    </span>
+                    <input
+                      onChange={handleChange}
+                      value={formData?.copyrightText}
+                      type="text"
+                      name="copyrightText"
+                      placeholder={t('paste_your_url')}
+                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                    />
+                  </div>
+                </div>
+
               </div>
 
               <div className="grid gap-1 mb-4 sm:mb-3 mt-6">
