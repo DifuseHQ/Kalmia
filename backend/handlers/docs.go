@@ -65,6 +65,9 @@ func CreateDocumentation(services *services.ServiceRegistry, w http.ResponseWrit
 		Name             string `json:"name" validate:"required"`
 		Description      string `json:"description"`
 		Version          string `json:"version" validate:"required"`
+		URL              string `json:"url"`
+		OrganizationName string `json:"organizationName"`
+		ProjectName      string `json:"projectName"`
 		Favicon          string `json:"favicon"`
 		MetaImage        string `json:"metaImage"`
 		NavImage         string `json:"navImage"`
@@ -83,6 +86,9 @@ func CreateDocumentation(services *services.ServiceRegistry, w http.ResponseWrit
 	documentation := &models.Documentation{
 		Name:             req.Name,
 		Description:      req.Description,
+		URL:              req.URL,
+		OrganizationName: req.OrganizationName,
+		ProjectName:      req.ProjectName,
 		AuthorID:         user.ID,
 		Author:           user,
 		Editors:          []models.User{user},
@@ -112,6 +118,9 @@ func EditDocumentation(services *services.ServiceRegistry, w http.ResponseWriter
 		ID               uint   `json:"id" validate:"required"`
 		Name             string `json:"name" validate:"required"`
 		Description      string `json:"description" validate:"required"`
+		URL              string `json:"url"`
+		OrganizationName string `json:"organizationName"`
+		ProjectName      string `json:"projectName"`
 		Version          string `json:"version"`
 		Favicon          string `json:"favicon"`
 		MetaImage        string `json:"metaImage"`
@@ -140,7 +149,7 @@ func EditDocumentation(services *services.ServiceRegistry, w http.ResponseWriter
 		return
 	}
 
-	err = services.DocService.EditDocumentation(user, req.ID, req.Name, req.Description, req.Version, req.Favicon, req.MetaImage, req.NavImage, req.CustomCSS, req.FooterLabelLinks, req.MoreLabelLinks, req.CopyrightText)
+	err = services.DocService.EditDocumentation(user, req.ID, req.Name, req.Description, req.Version, req.Favicon, req.MetaImage, req.NavImage, req.CustomCSS, req.FooterLabelLinks, req.MoreLabelLinks, req.CopyrightText, req.URL, req.OrganizationName, req.ProjectName)
 
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})

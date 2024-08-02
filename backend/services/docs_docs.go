@@ -37,7 +37,9 @@ func (service *DocService) GetDocumentations() ([]models.Documentation, error) {
 		return db.Select("ID", "Username", "Email", "Photo")
 	}).Preload("Pages.Editors", func(db *gorm.DB) *gorm.DB {
 		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
-	}).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID", "Version", "ClonedFrom", "LastEditorID", "Favicon", "MetaImage", "NavImage", "CustomCSS", "FooterLabelLinks", "MoreLabelLinks").
+	}).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID", "Version", "ClonedFrom",
+		"LastEditorID", "Favicon", "MetaImage", "NavImage", "CustomCSS", "FooterLabelLinks", "MoreLabelLinks",
+		"URL", "OrganizationName", "ProjectName").
 		Find(&documentations).Error; err != nil {
 		return nil, fmt.Errorf("failed_to_get_documentations")
 	}
@@ -81,7 +83,9 @@ func (service *DocService) GetDocumentation(id uint) (models.Documentation, erro
 		return db.Select("ID", "Username", "Email", "Photo")
 	}).Preload("Pages.Editors", func(db *gorm.DB) *gorm.DB {
 		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
-	}).Where("id = ?", id).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID", "Version", "LastEditorID", "Favicon", "MetaImage", "NavImage", "CustomCSS", "FooterLabelLinks", "MoreLabelLinks", "CopyrightText").
+	}).Where("id = ?", id).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID", "Version", "LastEditorID", "Favicon",
+		"MetaImage", "NavImage", "CustomCSS", "FooterLabelLinks", "MoreLabelLinks", "CopyrightText",
+		"URL", "OrganizationName", "ProjectName").
 		Find(&documentation).Error; err != nil {
 		return models.Documentation{}, fmt.Errorf("failed_to_get_documentation")
 	}
@@ -138,6 +142,7 @@ func (service *DocService) CreateDocumentation(documentation *models.Documentati
 		Editors:         []models.User{user},
 		LastEditorID:    &user.ID,
 		Order:           utils.UintPtr(0),
+		IsIntroPage:     true,
 	}
 
 	if err := db.Create(&introPage).Error; err != nil {
@@ -157,13 +162,16 @@ func (service *DocService) CreateDocumentation(documentation *models.Documentati
 	return nil
 }
 
-func (service *DocService) EditDocumentation(user models.User, id uint, name, description, version, favicon, metaImage, navImage, customCSS, footerLabelLinks, moreLabelLinks, copyrightText string) error {
+func (service *DocService) EditDocumentation(user models.User, id uint, name, description, version, favicon, metaImage, navImage, customCSS, footerLabelLinks, moreLabelLinks, copyrightText, url, organizationName, projectName string) error {
 	tx := service.DB.Begin()
 
 	updateDoc := func(doc *models.Documentation, isTarget bool) error {
 		doc.LastEditorID = &user.ID
 		doc.Name = name
 		doc.Description = description
+		doc.URL = url
+		doc.OrganizationName = organizationName
+		doc.ProjectName = projectName
 		doc.Favicon = favicon
 		doc.MetaImage = metaImage
 		doc.NavImage = navImage

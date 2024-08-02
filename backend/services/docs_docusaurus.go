@@ -14,6 +14,26 @@ import (
 	"go.uber.org/zap"
 )
 
+type Block struct {
+	Type     string                 `json:"type"`
+	Props    map[string]interface{} `json:"props"`
+	Content  interface{}            `json:"content"`
+	Children []Block                `json:"children"`
+}
+
+type Props struct {
+	Level           int    `json:"level"`
+	TextColor       string `json:"textColor"`
+	BackgroundColor string `json:"backgroundColor"`
+	TextAlignment   string `json:"textAlignment"`
+}
+
+type TextContent struct {
+	Type   string                 `json:"type"`
+	Text   string                 `json:"text"`
+	Styles map[string]interface{} `json:"styles"`
+}
+
 func copyInitFiles(to string) error {
 	toCopy := []string{
 		"src/",
@@ -80,8 +100,19 @@ func (service *DocService) StartupCheck() error {
 			}
 		}
 
-		service.UpdateBasicData(doc.ID)
-		service.WriteContents(doc.ID)
+		err := service.UpdateBasicData(doc.ID)
+
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+
+		err = service.WriteContents(doc.ID)
+
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
 	}
 
 	return nil
@@ -176,10 +207,92 @@ func (service *DocService) UpdateBasicData(docId uint) error {
 	return utils.ReplaceManyInFile(docConfig, replacements)
 }
 
-func CraftPage(position uint, title string, slug string, content string) string {
-	content = strings.ReplaceAll(content, `"`, "")
-	content = strings.ReplaceAll(content, "\n", "<br>")
-	return fmt.Sprintf("---\nsidebar_position: %d\ntitle: %s\nslug: %s\n---\n\n%s", position, title, slug, content)
+func CraftPage(position uint, title string, slug string, content string) (string, error) {
+	var blocks []Block
+	err := json.Unmarshal([]byte(content), &blocks)
+	if err != nil {
+		return "", err
+	}
+
+	markdown := ""
+	for _, block := range blocks {
+		markdown += blockToMarkdown(block, 0)
+	}
+
+	return fmt.Sprintf("---\nsidebar_position: %d\ntitle: %s\nslug: %s\n---\n\n%s", position, title, slug, markdown), nil
+}
+
+func blockToMarkdown(block Block, depth int) string {
+	switch block.Type {
+	case "heading":
+		level, _ := block.Props["level"].(float64)
+		text := getTextContent(block.Content)
+		return fmt.Sprintf("%s %s\n\n", strings.Repeat("#", int(level)), text)
+	case "paragraph":
+		return fmt.Sprintf("%s\n\n", getTextContent(block.Content))
+	case "numberedListItem":
+		return listItemToMarkdown(block, depth, "1. ")
+	case "bulletListItem":
+		return listItemToMarkdown(block, depth, "- ")
+	default:
+		return ""
+	}
+}
+
+func listItemToMarkdown(block Block, depth int, prefix string) string {
+	indent := strings.Repeat("  ", depth)
+	content := getTextContent(block.Content)
+	markdown := fmt.Sprintf("%s%s%s\n", indent, prefix, content)
+
+	for _, child := range block.Children {
+		markdown += blockToMarkdown(child, depth+1)
+	}
+
+	if len(block.Children) > 0 || depth == 0 {
+		markdown += "\n"
+	}
+
+	return markdown
+}
+
+func getTextContent(content interface{}) string {
+	switch v := content.(type) {
+	case []interface{}:
+		var texts []string
+		for _, item := range v {
+			if contentItem, ok := item.(map[string]interface{}); ok {
+				text := ""
+				if t, ok := contentItem["text"].(string); ok {
+					text = t
+				}
+				if styles, ok := contentItem["styles"].(map[string]interface{}); ok {
+					text = applyStyles(text, styles)
+				}
+				texts = append(texts, text)
+			}
+		}
+		return strings.Join(texts, "")
+	case string:
+		return v
+	default:
+		return ""
+	}
+}
+
+func applyStyles(text string, styles map[string]interface{}) string {
+	if bold, ok := styles["bold"].(bool); ok && bold {
+		text = fmt.Sprintf("**%s**", text)
+	}
+	if italic, ok := styles["italic"].(bool); ok && italic {
+		text = fmt.Sprintf("*%s*", text)
+	}
+	if underline, ok := styles["underline"].(bool); ok && underline {
+		text = fmt.Sprintf("__%s__", text)
+	}
+	if strike, ok := styles["strike"].(bool); ok && strike {
+		text = fmt.Sprintf("~~%s~~", text)
+	}
+	return text
 }
 
 func (service *DocService) writePagesToDirectory(pages []models.Page, dirPath string) error {
@@ -192,7 +305,7 @@ func (service *DocService) writePagesToDirectory(pages []models.Page, dirPath st
 		var fileName, content string
 		var order uint
 
-		if fullPage.Title == "Introduction" {
+		if fullPage.IsIntroPage {
 			fileName = "index.md"
 			order = 0
 		} else {
@@ -202,7 +315,12 @@ func (service *DocService) writePagesToDirectory(pages []models.Page, dirPath st
 			}
 		}
 
-		content = CraftPage(order, fullPage.Title, fullPage.Slug, fullPage.Content)
+		content, err = CraftPage(order, fullPage.Title, fullPage.Slug, fullPage.Content)
+
+		if err != nil {
+			return err
+		}
+
 		err = utils.WriteToFile(filepath.Join(dirPath, fileName), content)
 		if err != nil {
 			return err
