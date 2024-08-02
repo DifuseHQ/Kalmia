@@ -17,7 +17,7 @@ import {
 } from '../../api/Requests';
 import { AuthContext } from '../../context/AuthContext';
 import { ModalContext } from '../../context/ModalContext';
-import { handleError, sortGroupAndPage } from '../../utils/Common';
+import { getLastPageOrder, handleError, sortGroupAndPage } from '../../utils/Common';
 import { toastMessage } from '../../utils/Toast';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
 import EditDocumentModal from '../CreateDocumentModal/EditDocumentModal';
@@ -99,10 +99,12 @@ export default function PageGroupTable () {
       return;
     }
 
+    const lastOrder = getLastPageOrder(data);
     const result = await createPageGroup({
       name: title,
       documentationId: Number(docId),
-      parentId: Number(pageGroupId)
+      parentId: Number(pageGroupId),
+      order: parseInt(lastOrder)
     });
 
     if (handleError(result, navigate, t)) {
@@ -172,6 +174,7 @@ export default function PageGroupTable () {
       return;
     }
 
+    const lastOrder = getLastPageOrder(data);
     const docIdOrVersionId = versionId || docId;
 
     const result = await createPageAPI({
@@ -179,7 +182,8 @@ export default function PageGroupTable () {
       slug,
       content: JSON.stringify([]),
       documentationId: parseInt(docIdOrVersionId),
-      pageGroupId: parseInt(pageGroupId)
+      pageGroupId: parseInt(pageGroupId),
+      order: parseInt(lastOrder)
     });
 
     if (handleError(result, navigate, t)) {

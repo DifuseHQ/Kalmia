@@ -147,7 +147,6 @@ export default function EditPage () {
   }, [editor, editorContent]);
 
   const handleEdit = async () => {
-    console.log('editor', editor.topLevelBlocks);
     const result = await updatePage({
       title: pageData?.title,
       slug: pageData?.slug,

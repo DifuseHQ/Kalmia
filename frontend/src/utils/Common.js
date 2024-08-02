@@ -126,6 +126,8 @@ export function getVersion (cloneData, versionId) {
 }
 
 export function getLastPageOrder (data) {
-  const lastOrder = data[data.length - 1].order;
-  return lastOrder;
+  if (data.length > 0) {
+    return data[data.length - 1].order + 1;
+  }
+  return 0;
 }

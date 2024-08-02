@@ -277,10 +277,11 @@ export default function Documentation () {
       );
       return;
     }
-
+    const lastOrder = getLastPageOrder(groupsAndPageData);
     const result = await createPageGroup({
       name: title,
-      documentationId: Number(selectedVersion.id)
+      documentationId: Number(selectedVersion.id),
+      order: parseInt(lastOrder)
     });
 
     if (handleError(result, navigate, t)) {
@@ -317,7 +318,7 @@ export default function Documentation () {
       slug,
       content: JSON.stringify([]),
       documentationId: parseInt(docIdOrVersionId),
-      order: parseInt(lastOrder) + 1
+      order: parseInt(lastOrder)
     });
 
     if (handleError(result, navigate, t)) {
