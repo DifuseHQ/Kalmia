@@ -133,8 +133,7 @@ export default function EditPage () {
           slug: result.data.slug || ''
         }));
         const parsed = parsedContent(result.data.content);
-        const blocksFromMarkdown = await editor.tryParseMarkdownToBlocks(parsed);
-        setEditorContent(blocksFromMarkdown.length > 0 ? blocksFromMarkdown : []);
+        setEditorContent(parsed.length > 0 ? parsed : []);
       }
     };
 
@@ -148,11 +147,11 @@ export default function EditPage () {
   }, [editor, editorContent]);
 
   const handleEdit = async () => {
-    const markdownFromBlocks = await editor.blocksToMarkdownLossy(editor.topLevelBlocks);
+    console.log('editor', editor.topLevelBlocks);
     const result = await updatePage({
       title: pageData?.title,
       slug: pageData?.slug,
-      content: JSON.stringify(markdownFromBlocks),
+      content: JSON.stringify(editor.topLevelBlocks),
       id: Number(pageId)
     });
 
