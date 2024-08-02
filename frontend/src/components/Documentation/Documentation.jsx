@@ -24,6 +24,7 @@ import { ModalContext } from '../../context/ModalContext';
 import {
   combinePages,
   getClosestVersion,
+  getLastPageOrder,
   getVersion,
   handleError
 } from '../../utils/Common';
@@ -308,14 +309,15 @@ export default function Documentation () {
       );
       return;
     }
-
+    const lastOrder = getLastPageOrder(groupsAndPageData);
     const docIdOrVersionId = selectedVersion.id ? selectedVersion.id : docId;
 
     const result = await createPageAPI({
       title,
       slug,
       content: JSON.stringify([]),
-      documentationId: parseInt(docIdOrVersionId)
+      documentationId: parseInt(docIdOrVersionId),
+      order: parseInt(lastOrder) + 1
     });
 
     if (handleError(result, navigate, t)) {
