@@ -1,11 +1,14 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"git.difuse.io/Difuse/kalmia/db/models"
 	"git.difuse.io/Difuse/kalmia/logger"
 	"git.difuse.io/Difuse/kalmia/services"
+	"github.com/gorilla/mux"
 )
 
 func GetDocumentations(service *services.DocService, w http.ResponseWriter, r *http.Request) {
@@ -545,4 +548,32 @@ func ReorderPageGroup(service *services.DocService, w http.ResponseWriter, r *ht
 	}
 
 	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "page_group_reordered"})
+}
+
+func GetDocusaurus(service *services.DocService, w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	idStr := vars["id"]
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid ID"})
+		return
+	}
+
+	docPath, err := service.GetDocusaurus(uint(id))
+	if err != nil {
+		switch err.Error() {
+		case "documentation_not_found":
+			SendJSONResponse(http.StatusNotFound, w, map[string]string{"status": "error", "message": "Documentation not found"})
+		case "docusaurus_build_not_found":
+			SendJSONResponse(http.StatusNotFound, w, map[string]string{"status": "error", "message": "Docusaurus build not found"})
+		case "docusaurus_build_empty":
+			SendJSONResponse(http.StatusNotFound, w, map[string]string{"status": "error", "message": "Docusaurus build is empty"})
+		default:
+			logger.Error(err.Error())
+			SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Internal server error"})
+		}
+		return
+	}
+
+	http.StripPrefix(fmt.Sprintf("/documentation/%s", idStr), http.FileServer(http.Dir(docPath))).ServeHTTP(w, r)
 }

@@ -86,6 +86,24 @@ func (service *DocService) EditPage(user models.User, id uint, title, slug, cont
 		return fmt.Errorf("failed_to_commit_changes")
 	}
 
+	docId, err := service.GetDocumentationIDOfPage(id)
+
+	if err != nil {
+		return fmt.Errorf("failed_to_get_documentation_id")
+	}
+
+	parentDocId, _ := service.GetParentDocId(docId)
+
+	if parentDocId == 0 {
+		err = service.UpdateWriteBuild(docId)
+	} else {
+		err = service.UpdateWriteBuild(parentDocId)
+	}
+
+	if err != nil {
+		return fmt.Errorf("failed_to_update_write_build")
+	}
+
 	return nil
 }
 
@@ -137,5 +155,45 @@ func (service *DocService) ReorderPage(id uint, pageGroupID *uint, order *uint) 
 		return fmt.Errorf("failed_to_update_page")
 	}
 
+	docId, err := service.GetDocumentationIDOfPage(id)
+
+	if err != nil {
+		return fmt.Errorf("failed_to_get_documentation_id")
+	}
+
+	parentDocId, _ := service.GetParentDocId(docId)
+
+	if parentDocId == 0 {
+		err = service.UpdateWriteBuild(docId)
+	} else {
+		err = service.UpdateWriteBuild(parentDocId)
+	}
+
+	if err != nil {
+		return fmt.Errorf("failed_to_update_write_build")
+	}
+
 	return nil
+}
+
+func (service *DocService) GetDocumentationIDOfPage(id uint) (uint, error) {
+	var page models.Page
+	if err := service.DB.First(&page, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return 0, fmt.Errorf("page_not_found")
+		}
+		return 0, fmt.Errorf("failed_to_fetch_page")
+	}
+
+	return page.DocumentationID, nil
+}
+
+func (service *DocService) GetPagesOfPageGroup(id uint) ([]models.Page, error) {
+	var pages []models.Page
+
+	if err := service.DB.Where("page_group_id = ?", id).Find(&pages).Error; err != nil {
+		return nil, fmt.Errorf("failed_to_get_pages")
+	}
+
+	return pages, nil
 }

@@ -8,7 +8,7 @@ const config = {
   tagline: '__TAG_LINE__',
   favicon: '__FAVICON__',
   url: '__URL__',
-  baseUrl: '/',
+  baseUrl: '__BASE_URL__',
   organizationName: '__ORGANIZATION_NAME__',
   projectName: '__PROJECT_NAME__',
   onBrokenLinks: 'warn',
@@ -40,15 +40,12 @@ const config = {
     ({
       image: '__META_IMAGE__',
       navbar: {
-        title: '__TITLE__',
-        logo: {
-          alt: '__TITLE__ Logo',
-          src: '__NAVBAR_LOGO__',
-        },
+        title: '__NAVBAR_TITLE__',
+        __NAVBAR_LOGO__
         items: [
           {
             type: 'docsVersionDropdown',
-            position: 'left',
+            position: 'right',
           },
         ],
       },

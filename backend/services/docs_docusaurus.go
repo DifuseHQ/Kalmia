@@ -3,9 +3,13 @@ package services
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 
 	"git.difuse.io/Difuse/kalmia/config"
 	"git.difuse.io/Difuse/kalmia/db/models"
@@ -48,6 +52,47 @@ func copyInitFiles(to string) error {
 	return nil
 }
 
+func (service *DocService) UpdateWriteBuild(docId uint) error {
+	key := fmt.Sprintf("update_write_build_%d", docId)
+
+	var mutex *sync.Mutex
+	mutexI, _ := service.UWBMutexMap.LoadOrStore(key, &sync.Mutex{})
+	mutex = mutexI.(*sync.Mutex)
+
+	acquired := make(chan bool, 1)
+	go func() {
+		mutex.Lock()
+		acquired <- true
+	}()
+
+	select {
+	case <-acquired:
+		defer mutex.Unlock()
+	case <-time.After(1 * time.Minute):
+		return fmt.Errorf("timeout waiting for operation to complete for docId: %d", docId)
+	}
+
+	err := service.UpdateBasicData(docId)
+	if err != nil {
+		logger.Error("Failed to update basic data -> ", zap.Uint("doc_id", docId), zap.Error(err))
+		return err
+	}
+
+	err = service.WriteContents(docId)
+	if err != nil {
+		logger.Error("Failed to write contents -> ", zap.Uint("doc_id", docId), zap.Error(err))
+		return err
+	}
+
+	err = service.DocusaurusBuild(docId)
+	if err != nil {
+		logger.Error("Failed to build docusaurus -> ", zap.Uint("doc_id", docId), zap.Error(err))
+		return err
+	}
+
+	return nil
+}
+
 func (service *DocService) StartupCheck() error {
 	npmPinged := utils.NpmPing()
 
@@ -68,7 +113,7 @@ func (service *DocService) StartupCheck() error {
 			docsPath := filepath.Join(allDocsPath, "doc_"+strconv.Itoa(int(doc.ID)))
 
 			if !utils.PathExists(docsPath) {
-				if err := service.InitDocusaurus(doc.ID); err != nil {
+				if err := service.InitDocusaurus(doc.ID, true); err != nil {
 					return err
 				}
 
@@ -80,49 +125,50 @@ func (service *DocService) StartupCheck() error {
 						return fmt.Errorf("failed to remove path %s: %w", docsPath, removeErr)
 					}
 
-					if err := service.InitDocusaurus(doc.ID); err != nil {
+					if err := service.InitDocusaurus(doc.ID, true); err != nil {
 						return err
 					}
 				}
 			}
-		}
 
-		err := service.UpdateBasicData(doc.ID)
+			err := service.UpdateWriteBuild(doc.ID)
 
-		if err != nil {
-			fmt.Println(err)
-			return err
-		}
-
-		err = service.WriteContents(doc.ID)
-
-		if err != nil {
-			fmt.Println(err)
-			return err
+			if err != nil {
+				return err
+			}
 		}
 	}
 
 	return nil
 }
 
-func (service *DocService) InitDocusaurus(docId uint) error {
+func (service *DocService) InitDocusaurus(docId uint, init bool) error {
 	cfg := config.ParsedConfig
-	allDocsPath := filepath.Join(cfg.DataPath, "docusaurus_data")
-	docsPath := filepath.Join(allDocsPath, "doc_"+strconv.Itoa(int(docId)))
 
-	err := copyInitFiles(docsPath)
+	if init {
+		allDocsPath := filepath.Join(cfg.DataPath, "docusaurus_data")
+		docsPath := filepath.Join(allDocsPath, "doc_"+strconv.Itoa(int(docId)))
+
+		err := copyInitFiles(docsPath)
+
+		if err != nil {
+			return err
+		}
+
+		npmPing := utils.NpmPing()
+
+		if !npmPing {
+			return fmt.Errorf("NPM ping failed for %d initialization", docId)
+		}
+
+		if err := utils.RunNpmCommand(docsPath, "install", "--prefer-offline", "--no-audit", "--progress=false", "--no-fund"); err != nil {
+			return err
+		}
+	}
+
+	err := service.UpdateWriteBuild(docId)
 
 	if err != nil {
-		return err
-	}
-
-	npmPing := utils.NpmPing()
-
-	if !npmPing {
-		return fmt.Errorf("NPM ping failed for %d initialization", docId)
-	}
-
-	if err := utils.RunNpmCommand(docsPath, "install", "--prefer-offline", "--no-audit", "--progress=false", "--no-fund"); err != nil {
 		return err
 	}
 
@@ -140,13 +186,17 @@ func (service *DocService) UpdateBasicData(docId uint) error {
 	docCssConfig := filepath.Join(docPath, "src/css/custom.css")
 
 	replacements := map[string]string{
-		"__TITLE__":          doc.Name,
-		"__TAG_LINE__":       doc.Description,
-		"__FAVICON__":        "img/favicon.ico",
-		"__META_IMAGE__":     "img/meta.webp",
-		"__NAVBAR_LOGO__":    "img/navbar.webp",
-		"__COPYRIGHT_TEXT__": "Iridia Solutions Pvt. Ltd. Built With Kalmia",
-		"__URL__":            "http://localhost:3000",
+		"__TITLE__":             doc.Name,
+		"__TAG_LINE__":          doc.Description,
+		"__BASE_URL__":          fmt.Sprintf("/documentation/%d/", docId),
+		"__FAVICON__":           "img/favicon.ico",
+		"__META_IMAGE__":        "img/meta.webp",
+		"__NAVBAR_TITLE__":      doc.Name,
+		"__NAVBAR_LOGO__":       "img/navbar.webp",
+		"__COPYRIGHT_TEXT__":    "Iridia Solutions Pvt. Ltd. Built With Kalmia",
+		"__URL__":               "http://localhost:3000",
+		"__ORGANIZATION_NAME__": "Iridia Solutions Pvt. Ltd.",
+		"__PROJECT_NAME__":      "Kalmia",
 	}
 
 	if doc.Favicon != "" {
@@ -158,15 +208,22 @@ func (service *DocService) UpdateBasicData(docId uint) error {
 	}
 
 	if doc.NavImage != "" {
-		replacements["__NAVBAR_LOGO__"] = doc.NavImage
+		replacements["__NAVBAR_LOGO__"] = fmt.Sprintf("logo: { alt: '%s Logo', src: '%s',},", doc.Name, doc.NavImage)
+		replacements["__NAVBAR_TITLE__"] = ""
+	} else {
+		replacements["__NAVBAR_LOGO__"] = ""
 	}
 
 	if doc.CopyrightText != "" {
-		replacements["__COPYRIGHT_TEXT__"] = doc.CopyrightText + ", Built With Kalmia."
+		replacements["__COPYRIGHT_TEXT__"] = doc.CopyrightText
+	}
+
+	if doc.URL != "" {
+		replacements["__URL__"] = doc.URL
 	}
 
 	if doc.CustomCSS != "" {
-		err := utils.ReplaceInFile(docCssConfig, "__CUSTOM_CSS__", doc.CustomCSS)
+		err := utils.WriteToFile(docCssConfig, doc.CustomCSS)
 		if err != nil {
 			return err
 		}
@@ -178,14 +235,14 @@ func (service *DocService) UpdateBasicData(docId uint) error {
 	}
 
 	if doc.MoreLabelLinks != "" {
-		moreLabelLinks := strings.ReplaceAll(doc.MoreLabelLinks, "community", "href")
+		moreLabelLinks := strings.ReplaceAll(doc.MoreLabelLinks, "link", "href")
 		replacements["__MORE_LABEL_HREF__"] = moreLabelLinks
 	} else {
 		replacements["__MORE_LABEL_HREF__"] = ""
 	}
 
 	if doc.FooterLabelLinks != "" {
-		footerLabelLinks := strings.ReplaceAll(doc.FooterLabelLinks, "community", "href")
+		footerLabelLinks := strings.ReplaceAll(doc.FooterLabelLinks, "link", "href")
 		replacements["__COMMUNITY_LABEL_HREF__"] = footerLabelLinks
 	} else {
 		replacements["__COMMUNITY_LABEL_HREF__"] = ""
@@ -194,7 +251,7 @@ func (service *DocService) UpdateBasicData(docId uint) error {
 	return utils.ReplaceManyInFile(docConfig, replacements)
 }
 
-func CraftPage(position uint, title string, slug string, content string) (string, error) {
+func (service *DocService) CraftPage(pageID uint, title string, slug string, content string) (string, error) {
 	var blocks []Block
 	err := json.Unmarshal([]byte(content), &blocks)
 	if err != nil {
@@ -206,28 +263,168 @@ func CraftPage(position uint, title string, slug string, content string) (string
 		markdown += blockToMarkdown(block, 0, nil)
 	}
 
-	return fmt.Sprintf("---\nsidebar_position: %d\ntitle: %s\nslug: %s\n---\n\n%s", position, title, slug, markdown), nil
+	position, err := service.getSidebarPosition(pageID, false)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("---\nsidebar_position: %d\ntitle: %s\nslug: %s\n---\n\nimport ReactPlayer from 'react-player' \n\n%s", position, title, slug, markdown), nil
 }
 
 func blockToMarkdown(block Block, depth int, numbering *[]int) string {
 	content := getTextContent(block.Content)
-	styledContent := applyBlockStyles(content, block.Props)
+	styledContent := applyBlockStyles(content, block.Props, block.Type)
 
 	switch block.Type {
 	case "heading":
 		level, _ := block.Props["level"].(float64)
 		return fmt.Sprintf("%s %s\n\n", strings.Repeat("#", int(level)), styledContent)
 	case "paragraph":
-		return paragraphToMarkdown(styledContent)
+		return fmt.Sprintf("\n%s\n", styledContent)
 	case "numberedListItem":
 		return numberedListItemToMarkdown(block, depth, numbering, styledContent)
 	case "bulletListItem":
 		return bulletListItemToMarkdown(block, depth, styledContent)
 	case "checkListItem":
 		return checkListItemToMarkdown(block, depth, styledContent)
+	case "table":
+		tableContent, ok := block.Content.(map[string]interface{})
+		if !ok {
+			return "Invalid content for table"
+		}
+		return applyBlockStyles(tableToMarkdown(tableContent), block.Props, block.Type) + "\n"
+	case "image":
+		return applyBlockStyles(imageToMarkdown(block.Props), block.Props, block.Type)
+	case "video":
+		return applyBlockStyles(videoToMarkdown(block.Props), block.Props, block.Type)
+	case "audio":
+		return applyBlockStyles(audioToMarkdown(block.Props), block.Props, block.Type)
+	case "file":
+		return applyBlockStyles(fileToMarkdown(block.Props), block.Props, block.Type)
+	case "alert":
+		return applyBlockStyles(alertToMarkdown(block.Props, styledContent), block.Props, block.Type)
 	default:
 		return ""
 	}
+}
+
+func imageToMarkdown(props map[string]interface{}) string {
+	name, _ := props["name"].(string)
+	url, urlOK := props["url"].(string)
+	caption, _ := props["caption"].(string)
+
+	if !urlOK {
+		return "Invalid image URL"
+	}
+
+	return fmt.Sprintf("<figure>\n![%s](%s)\n<figcaption>%s</figcaption>\n</figure>\n", name, url, caption)
+}
+
+func videoToMarkdown(props map[string]interface{}) string {
+	url, urlOK := props["url"].(string)
+	width, _ := props["previewWidth"].(float64)
+	caption, _ := props["caption"].(string)
+
+	if !urlOK {
+		return "\nInvalid video URL\n"
+	}
+
+	return fmt.Sprintf("<figure style={{marginLeft:'0px'}}>\n<ReactPlayer playing controls url='%s' width='%dpx' />\n<figcaption style={{textAlign:'center'}}>%s</figcaption>\n</figure>\n", url, int(width), caption)
+}
+
+func fileToMarkdown(props map[string]interface{}) string {
+	name, _ := props["name"].(string)
+	url, urlOK := props["url"].(string)
+	caption, _ := props["caption"].(string)
+
+	if !urlOK {
+		return "Invalid file URL"
+	}
+
+	return fmt.Sprintf("<figure>\n[%s](%s)\n<figcaption>%s</figcaption>\n</figure>\n", name, url, caption)
+}
+
+func audioToMarkdown(props map[string]interface{}) string {
+	url, urlOK := props["url"].(string)
+	caption, _ := props["caption"].(string)
+
+	if !urlOK {
+		return "\nInvalid audio URL\n"
+	}
+
+	return fmt.Sprintf("<figure style={{marginLeft:'0px'}}>\n<audio controls src='%s'>\nYour browser does not support the audio element.\n</audio>\n<figcaption style={{textAlign:'center'}}>%s</figcaption>\n</figure>\n", url, caption)
+}
+
+func alertToMarkdown(props map[string]interface{}, content string) string {
+	alertType, _ := props["type"].(string)
+
+	if alertType == "error" {
+		alertType = "danger"
+	}
+
+	return fmt.Sprintf(":::%s\n%s\n:::\n", alertType, content)
+}
+
+func tableToMarkdown(tableContent map[string]interface{}) string {
+	// Assume this function handles table properties as earlier defined
+	rowsInterface, ok := tableContent["rows"].([]interface{})
+	if !ok {
+		return "Invalid table data"
+	}
+
+	markdown := ""
+	headers := []string{}
+	separators := []string{}
+	dataRows := []string{}
+
+	for rowIndex, rowInterface := range rowsInterface {
+		row, ok := rowInterface.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		cellsInterface, ok := row["cells"].([]interface{})
+		if !ok {
+			continue
+		}
+
+		rowMarkdown := "|"
+		for _, cellInterface := range cellsInterface {
+			cell, ok := cellInterface.([]interface{})
+			if !ok || len(cell) == 0 {
+				rowMarkdown += " |"
+				continue
+			}
+
+			cellMap, ok := cell[0].(map[string]interface{})
+			if !ok {
+				continue
+			}
+
+			text, ok := cellMap["text"].(string)
+			if !ok {
+				text = ""
+			}
+
+			rowMarkdown += " " + text + " |"
+			if rowIndex == 0 {
+				headers = append(headers, text)
+				separators = append(separators, "---")
+			}
+		}
+
+		if rowIndex == 0 {
+			markdown += rowMarkdown + "\n|" + strings.Join(separators, "|") + "|\n"
+		} else {
+			dataRows = append(dataRows, rowMarkdown)
+		}
+	}
+
+	for _, dataRow := range dataRows {
+		markdown += dataRow + "\n"
+	}
+
+	return "\n" + markdown + "\n"
 }
 
 func numberedListItemToMarkdown(block Block, depth int, numbering *[]int, content string) string {
@@ -263,7 +460,7 @@ func bulletListItemToMarkdown(block Block, depth int, content string) string {
 
 func checkListItemToMarkdown(block Block, depth int, content string) string {
 	indent := strings.Repeat("    ", depth)
-	checked := "[ ]" // default unchecked
+	checked := "[ ]" // default unchecke
 	if isChecked, ok := block.Props["checked"].(bool); ok && isChecked {
 		checked = "[x]" // checked
 	}
@@ -280,7 +477,7 @@ func checkListItemToMarkdown(block Block, depth int, content string) string {
 }
 
 func paragraphToMarkdown(content string) string {
-	return fmt.Sprintf("%s\n\n", content)
+	return fmt.Sprintf("\n%s\n", content)
 }
 
 func getTextContent(content interface{}) string {
@@ -323,7 +520,7 @@ func applyTextStyles(text string, styles map[string]interface{}) string {
 	return text
 }
 
-func applyBlockStyles(content string, props map[string]interface{}) string {
+func applyBlockStyles(content string, props map[string]interface{}, blockType string) string {
 	style := make(map[string]string)
 	if textColor, ok := props["textColor"].(string); ok && textColor != "default" {
 		style["color"] = textColor
@@ -341,13 +538,48 @@ func applyBlockStyles(content string, props map[string]interface{}) string {
 			styleString += fmt.Sprintf("%s: '%s', ", key, value)
 		}
 		styleString = styleString[:len(styleString)-2] + "}"
-		return fmt.Sprintf("<div style={%s}>%s</div>", styleString, content)
+
+		if blockType != "image" && blockType != "video" {
+			return fmt.Sprintf("<div style={%s}>%s</div>", styleString, content)
+		}
+	}
+
+	if blockType == "image" {
+		styleString := ""
+
+		if len(style) > 0 {
+			styleString = "{"
+			for key, value := range style {
+				styleString += fmt.Sprintf("%s: '%s', ", key, value)
+			}
+			styleString = styleString[:len(styleString)-2] + "}"
+		}
+
+		if styleString != "" {
+			return fmt.Sprintf("<div style={%s}>\n%s</div>\n", styleString, content)
+		} else {
+			return fmt.Sprintf("<div>\n%s</div>\n", content)
+		}
+	}
+
+	if blockType == "video" || blockType == "audio" {
+		textAlignment, _ := props["textAlignment"].(string)
+		customVideoStyle := fmt.Sprintf("display: 'flex', justifyContent: '%s', alignItems: '%s', textAlign: '%s', height: '100%%'", textAlignment, textAlignment, textAlignment)
+
+		return fmt.Sprintf("<div style={{%s}}>\n%s</div>\n", customVideoStyle, content)
 	}
 
 	return content
 }
 
 func (service *DocService) writePagesToDirectory(pages []models.Page, dirPath string) error {
+	sort.Slice(pages, func(i, j int) bool {
+		if pages[i].Order == nil || pages[j].Order == nil {
+			return false
+		}
+		return *pages[i].Order < *pages[j].Order
+	})
+
 	for _, page := range pages {
 		fullPage, err := service.GetPage(page.ID)
 		if err != nil {
@@ -355,19 +587,14 @@ func (service *DocService) writePagesToDirectory(pages []models.Page, dirPath st
 		}
 
 		var fileName, content string
-		var order uint
 
 		if fullPage.IsIntroPage {
-			fileName = "index.md"
-			order = 0
+			fileName = "index.mdx"
 		} else {
-			fileName = utils.StringToFileString(fullPage.Title) + ".md"
-			if fullPage.Order != nil {
-				order = *fullPage.Order
-			}
+			fileName = utils.StringToFileString(fullPage.Title) + ".mdx"
 		}
 
-		content, err = CraftPage(order, fullPage.Title, fullPage.Slug, fullPage.Content)
+		content, err = service.CraftPage(fullPage.ID, fullPage.Title, fullPage.Slug, fullPage.Content)
 
 		if err != nil {
 			return err
@@ -378,6 +605,70 @@ func (service *DocService) writePagesToDirectory(pages []models.Page, dirPath st
 			return err
 		}
 	}
+	return nil
+}
+
+func (service *DocService) writePageGroupsToDirectory(pageGroups []models.PageGroup, dirPath string) error {
+	sort.Slice(pageGroups, func(i, j int) bool {
+		if pageGroups[i].Order == nil || pageGroups[j].Order == nil {
+			return false // Handle nil cases appropriately
+		}
+		return *pageGroups[i].Order < *pageGroups[j].Order
+	})
+
+	for _, pageGroup := range pageGroups {
+		position, err := service.getSidebarPosition(pageGroup.ID, true)
+		if err != nil {
+			return err
+		}
+
+		categoryJson := fmt.Sprintf(`{
+            "label": "%s",
+            "position": %d,
+            "collapsible": true,
+            "collapsed": true,
+            "className": "red",
+            "link": {
+                "type": "generated-index",
+                "title": "%s"
+            }
+        }`, pageGroup.Name, position, pageGroup.Name)
+
+		pageGroupDir := utils.StringToFileString(pageGroup.Name)
+		fullPath := filepath.Join(dirPath, pageGroupDir)
+
+		if !utils.PathExists(fullPath) {
+			if err := utils.MakeDir(fullPath); err != nil {
+				return err
+			}
+		}
+
+		if err := utils.WriteToFile(filepath.Join(fullPath, "_category_.json"), categoryJson); err != nil {
+			return err
+		}
+
+		pages, err := service.GetPagesOfPageGroup(pageGroup.ID)
+
+		if err != nil {
+			return err
+		}
+
+		if err := service.writePagesToDirectory(pages, fullPath); err != nil {
+			return err
+		}
+
+		var nestedPageGroups []models.PageGroup
+		if err := service.DB.Where("parent_id = ?", pageGroup.ID).Find(&nestedPageGroups).Error; err != nil {
+			return err
+		}
+
+		if len(nestedPageGroups) > 0 {
+			if err := service.writePageGroupsToDirectory(nestedPageGroups, fullPath); err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -404,22 +695,49 @@ func (service *DocService) WriteContents(docId uint) error {
 		return err
 	}
 
+	var rootPageGroups []models.PageGroup
+
+	result := service.DB.Where("parent_id IS NULL").Find(&rootPageGroups)
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if err := service.writePageGroupsToDirectory(rootPageGroups, docsPath); err != nil {
+		return err
+	}
+
 	childrenIds, err := service.GetChildrenOfDocumentation(docId)
 	if err != nil {
 		return err
 	}
 
-	versions := []string{doc.Version}
+	type VersionInfo struct {
+		Version   string
+		CreatedAt time.Time
+	}
+
+	versionInfos := []VersionInfo{{Version: doc.Version, CreatedAt: *doc.CreatedAt}}
 
 	if len(childrenIds) == 0 {
 		versionDirName := fmt.Sprintf("version-%s", doc.Version)
 		versionedDocPath := filepath.Join(versionedDocsPath, versionDirName)
-
 		if err := utils.MakeDir(versionedDocPath); err != nil {
 			return err
 		}
-
 		if err := service.writePagesToDirectory(doc.Pages, versionedDocPath); err != nil {
+			return err
+		}
+
+		var rootPageGroups []models.PageGroup
+
+		result := service.DB.Where("parent_id IS NULL").Find(&rootPageGroups)
+
+		if result.Error != nil {
+			return result.Error
+		}
+
+		if err := service.writePageGroupsToDirectory(rootPageGroups, versionedDocPath); err != nil {
 			return err
 		}
 
@@ -441,17 +759,26 @@ func (service *DocService) WriteContents(docId uint) error {
 			if err != nil {
 				return err
 			}
-
-			versions = append(versions, childDoc.Version)
-
+			versionInfos = append(versionInfos, VersionInfo{Version: childDoc.Version, CreatedAt: *childDoc.CreatedAt})
 			versionDirName := fmt.Sprintf("version-%s", childDoc.Version)
 			versionedDocPath := filepath.Join(versionedDocsPath, versionDirName)
-
 			if err := utils.MakeDir(versionedDocPath); err != nil {
 				return err
 			}
 
 			if err := service.writePagesToDirectory(childDoc.Pages, versionedDocPath); err != nil {
+				return err
+			}
+
+			var rootPageGroups []models.PageGroup
+
+			result := service.DB.Where("parent_id IS NULL").Find(&rootPageGroups)
+
+			if result.Error != nil {
+				return result.Error
+			}
+
+			if err := service.writePageGroupsToDirectory(rootPageGroups, versionedDocPath); err != nil {
 				return err
 			}
 
@@ -470,6 +797,15 @@ func (service *DocService) WriteContents(docId uint) error {
 		}
 	}
 
+	sort.Slice(versionInfos, func(i, j int) bool {
+		return versionInfos[i].CreatedAt.After(versionInfos[j].CreatedAt)
+	})
+
+	versions := make([]string, len(versionInfos))
+	for i, vi := range versionInfos {
+		versions[i] = vi.Version
+	}
+
 	versionsJSON, err := json.Marshal(versions)
 	if err != nil {
 		return err
@@ -479,4 +815,68 @@ func (service *DocService) WriteContents(docId uint) error {
 	}
 
 	return nil
+}
+
+func (service *DocService) DocusaurusBuild(docId uint) error {
+	docPath := filepath.Join(config.ParsedConfig.DataPath, "docusaurus_data", "doc_"+strconv.Itoa(int(docId)))
+
+	err := utils.RunNpmCommand(docPath, "run", "build")
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (service *DocService) GetDocusaurus(docId uint) (string, error) {
+	exists := service.IsDocIdValid(docId)
+	if !exists {
+		return "", fmt.Errorf("doc_does_not_exist")
+	}
+
+	docPath := fmt.Sprintf("data/docusaurus_data/doc_%d/build", docId)
+	if _, err := os.Stat(docPath); os.IsNotExist(err) {
+		return "", fmt.Errorf("docusaurus_build_not_found")
+	}
+
+	files, err := os.ReadDir(docPath)
+	if err != nil {
+		return "", fmt.Errorf("error_reading_docusaurus_directory")
+	}
+	if len(files) == 0 {
+		return "", fmt.Errorf("docusaurus_build_empty")
+	}
+
+	return docPath, nil
+}
+
+func (service *DocService) getSidebarPosition(id uint, isPageGroup bool) (uint, error) {
+	if isPageGroup {
+		var pageGroup models.PageGroup
+		if err := service.DB.First(&pageGroup, id).Error; err != nil {
+			return 0, err
+		}
+
+		if pageGroup.Order == nil {
+			return 0, fmt.Errorf("page group must have an order")
+		}
+
+		return *pageGroup.Order, nil
+	} else {
+		var page models.Page
+		if err := service.DB.First(&page, id).Error; err != nil {
+			return 0, err
+		}
+
+		if page.IsIntroPage {
+			return 0, nil
+		}
+
+		if page.Order == nil {
+			return 0, fmt.Errorf("page must have an order")
+		}
+
+		return *page.Order, nil
+	}
 }
