@@ -20,8 +20,8 @@ export const alertTypes = [
     }
   },
   {
-    title: 'Error',
-    value: 'error',
+    title: 'Danger',
+    value: 'danger',
     icon: errorIcon,
     color: '#d80d0d',
     backgroundColor: {
@@ -60,7 +60,7 @@ export const Alert = createReactBlockSpec(
       textColor: defaultProps.textColor,
       type: {
         default: 'warning',
-        values: ['warning', 'error', 'info', 'success']
+        values: ['warning', 'danger', 'info', 'success']
       }
     },
     content: 'inline'
