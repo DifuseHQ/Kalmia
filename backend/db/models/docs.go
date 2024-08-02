@@ -20,6 +20,7 @@ type Page struct {
 	Order           *uint      `json:"order,omitempty"`
 	Editors         []User     `gorm:"many2many:page_editors;" json:"editors,omitempty"`
 	LastEditorID    *uint      `json:"lastEditorId,omitempty"`
+	IsIntroPage     bool       `json:"isIntroPage,omitempty" gorm:"default:false"`
 }
 
 func (s Page) MarshalJSON() ([]byte, error) {
@@ -51,6 +52,9 @@ type Documentation struct {
 	ID               uint        `gorm:"primarykey" json:"id,omitempty"`
 	Name             string      `gorm:"index:idx_name_root" json:"name,omitempty"`
 	Version          string      `json:"version,omitempty"`
+	URL              string      `json:"url,omitempty"`
+	OrganizationName string      `json:"organizationName,omitempty"`
+	ProjectName      string      `json:"projectName,omitempty"`
 	ClonedFrom       *uint       `gorm:"default:null" json:"clonedFrom"`
 	Description      string      `json:"description,omitempty"`
 	Favicon          string      `json:"favicon,omitempty"`
