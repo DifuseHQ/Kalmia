@@ -42,7 +42,7 @@ const LabelAndCommunityComponent = ({
       </div>
       <div>
         <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          {t('community')}
+          {t('link')}
         </span>
         <input
           type="text"
@@ -392,7 +392,7 @@ export default function CreateDocModal () {
                 <div>
                   <div className="flex justify-between items-center">
                     <p className="block text-md font-medium text-gray-700 dark:text-gray-300 ">
-                      {t('footer')}
+                      {t('community_footer')}
                     </p>
                     <div className="flex justify-center gap-3">
                       <button
@@ -436,7 +436,7 @@ export default function CreateDocModal () {
                 <div>
                   <div className="flex justify-between items-center">
                     <span className="block text-md font-medium text-gray-700 dark:text-gray-300 ">
-                      {t('more')}
+                      {t('more_footer')}
                     </span>
                     <div className="flex justify-center gap-3">
                       <button
