@@ -4,8 +4,6 @@ import { DateTime } from 'luxon';
 import { toastMessage } from './Toast';
 
 export const handleError = (result, navigate = null, t) => {
-  console.log(result, 'error');
-
   if (result.status === 'error') {
     if (result.status.code === '401') {
       toastMessage(t(result.message), 'error');
@@ -133,3 +131,79 @@ export function getLastPageOrder (data) {
   }
   return 0;
 }
+
+export const isValidURL = (urlString) => {
+  try {
+    const url = new URL(urlString);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch (error) {
+    return false;
+  }
+};
+
+export const validateFormData = (formData) => {
+  const errors = {
+    status: false,
+    message: ''
+  };
+
+  if (!formData.name) {
+    errors.status = true;
+    errors.message = 'title_is_required';
+    return errors;
+  }
+
+  if (!formData.version) {
+    errors.status = true;
+    errors.message = 'version_is_required';
+    return errors;
+  }
+
+  if (!formData.description) {
+    errors.status = true;
+    errors.message = 'description_is_required';
+    return errors;
+  }
+
+  if (formData.favicon && !isValidURL(formData.favicon)) {
+    errors.status = true;
+    errors.message = 'valid_favicon_url_required';
+    return errors;
+  }
+
+  if (formData.navImage && !isValidURL(formData.navImage)) {
+    errors.status = true;
+    errors.message = 'valid_navbar_icon_url_required';
+    return errors;
+  }
+
+  if (formData.metaImage && !isValidURL(formData.metaImage)) {
+    errors.status = true;
+    errors.message = 'valid_social_image_url_required';
+    return errors;
+  }
+
+  return errors;
+};
+
+export const validateCommunityFields = (footerField, moreField) => {
+  const errors = {
+    status: false,
+    message: ''
+  };
+  for (const field of footerField) {
+    if (field.link && !isValidURL(field.link)) {
+      errors.status = true;
+      errors.message = 'valid_footer_community_url_required';
+      return errors;
+    }
+  }
+  for (const field of moreField) {
+    if (field.link && !isValidURL(field.link)) {
+      errors.status = true;
+      errors.message = 'valid_more_community_url_required';
+      return errors;
+    }
+  }
+  return errors;
+};

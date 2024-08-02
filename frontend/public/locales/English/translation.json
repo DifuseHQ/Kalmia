@@ -113,7 +113,13 @@
         "something_went_wrong_try_again":"Something went wrong, try again",
         "user_deleted_successfully":"User deleted successfully",
         "logged_out":"Logged Out",
+        "valid_favicon_url_required":"Valid Favicon URL Required",
+        "valid_navbar_icon_url_required":"Valid Navbar Icon URL Required",
+        "valid_social_image_url_required":"Valid Social Image URL Required",
+        "valid_footer_community_url_required":"Valid Footer Community URL Required",
+        "valid_more_community_url_required":"Valid More Community URL Required",
         
+        "documentation_name_already_exists":"Documentation Name Already Exists",
         "invalid_request":"Invalid request",
         "failed_to_hash_password":"Failed to hash password" ,
         "failed_to_create_user":"Failed to create user",

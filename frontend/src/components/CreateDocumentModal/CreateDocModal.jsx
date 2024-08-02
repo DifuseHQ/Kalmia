@@ -5,17 +5,17 @@ import { Icon } from '@iconify/react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 import { createDocumentation, getDocumentation, updateDocumentation } from '../../api/Requests';
-import { handleError } from '../../utils/Common';
+import { handleError, validateCommunityFields, validateFormData } from '../../utils/Common';
 import { toastMessage } from '../../utils/Toast';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
 
 const LabelAndCommunityComponent = ({
   index,
   labelId,
-  communityId,
+  linkId,
   data,
   onLabelChange,
-  onCommunityChange
+  onLinkChange
 }) => {
   const { t } = useTranslation();
   return (
@@ -46,10 +46,10 @@ const LabelAndCommunityComponent = ({
         </span>
         <input
           type="text"
-          value={data?.community || ''}
-          id={communityId}
+          value={data?.link || ''}
+          id={linkId}
           name={index}
-          onChange={(e) => onCommunityChange(index, e.target.value)}
+          onChange={(e) => onLinkChange(index, e.target.value)}
           placeholder={t('community_placeholder')}
           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
         />
@@ -77,9 +77,9 @@ export default function CreateDocModal () {
   });
 
   const [footerField, setFooterField] = useState([
-    { label: '', community: '' }
+    { label: '', link: '' }
   ]);
-  const [moreField, setMoreField] = useState([{ label: '', community: '' }]);
+  const [moreField, setMoreField] = useState([{ label: '', link: '' }]);
 
   useEffect(() => {
     if (mode === 'edit') {
@@ -154,24 +154,15 @@ export default function CreateDocModal () {
   };
 
   const handleCreateDocument = async () => {
-    if (formData.name === '') {
-      toastMessage(
-        t('title_is_required'),
-        'warning'
-      );
+    const validate = validateFormData(formData);
+    if (validate.status) {
+      toastMessage(t(validate.message), 'error');
       return;
     }
 
-    if (formData.version === '') {
-      toastMessage(t('version_is_required'), 'warning');
-      return;
-    }
-
-    if (formData.description === '') {
-      toastMessage(
-        t('description_is_required'),
-        'warning'
-      );
+    const validateCommunity = validateCommunityFields(footerField, moreField);
+    if (validateCommunity.status) {
+      toastMessage(t(validateCommunity.message), 'error');
       return;
     }
 
@@ -195,18 +186,16 @@ export default function CreateDocModal () {
       result = await createDocumentation(payload);
     }
 
+    if (handleError(result, navigate, t)) return;
+
     if (result.status === 'success') {
       if (docId) {
         navigate(`/dashboard/documentation?id=${docId}`);
       } else {
         navigate('/');
       }
-      console.log('t');
 
       toastMessage(t('document_created_successfully'), 'success');
-    } else {
-      console.log('te');
-      handleError(result, navigate, t);
     }
   };
 
@@ -217,9 +206,9 @@ export default function CreateDocModal () {
     setFooterField(updatedFields);
   };
 
-  const handleFooterCommunityChange = (index, newValue) => {
+  const handleFooterLinkChange = (index, newValue) => {
     const updatedFields = footerField.map((field, i) =>
-      i === index ? { ...field, community: newValue } : field
+      i === index ? { ...field, link: newValue } : field
     );
     setFooterField(updatedFields);
   };
@@ -231,9 +220,9 @@ export default function CreateDocModal () {
     setMoreField(updatedFields);
   };
 
-  const handleMoreCommunityChange = (index, newValue) => {
+  const handleMoreLinkChange = (index, newValue) => {
     const updatedFields = moreField.map((field, i) =>
-      i === index ? { ...field, community: newValue } : field
+      i === index ? { ...field, link: newValue } : field
     );
     setMoreField(updatedFields);
   };
@@ -426,11 +415,11 @@ export default function CreateDocModal () {
                   <div key={`footer-label-${index}`}>
                     <LabelAndCommunityComponent
                       labelId={`footer-label-${index}`}
-                      communityId={`footer-community-${index}`}
+                      linkId={`footer-link-${index}`}
                       index={index}
                       data={obj}
                       onLabelChange={handleFooterLabelChange}
-                      onCommunityChange={handleFooterCommunityChange}
+                      onLinkChange={handleFooterLinkChange}
                     />
                   </div>
                 ))}
@@ -470,11 +459,11 @@ export default function CreateDocModal () {
                     <div key={`more-label-${index}`}>
                       <LabelAndCommunityComponent
                         labelId={`more-label-${index}`}
-                        communityId={`more-community-${index}`}
+                        linkId={`more-link-${index}`}
                         index={index}
                         data={obj}
                         onLabelChange={handleMoreLabelChange}
-                        onCommunityChange={handleMoreCommunityChange}
+                        onLinkChange={handleMoreLinkChange}
                       />
                     </div>
                   ))}
