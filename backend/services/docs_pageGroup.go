@@ -208,7 +208,11 @@ func (service *DocService) EditPageGroup(user models.User, id uint, name string,
 	pageGroup.Name = name
 	pageGroup.DocumentationID = documentationID
 	pageGroup.ParentID = parentID
-	pageGroup.Order = order
+
+	if order != nil {
+		pageGroup.Order = order
+	}
+
 	pageGroup.LastEditorID = &user.ID
 
 	alreadyEditor := false
