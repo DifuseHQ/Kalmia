@@ -8,6 +8,7 @@ import { createDocumentation, getDocumentation, updateDocumentation } from '../.
 import { ModalContext } from '../../context/ModalContext';
 import { handleError, validateCommunityFields, validateFormData } from '../../utils/Common';
 import { toastMessage } from '../../utils/Toast';
+import { customCSSInitial } from '../../utils/Utils';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
 
 const LabelAndCommunityComponent = ({
@@ -74,7 +75,7 @@ export default function CreateDocModal () {
     url: '',
     organizationName: '',
     projectName: '',
-    customCSS: '',
+    customCSS: customCSSInitial(),
     favicon: '',
     navImage: '',
     copyrightText: '',
@@ -114,7 +115,7 @@ export default function CreateDocModal () {
         url: '',
         organizationName: '',
         projectName: '',
-        customCSS: '',
+        customCSS: customCSSInitial(),
         favicon: '',
         navImage: '',
         copyrightText: '',
@@ -155,6 +156,7 @@ export default function CreateDocModal () {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
     setFormData({
       ...formData,
       [name]: value || ''
@@ -182,7 +184,7 @@ export default function CreateDocModal () {
       url: formData.url || '',
       organizationName: formData.organizationName || '',
       projectName: formData.projectName || '',
-      customCSS: formData.customCSS || '',
+      customCSS: formData.customCSS || customCSSInitial(),
       favicon: formData.favicon || '',
       navImage: formData.navImage || '',
       copyrightText: formData.copyrightText || '',
@@ -311,7 +313,7 @@ export default function CreateDocModal () {
                         value={formData?.description}
                         name="description"
                         id="description"
-                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+                        className="bg-gray-50 border min-h-36 border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
                         placeholder={t('description_placeholder')}
                         rows="3"
                       />
@@ -328,7 +330,7 @@ export default function CreateDocModal () {
                         value={formData?.customCSS}
                         name="customCSS"
                         id="customCSS"
-                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                        className="bg-gray-50 border min-h-36 border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                         placeholder={t('custom_css_placeholder')}
                         rows="3"
                       />
