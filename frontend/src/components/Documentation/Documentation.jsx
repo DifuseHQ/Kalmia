@@ -343,6 +343,14 @@ export default function Documentation () {
       )
     );
 
+    const newIndex = result.destination.index;
+    const oldDataAtNewPosition = newItems[newIndex];
+
+    if (oldDataAtNewPosition.isIntroPage) {
+      toastMessage(t('intro_page_cannot_be_reordered'), 'warning');
+      return;
+    }
+
     const [reorderedItem] = newItems.splice(result.source.index, 1);
     const dragItem = reorderedItem;
     newItems.splice(result.destination.index, 0, reorderedItem);
@@ -358,7 +366,7 @@ export default function Documentation () {
         order: index
       });
 
-        if (handleError(result, navigate, t)) return; //eslint-disable-line
+      if (handleError(result, navigate, t)) return; //eslint-disable-line
     };
 
     try {
@@ -706,6 +714,7 @@ export default function Documentation () {
                                           : `page-${obj.id}`
                                       }
                                       index={index}
+                                      isDragDisabled={obj.isIntroPage}
                                     >
                                       {(provided, snapshot) => (
                                         <Table
@@ -723,7 +732,6 @@ export default function Documentation () {
                                       ))
                                     )
                               ) : (
-                                // Optional: Show a loading spinner or message while data is loading
                                 <motion.tr
                                   initial={{ opacity: 0 }}
                                   animate={{ opacity: 1 }}

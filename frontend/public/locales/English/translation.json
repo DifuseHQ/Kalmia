@@ -125,6 +125,7 @@
         "enter_project_name":"Enter Project Name",
         "paste_your_url":"Paste your url",
         "valid_url_required":"Valid URL Required",
+        "intro_page_cannot_be_reordered":"Introduction page cannot be Reordered",
         
         "documentation_name_already_exists":"Documentation Name Already Exists",
         "invalid_request":"Invalid request",
