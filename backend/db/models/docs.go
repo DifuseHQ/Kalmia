@@ -78,3 +78,16 @@ func (s Documentation) MarshalJSON() ([]byte, error) {
 	type TmpStruct Documentation
 	return jsonx.Marshal(TmpStruct(s))
 }
+
+type BuildTriggers struct {
+	ID              uint       `gorm:"primarykey" json:"id,omitempty"`
+	DocumentationID uint       `json:"documentationId,omitempty"`
+	Triggered       bool       `json:"triggered,omitempty"`
+	CreatedAt       *time.Time `gorm:"autoCreateTime" json:"createdAt,omitempty"`
+	CompletedAt     *time.Time
+}
+
+func (s BuildTriggers) MarshalJSON() ([]byte, error) {
+	type TmpStruct BuildTriggers
+	return jsonx.Marshal(TmpStruct(s))
+}

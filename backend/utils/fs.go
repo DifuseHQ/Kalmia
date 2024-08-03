@@ -22,6 +22,10 @@ func RemovePath(path string) error {
 	return os.RemoveAll(path)
 }
 
+func MovePath(oldPath, newPath string) error {
+	return os.Rename(oldPath, newPath)
+}
+
 func ReplaceInFile(filename, oldStr, newStr string) error {
 	input, err := os.ReadFile(filename)
 	if err != nil {

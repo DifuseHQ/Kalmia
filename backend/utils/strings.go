@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	crypt "github.com/simia-tech/crypt"
 	"golang.org/x/crypto/bcrypt"
@@ -53,5 +54,9 @@ func StringToFileString(input string) string {
 }
 
 func UintPtr(v uint) *uint {
+	return &v
+}
+
+func TimePtr(v time.Time) *time.Time {
 	return &v
 }

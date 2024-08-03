@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
+	"time"
 
 	"git.difuse.io/Difuse/kalmia/cmd"
 	"git.difuse.io/Difuse/kalmia/config"
@@ -16,6 +18,8 @@ import (
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 )
+
+var startupWg sync.WaitGroup
 
 func main() {
 	cmd.AsciiArt()
@@ -31,10 +35,18 @@ func main() {
 	aS := serviceRegistry.AuthService
 	dS := serviceRegistry.DocService
 
-	/* Let's do some startup stuff */
-
+	startupWg.Add(1)
 	go func() {
 		dS.StartupCheck()
+		startupWg.Done()
+	}()
+
+	go func() {
+		startupWg.Wait()
+		for {
+			dS.BuildJob()
+			time.Sleep(10 * time.Second)
+		}
 	}()
 
 	/* Setup router */

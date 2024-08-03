@@ -2,6 +2,9 @@ package db
 
 import (
 	"errors"
+	"log"
+	"path"
+
 	"git.difuse.io/Difuse/kalmia/config"
 	"git.difuse.io/Difuse/kalmia/db/models"
 	"git.difuse.io/Difuse/kalmia/logger"
@@ -11,8 +14,6 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	gormLogger "gorm.io/gorm/logger"
-	"log"
-	"path"
 )
 
 func SetupDatabase(env string, dbURL string, dataPath string) *gorm.DB {
@@ -40,6 +41,7 @@ func SetupDatabase(env string, dbURL string, dataPath string) *gorm.DB {
 		&models.User{},
 		&models.Token{},
 		&models.Documentation{},
+		&models.BuildTriggers{},
 		&models.PageGroup{},
 		&models.Page{},
 	)
