@@ -165,6 +165,12 @@ export const validateFormData = (formData) => {
     return errors;
   }
 
+  if (!formData.customCSS) {
+    errors.status = true;
+    errors.message = 'custom_css_is_required';
+    return errors;
+  }
+
   if (formData.favicon && !isValidURL(formData.favicon)) {
     errors.status = true;
     errors.message = 'valid_favicon_url_required';
@@ -177,13 +183,37 @@ export const validateFormData = (formData) => {
     return errors;
   }
 
-  if (formData.metaImage && !isValidURL(formData.metaImage)) {
+  if (!formData.copyrightText) {
+    errors.status = true;
+    errors.message = 'copyright_text_is_required';
+    return errors;
+  }
+
+  if (!isValidURL(formData.metaImage)) {
     errors.status = true;
     errors.message = 'valid_social_image_url_required';
     return errors;
   }
 
-  if (formData.url && !isValidURL(formData.url)) {
+  if (!formData.organizationName) {
+    errors.status = true;
+    errors.message = 'organization_name_is_required';
+    return errors;
+  }
+
+  if (!formData.projectName) {
+    errors.status = true;
+    errors.message = 'project_name_is_required';
+    return errors;
+  }
+
+  if (!isValidURL(formData.baseURL)) {
+    errors.status = true;
+    errors.message = 'valid_base_url_required';
+    return errors;
+  }
+
+  if (!isValidURL(formData.url)) {
     errors.status = true;
     errors.message = 'valid_url_required';
     return errors;
@@ -197,15 +227,26 @@ export const validateCommunityFields = (footerField, moreField) => {
     status: false,
     message: ''
   };
+
   for (const field of footerField) {
-    if (field.link && !isValidURL(field.link)) {
+    if (!field.label) {
+      errors.status = true;
+      errors.message = 'footer_field_label_required';
+      return errors;
+    }
+    if (!field.link || !isValidURL(field.link)) {
       errors.status = true;
       errors.message = 'valid_footer_community_url_required';
       return errors;
     }
   }
   for (const field of moreField) {
-    if (field.link && !isValidURL(field.link)) {
+    if (!field.label) {
+      errors.status = true;
+      errors.message = 'more_field_label_required';
+      return errors;
+    }
+    if (!field.link || !isValidURL(field.link)) {
       errors.status = true;
       errors.message = 'valid_more_community_url_required';
       return errors;
