@@ -72,6 +72,7 @@ export default function CreateDocModal () {
     name: '',
     description: '',
     version: '',
+    baseURL: '',
     url: '',
     organizationName: '',
     projectName: '',
@@ -112,6 +113,7 @@ export default function CreateDocModal () {
         name: '',
         description: '',
         version: '',
+        baseURL: '',
         url: '',
         organizationName: '',
         projectName: '',
@@ -156,7 +158,7 @@ export default function CreateDocModal () {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
+
     setFormData({
       ...formData,
       [name]: value || ''
@@ -181,6 +183,7 @@ export default function CreateDocModal () {
       name: formData.name || '',
       description: formData.description || '',
       version: formData.version || '',
+      baseURL: formData.baseURL || '',
       url: formData.url || '',
       organizationName: formData.organizationName || '',
       projectName: formData.projectName || '',
@@ -398,7 +401,7 @@ export default function CreateDocModal () {
                   </div>
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-3">
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     {t('organization_name')}
@@ -423,6 +426,22 @@ export default function CreateDocModal () {
                       type="url"
                       name="projectName"
                       placeholder={t('enter_project_name')}
+                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {t('base_url')}
+                    </span>
+                    <input
+                      onChange={handleChange}
+                      value={formData?.baseURL}
+                      type="text"
+                      name="baseURL"
+                      placeholder={t('paste_your_url')}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     />
                   </div>
