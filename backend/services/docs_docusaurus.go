@@ -981,7 +981,6 @@ func (service *DocService) BuildJob() {
 	}
 
 	if len(triggers) == 0 {
-		logger.Debug("No pending build triggers")
 		return
 	}
 
