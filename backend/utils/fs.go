@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"os"
 	"strings"
 )
@@ -15,6 +17,19 @@ func MakeDir(path string) error {
 }
 
 func WriteToFile(filename, content string) error {
+	newHash := sha256.Sum256([]byte(content))
+	newHashStr := hex.EncodeToString(newHash[:])
+
+	existingContent, err := os.ReadFile(filename)
+	if err == nil {
+		existingHash := sha256.Sum256(existingContent)
+		existingHashStr := hex.EncodeToString(existingHash[:])
+
+		if existingHashStr == newHashStr {
+			return nil
+		}
+	}
+
 	return os.WriteFile(filename, []byte(content), 0644)
 }
 

@@ -46,6 +46,24 @@ func (service *DocService) CreatePage(page *models.Page) error {
 		return fmt.Errorf("failed_to_create_page")
 	}
 
+	docId, err := service.GetDocumentationIDOfPage(page.ID)
+
+	if err != nil {
+		return fmt.Errorf("failed_to_get_documentation_id")
+	}
+
+	parentDocId, _ := service.GetParentDocId(docId)
+
+	if parentDocId == 0 {
+		err = service.AddBuildTrigger(docId)
+	} else {
+		err = service.AddBuildTrigger(parentDocId)
+	}
+
+	if err != nil {
+		return fmt.Errorf("failed_to_update_write_build")
+	}
+
 	return nil
 }
 

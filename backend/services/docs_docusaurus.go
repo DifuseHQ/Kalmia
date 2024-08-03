@@ -984,23 +984,41 @@ func (service *DocService) BuildJob() {
 		return
 	}
 
+	triggerGroups := make(map[uint][]models.BuildTriggers)
 	for _, trigger := range triggers {
-		start := time.Now() // Record the start time
-		err := service.UpdateWriteBuild(trigger.DocumentationID)
-		elapsed := time.Since(start) // Calculate the elapsed time
+		triggerGroups[trigger.DocumentationID] = append(triggerGroups[trigger.DocumentationID], trigger)
+	}
+
+	for docID, groupTriggers := range triggerGroups {
+		start := time.Now()
+
+		err := service.UpdateWriteBuild(docID)
+		elapsed := time.Since(start)
 
 		if err != nil {
-			logger.Error("Failed to update write build", zap.Uint("doc_id", trigger.DocumentationID), zap.Error(err), zap.Duration("elapsed", elapsed))
-			continue
+			logger.Error("Failed to update write build",
+				zap.Uint("doc_id", docID),
+				zap.Error(err),
+				zap.Duration("elapsed", elapsed),
+				zap.Int("trigger_count", len(groupTriggers)))
+		} else {
+			logger.Info("UpdateWriteBuild completed",
+				zap.Uint("doc_id", docID),
+				zap.Duration("elapsed", elapsed),
+				zap.Int("trigger_count", len(groupTriggers)))
 		}
 
-		logger.Info("UpdateWriteBuild completed", zap.Uint("doc_id", trigger.DocumentationID), zap.Duration("elapsed", elapsed))
+		now := time.Now()
+		for i := range groupTriggers {
+			groupTriggers[i].Triggered = true
+			groupTriggers[i].CompletedAt = utils.TimePtr(now)
+		}
 
-		trigger.Triggered = true
-		trigger.CompletedAt = utils.TimePtr(time.Now())
-
-		if err := service.DB.Save(&trigger).Error; err != nil {
-			logger.Error("Failed to save build trigger", zap.Uint("doc_id", trigger.DocumentationID), zap.Error(err))
+		if err := service.DB.Save(&groupTriggers).Error; err != nil {
+			logger.Error("Failed to save build triggers",
+				zap.Uint("doc_id", docID),
+				zap.Error(err),
+				zap.Int("trigger_count", len(groupTriggers)))
 		}
 	}
 }
