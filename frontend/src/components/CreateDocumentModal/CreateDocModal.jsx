@@ -1,10 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 import { createDocumentation, getDocumentation, updateDocumentation } from '../../api/Requests';
+import { ModalContext } from '../../context/ModalContext';
 import { handleError, validateCommunityFields, validateFormData } from '../../utils/Common';
 import { toastMessage } from '../../utils/Toast';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
@@ -64,6 +65,7 @@ export default function CreateDocModal () {
   const [searchParam] = useSearchParams();
   const docId = searchParam.get('id');
   const mode = searchParam.get('mode');
+  const { openModal, closeModal, setLoadingMessage } = useContext(ModalContext);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -190,15 +192,21 @@ export default function CreateDocModal () {
     };
     let result;
 
+    setLoadingMessage('Please wait while we preparing your documentation...');
+    openModal('loadingModal');
     if (mode === 'edit') {
       result = await updateDocumentation(payload);
     } else {
       result = await createDocumentation(payload);
     }
 
-    if (handleError(result, navigate, t)) return;
+    if (handleError(result, navigate, t)) {
+      closeModal('loadingModal');
+      return;
+    }
 
     if (result.status === 'success') {
+      closeModal('loadingModal');
       if (docId) {
         navigate(`/dashboard/documentation?id=${docId}`);
       } else {
