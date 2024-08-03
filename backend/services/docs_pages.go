@@ -95,9 +95,9 @@ func (service *DocService) EditPage(user models.User, id uint, title, slug, cont
 	parentDocId, _ := service.GetParentDocId(docId)
 
 	if parentDocId == 0 {
-		err = service.UpdateWriteBuild(docId)
+		err = service.AddBuildTrigger(docId)
 	} else {
-		err = service.UpdateWriteBuild(parentDocId)
+		err = service.AddBuildTrigger(parentDocId)
 	}
 
 	if err != nil {
@@ -136,6 +136,24 @@ func (service *DocService) DeletePage(id uint) error {
 		return fmt.Errorf("transaction_commit_failed")
 	}
 
+	docId, err := service.GetDocumentationIDOfPage(id)
+
+	if err != nil {
+		return fmt.Errorf("failed_to_get_documentation_id")
+	}
+
+	parentDocId, _ := service.GetParentDocId(docId)
+
+	if parentDocId == 0 {
+		err = service.AddBuildTrigger(docId)
+	} else {
+		err = service.AddBuildTrigger(parentDocId)
+	}
+
+	if err != nil {
+		return fmt.Errorf("failed_to_update_write_build")
+	}
+
 	return nil
 }
 
@@ -164,9 +182,9 @@ func (service *DocService) ReorderPage(id uint, pageGroupID *uint, order *uint) 
 	parentDocId, _ := service.GetParentDocId(docId)
 
 	if parentDocId == 0 {
-		err = service.UpdateWriteBuild(docId)
+		err = service.AddBuildTrigger(docId)
 	} else {
-		err = service.UpdateWriteBuild(parentDocId)
+		err = service.AddBuildTrigger(parentDocId)
 	}
 
 	if err != nil {

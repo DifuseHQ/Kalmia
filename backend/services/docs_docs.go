@@ -175,6 +175,12 @@ func (service *DocService) CreateDocumentation(documentation *models.Documentati
 		return fmt.Errorf("failed_to_init_docusaurus")
 	}
 
+	err = service.AddBuildTrigger(documentation.ID)
+
+	if err != nil {
+		return fmt.Errorf("failed_to_add_build_trigger")
+	}
+
 	return nil
 }
 
@@ -245,6 +251,20 @@ func (service *DocService) EditDocumentation(user models.User, id uint, name, de
 		return fmt.Errorf("failed_to_commit_changes")
 	}
 
+	parentDocId, _ := service.GetParentDocId(id)
+
+	var err error
+
+	if parentDocId == 0 {
+		err = service.AddBuildTrigger(id)
+	} else {
+		err = service.AddBuildTrigger(parentDocId)
+	}
+
+	if err != nil {
+		return fmt.Errorf("failed_to_add_build_trigger")
+	}
+
 	return nil
 }
 
@@ -276,6 +296,12 @@ func (service *DocService) DeleteDocumentation(id uint) error {
 
 	if err := tx.Commit().Error; err != nil {
 		return fmt.Errorf("failed_to_commit_changes")
+	}
+
+	err := service.AddBuildTrigger(id)
+
+	if err != nil {
+		return fmt.Errorf("failed_to_add_build_trigger")
 	}
 
 	return nil
@@ -445,11 +471,10 @@ func (service *DocService) CreateDocumentationVersion(originalDocId uint, newVer
 		return err
 	}
 
-	err = service.UpdateWriteBuild(originalDocId)
+	err = service.AddBuildTrigger(originalDocId)
 
 	if err != nil {
-		logger.Error("failed_to_init_docusaurus", zap.Error(err))
-		return fmt.Errorf("failed_to_init_docusaurus")
+		return fmt.Errorf("failed_to_add_build_trigger")
 	}
 
 	return nil

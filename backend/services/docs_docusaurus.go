@@ -166,12 +166,6 @@ func (service *DocService) InitDocusaurus(docId uint, init bool) error {
 		}
 	}
 
-	err := service.UpdateWriteBuild(docId)
-
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -608,7 +602,7 @@ func (service *DocService) writePagesToDirectory(pages []models.Page, dirPath st
 	return nil
 }
 
-func (service *DocService) writePageGroupsToDirectory(pageGroups []models.PageGroup, dirPath string) error {
+func (service *DocService) writePageGroupsToDirectory(pageGroups []models.PageGroup, dirPath string, docId uint) error {
 	sort.Slice(pageGroups, func(i, j int) bool {
 		if pageGroups[i].Order == nil || pageGroups[j].Order == nil {
 			return false // Handle nil cases appropriately
@@ -617,6 +611,10 @@ func (service *DocService) writePageGroupsToDirectory(pageGroups []models.PageGr
 	})
 
 	for _, pageGroup := range pageGroups {
+		if pageGroup.DocumentationID != docId {
+			continue
+		}
+
 		position, err := service.getSidebarPosition(pageGroup.ID, true)
 		if err != nil {
 			return err
@@ -663,7 +661,7 @@ func (service *DocService) writePageGroupsToDirectory(pageGroups []models.PageGr
 		}
 
 		if len(nestedPageGroups) > 0 {
-			if err := service.writePageGroupsToDirectory(nestedPageGroups, fullPath); err != nil {
+			if err := service.writePageGroupsToDirectory(nestedPageGroups, fullPath, docId); err != nil {
 				return err
 			}
 		}
@@ -672,75 +670,186 @@ func (service *DocService) writePageGroupsToDirectory(pageGroups []models.PageGr
 	return nil
 }
 
-func (service *DocService) WriteContents(docId uint) error {
-	doc, err := service.GetDocumentation(docId)
+func removeOldContent(currentItems map[string]bool, dirPath string) error {
+	entries, err := os.ReadDir(dirPath)
 	if err != nil {
 		return err
 	}
 
+	for _, entry := range entries {
+		fullPath := filepath.Join(dirPath, entry.Name())
+		if entry.IsDir() {
+			// Check if this directory is a current page group
+			if _, exists := currentItems[entry.Name()]; !exists {
+				if err := os.RemoveAll(fullPath); err != nil {
+					return err
+				}
+			} else {
+				// If it's a current page group, recursively check its contents
+				// but don't remove the directory itself
+				if err := removeOldContent(currentItems, fullPath); err != nil {
+					return err
+				}
+			}
+		} else {
+			// Don't remove index.mdx from the root
+			if entry.Name() == "index.mdx" && filepath.Dir(fullPath) == dirPath {
+				continue
+			}
+
+			// Don't remove _category_.json files
+			if entry.Name() == "_category_.json" {
+				continue
+			}
+
+			// Strip the .mdx extension for comparison
+			baseName := strings.TrimSuffix(entry.Name(), ".mdx")
+			if _, exists := currentItems[baseName]; !exists {
+				if err := os.Remove(fullPath); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (service *DocService) WriteContents(docId uint) error {
 	docPath := filepath.Join(config.ParsedConfig.DataPath, "docusaurus_data", "doc_"+strconv.Itoa(int(docId)))
+	doc, err := service.GetDocumentation(docId)
+	if err != nil {
+		if err.Error() == "documentation_not_found" {
+			if err := utils.RemovePath(docPath); err != nil {
+				return err
+			}
+		}
+		return err
+	}
+
 	docsPath := filepath.Join(docPath, "docs")
 	versionedDocsPath := filepath.Join(docPath, "versioned_docs")
 	versionedSidebarsPath := filepath.Join(docPath, "versioned_sidebars")
 
-	for _, path := range []string{docsPath, versionedDocsPath, versionedSidebarsPath} {
-		if !utils.PathExists(path) {
-			if err := utils.MakeDir(path); err != nil {
-				return err
-			}
+	for _, path := range []string{docPath, docsPath, versionedDocsPath, versionedSidebarsPath} {
+		if err := utils.MakeDir(path); err != nil {
+			return err
 		}
 	}
 
-	if err := service.writePagesToDirectory(doc.Pages, docsPath); err != nil {
-		return err
+	type VersionInfo struct {
+		Version   string
+		CreatedAt time.Time
+		DocId     uint
 	}
 
-	var rootPageGroups []models.PageGroup
-
-	result := service.DB.Where("parent_id IS NULL").Find(&rootPageGroups)
-
-	if result.Error != nil {
-		return result.Error
-	}
-
-	if err := service.writePageGroupsToDirectory(rootPageGroups, docsPath); err != nil {
-		return err
-	}
+	versionInfos := []VersionInfo{{Version: doc.Version, CreatedAt: *doc.CreatedAt, DocId: doc.ID}}
 
 	childrenIds, err := service.GetChildrenOfDocumentation(docId)
 	if err != nil {
 		return err
 	}
 
-	type VersionInfo struct {
-		Version   string
-		CreatedAt time.Time
-	}
-
-	versionInfos := []VersionInfo{{Version: doc.Version, CreatedAt: *doc.CreatedAt}}
-
-	if len(childrenIds) == 0 {
-		versionDirName := fmt.Sprintf("version-%s", doc.Version)
-		versionedDocPath := filepath.Join(versionedDocsPath, versionDirName)
-		if err := utils.MakeDir(versionedDocPath); err != nil {
+	for _, childId := range childrenIds {
+		childDoc, err := service.GetDocumentation(childId)
+		if err != nil {
 			return err
 		}
-		if err := service.writePagesToDirectory(doc.Pages, versionedDocPath); err != nil {
+		versionInfos = append(versionInfos, VersionInfo{Version: childDoc.Version, CreatedAt: *childDoc.CreatedAt, DocId: childDoc.ID})
+	}
+
+	// Sort versions in descending order (newest first)
+	sort.Slice(versionInfos, func(i, j int) bool {
+		return versionInfos[i].CreatedAt.After(versionInfos[j].CreatedAt)
+	})
+
+	for i, versionInfo := range versionInfos {
+		versionDoc, err := service.GetDocumentation(versionInfo.DocId)
+		if err != nil {
 			return err
 		}
 
 		var rootPageGroups []models.PageGroup
-
-		result := service.DB.Where("parent_id IS NULL").Find(&rootPageGroups)
-
-		if result.Error != nil {
-			return result.Error
-		}
-
-		if err := service.writePageGroupsToDirectory(rootPageGroups, versionedDocPath); err != nil {
+		if err := service.DB.Where("parent_id IS NULL AND documentation_id = ?", versionDoc.ID).Preload("Pages").Find(&rootPageGroups).Error; err != nil {
 			return err
 		}
 
+		currentItems := make(map[string]bool)
+
+		// Helper function to recursively add page groups and their pages to currentItems
+		var addPageGroupToCurrentItems func(group models.PageGroup) error
+		addPageGroupToCurrentItems = func(group models.PageGroup) error {
+			groupName := utils.StringToFileString(group.Name)
+			currentItems[groupName] = true
+
+			// Add pages of this group
+			pages, err := service.GetPagesOfPageGroup(group.ID)
+			if err != nil {
+				return err
+			}
+			for _, page := range pages {
+				currentItems[utils.StringToFileString(page.Title)] = true
+			}
+
+			// Add nested page groups
+			var nestedGroups []models.PageGroup
+			if err := service.DB.Where("parent_id = ?", group.ID).Find(&nestedGroups).Error; err != nil {
+				return err
+			}
+			for _, nestedGroup := range nestedGroups {
+				if err := addPageGroupToCurrentItems(nestedGroup); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+
+		// Add root-level pages
+		for _, page := range versionDoc.Pages {
+			currentItems[utils.StringToFileString(page.Title)] = true
+		}
+
+		// Add all page groups and their pages (including nested ones)
+		for _, group := range rootPageGroups {
+			if err := addPageGroupToCurrentItems(group); err != nil {
+				return err
+			}
+		}
+
+		// Write to docs/ only for the latest version
+		if i == 0 {
+			if err := service.writePagesToDirectory(versionDoc.Pages, docsPath); err != nil {
+				return err
+			}
+
+			if err := service.writePageGroupsToDirectory(rootPageGroups, docsPath, versionDoc.ID); err != nil {
+				return err
+			}
+
+			if err := removeOldContent(currentItems, docsPath); err != nil {
+				return err
+			}
+		}
+
+		// Always write to versioned_docs for all versions
+		versionDirName := fmt.Sprintf("version-%s", versionDoc.Version)
+		versionedDocPath := filepath.Join(versionedDocsPath, versionDirName)
+		if err := utils.MakeDir(versionedDocPath); err != nil {
+			return err
+		}
+
+		if err := service.writePagesToDirectory(versionDoc.Pages, versionedDocPath); err != nil {
+			return err
+		}
+
+		if err := service.writePageGroupsToDirectory(rootPageGroups, versionedDocPath, versionDoc.ID); err != nil {
+			return err
+		}
+
+		if err := removeOldContent(currentItems, versionedDocPath); err != nil {
+			return err
+		}
+
+		// Write sidebar for all versions
 		sidebarContent := `{
             "mainSidebar": [
                 {
@@ -749,63 +858,17 @@ func (service *DocService) WriteContents(docId uint) error {
                 }
             ]
         }`
-		sidebarFileName := fmt.Sprintf("version-%s-sidebars.json", doc.Version)
+		sidebarFileName := fmt.Sprintf("version-%s-sidebars.json", versionDoc.Version)
 		if err := utils.WriteToFile(filepath.Join(versionedSidebarsPath, sidebarFileName), sidebarContent); err != nil {
 			return err
 		}
-	} else {
-		for _, childId := range childrenIds {
-			childDoc, err := service.GetDocumentation(childId)
-			if err != nil {
-				return err
-			}
-			versionInfos = append(versionInfos, VersionInfo{Version: childDoc.Version, CreatedAt: *childDoc.CreatedAt})
-			versionDirName := fmt.Sprintf("version-%s", childDoc.Version)
-			versionedDocPath := filepath.Join(versionedDocsPath, versionDirName)
-			if err := utils.MakeDir(versionedDocPath); err != nil {
-				return err
-			}
-
-			if err := service.writePagesToDirectory(childDoc.Pages, versionedDocPath); err != nil {
-				return err
-			}
-
-			var rootPageGroups []models.PageGroup
-
-			result := service.DB.Where("parent_id IS NULL").Find(&rootPageGroups)
-
-			if result.Error != nil {
-				return result.Error
-			}
-
-			if err := service.writePageGroupsToDirectory(rootPageGroups, versionedDocPath); err != nil {
-				return err
-			}
-
-			sidebarContent := `{
-                "mainSidebar": [
-                    {
-                        "type": "autogenerated",
-                        "dirName": "."
-                    }
-                ]
-            }`
-			sidebarFileName := fmt.Sprintf("version-%s-sidebars.json", childDoc.Version)
-			if err := utils.WriteToFile(filepath.Join(versionedSidebarsPath, sidebarFileName), sidebarContent); err != nil {
-				return err
-			}
-		}
 	}
 
-	sort.Slice(versionInfos, func(i, j int) bool {
-		return versionInfos[i].CreatedAt.After(versionInfos[j].CreatedAt)
-	})
-
+	// Create versions.json
 	versions := make([]string, len(versionInfos))
 	for i, vi := range versionInfos {
 		versions[i] = vi.Version
 	}
-
 	versionsJSON, err := json.Marshal(versions)
 	if err != nil {
 		return err
@@ -819,12 +882,27 @@ func (service *DocService) WriteContents(docId uint) error {
 
 func (service *DocService) DocusaurusBuild(docId uint) error {
 	docPath := filepath.Join(config.ParsedConfig.DataPath, "docusaurus_data", "doc_"+strconv.Itoa(int(docId)))
+	buildPath := filepath.Join(docPath, "build")
+	tmpBuildPath := filepath.Join(docPath, "build_tmp")
+	oldBuildPath := filepath.Join(docPath, "build_old")
 
-	err := utils.RunNpmCommand(docPath, "run", "build")
-
+	err := utils.RunNpxCommand(docPath, "docusaurus", "build", "--out-dir", "build_tmp")
 	if err != nil {
 		return err
 	}
+
+	if err := os.Rename(buildPath, oldBuildPath); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("failed to rename current build directory: %w", err)
+	}
+
+	if err := os.Rename(tmpBuildPath, buildPath); err != nil {
+		os.Rename(oldBuildPath, buildPath)
+		return fmt.Errorf("failed to rename new build directory: %w", err)
+	}
+
+	go func() {
+		os.RemoveAll(oldBuildPath)
+	}()
 
 	return nil
 }
@@ -878,5 +956,47 @@ func (service *DocService) getSidebarPosition(id uint, isPageGroup bool) (uint, 
 		}
 
 		return *page.Order, nil
+	}
+}
+
+func (service *DocService) AddBuildTrigger(docId uint) error {
+	trigger := models.BuildTriggers{
+		DocumentationID: docId,
+		Triggered:       false,
+		CompletedAt:     nil,
+	}
+
+	if err := service.DB.Create(&trigger).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (service *DocService) BuildJob() {
+	var triggers []models.BuildTriggers
+	if err := service.DB.Where("triggered = ?", false).Find(&triggers).Error; err != nil {
+		logger.Error("Failed to fetch build triggers", zap.Error(err))
+		return
+	}
+
+	if len(triggers) == 0 {
+		logger.Debug("No pending build triggers")
+		return
+	}
+
+	for _, trigger := range triggers {
+		err := service.UpdateWriteBuild(trigger.DocumentationID)
+		if err != nil {
+			logger.Error("Failed to update write build", zap.Uint("doc_id", trigger.DocumentationID), zap.Error(err))
+			continue
+		}
+
+		trigger.Triggered = true
+		trigger.CompletedAt = utils.TimePtr(time.Now())
+
+		if err := service.DB.Save(&trigger).Error; err != nil {
+			logger.Error("Failed to save build trigger", zap.Uint("doc_id", trigger.DocumentationID), zap.Error(err))
+		}
 	}
 }

@@ -157,6 +157,24 @@ func (service *DocService) CreatePageGroup(group *models.PageGroup) error {
 		return fmt.Errorf("failed_to_create_page_group")
 	}
 
+	docId, err := service.GetDocumentationIDOfPageGroup(group.ID)
+
+	if err != nil {
+		return fmt.Errorf("failed_to_get_documentation_id")
+	}
+
+	parentDocId, _ := service.GetParentDocId(docId)
+
+	if parentDocId == 0 {
+		err = service.AddBuildTrigger(docId)
+	} else {
+		err = service.AddBuildTrigger(parentDocId)
+	}
+
+	if err != nil {
+		return fmt.Errorf("failed_to_update_write_build")
+	}
+
 	return nil
 }
 
@@ -208,6 +226,24 @@ func (service *DocService) EditPageGroup(user models.User, id uint, name string,
 		return fmt.Errorf("failed_to_update_page_group")
 	}
 
+	docId, err := service.GetDocumentationIDOfPageGroup(id)
+
+	if err != nil {
+		return fmt.Errorf("failed_to_get_documentation_id")
+	}
+
+	parentDocId, _ := service.GetParentDocId(docId)
+
+	if parentDocId == 0 {
+		err = service.AddBuildTrigger(docId)
+	} else {
+		err = service.AddBuildTrigger(parentDocId)
+	}
+
+	if err != nil {
+		return fmt.Errorf("failed_to_update_write_build")
+	}
+
 	return nil
 }
 
@@ -240,6 +276,24 @@ func (service *DocService) deletePageGroupRecursive(tx *gorm.DB, id uint) error 
 		return fmt.Errorf("failed_to_delete_page_group")
 	}
 
+	docId, err := service.GetDocumentationIDOfPageGroup(id)
+
+	if err != nil {
+		return fmt.Errorf("failed_to_get_documentation_id")
+	}
+
+	parentDocId, _ := service.GetParentDocId(docId)
+
+	if parentDocId == 0 {
+		err = service.AddBuildTrigger(docId)
+	} else {
+		err = service.AddBuildTrigger(parentDocId)
+	}
+
+	if err != nil {
+		return fmt.Errorf("failed_to_update_write_build")
+	}
+
 	return nil
 }
 
@@ -248,6 +302,25 @@ func (service *DocService) DeletePageGroup(id uint) error {
 		if err := service.deletePageGroupRecursive(tx, id); err != nil {
 			return err
 		}
+
+		docId, err := service.GetDocumentationIDOfPageGroup(id)
+
+		if err != nil {
+			return fmt.Errorf("failed_to_get_documentation_id")
+		}
+
+		parentDocId, _ := service.GetParentDocId(docId)
+
+		if parentDocId == 0 {
+			err = service.AddBuildTrigger(docId)
+		} else {
+			err = service.AddBuildTrigger(parentDocId)
+		}
+
+		if err != nil {
+			return fmt.Errorf("failed_to_update_write_build")
+		}
+
 		return nil
 	})
 }
@@ -286,9 +359,9 @@ func (service *DocService) ReorderPageGroup(id uint, order *uint, parentID *uint
 	parentDocId, _ := service.GetParentDocId(docId)
 
 	if parentDocId == 0 {
-		err = service.UpdateWriteBuild(docId)
+		err = service.AddBuildTrigger(docId)
 	} else {
-		err = service.UpdateWriteBuild(parentDocId)
+		err = service.AddBuildTrigger(parentDocId)
 	}
 
 	if err != nil {
