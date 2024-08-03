@@ -23,12 +23,14 @@ export default function Table ({ provided, snapshot, docId, pageGroupId, obj, in
       key={`${obj.id}-${index}`}
     >
       <td
-        className='w-1/12 items-center cursor-pointer px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white'
+        className={`w-1/12 items-center ${obj.isIntroPage ? 'cursor-not-allowed' : 'cursor-pointer'} px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white`}
       >
-        <Icon
-          icon='nimbus:drag-dots'
-          className='w-6 h-6 text-gray-600 dark:text-white'
-        />
+        {!obj.isIntroPage &&
+          <Icon
+            icon='nimbus:drag-dots'
+            className='w-6 h-6 text-gray-600 dark:text-white'
+          />
+        }
       </td>
 
       <td
@@ -155,15 +157,15 @@ export default function Table ({ provided, snapshot, docId, pageGroupId, obj, in
                   className='w-6 h-6 text-yellow-500 dark:text-yellow-400'
                 />
               </Link>
-            {!obj.isIntroPage &&
-              <Icon
-                icon='material-symbols:delete'
-                className='w-6 h-6 text-red-600 dark:text-red-500'
-                onClick={() => {
-                  openModal('delete', obj);
-                }}
-              />
-            }
+              {!obj.isIntroPage &&
+                <Icon
+                  icon='material-symbols:delete'
+                  className='w-6 h-6 text-red-600 dark:text-red-500'
+                  onClick={() => {
+                    openModal('delete', obj);
+                  }}
+                />
+              }
             </button>
           </td>
 

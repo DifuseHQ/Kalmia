@@ -64,7 +64,7 @@
     border-radius: 10px;
 }
  
-[data-color-scheme="dark"] .bn-container .alert[data-alert-type="error"] {
+[data-color-scheme="dark"] .bn-container .alert[data-alert-type="danger"] {
     background-color: #af0707b7;
     border: solid #cc0909;
     border-radius: 10px;
@@ -108,7 +108,7 @@
     color: #e69819;
 }
  
-.alert-icon[data-alert-icon-type="error"] {
+.alert-icon[data-alert-icon-type="danger"] {
     color: #d80d0d
 }
  
@@ -128,7 +128,7 @@
     color: #f8aa2b;
 }
 
-[data-color-scheme="dark"] .bn-container .alert-icon[data-alert-icon-type="error"] {
+[data-color-scheme="dark"] .bn-container .alert-icon[data-alert-icon-type="danger"] {
     color: #f53131;
 }
 

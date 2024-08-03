@@ -44,9 +44,8 @@ export default function AdminAuth () {
     fetchData();
   }, [navigate]); //eslint-disable-line
 
-  // Render conditionally based on isAdmin and isLoading state
   if (isLoading) {
-    return <div><Loading /></div>; // Placeholder while data is loading
+    return <div><Loading /></div>;
   } else if (isAdmin) {
     return <Outlet />;
   } else {

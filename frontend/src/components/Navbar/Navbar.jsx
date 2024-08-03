@@ -96,13 +96,13 @@ export default function Navbar () {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className='absolute top-9 left-0 z-50 my-4 overflow-hidden text-base list-none bg-white divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600 rounded-md'
+                  className='absolute top-9 left-0 z-50 my-4 overflow-hidden text-base list-none bg-white divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600 rounded-md border border-gray-200 dark:border-gray-600'
                   key='user-details-dropdown'
                 >
                   <ul className="w-32  text-start text-sm font-medium text-gray-900 dark:text-white">
                     {languages.map((lng) => (
                       <li key={lng.code} onClick={() => changeLanguage(lng.code)}
-                        className={`w-full py-2 px-3  cursor-pointer ${lng.code === i18n.language ? 'bg-gray-800 cursor-text' : 'dark:hover:bg-gray-600 hover:bg-gray-200'}`}>
+                        className={`w-full py-2 px-3  cursor-pointer ${lng.code === i18n.language ? 'bg-gray-400 dark:bg-gray-800 cursor-text' : 'dark:hover:bg-gray-600 hover:bg-gray-200'}`}>
                         {lng.lang}</li>
                     ))}</ul>
                 </motion.div>

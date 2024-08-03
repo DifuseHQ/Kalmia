@@ -147,7 +147,7 @@ export default function EditPage () {
     }
   }, [editor, editorContent]);
 
-  const handleEdit = async () => {
+  const handleEdit = useCallback(async () => {
     const result = await updatePage({
       title: pageData?.title,
       slug: pageData?.slug,
@@ -163,7 +163,7 @@ export default function EditPage () {
       toastMessage(t(result.data.message), 'success');
       refreshData();
     }
-  };
+  }, [pageData, editor, pageId, navigate, t, refreshData]);
 
   const handleDelete = async () => {
     const result = await deletePage(Number(pageId));
@@ -184,6 +184,21 @@ export default function EditPage () {
       }
     }
   };
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.ctrlKey && event.key === 's') {
+        event.preventDefault();
+        handleEdit();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleEdit]);
 
   const lightTheme = {
     colors: {
