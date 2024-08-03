@@ -184,7 +184,7 @@ func (service *DocService) CreateDocumentation(documentation *models.Documentati
 	return nil
 }
 
-func (service *DocService) EditDocumentation(user models.User, id uint, name, description, version, favicon, metaImage, navImage, customCSS, footerLabelLinks, moreLabelLinks, copyrightText, url, organizationName, projectName string) error {
+func (service *DocService) EditDocumentation(user models.User, id uint, name, description, version, favicon, metaImage, navImage, customCSS, footerLabelLinks, moreLabelLinks, copyrightText, url, organizationName, projectName, baseURL string) error {
 	tx := service.DB.Begin()
 
 	updateDoc := func(doc *models.Documentation, isTarget bool) error {
@@ -194,6 +194,7 @@ func (service *DocService) EditDocumentation(user models.User, id uint, name, de
 		doc.URL = url
 		doc.OrganizationName = organizationName
 		doc.ProjectName = projectName
+		doc.BaseURL = baseURL
 		doc.Favicon = favicon
 		doc.MetaImage = metaImage
 		doc.NavImage = navImage
@@ -322,6 +323,9 @@ func (service *DocService) CreateDocumentationVersion(originalDocId uint, newVer
 		Name:             originalDoc.Name,
 		Description:      originalDoc.Description,
 		Version:          newVersion,
+		OrganizationName: originalDoc.OrganizationName,
+		ProjectName:      originalDoc.ProjectName,
+		BaseURL:          originalDoc.BaseURL,
 		ClonedFrom:       &originalDocId,
 		Favicon:          originalDoc.Favicon,
 		MetaImage:        originalDoc.MetaImage,

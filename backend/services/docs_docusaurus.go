@@ -986,11 +986,16 @@ func (service *DocService) BuildJob() {
 	}
 
 	for _, trigger := range triggers {
+		start := time.Now() // Record the start time
 		err := service.UpdateWriteBuild(trigger.DocumentationID)
+		elapsed := time.Since(start) // Calculate the elapsed time
+
 		if err != nil {
-			logger.Error("Failed to update write build", zap.Uint("doc_id", trigger.DocumentationID), zap.Error(err))
+			logger.Error("Failed to update write build", zap.Uint("doc_id", trigger.DocumentationID), zap.Error(err), zap.Duration("elapsed", elapsed))
 			continue
 		}
+
+		logger.Info("UpdateWriteBuild completed", zap.Uint("doc_id", trigger.DocumentationID), zap.Duration("elapsed", elapsed))
 
 		trigger.Triggered = true
 		trigger.CompletedAt = utils.TimePtr(time.Now())
