@@ -93,6 +93,22 @@ func (service *DocService) GetDocumentation(id uint) (models.Documentation, erro
 	return documentation, nil
 }
 
+func (service *DocService) IsDocIdValid(id uint) bool {
+	var count int64
+
+	db := service.DB
+
+	if err := db.Model(&models.Documentation{}).Where("id = ? AND cloned_from IS NULL", id).Count(&count).Error; err != nil {
+		return false
+	}
+
+	if count == 0 {
+		return false
+	}
+
+	return true
+}
+
 func (service *DocService) GetChildrenOfDocumentation(id uint) ([]uint, error) {
 	docs, err := service.GetDocumentations()
 
@@ -149,7 +165,7 @@ func (service *DocService) CreateDocumentation(documentation *models.Documentati
 		return fmt.Errorf("failed_to_create_documentation_intro_page")
 	}
 
-	err := service.InitDocusaurus(documentation.ID)
+	err := service.InitDocusaurus(documentation.ID, true)
 
 	if err != nil {
 		logger.Error("failed_to_init_docusaurus", zap.Error(err))
@@ -409,6 +425,7 @@ func (service *DocService) CreateDocumentationVersion(originalDocId uint, newVer
 					Slug:            page.Slug,
 					Content:         page.Content,
 					Order:           page.Order,
+					IsIntroPage:     page.IsIntroPage,
 				}
 				if err := tx.Create(&newPage).Error; err != nil {
 					return fmt.Errorf("failed to create new page without group: %w", err)
@@ -427,6 +444,14 @@ func (service *DocService) CreateDocumentationVersion(originalDocId uint, newVer
 	if err != nil {
 		return err
 	}
+
+	err = service.UpdateWriteBuild(originalDocId)
+
+	if err != nil {
+		logger.Error("failed_to_init_docusaurus", zap.Error(err))
+		return fmt.Errorf("failed_to_init_docusaurus")
+	}
+
 	return nil
 }
 
@@ -452,4 +477,17 @@ func (service *DocService) getAncestorDocuments(docID uint) ([]models.Documentat
 	}
 
 	return ancestors, nil
+}
+
+func (service *DocService) GetParentDocId(docID uint) (uint, error) {
+	var doc models.Documentation
+	if err := service.DB.First(&doc, docID).Error; err != nil {
+		return 0, fmt.Errorf("failed_to_get_documentation")
+	}
+
+	if doc.ClonedFrom == nil {
+		return 0, nil
+	}
+
+	return *doc.ClonedFrom, nil
 }

@@ -1,11 +1,14 @@
 package services
 
 import (
+	"sync"
+
 	"gorm.io/gorm"
 )
 
 type DocService struct {
-	DB *gorm.DB
+	DB          *gorm.DB
+	UWBMutexMap sync.Map
 }
 
 func NewDocService(db *gorm.DB) *DocService {

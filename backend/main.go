@@ -83,6 +83,11 @@ func main() {
 	docsRouter.HandleFunc("/page-group/reorder", func(w http.ResponseWriter, r *http.Request) { handlers.ReorderPageGroup(dS, w, r) }).Methods("POST")
 	docsRouter.HandleFunc("/page-group/delete", func(w http.ResponseWriter, r *http.Request) { handlers.DeletePageGroup(dS, w, r) }).Methods("POST")
 
+	docRouter := r.PathPrefix("/documentation").Subrouter()
+	docRouter.PathPrefix("/{id}").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		handlers.GetDocusaurus(dS, w, r)
+	}).Methods("GET")
+
 	logger.Info("Starting server", zap.Int("port", cfg.Port))
 
 	http.Handle("/", r)

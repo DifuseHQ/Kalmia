@@ -252,6 +252,18 @@ func (service *DocService) DeletePageGroup(id uint) error {
 	})
 }
 
+func (service *DocService) GetDocumentationIDOfPageGroup(id uint) (uint, error) {
+	var pageGroup models.PageGroup
+	if err := service.DB.First(&pageGroup, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return 0, fmt.Errorf("page_group_not_found")
+		}
+		return 0, fmt.Errorf("failed_to_fetch_page_group")
+	}
+
+	return pageGroup.DocumentationID, nil
+}
+
 func (service *DocService) ReorderPageGroup(id uint, order *uint, parentID *uint) error {
 	var pageGroup models.PageGroup
 	if err := service.DB.First(&pageGroup, id).Error; err != nil {
@@ -263,6 +275,24 @@ func (service *DocService) ReorderPageGroup(id uint, order *uint, parentID *uint
 
 	if err := service.DB.Save(&pageGroup).Error; err != nil {
 		return fmt.Errorf("failed_to_update_page_group")
+	}
+
+	docId, err := service.GetDocumentationIDOfPageGroup(id)
+
+	if err != nil {
+		return fmt.Errorf("failed_to_get_documentation_id")
+	}
+
+	parentDocId, _ := service.GetParentDocId(docId)
+
+	if parentDocId == 0 {
+		err = service.UpdateWriteBuild(docId)
+	} else {
+		err = service.UpdateWriteBuild(parentDocId)
+	}
+
+	if err != nil {
+		return fmt.Errorf("failed_to_update_write_build")
 	}
 
 	return nil
