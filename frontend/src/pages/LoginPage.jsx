@@ -6,9 +6,9 @@ import { AuthContext } from '../context/AuthContext';
 
 export default function LoginPage () {
   const { t } = useTranslation();
-  const [username, setUsername] = useState(null);
-  const [password, setPassword] = useState(null);
-
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const { login } = useContext(AuthContext);
 
   useEffect(() => {
@@ -16,11 +16,18 @@ export default function LoginPage () {
   }, []);
 
   const handleSubmit = async () => {
-    await login(username, password);
+    setIsLoading(true);
+    try {
+      await login(username, password);
+    } catch (error) {
+      console.error('Login failed:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleKeyDown = (event) => {
-    if (event.key === 'Enter') {
+    if (event.key === 'Enter' && !isLoading) {
       event.preventDefault();
       handleSubmit();
     }
@@ -39,9 +46,7 @@ export default function LoginPage () {
               </h1>
               <div className='space-y-4 md:space-y-6'>
                 <div>
-                  <span
-                    className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
-                  >
+                  <span className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'>
                     {t('username')}
                   </span>
                   <input
@@ -54,9 +59,7 @@ export default function LoginPage () {
                   />
                 </div>
                 <div>
-                  <span
-                    className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'
-                  >
+                  <span className='block mb-2 text-sm font-medium text-gray-900 dark:text-white'>
                     {t('password')}
                   </span>
                   <input
@@ -72,9 +75,16 @@ export default function LoginPage () {
                 <button
                   onClick={handleSubmit}
                   type='submit'
-                  className='w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800'
+                  disabled={isLoading}
+                  className={`w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 ${
+                    isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
                 >
-                  {t('sign_in')}
+                {isLoading ? (
+                  <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                ) : (
+                  t('sign_in')
+                )}
                 </button>
               </div>
             </div>
