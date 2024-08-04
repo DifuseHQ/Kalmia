@@ -1,11 +1,17 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
+import AceEditor from 'react-ace';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { AnimatePresence, motion } from 'framer-motion';
 
+import 'ace-builds/src-noconflict/mode-css';
+import 'ace-builds/src-noconflict/theme-monokai';
+import 'ace-builds/src-noconflict/theme-github';
+
 import { createDocumentation, getDocumentation, updateDocumentation } from '../../api/Requests';
 import { ModalContext } from '../../context/ModalContext';
+import { ThemeContext } from '../../context/ThemeContext';
 import { handleError, validateCommunityFields, validateFormData } from '../../utils/Common';
 import { toastMessage } from '../../utils/Toast';
 import { customCSSInitial } from '../../utils/Utils';
@@ -67,6 +73,7 @@ export default function CreateDocModal () {
   const docId = searchParam.get('id');
   const mode = searchParam.get('mode');
   const { openModal, closeModal, setLoadingMessage } = useContext(ModalContext);
+  const { darkMode } = useContext(ThemeContext);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -327,18 +334,23 @@ export default function CreateDocModal () {
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       {t('custom_css')}
                     </span>
-                    <div>
-                      <textarea
-                        onChange={handleChange}
-                        value={formData?.customCSS}
+                    <AceEditor
+                        mode="css"
+                        theme={darkMode ? 'monokai' : 'github'}
+                        onChange={(newValue) => handleChange({ target: { name: 'customCSS', value: newValue } })}
+                        value={formData.customCSS}
                         name="customCSS"
-                        id="customCSS"
-                        className="bg-gray-50 border min-h-36 border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                        placeholder={t('custom_css_placeholder')}
-                        rows="3"
+                        editorProps={{ $blockScrolling: true }}
+                        setOptions={{
+                          useWorker: false,
+                          showLineNumbers: true,
+                          tabSize: 2
+                        }}
+                        style={{ width: '100%', height: '200px' }}
+                        className="rounded-lg border border-gray-600"
                       />
-                    </div>
                   </div>
+
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
