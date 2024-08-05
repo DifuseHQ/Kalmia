@@ -97,8 +97,7 @@ func main() {
 	docsRouter.HandleFunc("/page-group/reorder-bulk", func(w http.ResponseWriter, r *http.Request) { handlers.BulkReorderPageGroup(dS, w, r) }).Methods("POST")
 	docsRouter.HandleFunc("/page-group/delete", func(w http.ResponseWriter, r *http.Request) { handlers.DeletePageGroup(dS, w, r) }).Methods("POST")
 
-	docRouter := r.PathPrefix("/documentation").Subrouter()
-	docRouter.PathPrefix("/{id}").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	r.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		handlers.GetDocusaurus(dS, w, r)
 	}).Methods("GET")
 

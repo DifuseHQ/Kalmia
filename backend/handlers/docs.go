@@ -1,14 +1,15 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
-	"strconv"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"git.difuse.io/Difuse/kalmia/db/models"
 	"git.difuse.io/Difuse/kalmia/logger"
 	"git.difuse.io/Difuse/kalmia/services"
-	"github.com/gorilla/mux"
+	"go.uber.org/zap"
 )
 
 func GetDocumentations(service *services.DocService, w http.ResponseWriter, r *http.Request) {
@@ -607,29 +608,29 @@ func BulkReorderPageGroup(service *services.DocService, w http.ResponseWriter, r
 }
 
 func GetDocusaurus(service *services.DocService, w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	idStr := vars["id"]
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "Invalid ID"})
-		return
-	}
+	urlPath := r.URL.Path
 
-	docPath, err := service.GetDocusaurus(uint(id))
+	docPath, baseURL, err := service.GetDocusaurus(urlPath)
 	if err != nil {
+		logger.Error("Error in GetDocusaurus", zap.Error(err))
 		switch err.Error() {
-		case "documentation_not_found":
+		case "doc_does_not_exist":
 			SendJSONResponse(http.StatusNotFound, w, map[string]string{"status": "error", "message": "Documentation not found"})
 		case "docusaurus_build_not_found":
 			SendJSONResponse(http.StatusNotFound, w, map[string]string{"status": "error", "message": "Docusaurus build not found"})
 		case "docusaurus_build_empty":
 			SendJSONResponse(http.StatusNotFound, w, map[string]string{"status": "error", "message": "Docusaurus build is empty"})
 		default:
-			logger.Error(err.Error())
 			SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Internal server error"})
 		}
 		return
 	}
 
-	http.StripPrefix(fmt.Sprintf("/documentation/%s", idStr), http.FileServer(http.Dir(docPath))).ServeHTTP(w, r)
+	fullPath := filepath.Join(docPath, strings.TrimPrefix(urlPath, baseURL))
+
+	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+		fullPath = filepath.Join(docPath, "index.html")
+	}
+
+	http.ServeFile(w, r, fullPath)
 }

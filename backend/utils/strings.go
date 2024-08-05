@@ -60,3 +60,10 @@ func UintPtr(v uint) *uint {
 func TimePtr(v time.Time) *time.Time {
 	return &v
 }
+
+func ReplaceMany(input string, replacements map[string]string) string {
+	for k, v := range replacements {
+		input = strings.ReplaceAll(input, k, v)
+	}
+	return input
+}

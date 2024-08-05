@@ -16,6 +16,7 @@ import (
 	"git.difuse.io/Difuse/kalmia/logger"
 	"git.difuse.io/Difuse/kalmia/utils"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 type Block struct {
@@ -80,6 +81,16 @@ func (service *DocService) UpdateWriteBuild(docId uint) error {
 		defer mutex.Unlock()
 	case <-time.After(1 * time.Minute):
 		return fmt.Errorf("timeout waiting for operation to complete for docId: %d", docId)
+	}
+
+	allDocsPath := filepath.Join(config.ParsedConfig.DataPath, "docusaurus_data")
+	docsPath := filepath.Join(allDocsPath, "doc_"+strconv.Itoa(int(docId)))
+
+	if !utils.PathExists(docsPath) {
+		err := utils.MakeDir(docsPath)
+		if err != nil {
+			return err
+		}
 	}
 
 	err := service.UpdateBasicData(docId)
@@ -194,6 +205,12 @@ func (service *DocService) UpdateBasicData(docId uint) error {
 		return err
 	}
 
+	docConfigTemplate, err := utils.ReadEmbeddedFile("docusaurus.config.js")
+
+	if err != nil {
+		return err
+	}
+
 	docPath := filepath.Join(config.ParsedConfig.DataPath, "docusaurus_data", "doc_"+strconv.Itoa(int(docId)))
 	docConfig := filepath.Join(docPath, "docusaurus.config.js")
 	docCssConfig := filepath.Join(docPath, "src/css/custom.css")
@@ -201,7 +218,7 @@ func (service *DocService) UpdateBasicData(docId uint) error {
 	replacements := map[string]string{
 		"__TITLE__":             doc.Name,
 		"__TAG_LINE__":          doc.Description,
-		"__BASE_URL__":          fmt.Sprintf("/documentation/%d/", docId),
+		"__BASE_URL__":          doc.BaseURL,
 		"__FAVICON__":           "img/favicon.ico",
 		"__META_IMAGE__":        "img/meta.webp",
 		"__NAVBAR_TITLE__":      doc.Name,
@@ -241,7 +258,7 @@ func (service *DocService) UpdateBasicData(docId uint) error {
 			return err
 		}
 	} else {
-		err := utils.ReplaceInFile(docCssConfig, "__CUSTOM_CSS__", "")
+		err := utils.WriteToFile(docCssConfig, "")
 		if err != nil {
 			return err
 		}
@@ -261,7 +278,17 @@ func (service *DocService) UpdateBasicData(docId uint) error {
 		replacements["__COMMUNITY_LABEL_HREF__"] = ""
 	}
 
-	return utils.ReplaceManyInFile(docConfig, replacements)
+	if err := os.Remove(docConfig); err != nil {
+		return err
+	}
+
+	err = utils.WriteToFile(docConfig, utils.ReplaceMany(string(docConfigTemplate), replacements))
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (service *DocService) CraftPage(pageID uint, title string, slug string, content string) (string, error) {
@@ -926,26 +953,62 @@ func (service *DocService) DocusaurusBuild(docId uint) error {
 	return nil
 }
 
-func (service *DocService) GetDocusaurus(docId uint) (string, error) {
-	exists := service.IsDocIdValid(docId)
-	if !exists {
-		return "", fmt.Errorf("doc_does_not_exist")
+func (service *DocService) GetDocIdFromBaseURL(baseUrl string) (uint, error) {
+	var doc models.Documentation
+	if err := service.DB.Where("base_url = ?", baseUrl).First(&doc).Error; err != nil {
+		return 0, err
 	}
 
-	docPath := fmt.Sprintf("data/docusaurus_data/doc_%d/build", docId)
+	return doc.ID, nil
+}
+
+func (service *DocService) GetDocusaurus(urlPath string) (string, string, error) {
+	var doc models.Documentation
+	var err error
+
+	dialectName := strings.ToLower(service.DB.Dialector.Name())
+
+	var query string
+	var args []interface{}
+
+	switch dialectName {
+	case "sqlite":
+		query = "? LIKE base_url || ?"
+		args = []interface{}{urlPath, "%"}
+	case "postgres":
+		query = "? LIKE base_url || ?"
+		args = []interface{}{urlPath, "%"}
+	default:
+		return "", "", fmt.Errorf("unsupported_database_type: %s", dialectName)
+	}
+
+	err = service.DB.Where(query, args...).
+		Order("LENGTH(base_url) DESC").
+		First(&doc).Error
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return "", "", fmt.Errorf("doc_does_not_exist")
+		}
+		return "", "", fmt.Errorf("database_error: %v", err)
+	}
+
+	docPath := filepath.Join("data", "docusaurus_data", fmt.Sprintf("doc_%d", doc.ID), "build")
+
 	if _, err := os.Stat(docPath); os.IsNotExist(err) {
-		return "", fmt.Errorf("docusaurus_build_not_found")
+		return "", "", fmt.Errorf("docusaurus_build_not_found")
 	}
 
 	files, err := os.ReadDir(docPath)
 	if err != nil {
-		return "", fmt.Errorf("error_reading_docusaurus_directory")
-	}
-	if len(files) == 0 {
-		return "", fmt.Errorf("docusaurus_build_empty")
+		return "", "", fmt.Errorf("error_reading_docusaurus_directory")
 	}
 
-	return docPath, nil
+	if len(files) == 0 {
+		return "", "", fmt.Errorf("docusaurus_build_empty")
+	}
+
+	return docPath, doc.BaseURL, nil
 }
 
 func (service *DocService) getSidebarPosition(id uint, isPageGroup bool) (uint, error) {

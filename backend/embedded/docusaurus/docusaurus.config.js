@@ -13,6 +13,7 @@ const config = {
   projectName: '__PROJECT_NAME__',
   onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'warn',
+  trailingSlash: false,
   i18n: {
     defaultLocale: 'en',
     locales: ['en'],

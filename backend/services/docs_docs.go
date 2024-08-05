@@ -85,7 +85,7 @@ func (service *DocService) GetDocumentation(id uint) (models.Documentation, erro
 		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
 	}).Where("id = ?", id).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID", "Version", "LastEditorID", "Favicon",
 		"MetaImage", "NavImage", "CustomCSS", "FooterLabelLinks", "MoreLabelLinks", "CopyrightText",
-		"URL", "OrganizationName", "ProjectName").
+		"BaseURL", "URL", "OrganizationName", "ProjectName").
 		Find(&documentation).Error; err != nil {
 		return models.Documentation{}, fmt.Errorf("failed_to_get_documentation")
 	}
