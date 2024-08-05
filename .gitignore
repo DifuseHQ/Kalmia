@@ -1,1 +1,8 @@
+node_modules/
+tmp/
+config.json
+main
+test.db
 .idea/
+dist/
+data/
