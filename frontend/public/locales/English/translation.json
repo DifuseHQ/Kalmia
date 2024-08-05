@@ -136,6 +136,9 @@
         "paste_your_base_url":"https://basebin.org",
         "valid_url_required":"Valid URL Required",
         "intro_page_cannot_be_reordered":"Introduction page cannot be Reordered",
+        "internal_server_error":"Internal Server Error",
+        "reload":"Reload",
+        "back_to_previous_page":"Back to previous page",
         
         "documentation_name_already_exists":"Documentation Name Already Exists",
         "invalid_request":"Invalid request",
