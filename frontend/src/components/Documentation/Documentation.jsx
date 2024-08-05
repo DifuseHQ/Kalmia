@@ -112,10 +112,10 @@ export default function Documentation () {
             children.forEach(addVersion);
           };
 
-          const startDoc = data.find(doc => doc.id === startId);
+          const startDoc = data?.find(doc => doc.id === startId);
           if (startDoc) {
             if (startDoc.clonedFrom !== null && startDoc.clonedFrom !== undefined) {
-              const parent = data.find(doc => doc.id === startDoc.clonedFrom);
+              const parent = data?.find(doc => doc.id === startDoc.clonedFrom);
               if (parent) {
                 addVersion(parent);
               } else {

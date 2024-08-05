@@ -18,7 +18,7 @@ export const useUserDetails = (user, refresh) => {
 
       if (result.status === 'success') {
         const data = result.data;
-        const filterUser = data.find(
+        const filterUser = data?.find(
           (obj) => obj?.id.toString() === user?.userId
         );
         setUserDetails(filterUser);

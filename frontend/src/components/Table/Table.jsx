@@ -81,7 +81,7 @@ export default function Table ({ provided, snapshot, docId, pageGroupId, obj, in
             {(() => {
               if (obj.editors && Array.isArray(obj.editors)) {
                 if (obj.lastEditorId != null) {
-                  const editor = obj.editors.find(editor => parseInt(editor.id) === parseInt(obj.lastEditorId));
+                  const editor = obj.editors?.find(editor => parseInt(editor.id) === parseInt(obj.lastEditorId));
                   return editor ? editor.username : 'None';
                 } else {
                   return obj.editors[0]?.username || 'None';

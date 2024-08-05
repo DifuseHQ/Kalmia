@@ -7,7 +7,6 @@ import CreateUser from '../src/components/CreateUser/CreateUser';
 import Documentation from '../src/components/Documentation/Documentation';
 import EditPage from '../src/components/EditPage/EditPage';
 import Error from '../src/components/error/Error';
-import Error500 from '../src/components/error500/Error500';
 import PageGroupTable from '../src/components/PageGroup/PageGroupTable';
 import UserList from '../src/components/UserList/UserList';
 import DashboardPage from '../src/pages/DashboardPage';
@@ -56,7 +55,7 @@ function App () {
               </Route>
             </Route>
 
-            <Route path='/server-down' element={<Error500 />} />
+            <Route path='/error' element={<Error />} />
             <Route path='*' element={<Error />} />
 
           </Routes>

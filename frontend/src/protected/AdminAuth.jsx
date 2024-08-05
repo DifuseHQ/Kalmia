@@ -31,7 +31,7 @@ export default function AdminAuth () {
       }
 
       if (response?.status === 'success') {
-        const foundUser = response?.data.find(
+        const foundUser = response.data?.find(
           (obj) => obj.id.toString() === user?.userId
         );
         if (foundUser && foundUser?.admin === true) {

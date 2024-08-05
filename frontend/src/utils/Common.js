@@ -18,7 +18,7 @@ export const handleError = (result, navigate = null, t) => {
         toastMessage(t(result?.data?.message), 'error');
       } else {
         toastMessage(t(result.message), 'error');
-        if (navigate) navigate('/server-down');
+        if (navigate) navigate('/error', { state: { errorDetails: result || {} } });
       }
     }
     return true;
@@ -117,7 +117,7 @@ export function getClosestVersion (cloneData) {
 }
 
 export function getVersion (cloneData, versionId) {
-  const matchingObj = cloneData.find(obj => obj.id === Number(versionId));
+  const matchingObj = cloneData?.find(obj => obj.id === Number(versionId));
 
   return matchingObj
     ? {

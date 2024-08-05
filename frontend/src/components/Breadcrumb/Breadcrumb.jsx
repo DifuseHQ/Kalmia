@@ -95,11 +95,11 @@ export default function Breadcrumb () {
       const isCreatePage = location.pathname.includes('/create-page');
       const versionId = searchParams.get('versionId');
       const version = searchParams.get('version');
-      const clonedFrom = (versionId && version) ? (documentations.find(d => parseInt(d.id) === parseInt(versionId)))?.clonedFrom : null;
+      const clonedFrom = (versionId && version) ? (documentations?.find(d => parseInt(d.id) === parseInt(versionId)))?.clonedFrom : null;
 
       if (clonedFrom !== null) {
-        const parentDoc = documentations.find(d => parseInt(d.id) === parseInt(clonedFrom));
-        const doc = documentations.find(d => parseInt(d.id) === parseInt(versionId));
+        const parentDoc = documentations?.find(d => parseInt(d.id) === parseInt(clonedFrom));
+        const doc = documentations?.find(d => parseInt(d.id) === parseInt(versionId));
         newBreadcrumb.push({
           title: doc.name,
           path: `/dashboard/documentation?id=${parentDoc?.id}&versionId=${doc?.id}&version=${doc?.version}`,
@@ -113,7 +113,7 @@ export default function Breadcrumb () {
             icon: 'pajamas:doc-new'
           });
         } else {
-          const doc = documentations.find(d => d.id === parseInt(docId));
+          const doc = documentations?.find(d => d.id === parseInt(docId));
           if (doc) {
             newBreadcrumb.push({
               title: doc.name,
@@ -153,7 +153,7 @@ export default function Breadcrumb () {
           icon: 'mdi:file-document-plus'
         });
       } else if (location.pathname.includes('/edit-page') && pageId) {
-        const page = pages.find(p => p.id === parseInt(pageId));
+        const page = pages?.find(p => p.id === parseInt(pageId));
         if (page) {
           if (page.pageGroupId != null && page.pageGroupId !== undefined) {
             addPageGroupsBreadcrumb(page.pageGroupId, pageGroups, newBreadcrumb, versionId, version);

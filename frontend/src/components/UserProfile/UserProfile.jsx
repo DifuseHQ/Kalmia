@@ -38,7 +38,7 @@ export default function UserProfile () {
 
       if (users.status === 'success') {
         const data = users.data;
-        const filterUser = data.find(
+        const filterUser = data?.find(
           (obj) => obj.id.toString() === user.userId
         );
         setUserData(filterUser);
