@@ -224,8 +224,11 @@ export default function CreateDocModal () {
       } else {
         navigate('/');
       }
-
-      toastMessage(t('document_created_successfully'), 'success');
+      if (mode === 'edit') {
+        toastMessage(t('documentation_updated'), 'success');
+      } else {
+        toastMessage(t('document_created_successfully'), 'success');
+      }
     }
   };
 

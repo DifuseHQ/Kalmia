@@ -182,6 +182,7 @@ export default function Documentation () {
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
+    setCurrentPage(1);
   };
 
   const filteredItems = groupsAndPageData.filter(
