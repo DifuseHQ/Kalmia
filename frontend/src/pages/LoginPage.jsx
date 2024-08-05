@@ -3,8 +3,9 @@ import { useTranslation } from 'react-i18next';
 
 import Navbar from '../components/Navbar/Navbar';
 import { AuthContext } from '../context/AuthContext';
+import { Icon } from '@iconify/react/dist/iconify.js';
 
-export default function LoginPage () {
+export default function LoginPage() {
   const { t } = useTranslation();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -72,19 +73,35 @@ export default function LoginPage () {
                     onKeyDown={handleKeyDown}
                   />
                 </div>
+
+                <div className="grid gap-4 grid-cols-3">
+                  <button className="w-full inline-flex items-center justify-center py-2.5 px-5 focus:ring-2 dark:focus:ring-2 focus:outline-none focus:ring-gray-700 dark:focus:ring-gray-700 font-medium text-gray-900 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-gray-900 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                    <Icon icon="mdi:github" className='w-6 h-6' />
+                  </button>
+
+                  <button className="w-full inline-flex items-center justify-center py-2.5 px-5 focus:ring-2 dark:focus:ring-2 focus:outline-none focus:ring-gray-700 dark:focus:ring-gray-700 font-medium text-gray-900  bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-gray-900 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                    <Icon icon="mdi:google" className='w-6 h-6' />
+                  </button>
+
+                  <button className="w-full inline-flex items-center justify-center py-2.5 px-5 focus:ring-2 dark:focus:ring-2 focus:outline-none focus:ring-gray-700 dark:focus:ring-gray-700 font-medium text-gray-900 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-gray-900 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
+                    <Icon icon="mdi:microsoft" className='w-6 h-6' />
+                  </button>
+                </div>
+
+
+
                 <button
                   onClick={handleSubmit}
                   type='submit'
                   disabled={isLoading}
-                  className={`w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 ${
-                    isLoading ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
+                  className={`w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
                 >
-                {isLoading ? (
-                  <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                ) : (
-                  t('sign_in')
-                )}
+                  {isLoading ? (
+                    <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  ) : (
+                    t('sign_in')
+                  )}
                 </button>
               </div>
             </div>

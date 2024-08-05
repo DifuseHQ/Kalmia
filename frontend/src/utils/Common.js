@@ -4,6 +4,8 @@ import { DateTime } from 'luxon';
 import { toastMessage } from './Toast';
 
 let isRedirecting = false;
+let lastToastMessage = '';
+let lastToastTime = 0;
 
 export const handleError = (result, navigate = null, t) => {
   if (result.status === 'error') {
@@ -17,7 +19,15 @@ export const handleError = (result, navigate = null, t) => {
       if (result?.data) {
         toastMessage(t(result?.data?.message), 'error');
       } else {
-        toastMessage(t(result.message), 'error');
+        const currentTime = Date.now();
+        const message = t(result.message);
+        
+        if (message !== lastToastMessage || currentTime - lastToastTime > 1000) {
+          toastMessage(message, 'error');
+          lastToastMessage = message;
+          lastToastTime = currentTime;
+        }
+        
         if (navigate) navigate('/error', { state: { errorDetails: result || {} } });
       }
     }
