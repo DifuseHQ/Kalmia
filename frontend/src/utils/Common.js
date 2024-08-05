@@ -135,14 +135,31 @@ export function getLastPageOrder (data) {
   return 0;
 }
 
-export const isValidURL = (urlString) => {
+export const isValidURL = (string) => {
   try {
-    const url = new URL(urlString);
-    return url.protocol === 'http:' || url.protocol === 'https:';
-  } catch (error) {
+    new URL(string); // eslint-disable-line no-new
+    return true;
+  } catch (err) {
     return false;
   }
 };
+
+function isValidBaseURL (baseURL) {
+  if (!baseURL.startsWith('/')) {
+    return false;
+  }
+
+  if (baseURL.includes('://') || baseURL.includes('www.')) {
+    return false;
+  }
+
+  const validChars = /^[a-zA-Z0-9\/\-_\.]+$/; // eslint-disable-line no-useless-escape
+  if (!validChars.test(baseURL)) {
+    return false;
+  }
+
+  return true;
+}
 
 export const validateFormData = (formData) => {
   const errors = {
@@ -210,7 +227,7 @@ export const validateFormData = (formData) => {
     return errors;
   }
 
-  if (!isValidURL(formData.baseURL)) {
+  if (!isValidBaseURL(formData.baseURL)) {
     errors.status = true;
     errors.message = 'valid_base_url_required';
     return errors;
