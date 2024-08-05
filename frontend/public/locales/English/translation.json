@@ -5,7 +5,7 @@
         "sign_in": "Sign In",
 
         "new_documentation": "New Documentation",
-        "no_documentations": "No documentations",
+        "no_documentations": "No Documentations",
         "user_management": "User Management",
 
         "edit_documentation":"Edit Documentation",
@@ -57,7 +57,7 @@
         "of":"of",
         "items": "items",
         "page_size": "Page size",
-        "no_documentations_found":"no documentations found",
+        "no_documentations_found":"No Documentations Found",
         "no_pages_found":"No Pages Found",
 
         "new_page_Group": "New Group",

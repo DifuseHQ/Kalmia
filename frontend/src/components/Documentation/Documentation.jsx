@@ -15,8 +15,8 @@ import {
   getDocumentations,
   getPageGroups,
   getPages,
-  pageGroupReorder,
-  pageReorder,
+  pageGroupReorderBulk,
+  pageReorderBulk,
   updatePageGroup
 } from '../../api/Requests';
 import { AuthContext } from '../../context/AuthContext';
@@ -60,7 +60,7 @@ export default function Documentation () {
   const [loading, setLoading] = useState(true);
   const [pageGroupLoading, setPageGroupLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectPageSize, setSelectPageSize] = useState(10);
+  const [selectPageSize, setSelectPageSize] = useState(50);
   const [searchTerm, setSearchTerm] = useState('');
 
   // Documentation CRUD
@@ -345,7 +345,6 @@ export default function Documentation () {
 
     const newIndex = result.destination.index;
     const oldDataAtNewPosition = newItems[newIndex];
-
     if (oldDataAtNewPosition.isIntroPage) {
       toastMessage(t('intro_page_cannot_be_reordered'), 'warning');
       return;
@@ -354,27 +353,43 @@ export default function Documentation () {
     const [reorderedItem] = newItems.splice(result.source.index, 1);
     const dragItem = reorderedItem;
     newItems.splice(result.destination.index, 0, reorderedItem);
+
     setGroupsAndPageData(newItems);
 
-    const updateOrder = async (item, index) => {
-      const endpoint = item?.name
-        ? pageGroupReorder
-        : pageReorder;
-      const result = await endpoint({
-        id: item.id,
-        documentationId: selectedVersion.id,
-        order: index
-      });
+    const pageGroups = [];
+    const pages = [];
 
-      if (handleError(result, navigate, t)) return; //eslint-disable-line
-    };
+    newItems.forEach((item, index) => {
+      if (item.name) {
+        pageGroups.push({
+          id: item.id,
+          order: index,
+          parentId: item.parentId
+        });
+      } else {
+        pages.push({
+          id: item.id,
+          order: index,
+          pageGroupId: item.pageGroupId
+        });
+      }
+    });
 
     try {
-      await Promise.all(newItems.map((item, index) => updateOrder(item, index)));
+      let result;
+      if (pageGroups.length > 0) {
+        result = await pageGroupReorderBulk({ order: pageGroups });
+      } else {
+        result = await pageReorderBulk({ order: pages });
+      }
+
+      if (handleError(result, navigate, t)) return;
+
       toastMessage(t(`${dragItem.slug ? 'page_reordered' : 'page_group_reordered'}`), 'success');
     } catch (err) {
-      console.error('Error in Promise.all:', err);
+      console.error('Error in bulk reordering:', err);
     }
+
     refreshData();
   };
 

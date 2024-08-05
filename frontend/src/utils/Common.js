@@ -3,23 +3,26 @@ import { DateTime } from 'luxon';
 
 import { toastMessage } from './Toast';
 
+let isRedirecting = false;
+
 export const handleError = (result, navigate = null, t) => {
   if (result.status === 'error') {
-    if (result.status.code === '401') {
+    if (result.code === 401 && !isRedirecting && window.location.pathname !== '/login') {
+      isRedirecting = true;
       toastMessage(t(result.message), 'error');
       Cookies.remove('accessToken');
-      navigate('/login');
-    } else {
+      window.location.href = '/login';
+      return true;
+    } else if (result.code !== 401) {
       if (result?.data) {
         toastMessage(t(result?.data?.message), 'error');
       } else {
         toastMessage(t(result.message), 'error');
-        navigate('/server-down');
+        if (navigate) navigate('/server-down');
       }
     }
     return true;
   }
-
   return false;
 };
 

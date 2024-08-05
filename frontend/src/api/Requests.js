@@ -21,7 +21,6 @@ async function makeRequest (url, method = 'get', data = null) {
       path: ''
     };
   } catch (error) {
-    console.error(error);
     const statusCode = error?.response?.status || 500;
     const errorData = error?.response?.data || null;
     const [message, path] = getMessageAndPath(statusCode);
@@ -54,6 +53,7 @@ export const createPageGroup = (data) => makeRequest('/docs/page-group/create', 
 export const updatePageGroup = (data) => makeRequest('/docs/page-group/edit', 'post', data);
 export const deletePageGroup = (id) => makeRequest('/docs/page-group/delete', 'post', { id });
 export const pageGroupReorder = (data) => makeRequest('/docs/page-group/reorder', 'post', data);
+export const pageGroupReorderBulk = (data) => makeRequest('/docs/page-group/reorder-bulk', 'post', data);
 
 export const getPages = () => makeRequest('/docs/pages');
 export const getPage = (id) => makeRequest('/docs/page', 'post', { id });
@@ -61,6 +61,7 @@ export const updatePage = (data) => makeRequest('/docs/page/edit', 'post', data)
 export const createPage = (data) => makeRequest('/docs/page/create', 'post', data);
 export const deletePage = (id) => makeRequest('/docs/page/delete', 'post', { id });
 export const pageReorder = (data) => makeRequest('/docs/page/reorder', 'post', data);
+export const pageReorderBulk = (data) => makeRequest('/docs/page/reorder-bulk', 'post', data);
 
 export const getUsers = () => makeRequest('/auth/users');
 export const getUser = (id) => makeRequest('/auth/user', 'post', { id: parseInt(id) });
