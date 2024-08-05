@@ -52,6 +52,16 @@ func copyInitFiles(to string) error {
 	return nil
 }
 
+func (service *DocService) RemoveDocFolder(docId uint) error {
+	docPath := filepath.Join(config.ParsedConfig.DataPath, "docusaurus_data", "doc_"+strconv.Itoa(int(docId)))
+
+	if err := utils.RemovePath(docPath); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (service *DocService) UpdateWriteBuild(docId uint) error {
 	key := fmt.Sprintf("update_write_build_%d", docId)
 
@@ -74,7 +84,16 @@ func (service *DocService) UpdateWriteBuild(docId uint) error {
 
 	err := service.UpdateBasicData(docId)
 	if err != nil {
-		logger.Error("Failed to update basic data -> ", zap.Uint("doc_id", docId), zap.Error(err))
+		if err.Error() == "documentation_not_found" {
+			if err := service.RemoveDocFolder(docId); err != nil {
+				return err
+			}
+
+			return nil
+		} else {
+			logger.Error("Failed to update basic data -> ", zap.Uint("doc_id", docId), zap.Error(err))
+		}
+
 		return err
 	}
 

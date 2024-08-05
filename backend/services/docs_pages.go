@@ -212,6 +212,62 @@ func (service *DocService) ReorderPage(id uint, pageGroupID *uint, order *uint) 
 	return nil
 }
 
+func (service *DocService) BulkReorderPage(order []struct {
+	ID          uint  `json:"id" validate:"required"`
+	PageGroupID *uint `json:"pageGroupId"`
+	Order       *uint `json:"order"`
+}) error {
+	tx := service.DB.Begin()
+	if tx.Error != nil {
+		return fmt.Errorf("failed_to_start_transaction")
+	}
+
+	docId := uint(0)
+
+	for _, o := range order {
+		var page models.Page
+		if err := tx.First(&page, o.ID).Error; err != nil {
+			tx.Rollback()
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return fmt.Errorf("page_not_found")
+			}
+			return fmt.Errorf("failed_to_fetch_page")
+		}
+
+		if docId == 0 {
+			docId = page.DocumentationID
+		}
+
+		page.PageGroupID = o.PageGroupID
+		page.Order = o.Order
+
+		if err := tx.Save(&page).Error; err != nil {
+			tx.Rollback()
+			return fmt.Errorf("failed_to_update_page")
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return fmt.Errorf("transaction_commit_failed")
+	}
+
+	parentDocId, _ := service.GetParentDocId(docId)
+
+	if parentDocId == 0 {
+		err := service.AddBuildTrigger(docId)
+		if err != nil {
+			return fmt.Errorf("failed_to_update_write_build")
+		}
+	} else {
+		err := service.AddBuildTrigger(parentDocId)
+		if err != nil {
+			return fmt.Errorf("failed_to_update_write_build")
+		}
+	}
+
+	return nil
+}
+
 func (service *DocService) GetDocumentationIDOfPage(id uint) (uint, error) {
 	var page models.Page
 	if err := service.DB.First(&page, id).Error; err != nil {

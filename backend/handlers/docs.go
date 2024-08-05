@@ -386,6 +386,35 @@ func ReorderPage(service *services.DocService, w http.ResponseWriter, r *http.Re
 	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "page_reordered"})
 }
 
+func BulkReorderPage(service *services.DocService, w http.ResponseWriter, r *http.Request) {
+	type Request struct {
+		Order []struct {
+			ID          uint  `json:"id" validate:"required"`
+			PageGroupID *uint `json:"pageGroupId"`
+			Order       *uint `json:"order"`
+		} `json:"order" validate:"required"`
+	}
+
+	req, err := ValidateRequest[Request](w, r)
+	if err != nil {
+		return
+	}
+
+	err = service.BulkReorderPage(req.Order)
+	if err != nil {
+		switch err.Error() {
+		case "page_not_found":
+			SendJSONResponse(http.StatusNotFound, w, map[string]string{"status": "error", "message": "Page not found"})
+		default:
+			logger.Error(err.Error())
+			SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})
+		}
+		return
+	}
+
+	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "page_reordered"})
+}
+
 func GetPageGroups(service *services.DocService, w http.ResponseWriter, r *http.Request) {
 	pageGroups, err := service.GetPageGroups()
 	if err != nil {
@@ -544,6 +573,30 @@ func ReorderPageGroup(service *services.DocService, w http.ResponseWriter, r *ht
 	}
 
 	err = service.ReorderPageGroup(req.ID, req.Order, req.ParentID)
+	if err != nil {
+		logger.Error(err.Error())
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})
+		return
+	}
+
+	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "page_group_reordered"})
+}
+
+func BulkReorderPageGroup(service *services.DocService, w http.ResponseWriter, r *http.Request) {
+	type Request struct {
+		Order []struct {
+			ID       uint  `json:"id" validate:"required"`
+			Order    *uint `json:"order"`
+			ParentID *uint `json:"parentId"`
+		} `json:"order" validate:"required"`
+	}
+
+	req, err := ValidateRequest[Request](w, r)
+	if err != nil {
+		return
+	}
+
+	err = service.BulkReorderPageGroup(req.Order)
 	if err != nil {
 		logger.Error(err.Error())
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})

@@ -275,22 +275,22 @@ func (service *DocService) DeleteDocumentation(id uint) error {
 		return fmt.Errorf("failed_to_start_transaction")
 	}
 
-	var doc models.Documentation
-
-	if err := tx.Preload("PageGroups").Preload("Pages").First(&doc, id).Error; err != nil {
+	if err := tx.Where("documentation_id = ?", id).Delete(&models.PageGroup{}).Error; err != nil {
 		tx.Rollback()
-		return fmt.Errorf("documentation_not_found")
+		return fmt.Errorf("failed_to_delete_page_groups")
 	}
 
-	associations := []string{"PageGroups", "Pages", "Editors"}
-	for _, assoc := range associations {
-		if err := tx.Model(&doc).Association(assoc).Clear(); err != nil {
-			tx.Rollback()
-			return fmt.Errorf("failed_to_clear_association")
-		}
+	if err := tx.Where("documentation_id = ?", id).Delete(&models.Page{}).Error; err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed_to_delete_pages")
 	}
 
-	if err := tx.Delete(&doc).Error; err != nil {
+	if err := tx.Model(&models.Documentation{ID: id}).Association("Editors").Clear(); err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed_to_clear_editors_association")
+	}
+
+	if err := tx.Delete(&models.Documentation{ID: id}).Error; err != nil {
 		tx.Rollback()
 		return fmt.Errorf("failed_to_delete_documentation")
 	}
@@ -300,7 +300,6 @@ func (service *DocService) DeleteDocumentation(id uint) error {
 	}
 
 	err := service.AddBuildTrigger(id)
-
 	if err != nil {
 		return fmt.Errorf("failed_to_add_build_trigger")
 	}

@@ -374,3 +374,47 @@ func (service *DocService) ReorderPageGroup(id uint, order *uint, parentID *uint
 
 	return nil
 }
+
+func (service *DocService) BulkReorderPageGroup(order []struct {
+	ID       uint  `json:"id" validate:"required"`
+	Order    *uint `json:"order"`
+	ParentID *uint `json:"parentId"`
+}) error {
+	return service.DB.Transaction(func(tx *gorm.DB) error {
+		docId := uint(0)
+
+		for _, pageGroupOrder := range order {
+			var pageGroup models.PageGroup
+			if err := tx.First(&pageGroup, pageGroupOrder.ID).Error; err != nil {
+				return fmt.Errorf("failed_to_fetch_page_group")
+			}
+
+			if docId == 0 {
+				docId = pageGroup.DocumentationID
+			}
+
+			pageGroup.Order = pageGroupOrder.Order
+			pageGroup.ParentID = pageGroupOrder.ParentID
+
+			if err := tx.Save(&pageGroup).Error; err != nil {
+				return fmt.Errorf("failed_to_update_page_group")
+			}
+		}
+
+		parentDocId, _ := service.GetParentDocId(docId)
+
+		if parentDocId == 0 {
+			err := service.AddBuildTrigger(docId)
+			if err != nil {
+				return fmt.Errorf("failed_to_update_write_build")
+			}
+		} else {
+			err := service.AddBuildTrigger(parentDocId)
+			if err != nil {
+				return fmt.Errorf("failed_to_update_write_build")
+			}
+		}
+
+		return nil
+	})
+}

@@ -86,6 +86,7 @@ func main() {
 	docsRouter.HandleFunc("/page/create", func(w http.ResponseWriter, r *http.Request) { handlers.CreatePage(serviceRegistry, w, r) }).Methods("POST")
 	docsRouter.HandleFunc("/page/edit", func(w http.ResponseWriter, r *http.Request) { handlers.EditPage(serviceRegistry, w, r) }).Methods("POST")
 	docsRouter.HandleFunc("/page/reorder", func(w http.ResponseWriter, r *http.Request) { handlers.ReorderPage(dS, w, r) }).Methods("POST")
+	docsRouter.HandleFunc("/page/reorder-bulk", func(w http.ResponseWriter, r *http.Request) { handlers.BulkReorderPage(dS, w, r) }).Methods("POST")
 	docsRouter.HandleFunc("/page/delete", func(w http.ResponseWriter, r *http.Request) { handlers.DeletePage(dS, w, r) }).Methods("POST")
 
 	docsRouter.HandleFunc("/page-groups", func(w http.ResponseWriter, r *http.Request) { handlers.GetPageGroups(dS, w, r) }).Methods("GET")
@@ -93,6 +94,7 @@ func main() {
 	docsRouter.HandleFunc("/page-group/create", func(w http.ResponseWriter, r *http.Request) { handlers.CreatePageGroup(serviceRegistry, w, r) }).Methods("POST")
 	docsRouter.HandleFunc("/page-group/edit", func(w http.ResponseWriter, r *http.Request) { handlers.EditPageGroup(serviceRegistry, w, r) }).Methods("POST")
 	docsRouter.HandleFunc("/page-group/reorder", func(w http.ResponseWriter, r *http.Request) { handlers.ReorderPageGroup(dS, w, r) }).Methods("POST")
+	docsRouter.HandleFunc("/page-group/reorder-bulk", func(w http.ResponseWriter, r *http.Request) { handlers.BulkReorderPageGroup(dS, w, r) }).Methods("POST")
 	docsRouter.HandleFunc("/page-group/delete", func(w http.ResponseWriter, r *http.Request) { handlers.DeletePageGroup(dS, w, r) }).Methods("POST")
 
 	docRouter := r.PathPrefix("/documentation").Subrouter()
