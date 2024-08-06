@@ -15,8 +15,7 @@ import {
   getDocumentations,
   getPageGroups,
   getPages,
-  pageGroupReorderBulk,
-  pageReorderBulk,
+  commonReorderBulk,
   updatePageGroup
 } from '../../api/Requests';
 import { AuthContext } from '../../context/AuthContext';
@@ -355,6 +354,7 @@ export default function Documentation () {
     const dragItem = reorderedItem;
     newItems.splice(result.destination.index, 0, reorderedItem);
 
+    console.log('---------------------------------newItems:', newItems);
     setGroupsAndPageData(newItems);
 
     const pageGroups = [];
@@ -365,24 +365,23 @@ export default function Documentation () {
         pageGroups.push({
           id: item.id,
           order: index,
-          parentId: item.parentId
+          parentId: item.parentId,
+          isPageGroup: true
         });
       } else {
         pages.push({
           id: item.id,
           order: index,
-          pageGroupId: item.pageGroupId
+          pageGroupId: item.pageGroupId,
+          isPageGroup: false
         });
       }
     });
 
+    const allItems = pageGroups.concat(pages);
+
     try {
-      let result;
-      if (pageGroups.length > 0) {
-        result = await pageGroupReorderBulk({ order: pageGroups });
-      } else {
-        result = await pageReorderBulk({ order: pages });
-      }
+      let result = await commonReorderBulk({ order: allItems });
 
       if (handleError(result, navigate, t)) return;
 

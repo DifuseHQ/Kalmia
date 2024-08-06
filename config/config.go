@@ -26,7 +26,7 @@ type GithubOAuth struct {
 type Config struct {
 	Environment   string      `json:"environment"`
 	Port          int         `json:"port"`
-	DatabaseURL   string      `json:"databaseURL"`
+	Database      string      `json:"database"`
 	LogLevel      string      `json:"logLevel"`
 	SessionSecret string      `json:"sessionSecret"`
 	Admins        []User      `json:"users"`
@@ -76,8 +76,8 @@ func SetupDataPath() error {
 		}
 	}
 
-	if _, err := os.Stat(ParsedConfig.DataPath + "/docusaurus_data"); os.IsNotExist(err) {
-		err := os.Mkdir(ParsedConfig.DataPath+"/docusaurus_data", 0755)
+	if _, err := os.Stat(ParsedConfig.DataPath + "/rspress_data"); os.IsNotExist(err) {
+		err := os.Mkdir(ParsedConfig.DataPath+"/rspress_data", 0755)
 		if err != nil {
 			return err
 		}

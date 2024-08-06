@@ -34,7 +34,7 @@ func main() {
 	logger.InitializeLogger(cfg.Environment, cfg.LogLevel, cfg.DataPath)
 
 	/* Setup database */
-	d := db.SetupDatabase(cfg.Environment, cfg.DatabaseURL, cfg.DataPath)
+	d := db.SetupDatabase(cfg.Environment, cfg.Database, cfg.DataPath)
 	db.SetupBasicData(d, cfg.Admins)
 
 	serviceRegistry := services.NewServiceRegistry(d)
@@ -90,21 +90,18 @@ func main() {
 	docsRouter.HandleFunc("/documentation/edit", func(w http.ResponseWriter, r *http.Request) { handlers.EditDocumentation(serviceRegistry, w, r) }).Methods("POST")
 	docsRouter.HandleFunc("/documentation/delete", func(w http.ResponseWriter, r *http.Request) { handlers.DeleteDocumentation(dS, w, r) }).Methods("POST")
 	docsRouter.HandleFunc("/documentation/version", func(w http.ResponseWriter, r *http.Request) { handlers.CreateDocumentationVersion(dS, w, r) }).Methods("POST")
+	docsRouter.HandleFunc("/documentation/reorder-bulk", func(w http.ResponseWriter, r *http.Request) { handlers.BulkReorderPageOrPageGroup(dS, w, r) }).Methods("POST")
 
 	docsRouter.HandleFunc("/pages", func(w http.ResponseWriter, r *http.Request) { handlers.GetPages(dS, w, r) }).Methods("GET")
 	docsRouter.HandleFunc("/page", func(w http.ResponseWriter, r *http.Request) { handlers.GetPage(dS, w, r) }).Methods("POST")
 	docsRouter.HandleFunc("/page/create", func(w http.ResponseWriter, r *http.Request) { handlers.CreatePage(serviceRegistry, w, r) }).Methods("POST")
 	docsRouter.HandleFunc("/page/edit", func(w http.ResponseWriter, r *http.Request) { handlers.EditPage(serviceRegistry, w, r) }).Methods("POST")
-	docsRouter.HandleFunc("/page/reorder", func(w http.ResponseWriter, r *http.Request) { handlers.ReorderPage(dS, w, r) }).Methods("POST")
-	docsRouter.HandleFunc("/page/reorder-bulk", func(w http.ResponseWriter, r *http.Request) { handlers.BulkReorderPage(dS, w, r) }).Methods("POST")
 	docsRouter.HandleFunc("/page/delete", func(w http.ResponseWriter, r *http.Request) { handlers.DeletePage(dS, w, r) }).Methods("POST")
 
 	docsRouter.HandleFunc("/page-groups", func(w http.ResponseWriter, r *http.Request) { handlers.GetPageGroups(dS, w, r) }).Methods("GET")
 	docsRouter.HandleFunc("/page-group", func(w http.ResponseWriter, r *http.Request) { handlers.GetPageGroup(dS, w, r) }).Methods("POST")
 	docsRouter.HandleFunc("/page-group/create", func(w http.ResponseWriter, r *http.Request) { handlers.CreatePageGroup(serviceRegistry, w, r) }).Methods("POST")
 	docsRouter.HandleFunc("/page-group/edit", func(w http.ResponseWriter, r *http.Request) { handlers.EditPageGroup(serviceRegistry, w, r) }).Methods("POST")
-	docsRouter.HandleFunc("/page-group/reorder", func(w http.ResponseWriter, r *http.Request) { handlers.ReorderPageGroup(dS, w, r) }).Methods("POST")
-	docsRouter.HandleFunc("/page-group/reorder-bulk", func(w http.ResponseWriter, r *http.Request) { handlers.BulkReorderPageGroup(dS, w, r) }).Methods("POST")
 	docsRouter.HandleFunc("/page-group/delete", func(w http.ResponseWriter, r *http.Request) { handlers.DeletePageGroup(dS, w, r) }).Methods("POST")
 
 	adminHandler := spaHandler()
@@ -141,31 +138,41 @@ func spaHandler() http.HandlerFunc {
 			path = "index.html"
 		}
 
-		file, err := adminFS.Open("web/build/" + path)
-		if err != nil {
-			file, err = adminFS.Open("web/build/index.html")
+		if config.ParsedConfig.Environment != "dev" {
+			file, err := adminFS.Open("web/build/" + path)
 			if err != nil {
-				http.Error(w, "File not found", http.StatusNotFound)
-				return
-			}
-		}
-		defer file.Close()
-
-		stat, err := file.Stat()
-		if err != nil {
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
-			return
-		}
-
-		if stat.IsDir() {
-			file, err = adminFS.Open("web/build/index.html")
-			if err != nil {
-				http.Error(w, "File not found", http.StatusNotFound)
-				return
+				file, err = adminFS.Open("web/build/index.html")
+				if err != nil {
+					http.Error(w, "File not found", http.StatusNotFound)
+					return
+				}
 			}
 			defer file.Close()
-		}
 
-		http.ServeContent(w, r, path, stat.ModTime(), file.(io.ReadSeeker))
+			stat, err := file.Stat()
+			if err != nil {
+				http.Error(w, "Internal server error", http.StatusInternalServerError)
+				return
+			}
+
+			if stat.IsDir() {
+				file, err = adminFS.Open("web/build/index.html")
+				if err != nil {
+					http.Error(w, "File not found", http.StatusNotFound)
+					return
+				}
+				defer file.Close()
+			}
+
+			http.ServeContent(w, r, path, stat.ModTime(), file.(io.ReadSeeker))
+		} else {
+			filePath := "web/build/" + path
+
+			if _, err := os.Stat(filePath); os.IsNotExist(err) {
+				filePath = "web/build/index.html"
+			}
+
+			http.ServeFile(w, r, filePath)
+		}
 	}
 }

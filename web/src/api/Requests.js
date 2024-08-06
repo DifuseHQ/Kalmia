@@ -66,7 +66,6 @@ export const getDocumentation = (id) => makeRequest('/docs/documentation', 'post
 export const createDocumentation = (data) => makeRequest('/docs/documentation/create', 'post', data);
 export const updateDocumentation = (data) => makeRequest('/docs/documentation/edit', 'post', data);
 export const deleteDocumentation = (id) => makeRequest('/docs/documentation/delete', 'post', { id });
-
 export const createDocumentationVersion = (data) => makeRequest('/docs/documentation/version', 'post', data);
 
 export const getPageGroups = () => makeRequest('/docs/page-groups');
@@ -74,16 +73,14 @@ export const getPageGroup = (id) => makeRequest('/docs/page-group', 'post', { id
 export const createPageGroup = (data) => makeRequest('/docs/page-group/create', 'post', data);
 export const updatePageGroup = (data) => makeRequest('/docs/page-group/edit', 'post', data);
 export const deletePageGroup = (id) => makeRequest('/docs/page-group/delete', 'post', { id });
-export const pageGroupReorder = (data) => makeRequest('/docs/page-group/reorder', 'post', data);
-export const pageGroupReorderBulk = (data) => makeRequest('/docs/page-group/reorder-bulk', 'post', data);
 
 export const getPages = () => makeRequest('/docs/pages');
 export const getPage = (id) => makeRequest('/docs/page', 'post', { id });
 export const updatePage = (data) => makeRequest('/docs/page/edit', 'post', data);
 export const createPage = (data) => makeRequest('/docs/page/create', 'post', data);
 export const deletePage = (id) => makeRequest('/docs/page/delete', 'post', { id });
-export const pageReorder = (data) => makeRequest('/docs/page/reorder', 'post', data);
-export const pageReorderBulk = (data) => makeRequest('/docs/page/reorder-bulk', 'post', data);
+
+export const commonReorderBulk = (data) => makeRequest('/docs/documentation/reorder-bulk', 'post', data);
 
 export const getUsers = () => makeRequest('/auth/users');
 export const getUser = (id) => makeRequest('/auth/user', 'post', { id: parseInt(id) });

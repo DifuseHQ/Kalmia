@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"fmt"
 
 	"git.difuse.io/Difuse/kalmia/db/models"
@@ -32,7 +33,7 @@ func (service *DocService) GetDocumentations() ([]models.Documentation, error) {
 	}).Preload("PageGroups.Pages.Editors", func(db *gorm.DB) *gorm.DB {
 		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
 	}).Preload("Pages", func(db *gorm.DB) *gorm.DB {
-		return db.Select("ID", "DocumentationID", "Title", "Slug", "CreatedAt", "UpdatedAt", "AuthorID", "Order").Where("page_group_id IS NULL")
+		return db.Select("ID", "DocumentationID", "Title", "Slug", "CreatedAt", "UpdatedAt", "AuthorID", "Order", "IsIntroPage").Where("page_group_id IS NULL")
 	}).Preload("Pages.Author", func(db *gorm.DB) *gorm.DB {
 		return db.Select("ID", "Username", "Email", "Photo")
 	}).Preload("Pages.Editors", func(db *gorm.DB) *gorm.DB {
@@ -66,7 +67,7 @@ func (service *DocService) GetDocumentation(id uint) (models.Documentation, erro
 	}).Preload("Editors", func(db *gorm.DB) *gorm.DB {
 		return db.Select("ID", "Username", "Email", "Photo")
 	}).Preload("PageGroups", func(db *gorm.DB) *gorm.DB {
-		return db.Select("ID", "DocumentationID", "Name", "CreatedAt", "UpdatedAt", "AuthorID")
+		return db.Select("ID", "DocumentationID", "Name", "CreatedAt", "UpdatedAt", "AuthorID", "Order")
 	}).Preload("PageGroups.Author", func(db *gorm.DB) *gorm.DB {
 		return db.Select("ID", "Username", "Email", "Photo")
 	}).Preload("PageGroups.Editors", func(db *gorm.DB) *gorm.DB {
@@ -78,7 +79,7 @@ func (service *DocService) GetDocumentation(id uint) (models.Documentation, erro
 	}).Preload("PageGroups.Pages.Editors", func(db *gorm.DB) *gorm.DB {
 		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
 	}).Preload("Pages", func(db *gorm.DB) *gorm.DB {
-		return db.Select("ID", "DocumentationID", "Title", "Slug", "CreatedAt", "UpdatedAt", "AuthorID").Where("page_group_id IS NULL")
+		return db.Select("ID", "DocumentationID", "Title", "Slug", "CreatedAt", "UpdatedAt", "AuthorID", "IsIntroPage", "Order").Where("page_group_id IS NULL")
 	}).Preload("Pages.Author", func(db *gorm.DB) *gorm.DB {
 		return db.Select("ID", "Username", "Email", "Photo")
 	}).Preload("Pages.Editors", func(db *gorm.DB) *gorm.DB {
@@ -109,6 +110,15 @@ func (service *DocService) IsDocIdValid(id uint) bool {
 	return true
 }
 
+func (service *DocService) GetDocIdFromBaseURL(baseUrl string) (uint, error) {
+	var doc models.Documentation
+	if err := service.DB.Where("base_url = ?", baseUrl).First(&doc).Error; err != nil {
+		return 0, err
+	}
+
+	return doc.ID, nil
+}
+
 func (service *DocService) GetChildrenOfDocumentation(id uint) ([]uint, error) {
 	docs, err := service.GetDocumentations()
 
@@ -127,6 +137,32 @@ func (service *DocService) GetChildrenOfDocumentation(id uint) ([]uint, error) {
 	}
 
 	return children, nil
+}
+
+func (service *DocService) GetAllVersions(id uint) (string, []string, error) {
+	var versions []string
+
+	var parentDoc models.Documentation
+	var childDocs []models.Documentation
+
+	db := service.DB
+
+	if err := db.Where("id = ?", id).First(&parentDoc).Error; err != nil {
+		return "", nil, fmt.Errorf("documentation_not_found")
+	}
+
+	if err := db.Where("cloned_from = ?", id).Order("created_at ASC").Find(&childDocs).Error; err != nil {
+		return "", nil, fmt.Errorf("failed_to_get_documentation_versions")
+	}
+
+	for _, doc := range childDocs {
+		versions = append(versions, doc.Version)
+	}
+
+	versions = append([]string{parentDoc.Version}, versions...)
+	latestVersion := versions[len(versions)-1]
+
+	return latestVersion, versions, nil
 }
 
 func (service *DocService) CreateDocumentation(documentation *models.Documentation, user models.User) error {
@@ -520,4 +556,63 @@ func (service *DocService) GetParentDocId(docID uint) (uint, error) {
 	}
 
 	return *doc.ClonedFrom, nil
+}
+
+func (service *DocService) BulkReorderPageOrPageGroup(pageOrder []struct {
+	ID          uint  `json:"id" validate:"required"`
+	Order       *uint `json:"order"`
+	ParentID    *uint `json:"parentId"`
+	PageGroupID *uint `json:"pageGroupId"`
+	IsPageGroup bool  `json:"isPageGroup"`
+}) error {
+	var docId uint
+	err := service.DB.Transaction(func(tx *gorm.DB) error {
+		for _, item := range pageOrder {
+			if item.IsPageGroup {
+				var pageGroup models.PageGroup
+				if err := tx.First(&pageGroup, item.ID).Error; err != nil {
+					return fmt.Errorf("failed_to_fetch_page_group")
+				}
+				if docId == 0 {
+					docId = pageGroup.DocumentationID
+				}
+				pageGroup.Order = item.Order
+				pageGroup.ParentID = item.ParentID
+				if err := tx.Save(&pageGroup).Error; err != nil {
+					return fmt.Errorf("failed_to_update_page_group")
+				}
+			} else {
+				var page models.Page
+				if err := tx.First(&page, item.ID).Error; err != nil {
+					if errors.Is(err, gorm.ErrRecordNotFound) {
+						return fmt.Errorf("page_not_found")
+					}
+					return fmt.Errorf("failed_to_fetch_page")
+				}
+				if docId == 0 {
+					docId = page.DocumentationID
+				}
+				page.PageGroupID = item.PageGroupID
+				page.Order = item.Order
+				if err := tx.Save(&page).Error; err != nil {
+					return fmt.Errorf("failed_to_update_page")
+				}
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	parentDocId, _ := service.GetParentDocId(docId)
+	if parentDocId == 0 {
+		err = service.AddBuildTrigger(docId)
+	} else {
+		err = service.AddBuildTrigger(parentDocId)
+	}
+	if err != nil {
+		return fmt.Errorf("failed_to_update_write_build")
+	}
+	return nil
 }

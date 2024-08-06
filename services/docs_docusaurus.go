@@ -26,14 +26,31 @@ type Block struct {
 	Children []Block                `json:"children"`
 }
 
+type Versions struct {
+	Default  string   `json:"default"`
+	Versions []string `json:"versions"`
+}
+
+type VersionInfo struct {
+	Version   string
+	CreatedAt time.Time
+	DocId     uint
+}
+
+type MetaElement struct {
+	Type  string `json:"type"`
+	Name  string `json:"name"`
+	Label string `json:"label"`
+	Path  string `json:"path"`
+	Order uint   `json:"-"`
+}
+
 func copyInitFiles(to string) error {
 	toCopy := []string{
-		"src/",
-		"static/",
-		"babel.config.js",
 		"package.json",
-		"sidebars.js",
-		"docusaurus.config.js",
+		"postcss.config.js",
+		"rspress.config.ts",
+		"tsconfig.json",
 	}
 
 	for _, file := range toCopy {
@@ -54,7 +71,7 @@ func copyInitFiles(to string) error {
 }
 
 func (service *DocService) RemoveDocFolder(docId uint) error {
-	docPath := filepath.Join(config.ParsedConfig.DataPath, "docusaurus_data", "doc_"+strconv.Itoa(int(docId)))
+	docPath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data", "doc_"+strconv.Itoa(int(docId)))
 
 	if err := utils.RemovePath(docPath); err != nil {
 		return err
@@ -83,7 +100,7 @@ func (service *DocService) UpdateWriteBuild(docId uint) error {
 		return fmt.Errorf("timeout waiting for operation to complete for docId: %d", docId)
 	}
 
-	allDocsPath := filepath.Join(config.ParsedConfig.DataPath, "docusaurus_data")
+	allDocsPath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data")
 	docsPath := filepath.Join(allDocsPath, "doc_"+strconv.Itoa(int(docId)))
 
 	if !utils.PathExists(docsPath) {
@@ -139,7 +156,7 @@ func (service *DocService) StartupCheck() error {
 
 	for _, doc := range docs {
 		if doc.ClonedFrom == nil {
-			allDocsPath := filepath.Join(config.ParsedConfig.DataPath, "docusaurus_data")
+			allDocsPath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data")
 			docsPath := filepath.Join(allDocsPath, "doc_"+strconv.Itoa(int(doc.ID)))
 
 			if !utils.PathExists(docsPath) {
@@ -176,7 +193,7 @@ func (service *DocService) InitDocusaurus(docId uint, init bool) error {
 	cfg := config.ParsedConfig
 
 	if init {
-		allDocsPath := filepath.Join(cfg.DataPath, "docusaurus_data")
+		allDocsPath := filepath.Join(cfg.DataPath, "rspress_data")
 		docsPath := filepath.Join(allDocsPath, "doc_"+strconv.Itoa(int(docId)))
 
 		err := copyInitFiles(docsPath)
@@ -205,15 +222,14 @@ func (service *DocService) UpdateBasicData(docId uint) error {
 		return err
 	}
 
-	docConfigTemplate, err := utils.ReadEmbeddedFile("docusaurus.config.js")
+	docConfigTemplate, err := utils.ReadEmbeddedFile("rspress.config.ts")
 
 	if err != nil {
 		return err
 	}
 
-	docPath := filepath.Join(config.ParsedConfig.DataPath, "docusaurus_data", "doc_"+strconv.Itoa(int(docId)))
-	docConfig := filepath.Join(docPath, "docusaurus.config.js")
-	docCssConfig := filepath.Join(docPath, "src/css/custom.css")
+	docPath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data", "doc_"+strconv.Itoa(int(docId)))
+	docConfig := filepath.Join(docPath, "rspress.config.ts")
 
 	replacements := map[string]string{
 		"__TITLE__":             doc.Name,
@@ -252,18 +268,6 @@ func (service *DocService) UpdateBasicData(docId uint) error {
 		replacements["__URL__"] = doc.URL
 	}
 
-	if doc.CustomCSS != "" {
-		err := utils.WriteToFile(docCssConfig, doc.CustomCSS)
-		if err != nil {
-			return err
-		}
-	} else {
-		err := utils.WriteToFile(docCssConfig, "")
-		if err != nil {
-			return err
-		}
-	}
-
 	if doc.MoreLabelLinks != "" {
 		moreLabelLinks := strings.ReplaceAll(doc.MoreLabelLinks, "link", "href")
 		replacements["__MORE_LABEL_HREF__"] = moreLabelLinks
@@ -281,6 +285,21 @@ func (service *DocService) UpdateBasicData(docId uint) error {
 	if err := os.Remove(docConfig); err != nil {
 		return err
 	}
+
+	latest, versions, err := service.GetAllVersions(docId)
+
+	if err != nil {
+		return err
+	}
+
+	multiVersions := Versions{Default: latest, Versions: versions}
+	multiVersionsJSON, err := json.Marshal(multiVersions)
+
+	if err != nil {
+		return err
+	}
+
+	replacements["__MULTI_VERSIONS__"] = "multiVersion: " + string(multiVersionsJSON)
 
 	err = utils.WriteToFile(docConfig, utils.ReplaceMany(string(docConfigTemplate), replacements))
 
@@ -303,12 +322,17 @@ func (service *DocService) CraftPage(pageID uint, title string, slug string, con
 		markdown += blockToMarkdown(block, 0, nil)
 	}
 
-	position, err := service.getSidebarPosition(pageID, false)
-	if err != nil {
-		return "", err
+	imports := ""
+
+	if strings.Contains(markdown, "ReactPlayer") {
+		imports = "import ReactPlayer from 'react-player'"
 	}
 
-	return fmt.Sprintf("---\nsidebar_position: %d\ntitle: %s\nslug: %s\n---\n\nimport ReactPlayer from 'react-player' \n\n%s", position, title, slug, markdown), nil
+	if imports != "" {
+		imports += "\n\n"
+	}
+
+	return fmt.Sprintf("%s%s", imports, markdown), nil
 }
 
 func blockToMarkdown(block Block, depth int, numbering *[]int) string {
@@ -320,7 +344,7 @@ func blockToMarkdown(block Block, depth int, numbering *[]int) string {
 		level, _ := block.Props["level"].(float64)
 		return fmt.Sprintf("%s %s\n\n", strings.Repeat("#", int(level)), styledContent)
 	case "paragraph":
-		return fmt.Sprintf("\n%s\n", styledContent)
+		return paragraphToMarkdown(styledContent)
 	case "numberedListItem":
 		return numberedListItemToMarkdown(block, depth, numbering, styledContent)
 	case "bulletListItem":
@@ -613,6 +637,8 @@ func applyBlockStyles(content string, props map[string]interface{}, blockType st
 }
 
 func (service *DocService) writePagesToDirectory(pages []models.Page, dirPath string) error {
+	var metaElements []MetaElement
+
 	sort.Slice(pages, func(i, j int) bool {
 		if pages[i].Order == nil || pages[j].Order == nil {
 			return false
@@ -627,89 +653,339 @@ func (service *DocService) writePagesToDirectory(pages []models.Page, dirPath st
 		}
 
 		var fileName, content string
-
-		if fullPage.IsIntroPage {
-			fileName = "index.mdx"
-		} else {
-			fileName = utils.StringToFileString(fullPage.Title) + ".mdx"
-		}
-
 		content, err = service.CraftPage(fullPage.ID, fullPage.Title, fullPage.Slug, fullPage.Content)
-
 		if err != nil {
 			return err
+		}
+
+		markdownExt := ".md"
+		if strings.Contains(content, "import ReactPlayer from 'react-player'") {
+			markdownExt = ".mdx"
+		}
+
+		if fullPage.IsIntroPage {
+			fileName = "index" + markdownExt
+		} else {
+			fileName = utils.StringToFileString(fullPage.Title) + markdownExt
 		}
 
 		err = utils.WriteToFile(filepath.Join(dirPath, fileName), content)
 		if err != nil {
 			return err
 		}
+
+		order := uint(0)
+		if fullPage.Order != nil {
+			order = *fullPage.Order
+		}
+
+		if fullPage.IsIntroPage {
+			metaElements = append(metaElements, MetaElement{
+				Type:  "file",
+				Name:  "index",
+				Label: fullPage.Title,
+				Path:  "/",
+				Order: 0,
+			})
+		} else {
+			metaElements = append(metaElements, MetaElement{
+				Type:  "file",
+				Name:  utils.StringToFileString(fullPage.Title),
+				Label: fullPage.Title,
+				Path:  fullPage.Slug,
+				Order: order,
+			})
+		}
 	}
-	return nil
+
+	// Write _meta.json
+	return writeMetaJSON(metaElements, dirPath)
 }
 
 func (service *DocService) writePageGroupsToDirectory(pageGroups []models.PageGroup, dirPath string, docId uint) error {
-	sort.Slice(pageGroups, func(i, j int) bool {
-		if pageGroups[i].Order == nil || pageGroups[j].Order == nil {
-			return false // Handle nil cases appropriately
-		}
-		return *pageGroups[i].Order < *pageGroups[j].Order
-	})
-
 	for _, pageGroup := range pageGroups {
 		if pageGroup.DocumentationID != docId {
 			continue
 		}
 
-		position, err := service.getSidebarPosition(pageGroup.ID, true)
-		if err != nil {
-			return err
-		}
-
-		categoryJson := fmt.Sprintf(`{
-            "label": "%s",
-            "position": %d,
-            "collapsible": true,
-            "collapsed": true,
-            "className": "red",
-            "link": {
-                "type": "generated-index",
-                "title": "%s"
-            }
-        }`, pageGroup.Name, position, pageGroup.Name)
-
 		pageGroupDir := utils.StringToFileString(pageGroup.Name)
 		fullPath := filepath.Join(dirPath, pageGroupDir)
-
 		if !utils.PathExists(fullPath) {
 			if err := utils.MakeDir(fullPath); err != nil {
 				return err
 			}
 		}
 
-		if err := utils.WriteToFile(filepath.Join(fullPath, "_category_.json"), categoryJson); err != nil {
-			return err
-		}
+		var metaElements []MetaElement
 
+		// Write pages directly in this page group
 		pages, err := service.GetPagesOfPageGroup(pageGroup.ID)
-
 		if err != nil {
 			return err
 		}
-
 		if err := service.writePagesToDirectory(pages, fullPath); err != nil {
 			return err
 		}
 
+		// Add pages to meta elements
+		for _, page := range pages {
+			order := uint(0)
+			if page.Order != nil {
+				order = *page.Order
+			}
+			metaElements = append(metaElements, MetaElement{
+				Type:  "file",
+				Name:  utils.StringToFileString(page.Title),
+				Label: page.Title,
+				Path:  page.Slug,
+				Order: order,
+			})
+		}
+
+		// Handle nested page groups
 		var nestedPageGroups []models.PageGroup
 		if err := service.DB.Where("parent_id = ?", pageGroup.ID).Find(&nestedPageGroups).Error; err != nil {
 			return err
 		}
 
-		if len(nestedPageGroups) > 0 {
-			if err := service.writePageGroupsToDirectory(nestedPageGroups, fullPath, docId); err != nil {
+		for _, nestedGroup := range nestedPageGroups {
+			nestedGroupDir := utils.StringToFileString(nestedGroup.Name)
+			nestedFullPath := filepath.Join(fullPath, nestedGroupDir)
+			if !utils.PathExists(nestedFullPath) {
+				if err := utils.MakeDir(nestedFullPath); err != nil {
+					return err
+				}
+			}
+
+			if err := service.writePageGroupsToDirectory([]models.PageGroup{nestedGroup}, fullPath, docId); err != nil {
 				return err
 			}
+
+			order := uint(0)
+			if nestedGroup.Order != nil {
+				order = *nestedGroup.Order
+			}
+			metaElements = append(metaElements, MetaElement{
+				Type:  "dir",
+				Name:  utils.StringToFileString(nestedGroup.Name),
+				Label: nestedGroup.Name,
+				Path:  utils.StringToFileString(nestedGroup.Name),
+				Order: order,
+			})
+		}
+
+		// Write _meta.json for the current page group
+		if err := writeMetaJSON(metaElements, fullPath); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func writeMetaJSON(metaElements []MetaElement, dirPath string) error {
+	// Sort metaElements
+	sort.Slice(metaElements, func(i, j int) bool {
+		if metaElements[i].Order != metaElements[j].Order {
+			return metaElements[i].Order < metaElements[j].Order
+		}
+		return metaElements[i].Name < metaElements[j].Name
+	})
+
+	var metaJSON []byte
+	var err error
+
+	if len(metaElements) == 0 {
+		// Write an empty array instead of null
+		metaJSON = []byte("[]")
+	} else {
+		metaJSON, err = json.MarshalIndent(metaElements, "", "    ")
+		if err != nil {
+			return fmt.Errorf("error marshaling meta elements: %w", err)
+		}
+	}
+
+	metaFilePath := filepath.Join(dirPath, "_meta.json")
+	err = os.WriteFile(metaFilePath, metaJSON, 0644)
+	if err != nil {
+		return fmt.Errorf("error writing _meta.json file: %w", err)
+	}
+
+	return nil
+}
+
+func (service *DocService) WriteContents(docId uint) error {
+	docIdPath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data", "doc_"+strconv.Itoa(int(docId)))
+	doc, err := service.GetDocumentation(docId)
+
+	if err != nil {
+		if err.Error() == "documentation_not_found" {
+			if err := utils.RemovePath(docIdPath); err != nil {
+				return err
+			}
+		}
+		return err
+	}
+
+	docsPath := filepath.Join(docIdPath, "docs")
+
+	for _, path := range []string{docIdPath, docsPath} {
+		if err := utils.MakeDir(path); err != nil {
+			return err
+		}
+	}
+
+	versionInfos := []VersionInfo{{Version: doc.Version, CreatedAt: *doc.CreatedAt, DocId: doc.ID}}
+	childrenIds, err := service.GetChildrenOfDocumentation(docId)
+
+	if err != nil {
+		return err
+	}
+
+	for _, childId := range childrenIds {
+		childDoc, err := service.GetDocumentation(childId)
+		if err != nil {
+			return err
+		}
+		versionInfos = append(versionInfos, VersionInfo{Version: childDoc.Version, CreatedAt: *childDoc.CreatedAt, DocId: childDoc.ID})
+	}
+
+	for _, versionInfo := range versionInfos {
+		versionDoc, err := service.GetDocumentation(versionInfo.DocId)
+
+		if err != nil {
+			return err
+		}
+
+		versionedDocPath := filepath.Join(docsPath, versionInfo.Version)
+
+		if !utils.PathExists(versionedDocPath) {
+			if err := utils.MakeDir(versionedDocPath); err != nil {
+				return err
+			}
+		}
+
+		/* example: versionedDocPath -> docs/1.0.0 */
+
+		/* For Cleanup */
+		var rootPageGroups []models.PageGroup
+
+		if err := service.DB.Where("parent_id IS NULL AND documentation_id = ?", versionDoc.ID).Preload("Pages").Find(&rootPageGroups).Error; err != nil {
+			return err
+		}
+
+		currentItems := make(map[string]bool)
+
+		var addPageGroupToCurrentItems func(group models.PageGroup) error
+		addPageGroupToCurrentItems = func(group models.PageGroup) error {
+			groupName := utils.StringToFileString(group.Name)
+			currentItems[groupName] = true
+
+			pages, err := service.GetPagesOfPageGroup(group.ID)
+			if err != nil {
+				return err
+			}
+			for _, page := range pages {
+				currentItems[utils.StringToFileString(page.Title)] = true
+			}
+
+			var nestedGroups []models.PageGroup
+			if err := service.DB.Where("parent_id = ?", group.ID).Find(&nestedGroups).Error; err != nil {
+				return err
+			}
+			for _, nestedGroup := range nestedGroups {
+				if err := addPageGroupToCurrentItems(nestedGroup); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+
+		for _, page := range versionDoc.Pages {
+			currentItems[utils.StringToFileString(page.Title)] = true
+		}
+
+		for _, group := range rootPageGroups {
+			if err := addPageGroupToCurrentItems(group); err != nil {
+				return err
+			}
+		}
+		/* End Cleanup Stuff */
+
+		/* Root of Version folder stuff */
+		rootMeta := `[{"text": "Documentation","link": "/documentation/index","activeMatch": "/documentation/"}]`
+		if err := utils.WriteToFile(filepath.Join(versionedDocPath, "_meta.json"), rootMeta); err != nil {
+			return err
+		}
+
+		if err := service.WriteHomePage(docId, versionInfo.Version, versionDoc.LanderDetails, versionDoc.BaseURL); err != nil {
+			return err
+		}
+
+		userContentPath := filepath.Join(versionedDocPath, "documentation")
+
+		if !utils.PathExists(userContentPath) {
+			if err := utils.MakeDir(userContentPath); err != nil {
+				return err
+			}
+		}
+
+		var rootMetaElements []MetaElement
+
+		// Write pages directly in the userContentPath
+		if err := service.writePagesToDirectory(versionDoc.Pages, userContentPath); err != nil {
+			return err
+		}
+
+		// Add pages to root meta elements
+		for _, page := range versionDoc.Pages {
+			order := uint(0)
+			if page.Order != nil {
+				order = *page.Order
+			}
+
+			if page.IsIntroPage {
+				rootMetaElements = append(rootMetaElements, MetaElement{
+					Type:  "file",
+					Name:  "index",
+					Label: page.Title,
+					Path:  "/",
+					Order: order,
+				})
+			} else {
+				rootMetaElements = append(rootMetaElements, MetaElement{
+					Type:  "file",
+					Name:  utils.StringToFileString(page.Title),
+					Label: page.Title,
+					Path:  page.Slug,
+					Order: order,
+				})
+			}
+		}
+
+		// Write page groups
+		if err := service.writePageGroupsToDirectory(rootPageGroups, userContentPath, versionDoc.ID); err != nil {
+			return err
+		}
+
+		// Add page groups to root meta elements
+		for _, group := range rootPageGroups {
+			order := uint(0)
+			if group.Order != nil {
+				order = *group.Order
+			}
+			rootMetaElements = append(rootMetaElements, MetaElement{
+				Type:  "dir",
+				Name:  utils.StringToFileString(group.Name),
+				Label: group.Name,
+				Path:  utils.StringToFileString(group.Name),
+				Order: order,
+			})
+		}
+
+		// Write root _meta.json
+		if err := writeMetaJSON(rootMetaElements, userContentPath); err != nil {
+			return err
 		}
 	}
 
@@ -725,32 +1001,34 @@ func removeOldContent(currentItems map[string]bool, dirPath string) error {
 	for _, entry := range entries {
 		fullPath := filepath.Join(dirPath, entry.Name())
 		if entry.IsDir() {
-			// Check if this directory is a current page group
 			if _, exists := currentItems[entry.Name()]; !exists {
 				if err := os.RemoveAll(fullPath); err != nil {
 					return err
 				}
 			} else {
-				// If it's a current page group, recursively check its contents
-				// but don't remove the directory itself
 				if err := removeOldContent(currentItems, fullPath); err != nil {
 					return err
 				}
 			}
 		} else {
-			// Don't remove index.mdx from the root
-			if entry.Name() == "index.mdx" && filepath.Dir(fullPath) == dirPath {
+			if (entry.Name() == "index.mdx" || entry.Name() == "index.md" || entry.Name() == "home.mdx") && filepath.Dir(fullPath) == dirPath {
 				continue
 			}
 
-			// Don't remove _category_.json files
-			if entry.Name() == "_category_.json" {
+			if entry.Name() == "_meta.json" {
 				continue
 			}
 
-			// Strip the .mdx extension for comparison
-			baseName := strings.TrimSuffix(entry.Name(), ".mdx")
-			if _, exists := currentItems[baseName]; !exists {
+			baseNameMdx := strings.TrimSuffix(entry.Name(), ".mdx")
+			baseNameMd := strings.TrimSuffix(entry.Name(), ".md")
+
+			if _, exists := currentItems[baseNameMdx]; !exists {
+				if err := os.Remove(fullPath); err != nil {
+					return err
+				}
+			}
+
+			if _, exists := currentItems[baseNameMd]; !exists {
 				if err := os.Remove(fullPath); err != nil {
 					return err
 				}
@@ -760,166 +1038,56 @@ func removeOldContent(currentItems map[string]bool, dirPath string) error {
 	return nil
 }
 
-func (service *DocService) WriteContents(docId uint) error {
-	docPath := filepath.Join(config.ParsedConfig.DataPath, "docusaurus_data", "doc_"+strconv.Itoa(int(docId)))
-	doc, err := service.GetDocumentation(docId)
-	if err != nil {
-		if err.Error() == "documentation_not_found" {
-			if err := utils.RemovePath(docPath); err != nil {
-				return err
-			}
-		}
-		return err
+func (service *DocService) WriteHomePage(docId uint, version string, landerDetails string, baseURL string) error {
+	var homePage string
+
+	if landerDetails != "" {
+		homePage = `---
+		pageType: home
+		
+		hero:
+		  name: Kalmia
+		  text: Fast, easy-to-use CMS for your documentations
+		  tagline: Tagline
+		  actions:
+			- theme: brand
+			  text: Quick Start
+			  link: /guide/
+			- theme: alt
+			  text: GitHub
+			  link: https://github.com/web-infra-dev/rspress
+		  image:
+			src: /rspress-icon.png
+			alt: Rspress Logo
+		features:
+		  - title: Blazing fast build speed
+			details: The core compilation module is based on the Rust front-end toolchain, providing a more ultimate development experience.
+			icon: 🏃🏻‍♀️
+		  - title: Support for MDX content writing
+			details: MDX is a powerful way to write content, allowing you to use React components in Markdown.
+			icon: 📦
+		  - title: Built-in full-text search
+			details: Automatically generates a full-text search index for you during construction, providing out-of-the-box full-text search capabilities.
+			icon: 🎨
+		  - title: Simpler I18n solution
+			details: With the built-in I18n solution, you can easily provide multi-language support for documents or components.
+			icon: 🌍
+		  - title: Static site generation
+			details: In production, it automatically builds into static HTML files, which can be easily deployed anywhere.
+			icon: 🌈
+		  - title: Providing multiple custom capabilities
+			details: Through its extension mechanism, you can easily extend theme UI and build process.
+			icon: 🔥
+		---
+			`
+	} else {
+		//redirect to /documentation/
+		homePage = fmt.Sprintf("<meta http-equiv=\"refresh\" content=\"0;url=%s/documentation/\" />", baseURL)
 	}
 
-	docsPath := filepath.Join(docPath, "docs")
-	versionedDocsPath := filepath.Join(docPath, "versioned_docs")
-	versionedSidebarsPath := filepath.Join(docPath, "versioned_sidebars")
+	homePagePath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data", "doc_"+strconv.Itoa(int(docId)), "docs", version, "index.mdx")
 
-	for _, path := range []string{docPath, docsPath, versionedDocsPath, versionedSidebarsPath} {
-		if err := utils.MakeDir(path); err != nil {
-			return err
-		}
-	}
-
-	type VersionInfo struct {
-		Version   string
-		CreatedAt time.Time
-		DocId     uint
-	}
-
-	versionInfos := []VersionInfo{{Version: doc.Version, CreatedAt: *doc.CreatedAt, DocId: doc.ID}}
-
-	childrenIds, err := service.GetChildrenOfDocumentation(docId)
-	if err != nil {
-		return err
-	}
-
-	for _, childId := range childrenIds {
-		childDoc, err := service.GetDocumentation(childId)
-		if err != nil {
-			return err
-		}
-		versionInfos = append(versionInfos, VersionInfo{Version: childDoc.Version, CreatedAt: *childDoc.CreatedAt, DocId: childDoc.ID})
-	}
-
-	// Sort versions in descending order (newest first)
-	sort.Slice(versionInfos, func(i, j int) bool {
-		return versionInfos[i].CreatedAt.After(versionInfos[j].CreatedAt)
-	})
-
-	for i, versionInfo := range versionInfos {
-		versionDoc, err := service.GetDocumentation(versionInfo.DocId)
-		if err != nil {
-			return err
-		}
-
-		var rootPageGroups []models.PageGroup
-		if err := service.DB.Where("parent_id IS NULL AND documentation_id = ?", versionDoc.ID).Preload("Pages").Find(&rootPageGroups).Error; err != nil {
-			return err
-		}
-
-		currentItems := make(map[string]bool)
-
-		// Helper function to recursively add page groups and their pages to currentItems
-		var addPageGroupToCurrentItems func(group models.PageGroup) error
-		addPageGroupToCurrentItems = func(group models.PageGroup) error {
-			groupName := utils.StringToFileString(group.Name)
-			currentItems[groupName] = true
-
-			// Add pages of this group
-			pages, err := service.GetPagesOfPageGroup(group.ID)
-			if err != nil {
-				return err
-			}
-			for _, page := range pages {
-				currentItems[utils.StringToFileString(page.Title)] = true
-			}
-
-			// Add nested page groups
-			var nestedGroups []models.PageGroup
-			if err := service.DB.Where("parent_id = ?", group.ID).Find(&nestedGroups).Error; err != nil {
-				return err
-			}
-			for _, nestedGroup := range nestedGroups {
-				if err := addPageGroupToCurrentItems(nestedGroup); err != nil {
-					return err
-				}
-			}
-			return nil
-		}
-
-		// Add root-level pages
-		for _, page := range versionDoc.Pages {
-			currentItems[utils.StringToFileString(page.Title)] = true
-		}
-
-		// Add all page groups and their pages (including nested ones)
-		for _, group := range rootPageGroups {
-			if err := addPageGroupToCurrentItems(group); err != nil {
-				return err
-			}
-		}
-
-		// Write to docs/ only for the latest version
-		if i == 0 {
-			if err := service.writePagesToDirectory(versionDoc.Pages, docsPath); err != nil {
-				return err
-			}
-
-			if err := service.writePageGroupsToDirectory(rootPageGroups, docsPath, versionDoc.ID); err != nil {
-				return err
-			}
-
-			if err := removeOldContent(currentItems, docsPath); err != nil {
-				return err
-			}
-		}
-
-		// Always write to versioned_docs for all versions
-		versionDirName := fmt.Sprintf("version-%s", versionDoc.Version)
-		versionedDocPath := filepath.Join(versionedDocsPath, versionDirName)
-		if err := utils.MakeDir(versionedDocPath); err != nil {
-			return err
-		}
-
-		if err := service.writePagesToDirectory(versionDoc.Pages, versionedDocPath); err != nil {
-			return err
-		}
-
-		if err := service.writePageGroupsToDirectory(rootPageGroups, versionedDocPath, versionDoc.ID); err != nil {
-			return err
-		}
-
-		if err := removeOldContent(currentItems, versionedDocPath); err != nil {
-			return err
-		}
-
-		// Write sidebar for all versions
-		sidebarContent := `{
-            "mainSidebar": [
-                {
-                    "type": "autogenerated",
-                    "dirName": "."
-                }
-            ]
-        }`
-		sidebarFileName := fmt.Sprintf("version-%s-sidebars.json", versionDoc.Version)
-		if err := utils.WriteToFile(filepath.Join(versionedSidebarsPath, sidebarFileName), sidebarContent); err != nil {
-			return err
-		}
-	}
-
-	// Create versions.json
-	versions := make([]string, len(versionInfos))
-	for i, vi := range versionInfos {
-		versions[i] = vi.Version
-	}
-	versionsJSON, err := json.Marshal(versions)
-	if err != nil {
-		return err
-	}
-	if err := utils.WriteToFile(filepath.Join(docPath, "versions.json"), string(versionsJSON)); err != nil {
+	if err := utils.WriteToFile(homePagePath, homePage); err != nil {
 		return err
 	}
 
@@ -927,39 +1095,26 @@ func (service *DocService) WriteContents(docId uint) error {
 }
 
 func (service *DocService) DocusaurusBuild(docId uint) error {
-	docPath := filepath.Join(config.ParsedConfig.DataPath, "docusaurus_data", "doc_"+strconv.Itoa(int(docId)))
+	docPath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data", "doc_"+strconv.Itoa(int(docId)))
 	buildPath := filepath.Join(docPath, "build")
 	tmpBuildPath := filepath.Join(docPath, "build_tmp")
-	oldBuildPath := filepath.Join(docPath, "build_old")
 
-	err := utils.RunNpxCommand(docPath, "docusaurus", "build", "--out-dir", "build_tmp")
+	err := utils.RunNpxCommand(docPath, "rspress", "build")
 	if err != nil {
 		return err
 	}
 
-	if err := os.Rename(buildPath, oldBuildPath); err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("failed to rename current build directory: %w", err)
+	if _, err := os.Stat(buildPath); err == nil {
+		if err := os.RemoveAll(buildPath); err != nil {
+			return fmt.Errorf("failed to remove old build directory: %w", err)
+		}
 	}
 
 	if err := os.Rename(tmpBuildPath, buildPath); err != nil {
-		os.Rename(oldBuildPath, buildPath)
 		return fmt.Errorf("failed to rename new build directory: %w", err)
 	}
 
-	go func() {
-		os.RemoveAll(oldBuildPath)
-	}()
-
 	return nil
-}
-
-func (service *DocService) GetDocIdFromBaseURL(baseUrl string) (uint, error) {
-	var doc models.Documentation
-	if err := service.DB.Where("base_url = ?", baseUrl).First(&doc).Error; err != nil {
-		return 0, err
-	}
-
-	return doc.ID, nil
 }
 
 func (service *DocService) GetDocusaurus(urlPath string) (string, string, error) {
@@ -993,7 +1148,7 @@ func (service *DocService) GetDocusaurus(urlPath string) (string, string, error)
 		return "", "", fmt.Errorf("database_error: %v", err)
 	}
 
-	docPath := filepath.Join("data", "docusaurus_data", fmt.Sprintf("doc_%d", doc.ID), "build")
+	docPath := filepath.Join("data", "rspress_data", fmt.Sprintf("doc_%d", doc.ID), "build")
 
 	if _, err := os.Stat(docPath); os.IsNotExist(err) {
 		return "", "", fmt.Errorf("docusaurus_build_not_found")
@@ -1011,47 +1166,15 @@ func (service *DocService) GetDocusaurus(urlPath string) (string, string, error)
 	return docPath, doc.BaseURL, nil
 }
 
-func (service *DocService) getSidebarPosition(id uint, isPageGroup bool) (uint, error) {
-	if isPageGroup {
-		var pageGroup models.PageGroup
-		if err := service.DB.First(&pageGroup, id).Error; err != nil {
-			return 0, err
-		}
-
-		if pageGroup.Order == nil {
-			return 0, fmt.Errorf("page group must have an order")
-		}
-
-		return *pageGroup.Order, nil
-	} else {
-		var page models.Page
-		if err := service.DB.First(&page, id).Error; err != nil {
-			return 0, err
-		}
-
-		if page.IsIntroPage {
-			return 0, nil
-		}
-
-		if page.Order == nil {
-			return 0, fmt.Errorf("page must have an order")
-		}
-
-		return *page.Order, nil
-	}
-}
-
 func (service *DocService) AddBuildTrigger(docId uint) error {
 	trigger := models.BuildTriggers{
 		DocumentationID: docId,
 		Triggered:       false,
 		CompletedAt:     nil,
 	}
-
 	if err := service.DB.Create(&trigger).Error; err != nil {
 		return err
 	}
-
 	return nil
 }
 

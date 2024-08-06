@@ -12,7 +12,7 @@ import {
   deletePageGroup,
   getPageGroup,
   pageGroupReorder,
-  pageReorder,
+  commonReorderBulk,
   updatePageGroup
 } from '../../api/Requests';
 import { AuthContext } from '../../context/AuthContext';
@@ -217,15 +217,13 @@ export default function PageGroupTable () {
 
       if (item?.name) {
         payload.parentId = Number(pageGroupId);
+        payload.isPageGroup = true;
       } else {
         payload.pageGroupId = Number(pageGroupId);
       }
 
-      const endpoint = item?.name
-        ? pageGroupReorder
-        : pageReorder;
-
-      const result = await endpoint(payload);
+      // make payload an array
+      const result = await commonReorderBulk({order: [payload]});
 
       if (handleError(result, navigate, t)) return; //eslint-disable-line
     };

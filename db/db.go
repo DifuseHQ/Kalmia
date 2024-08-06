@@ -16,26 +16,30 @@ import (
 	gormLogger "gorm.io/gorm/logger"
 )
 
-func SetupDatabase(env string, dbURL string, dataPath string) *gorm.DB {
+func SetupDatabase(env string, database string, dataPath string) *gorm.DB {
 	var db *gorm.DB
 	var err error
 
 	ormConfig := &gorm.Config{
-		Logger: gormLogger.Default.LogMode(gormLogger.Silent),
+		Logger:                 gormLogger.Default.LogMode(gormLogger.Silent),
+		SkipDefaultTransaction: true,
 	}
 
-	if env == "production" || env == "prod" {
-		db, err = gorm.Open(postgres.Open(dbURL), ormConfig)
-	} else {
+	if database == "sqlite" {
 		db, err = gorm.Open(sqlite.Open(path.Join(dataPath, "kalmia.db")), ormConfig)
+	} else {
+		db, err = gorm.Open(postgres.Open(database), ormConfig)
 	}
 
 	if err != nil {
 		logger.Error("failed to connect to database", zap.Error(err))
 	}
 
-	db.Exec("PRAGMA foreign_keys = ON")
-	db.Exec("PRAGMA journal_mode = WAL")
+	if database == "sqlite" {
+		db.Exec("PRAGMA foreign_keys = ON")
+		db.Exec("PRAGMA journal_mode = WAL")
+		db.Exec("PRAGMA synchronous = NORMAL")
+	}
 
 	err = db.AutoMigrate(
 		&models.User{},

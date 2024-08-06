@@ -10,7 +10,7 @@ import (
 )
 
 func ReadEmbeddedFile(path string) ([]byte, error) {
-	content, err := embedded.DocusaurusFS.ReadFile("docusaurus/" + path)
+	content, err := embedded.RspressFS.ReadFile("rspress/" + path)
 	if err != nil {
 		return nil, err
 	}
@@ -19,7 +19,7 @@ func ReadEmbeddedFile(path string) ([]byte, error) {
 }
 
 func CopyEmbeddedFile(path string, to string) error {
-	content, err := embedded.DocusaurusFS.ReadFile("docusaurus/" + path)
+	content, err := embedded.RspressFS.ReadFile("rspress/" + path)
 	if err != nil {
 		return err
 	}
@@ -40,8 +40,8 @@ func CopyEmbeddedFile(path string, to string) error {
 }
 
 func CopyEmbeddedFolder(path string, to string) error {
-	dir := filepath.Join("docusaurus", path)
-	entries, err := embedded.DocusaurusFS.ReadDir(dir)
+	dir := filepath.Join("rspress", path)
+	entries, err := embedded.RspressFS.ReadDir(dir)
 	if err != nil {
 		return err
 	}

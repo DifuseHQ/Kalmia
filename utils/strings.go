@@ -50,7 +50,13 @@ func StringToUint(input string) (uint, error) {
 }
 
 func StringToFileString(input string) string {
+	input = strings.ToLower(input)
 	return strings.ReplaceAll(input, " ", "_")
+}
+
+func StringToURLString(input string) string {
+	input = strings.ToLower(input)
+	return strings.ReplaceAll(input, " ", "-")
 }
 
 func UintPtr(v uint) *uint {
