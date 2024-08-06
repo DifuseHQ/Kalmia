@@ -34,7 +34,6 @@
     "react-dom": "^18.3.1",
     "react-i18next": "^15.0.0",
     "react-router-dom": "^6.24.0",
-    "react-scripts": "5.0.1",
     "react-toastify": "^10.0.5",
     "sass": "^1.77.8",
     "semistandard": "^17.0.0",
@@ -42,10 +41,9 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
+    "start": "rsbuild dev",
+    "build": "rsbuild build",
+    "preview": "rsbuild preview",
     "lint": "eslint \"src/**/*.{js,jsx,ts,tsx}\"",
     "lint:fix": "eslint \"src/**/*.{js,jsx,ts,tsx}\" --fix",
     "prepare": "husky"
@@ -70,6 +68,8 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@rsbuild/core": "^1.0.1-beta.10",
+    "@rsbuild/plugin-react": "^1.0.1-beta.10",
     "autoprefixer": "^10.4.19",
     "editorjs-hyperlink": "^1.0.6",
     "editorjs-undo": "^2.0.28",
