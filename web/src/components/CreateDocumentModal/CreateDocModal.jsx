@@ -484,7 +484,22 @@ export default function CreateDocModal () {
                     <p className="block text-md font-medium text-gray-700 dark:text-gray-300 ">
                       {t('community_footer')}
                     </p>
-                    <div className="flex justify-center gap-3">
+                  </div>
+                </div>
+                <hr className="mt-2 mb-4 border-t-1 dark:border-gray-500" />
+                {footerField && footerField.map((obj, index) => (
+                  <div key={`footer-label-${index}`}>
+                    <LabelAndCommunityComponent
+                      labelId={`footer-label-${index}`}
+                      linkId={`footer-link-${index}`}
+                      index={index}
+                      data={obj}
+                      onLabelChange={handleFooterLabelChange}
+                      onLinkChange={handleFooterLinkChange}
+                    />
+                  </div>
+                ))}
+                  <div className="flex justify-end gap-3">
                       <button
                         onClick={() => addRow('footer')}
                         title={t('add_new_field')}
@@ -507,28 +522,28 @@ export default function CreateDocModal () {
                         />
                       </button>
                     </div>
-                  </div>
-                </div>
-                <hr className="mt-2 mb-4 border-t-1 dark:border-gray-500" />
-                {footerField && footerField.map((obj, index) => (
-                  <div key={`footer-label-${index}`}>
-                    <LabelAndCommunityComponent
-                      labelId={`footer-label-${index}`}
-                      linkId={`footer-link-${index}`}
-                      index={index}
-                      data={obj}
-                      onLabelChange={handleFooterLabelChange}
-                      onLinkChange={handleFooterLinkChange}
-                    />
-                  </div>
-                ))}
-
                 <div>
-                  <div className="flex justify-between items-center">
+                  <div className="flex justify-start items-center">
                     <span className="block text-md font-medium text-gray-700 dark:text-gray-300 ">
                       {t('more_footer')}
                     </span>
-                    <div className="flex justify-center gap-3">
+                  </div>
+
+                  <hr className="mt-2 mb-4 border-t-1 dark:border-gray-500" />
+                  {moreField && moreField.map((obj, index) => (
+                    <div key={`more-label-${index}`}>
+                      <LabelAndCommunityComponent
+                        labelId={`more-label-${index}`}
+                        linkId={`more-link-${index}`}
+                        index={index}
+                        data={obj}
+                        onLabelChange={handleMoreLabelChange}
+                        onLinkChange={handleMoreLinkChange}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div className="flex justify-end gap-3">
                       <button
                         onClick={() => addRow('more')}
                         title={t('add_new_field')}
@@ -551,22 +566,6 @@ export default function CreateDocModal () {
                         />
                       </button>
                     </div>
-                  </div>
-
-                  <hr className="mt-2 mb-4 border-t-1 dark:border-gray-500" />
-                  {moreField && moreField.map((obj, index) => (
-                    <div key={`more-label-${index}`}>
-                      <LabelAndCommunityComponent
-                        labelId={`more-label-${index}`}
-                        linkId={`more-link-${index}`}
-                        index={index}
-                        data={obj}
-                        onLabelChange={handleMoreLabelChange}
-                        onLinkChange={handleMoreLinkChange}
-                      />
-                    </div>
-                  ))}
-                </div>
               </div>
 
               <div className="flex justify-center items-center mt-7">
