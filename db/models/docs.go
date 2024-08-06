@@ -55,6 +55,7 @@ type Documentation struct {
 	URL              string      `json:"url,omitempty"`
 	OrganizationName string      `json:"organizationName,omitempty"`
 	ProjectName      string      `json:"projectName,omitempty"`
+	LanderDetails    string      `json:"landerDetails,omitempty"`
 	BaseURL          string      `json:"baseURL,omitempty"`
 	ClonedFrom       *uint       `gorm:"default:null" json:"clonedFrom"`
 	Description      string      `json:"description,omitempty"`

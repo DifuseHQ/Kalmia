@@ -10,6 +10,9 @@ export default defineConfig({
     assetPrefix: '/admin/',
     distPath: {
       root: 'build',
-    }
+    },
+    sourceMap: {
+      js: false,
+    },
   }
 });

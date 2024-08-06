@@ -39,7 +39,7 @@ func (service *DocService) GetDocumentations() ([]models.Documentation, error) {
 		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
 	}).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID", "Version", "ClonedFrom",
 		"LastEditorID", "Favicon", "MetaImage", "NavImage", "CustomCSS", "FooterLabelLinks", "MoreLabelLinks",
-		"URL", "OrganizationName", "ProjectName").
+		"URL", "OrganizationName", "LanderDetails", "ProjectName").
 		Find(&documentations).Error; err != nil {
 		return nil, fmt.Errorf("failed_to_get_documentations")
 	}
@@ -85,7 +85,7 @@ func (service *DocService) GetDocumentation(id uint) (models.Documentation, erro
 		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
 	}).Where("id = ?", id).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID", "Version", "LastEditorID", "Favicon",
 		"MetaImage", "NavImage", "CustomCSS", "FooterLabelLinks", "MoreLabelLinks", "CopyrightText",
-		"BaseURL", "URL", "OrganizationName", "ProjectName").
+		"BaseURL", "URL", "OrganizationName", "LanderDetails", "ProjectName").
 		Find(&documentation).Error; err != nil {
 		return models.Documentation{}, fmt.Errorf("failed_to_get_documentation")
 	}
@@ -184,7 +184,7 @@ func (service *DocService) CreateDocumentation(documentation *models.Documentati
 	return nil
 }
 
-func (service *DocService) EditDocumentation(user models.User, id uint, name, description, version, favicon, metaImage, navImage, customCSS, footerLabelLinks, moreLabelLinks, copyrightText, url, organizationName, projectName, baseURL string) error {
+func (service *DocService) EditDocumentation(user models.User, id uint, name, description, version, favicon, metaImage, navImage, customCSS, footerLabelLinks, moreLabelLinks, copyrightText, url, organizationName, projectName, baseURL, landerDetails string) error {
 	tx := service.DB.Begin()
 
 	updateDoc := func(doc *models.Documentation, isTarget bool) error {
@@ -193,6 +193,7 @@ func (service *DocService) EditDocumentation(user models.User, id uint, name, de
 		doc.Description = description
 		doc.URL = url
 		doc.OrganizationName = organizationName
+		doc.LanderDetails = landerDetails
 		doc.ProjectName = projectName
 		doc.BaseURL = baseURL
 		doc.Favicon = favicon
@@ -323,6 +324,7 @@ func (service *DocService) CreateDocumentationVersion(originalDocId uint, newVer
 		Description:      originalDoc.Description,
 		Version:          newVersion,
 		OrganizationName: originalDoc.OrganizationName,
+		LanderDetails:    originalDoc.LanderDetails,
 		ProjectName:      originalDoc.ProjectName,
 		BaseURL:          originalDoc.BaseURL,
 		ClonedFrom:       &originalDocId,

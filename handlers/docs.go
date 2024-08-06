@@ -71,6 +71,7 @@ func CreateDocumentation(services *services.ServiceRegistry, w http.ResponseWrit
 		Version          string `json:"version" validate:"required"`
 		URL              string `json:"url"`
 		OrganizationName string `json:"organizationName"`
+		LanderDetails    string `json:"landerDetails"`
 		ProjectName      string `json:"projectName"`
 		BaseURL          string `json:"baseURL"`
 		Favicon          string `json:"favicon"`
@@ -93,6 +94,7 @@ func CreateDocumentation(services *services.ServiceRegistry, w http.ResponseWrit
 		Description:      req.Description,
 		URL:              req.URL,
 		OrganizationName: req.OrganizationName,
+		LanderDetails:    req.LanderDetails,
 		ProjectName:      req.ProjectName,
 		BaseURL:          req.BaseURL,
 		AuthorID:         user.ID,
@@ -126,6 +128,7 @@ func EditDocumentation(services *services.ServiceRegistry, w http.ResponseWriter
 		Description      string `json:"description" validate:"required"`
 		URL              string `json:"url"`
 		OrganizationName string `json:"organizationName"`
+		LanderDetails    string `json:"landerDetails"`
 		ProjectName      string `json:"projectName"`
 		BaseURL          string `json:"baseURL"`
 		Version          string `json:"version"`
@@ -156,7 +159,7 @@ func EditDocumentation(services *services.ServiceRegistry, w http.ResponseWriter
 		return
 	}
 
-	err = services.DocService.EditDocumentation(user, req.ID, req.Name, req.Description, req.Version, req.Favicon, req.MetaImage, req.NavImage, req.CustomCSS, req.FooterLabelLinks, req.MoreLabelLinks, req.CopyrightText, req.URL, req.OrganizationName, req.ProjectName, req.BaseURL)
+	err = services.DocService.EditDocumentation(user, req.ID, req.Name, req.Description, req.Version, req.Favicon, req.MetaImage, req.NavImage, req.CustomCSS, req.FooterLabelLinks, req.MoreLabelLinks, req.CopyrightText, req.URL, req.OrganizationName, req.ProjectName, req.BaseURL, req.LanderDetails)
 
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})
