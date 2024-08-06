@@ -1,3 +1,5 @@
+import i18n from './i18n';
+
 export function nullOrUndefined (a) {
   return a === null || a === undefined;
 }
@@ -8,10 +10,16 @@ export function pageSize () {
 }
 
 export const languages = [
-  { code: 'English', lang: 'English' },
-  { code: 'Malayalam', lang: 'Malayalam' },
-  { code: 'Hindi', lang: 'Hindi' }
+  { code: 'en', lang: 'English' },
+  { code: 'ml', lang: 'Malayalam' },
+  { code: 'hi', lang: 'Hindi' }
 ];
+
+export const getLanguageName = () => {
+  const code = i18n.language || 'en';
+  const language = languages.find(lang => lang.code === code);
+  return language ? language.lang : 'Unknown Language';
+};
 
 export function customCSSInitial () {
   const customCSS = `:root {

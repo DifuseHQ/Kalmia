@@ -6,16 +6,18 @@ import { AnimatePresence, motion } from 'framer-motion';
 
 import { AuthContext } from '../../context/AuthContext';
 import { ThemeContext } from '../../context/ThemeContext';
-import { languages } from '../../utils/Utils';
+import { getLanguageName, languages } from '../../utils/Utils';
 
 export default function Navbar () {
+  const { i18n } = useTranslation();
+  const languageName = getLanguageName();
+   
   const { t } = useTranslation();
   const { userDetails, logout, isSidebarOpen, setIsSidebarOpen } = useContext(AuthContext);
   const { darkMode, toggleDarkMode } = useContext(ThemeContext);
 
   const [isOpen, setIsOpen] = useState(false);
   const [translateDropdown, setTranslateDropdown] = useState(false);
-
   const toggleTranslateDropdown = () => setTranslateDropdown(!translateDropdown);
 
   const toggleDropdown = () => setIsOpen(!isOpen);
@@ -49,7 +51,7 @@ export default function Navbar () {
     setTranslateDropdown(false);
   };
 
-  const { i18n } = useTranslation();
+  
   return (
     <AnimatePresence>
       <motion.nav
@@ -86,7 +88,7 @@ export default function Navbar () {
                 onClick={toggleTranslateDropdown}
               >
                 <Icon icon="material-symbols:translate" />
-                <span className='text-md'>{i18n.language}</span>
+                <span className='text-md'>{languageName}</span>
                 <Icon icon="mingcute:down-line" className='w-6 h-6' />
               </button>
 

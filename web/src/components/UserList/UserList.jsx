@@ -55,17 +55,13 @@ export default function UserList () {
     setCurrentPage(1);
   };
 
-  const handleDeleteClick = useCallback((user) => {
-    return () => openModal('delete', user);
-  }, [openModal]);
-
   const handleDeleteUser = async (username) => {
     if (!username) {
       toastMessage(t('something_went_wrong_try_again'), 'error');
       return;
     }
 
-    const response = await deleteUser(username);
+    const response = await deleteUser(username.toString());
 
     if (handleError(response, navigate, t)) return;
 
@@ -91,15 +87,6 @@ export default function UserList () {
     [totalPages]
   );
 
-  const memoizedUserHandlers = useMemo(() => {
-    return filterUser.reduce((acc, user) => {
-      acc[user.id] = {
-        handleDeleteClick: handleDeleteClick(user),
-        handleEditClick: () => navigate(`/dashboard/admin/edit-user/${user.id}`)
-      };
-      return acc;
-    }, {});
-  }, [filterUser, handleDeleteClick, navigate]);
 
   const renderTableContent = () => {
     if (loading) {
@@ -171,15 +158,16 @@ export default function UserList () {
               </td>
               <td className='px-4 py-3 cursor-pointer relative'>
                 <div className='inline-flex items-center gap-2 p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100'>
+                  <Link to={`/dashboard/admin/edit-user/${user.id}`}>
                   <Icon
                     icon='material-symbols:edit-outline'
                     className='w-6 h-6 text-yellow-500 dark:text-yellow-400'
-                    onClick={memoizedUserHandlers[user.id].handleEditClick}
                   />
+                  </Link>
                   <Icon
                     icon='material-symbols:delete'
                     className='w-6 h-6 text-red-600 dark:text-red-500'
-                    onClick={memoizedUserHandlers[user.id].handleDeleteClick}
+                    onClick={() => openModal('delete', user)}
                   />
                 </div>
               </td>

@@ -6,14 +6,14 @@ tmp_dir = "tmp"
   args_bin = []
   bin = "./tmp/main"
   cmd = "npm run build --prefix web/ && go build -o ./tmp/main main.go"
-  delay = 0
+  delay = 2000
   exclude_dir = ["assets", "tmp", "vendor", "testdata", "views", "node_modules", "data", "web/node_modules", "web/build"]
   exclude_unchanged = false
   follow_symlink = false
   full_bin = ""
   include_ext = ["go", "tpl", "tmpl", "html", "js", "css", "jsx", "ts", "tsx", "scss", "sass"]
   include_file = []
-  kill_delay = "0s"
+  kill_delay = "1s"
   log = "build-errors.log"
   poll = false
   poll_interval = 0
@@ -21,7 +21,7 @@ tmp_dir = "tmp"
   pre_cmd = []
   rerun = false
   rerun_delay = 50
-  send_interrupt = false
+  send_interrupt = true
   stop_on_error = true
 
 [color]

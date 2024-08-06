@@ -8,11 +8,14 @@ i18n
   .use(initReactI18next)
   .use(Backend)
   .init({
-    fallbackLng: 'English',
+    fallbackLng: 'en',
     returnObjects: true,
     backend: {
       loadPath: '/admin/locales/{{lng}}/translation.json'
     }
   });
+
+const savedLang = localStorage.getItem('i18nextLng') || 'en';
+i18n.changeLanguage(savedLang);
 
 export default i18n;

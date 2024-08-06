@@ -34,7 +34,7 @@ export default function UserForm () {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        if (userId && isLoggedInAdmin) {
+        if (userId && currentUser.admin) {
           const response = await getUser(userId);
           if (handleError(response, navigate, t)) return;
           setUserData(response.data);
@@ -56,7 +56,7 @@ export default function UserForm () {
     };
 
     fetchUserData();
-  }, [userId, currentUser, isLoggedInAdmin, navigate ]); //eslint-disable-line
+  }, [userId, currentUser, navigate ]); //eslint-disable-line
 
   useEffect(() => {
     if (isEdit) {
@@ -213,12 +213,13 @@ export default function UserForm () {
                 )}
             <span
               className='absolute bottom-1 right-1 bg-blue-500 text-white rounded-full p-2 hover:bg-blue-600 cursor-pointer shadow-lg transition duration-300'
+              onClick={() => document.getElementById('upload-profile-photo-button').click()}
             >
               <Icon icon='mdi:camera' className='w-5 h-5' />
               <input
-                id='upload-button'
+                id='upload-profile-photo-button'
                 type='file'
-                className='hidden'
+                className='hidden z-50'
                 onChange={handleUploadFile}
               />
             </span>
