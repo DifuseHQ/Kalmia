@@ -1,29 +1,37 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
-import AceEditor from 'react-ace';
-import { useTranslation } from 'react-i18next';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Icon } from '@iconify/react';
-import { AnimatePresence, motion } from 'framer-motion';
+import React, { useContext, useEffect, useRef, useState } from "react";
+import AceEditor from "react-ace";
+import { useTranslation } from "react-i18next";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Icon } from "@iconify/react";
+import { AnimatePresence, motion } from "framer-motion";
 
-import 'ace-builds/src-noconflict/mode-css';
-import 'ace-builds/src-noconflict/theme-monokai';
-import 'ace-builds/src-noconflict/theme-github';
+import "ace-builds/src-noconflict/mode-css";
+import "ace-builds/src-noconflict/theme-monokai";
+import "ace-builds/src-noconflict/theme-github";
 
-import { createDocumentation, getDocumentation, updateDocumentation } from '../../api/Requests';
-import { ModalContext } from '../../context/ModalContext';
-import { ThemeContext } from '../../context/ThemeContext';
-import { handleError, validateCommunityFields, validateFormData } from '../../utils/Common';
-import { toastMessage } from '../../utils/Toast';
-import { customCSSInitial } from '../../utils/Utils';
-import Breadcrumb from '../Breadcrumb/Breadcrumb';
-
+import {
+  createDocumentation,
+  getDocumentation,
+  updateDocumentation,
+} from "../../api/Requests";
+import { ModalContext } from "../../context/ModalContext";
+import { ThemeContext } from "../../context/ThemeContext";
+import {
+  handleError,
+  validateCommunityFields,
+  validateFormData,
+} from "../../utils/Common";
+import { toastMessage } from "../../utils/Toast";
+import { customCSSInitial, SocialLinkIcon } from "../../utils/Utils";
+import Breadcrumb from "../Breadcrumb/Breadcrumb";
+import EmojiPicker from "emoji-picker-react";
 const LabelAndCommunityComponent = ({
   index,
   labelId,
   linkId,
   data,
   onLabelChange,
-  onLinkChange
+  onLinkChange,
 }) => {
   const { t } = useTranslation();
   return (
@@ -36,29 +44,29 @@ const LabelAndCommunityComponent = ({
     >
       <div>
         <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          {t('label')}
+          {t("label")}
         </span>
         <input
           type="text"
           id={labelId}
-          value={data?.label || ''}
+          value={data?.label || ""}
           name={index}
           onChange={(e) => onLabelChange(index, e.target.value)}
-          placeholder={t('label_placeholder')}
+          placeholder={t("label_placeholder")}
           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
         />
       </div>
       <div>
         <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          {t('link')}
+          {t("link")}
         </span>
         <input
           type="text"
-          value={data?.link || ''}
+          value={data?.link || ""}
           id={linkId}
           name={index}
           onChange={(e) => onLinkChange(index, e.target.value)}
-          placeholder={t('community_placeholder')}
+          placeholder={t("community_placeholder")}
           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
         />
       </div>
@@ -66,49 +74,61 @@ const LabelAndCommunityComponent = ({
   );
 };
 
-export default function CreateDocModal () {
+export default function CreateDocModal() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParam] = useSearchParams();
-  const docId = searchParam.get('id');
-  const mode = searchParam.get('mode');
+  const docId = searchParam.get("id");
+  const mode = searchParam.get("mode");
   const { openModal, closeModal, setLoadingMessage } = useContext(ModalContext);
   const { darkMode } = useContext(ThemeContext);
+  const [isToggleOn, SetIsToggleOn] = useState(false);
+  const [activeFieldIndex, setActiveFieldIndex] = useState(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const inputRefs = useRef([]);
+
 
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    version: '',
-    baseURL: '',
-    url: '',
-    organizationName: '',
-    projectName: '',
+    name: "",
+    description: "",
+    version: "",
+    baseURL: "",
+    url: "",
+    organizationName: "",
+    projectName: "",
     customCSS: customCSSInitial(),
-    favicon: '',
-    navImage: '',
-    copyrightText: '',
-    metaImage: ''
+    favicon: "",
+    navImage: "",
+    copyrightText: "",
+    metaImage: "",
   });
 
-  const [footerField, setFooterField] = useState([
-    { label: '', link: '' }
-  ]);
-  const [moreField, setMoreField] = useState([{ label: '', link: '' }]);
+  const [moreField, setMoreField] = useState([{ label: "", link: "" }]);
 
+  const [landingPage, setLandingPage] = useState({
+    ctaButtonText: {
+      ctaButtonLinkLabel: "",
+      ctaButtonLink: "",
+    },
+    secondCtaButtonText: {
+      ctaButtonLinkLabel: "",
+      ctaButtonLink: "",
+    },
+    socialPlatform: [{ icon: "", community: "" }],
+    features: [{ emoji: "", title: "", text: "" }],
+  });
+  const [emojiPickerPosition, setEmojiPickerPosition] = useState('bottom');
   useEffect(() => {
-    if (mode === 'edit') {
+    if (mode === "edit") {
       const fetchDoc = async () => {
         const result = await getDocumentation(Number(docId));
-        if (result.status === 'success') {
+        if (result.status === "success") {
           setFormData(result?.data);
-          const footerLabelLinks = result?.data?.footerLabelLinks;
           const moreLabelLinks = result?.data?.moreLabelLinks;
-
-          setFooterField(
-            footerLabelLinks ? JSON.parse(footerLabelLinks) : [{ label: '', community: '' }]
-          );
           setMoreField(
-            moreLabelLinks ? JSON.parse(moreLabelLinks) : [{ label: '', community: '' }]
+            moreLabelLinks
+              ? JSON.parse(moreLabelLinks)
+              : [{ label: "", community: "" }]
           );
         } else {
           handleError(result, navigate, t);
@@ -117,40 +137,62 @@ export default function CreateDocModal () {
       fetchDoc();
     } else {
       setFormData({
-        name: '',
-        description: '',
-        version: '',
-        baseURL: '',
-        url: '',
-        organizationName: '',
-        projectName: '',
+        name: "",
+        description: "",
+        version: "",
+        baseURL: "",
+        url: "",
+        organizationName: "",
+        projectName: "",
         customCSS: customCSSInitial(),
-        favicon: '',
-        navImage: '',
-        copyrightText: '',
-        metaImage: ''
+        favicon: "",
+        navImage: "",
+        copyrightText: "",
+        metaImage: "",
       });
-      setFooterField([{ label: '', community: '' }]);
-      setMoreField([{ label: '', community: '' }]);
+      setMoreField([{ label: "", community: "" }]);
     }
-  }, [docId, mode, navigate ]); //eslint-disable-line
+  }, [docId, mode, navigate]); //eslint-disable-line
 
   const addRow = (fieldType) => {
-    if (fieldType === 'footer') {
-      setFooterField([...footerField, { label: '', community: '' }]);
-    } else if (fieldType === 'more') {
-      setMoreField([...moreField, { label: '', community: '' }]);
+    if (fieldType === "social-platform-link") {
+      setLandingPage((prevState) => ({
+        ...prevState,
+        socialPlatform: [
+          ...prevState.socialPlatform,
+          { icon: "", community: "" },
+        ],
+      }));
+    } else if (fieldType === "more") {
+      setMoreField([...moreField, { label: "", community: "" }]);
+    } else if (fieldType === "feature-filed") {
+      setLandingPage((prevState) => ({
+        ...prevState,
+        features: [...prevState.features, { emoji: "", title: "", text: "" }],
+      }));
     }
   };
 
   const deleteRow = (fieldType) => {
-    if (fieldType === 'footer') {
-      if (footerField.length > 1) {
-        setFooterField(footerField.slice(0, -1));
+    console.log(fieldType);
+
+    if (fieldType === "social-platform-link") {
+      if (landingPage.socialPlatform.length > 1) {
+        setLandingPage((prevState) => ({
+          ...prevState,
+          socialPlatform: prevState.socialPlatform.slice(0, -1),
+        }));
       }
-    } else if (fieldType === 'more') {
+    } else if (fieldType === "more") {
       if (moreField.length > 1) {
         setMoreField(moreField.slice(0, -1));
+      }
+    } else if (fieldType === "feature-filed") {
+      if (landingPage.features.length > 1) {
+        setLandingPage((prevState) => ({
+          ...prevState,
+          features: prevState.features.slice(0, -1),
+        }));
       }
     }
   };
@@ -168,82 +210,85 @@ export default function CreateDocModal () {
 
     setFormData({
       ...formData,
-      [name]: value || ''
+      [name]: value || "",
     });
   };
 
   const handleCreateDocument = async () => {
+    const data = JSON.stringify(landingPage);
+    console.log("data", data);
+
     const validate = validateFormData(formData);
     if (validate.status) {
-      toastMessage(t(validate.message), 'error');
+      toastMessage(t(validate.message), "error");
       return;
     }
 
-    const validateCommunity = validateCommunityFields(footerField, moreField);
+    const validateCommunity = validateCommunityFields(
+      landingPage.socialPlatform,
+      moreField
+    );
+
     if (validateCommunity.status) {
-      toastMessage(t(validateCommunity.message), 'error');
+      toastMessage(t(validateCommunity.message), "error");
       return;
     }
 
     const payload = {
       id: Number(docId),
-      name: formData.name || '',
-      description: formData.description || '',
-      version: formData.version || '',
-      baseURL: formData.baseURL || '',
-      url: formData.url || '',
-      organizationName: formData.organizationName || '',
-      projectName: formData.projectName || '',
+      name: formData.name || "",
+      description: formData.description || "",
+      version: formData.version || "",
+      baseURL: formData.baseURL || "",
+      url: formData.url || "",
+      organizationName: formData.organizationName || "",
+      projectName: formData.projectName || "",
       customCSS: formData.customCSS || customCSSInitial(),
-      favicon: formData.favicon || '',
-      navImage: formData.navImage || '',
-      copyrightText: formData.copyrightText || '',
-      metaImage: formData.metaImage || '',
-      footerLabelLinks: footerField ? JSON.stringify(footerField) : [{ label: '', community: '' }],
-      moreLabelLinks: moreField ? JSON.stringify(moreField) : [{ label: '', community: '' }]
+      favicon: formData.favicon || "",
+      navImage: formData.navImage || "",
+      copyrightText: formData.copyrightText || "",
+      metaImage: formData.metaImage || "",
+      landerDetails: JSON.stringify(landingPage) || "",
+      moreLabelLinks: moreField
+        ? JSON.stringify(moreField)
+        : [{ label: "", community: "" }],
     };
     let result;
 
-    setLoadingMessage('Please wait while we preparing your documentation...');
-    openModal('loadingModal');
-    if (mode === 'edit') {
+    setLoadingMessage("Please wait while we preparing your documentation...");
+    openModal("loadingModal");
+    if (mode === "edit") {
       result = await updateDocumentation(payload);
     } else {
       result = await createDocumentation(payload);
     }
 
     if (handleError(result, navigate, t)) {
-      closeModal('loadingModal');
+      closeModal("loadingModal");
       return;
     }
 
-    if (result.status === 'success') {
-      closeModal('loadingModal');
+    if (result.status === "success") {
+      closeModal("loadingModal");
       if (docId) {
         navigate(`/dashboard/documentation?id=${docId}`);
       } else {
-        navigate('/');
+        navigate("/");
       }
-      if (mode === 'edit') {
-        toastMessage(t('documentation_updated'), 'success');
+      if (mode === "edit") {
+        toastMessage(t("documentation_updated"), "success");
       } else {
-        toastMessage(t('documentation_created'), 'success');
+        toastMessage(t("documentation_created"), "success");
       }
     }
   };
-
-  const handleFooterLabelChange = (index, newValue) => {
-    const updatedFields = footerField.map((field, i) =>
-      i === index ? { ...field, label: newValue } : field
-    );
-    setFooterField(updatedFields);
-  };
-
-  const handleFooterLinkChange = (index, newValue) => {
-    const updatedFields = footerField.map((field, i) =>
-      i === index ? { ...field, link: newValue } : field
-    );
-    setFooterField(updatedFields);
+  const toggleEmojiPicker = (index) => {
+    if (activeFieldIndex === index) {
+      setShowEmojiPicker(!showEmojiPicker);
+    } else {
+      setActiveFieldIndex(index);
+      setShowEmojiPicker(true);
+    }
   };
 
   const handleMoreLabelChange = (index, newValue) => {
@@ -260,6 +305,60 @@ export default function CreateDocModal () {
     setMoreField(updatedFields);
   };
 
+  const updateSocialPlatform = (index, key, value) => {
+    const updatedSocialPlatforms = landingPage.socialPlatform.map(
+      (platform, i) => {
+        if (i === index) {
+          return { ...platform, [key]: value };
+        }
+        return platform;
+      }
+    );
+    setLandingPage((prevState) => ({
+      ...prevState,
+      socialPlatform: updatedSocialPlatforms,
+    }));
+  };
+
+  const updateCtaButtonText = (key, value) => {
+    setLandingPage((prevState) => ({
+      ...prevState,
+      ctaButtonText: {
+        ...prevState.ctaButtonText,
+        [key]: value,
+      },
+    }));
+  };
+
+  const updateSecondCtaButtonText = (key, value) => {
+    setLandingPage((prevState) => ({
+      ...prevState,
+      secondCtaButtonText: {
+        ...prevState.secondCtaButtonText,
+        [key]: value,
+      },
+    }));
+  };
+
+  const updateFeature = (index, key, value) => {
+    const updatedFeatures = landingPage.features.map((feature, i) => {
+      if (i === index) {
+        return { ...feature, [key]: value };
+      }
+      return feature;
+    });
+    setLandingPage((prevState) => ({
+      ...prevState,
+      features: updatedFeatures,
+    }));
+  };
+
+  const handleEmojiClick = (index, emojiObject) => {
+    console.log(emojiObject);
+    updateFeature(index, "emoji", emojiObject.emoji);
+    setShowEmojiPicker(false);
+  };
+  
   return (
     <AnimatePresence>
       <Breadcrumb />
@@ -273,7 +372,9 @@ export default function CreateDocModal () {
         <div className="relative w-full h-full md:h-auto">
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-400">
-              {mode === 'edit' ? t('edit_documentation') : t('new_documentation')}
+              {mode === "edit"
+                ? t("edit_documentation")
+                : t("new_documentation")}
             </h3>
           </div>
 
@@ -283,24 +384,24 @@ export default function CreateDocModal () {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t('title_label')}
+                      {t("title_label")}
                     </span>
                     <input
                       ref={titleRef}
                       onChange={handleChange}
                       type="text"
-                      value={formData?.name || ''}
+                      value={formData?.name || ""}
                       name="name"
                       id="name"
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
-                      placeholder={t('title_placeholder')}
+                      placeholder={t("title_placeholder")}
                       required
                     />
                   </div>
 
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t('version')}
+                      {t("version")}
                     </span>
                     <input
                       onChange={handleChange}
@@ -309,7 +410,7 @@ export default function CreateDocModal () {
                       name="version"
                       id="version"
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
-                      placeholder={t('version_placeholder')}
+                      placeholder={t("version_placeholder")}
                       required
                     />
                   </div>
@@ -318,7 +419,7 @@ export default function CreateDocModal () {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t('description')}
+                      {t("description")}
                     </span>
                     <div>
                       <textarea
@@ -327,7 +428,7 @@ export default function CreateDocModal () {
                         name="description"
                         id="description"
                         className="bg-gray-50 border min-h-36 border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
-                        placeholder={t('description_placeholder')}
+                        placeholder={t("description_placeholder")}
                         rows="3"
                       />
                     </div>
@@ -335,52 +436,55 @@ export default function CreateDocModal () {
 
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t('custom_css')}
+                      {t("custom_css")}
                     </span>
                     <AceEditor
-                        mode="css"
-                        theme={darkMode ? 'monokai' : 'github'}
-                        onChange={(newValue) => handleChange({ target: { name: 'customCSS', value: newValue } })}
-                        value={formData.customCSS}
-                        name="customCSS"
-                        editorProps={{ $blockScrolling: true }}
-                        setOptions={{
-                          useWorker: false,
-                          showLineNumbers: true,
-                          tabSize: 2
-                        }}
-                        style={{ width: '100%', height: '200px' }}
-                        className="rounded-lg border border-gray-600"
-                      />
+                      mode="css"
+                      theme={darkMode ? "monokai" : "github"}
+                      onChange={(newValue) =>
+                        handleChange({
+                          target: { name: "customCSS", value: newValue },
+                        })
+                      }
+                      value={formData.customCSS}
+                      name="customCSS"
+                      editorProps={{ $blockScrolling: true }}
+                      setOptions={{
+                        useWorker: false,
+                        showLineNumbers: true,
+                        tabSize: 2,
+                      }}
+                      style={{ width: "100%", height: "200px" }}
+                      className="rounded-lg border border-gray-600"
+                    />
                   </div>
-
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t('favicon')}
+                      {t("favicon")}
                     </span>
                     <input
                       type="url"
                       onChange={handleChange}
                       value={formData?.favicon}
                       name="favicon"
-                      placeholder={t('favicon_placeholder')}
+                      placeholder={t("favicon_placeholder")}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     />
                   </div>
 
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t('navbar_icon')}
+                      {t("navbar_icon")}
                     </span>
                     <input
                       onChange={handleChange}
                       value={formData?.navImage}
                       type="url"
                       name="navImage"
-                      placeholder={t('navbar_icon_placeholder')}
+                      placeholder={t("navbar_icon_placeholder")}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     />
                   </div>
@@ -389,28 +493,28 @@ export default function CreateDocModal () {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t('copyright_text')}
+                      {t("copyright_text")}
                     </span>
                     <input
                       onChange={handleChange}
                       value={formData?.copyrightText}
                       type="text"
                       name="copyrightText"
-                      placeholder={t('copyright_text_placeholder')}
+                      placeholder={t("copyright_text_placeholder")}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     />
                   </div>
 
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t('social_card_image')}
+                      {t("social_card_image")}
                     </span>
                     <input
                       onChange={handleChange}
                       value={formData?.metaImage}
                       type="url"
                       name="metaImage"
-                      placeholder={t('social_card_image_palceholder')}
+                      placeholder={t("social_card_image_palceholder")}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     />
                   </div>
@@ -419,154 +523,387 @@ export default function CreateDocModal () {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {t('organization_name')}
+                      {t("organization_name")}
                     </span>
                     <input
                       onChange={handleChange}
                       value={formData?.organizationName}
                       type="text"
                       name="organizationName"
-                      placeholder={t('enter_organization_name')}
+                      placeholder={t("enter_organization_name")}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     />
                   </div>
 
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t('project_name')}
+                      {t("project_name")}
                     </span>
                     <input
                       onChange={handleChange}
                       value={formData?.projectName}
                       type="url"
                       name="projectName"
-                      placeholder={t('enter_project_name')}
+                      placeholder={t("enter_project_name")}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     />
                   </div>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                <div>
+                  <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {t('base_url')}
+                      {t("base_url")}
                     </span>
                     <input
                       onChange={handleChange}
                       value={formData?.baseURL}
                       type="text"
                       name="baseURL"
-                      placeholder={t('paste_your_base_url')}
+                      placeholder={t("paste_your_base_url")}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     />
                   </div>
 
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {t('url')}
+                      {t("url")}
                     </span>
                     <input
                       onChange={handleChange}
                       value={formData?.url}
                       type="text"
                       name="url"
-                      placeholder={t('paste_your_url')}
+                      placeholder={t("paste_your_url")}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     />
                   </div>
                 </div>
-
               </div>
 
               <div className="grid gap-1 mb-4 sm:mb-3 mt-6">
                 <div>
                   <div className="flex justify-between items-center">
                     <p className="block text-md font-medium text-gray-700 dark:text-gray-300 ">
-                      {t('community_footer')}
+                      {t("social_media_platform")}
                     </p>
                   </div>
                 </div>
                 <hr className="mt-2 mb-4 border-t-1 dark:border-gray-500" />
-                {footerField && footerField.map((obj, index) => (
-                  <div key={`footer-label-${index}`}>
-                    <LabelAndCommunityComponent
-                      labelId={`footer-label-${index}`}
-                      linkId={`footer-link-${index}`}
-                      index={index}
-                      data={obj}
-                      onLabelChange={handleFooterLabelChange}
-                      onLinkChange={handleFooterLinkChange}
-                    />
-                  </div>
-                ))}
-                  <div className="flex justify-end gap-3">
-                      <button
-                        onClick={() => addRow('footer')}
-                        title={t('add_new_field')}
-                        className="flex items-center gap-1 text-blue-600 rounded-lg text-sm"
-                      >
-                        <Icon
-                          icon="ei:plus"
-                          className="w-8 h-8 hover:text-blue-400"
-                        />
-                      </button>
+                {landingPage.socialPlatform &&
+                  landingPage.socialPlatform.map((obj, index) => (
+                    <div className="grid gap-4 sm:grid-cols-2" key={index}>
+                      <div>
+                        <>
+                          <label
+                            for="countries"
+                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                          >
+                            Select social link icon
+                          </label>
+                          <select
+                            id="countries"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            onChange={(e) =>
+                              updateSocialPlatform(
+                                index,
+                                "icon",
+                                e.target.value
+                              )
+                            }
+                          >
+                            {SocialLinkIcon.map((icon) => (
+                              <option value={icon} className="m-3 text-sm">
+                                {icon}
+                              </option>
+                            ))}
+                          </select>
+                        </>
+                      </div>
 
-                      <button
-                        onClick={() => deleteRow('footer')}
-                        title={t('delete_field')}
-                        className="flex items-center gap-1 rounded-lg text-sm "
-                      >
-                        <Icon
-                          icon="material-symbols:delete"
-                          className="text-red-500 dark:text-red-600 hover:text-red-800 h-7 w-7"
+                      <div>
+                        <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          {t("link")}
+                        </span>
+                        <input
+                          onChange={(e) =>
+                            updateSocialPlatform(
+                              index,
+                              "community",
+                              e.target.value
+                            )
+                          }
+                          value={obj.community}
+                          type="text"
+                          name="url"
+                          placeholder={t("social_link_placeholder")}
+                          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                         />
-                      </button>
+                      </div>
                     </div>
+                  ))}
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => addRow("social-platform-link")}
+                    title={t("add_new_field")}
+                    className="flex items-center gap-1 text-blue-600 rounded-lg text-sm"
+                  >
+                    <Icon
+                      icon="ei:plus"
+                      className="w-8 h-8 hover:text-blue-400"
+                    />
+                  </button>
+
+                  <button
+                    onClick={() => deleteRow("social-platform-link")}
+                    title={t("delete_field")}
+                    className="flex items-center gap-1 rounded-lg text-sm "
+                  >
+                    <Icon
+                      icon="material-symbols:delete"
+                      className="text-red-500 dark:text-red-600 hover:text-red-800 h-7 w-7"
+                    />
+                  </button>
+                </div>
                 <div>
                   <div className="flex justify-start items-center">
                     <span className="block text-md font-medium text-gray-700 dark:text-gray-300 ">
-                      {t('more_footer')}
+                      {t("more_footer")}
                     </span>
                   </div>
 
                   <hr className="mt-2 mb-4 border-t-1 dark:border-gray-500" />
-                  {moreField && moreField.map((obj, index) => (
-                    <div key={`more-label-${index}`}>
-                      <LabelAndCommunityComponent
-                        labelId={`more-label-${index}`}
-                        linkId={`more-link-${index}`}
-                        index={index}
-                        data={obj}
-                        onLabelChange={handleMoreLabelChange}
-                        onLinkChange={handleMoreLinkChange}
-                      />
-                    </div>
-                  ))}
+                  {moreField &&
+                    moreField.map((obj, index) => (
+                      <div key={`more-label-${index}`}>
+                        <LabelAndCommunityComponent
+                          labelId={`more-label-${index}`}
+                          linkId={`more-link-${index}`}
+                          index={index}
+                          data={obj}
+                          onLabelChange={handleMoreLabelChange}
+                          onLinkChange={handleMoreLinkChange}
+                        />
+                      </div>
+                    ))}
                 </div>
                 <div className="flex justify-end gap-3">
-                      <button
-                        onClick={() => addRow('more')}
-                        title={t('add_new_field')}
-                        className="flex items-center gap-1 text-blue-600 rounded-lg text-sm  py-1.5  mb-2 "
-                      >
-                        <Icon
-                          icon="ei:plus"
-                          className="w-8 h-8  hover:text-blue-400"
-                        />
-                      </button>
+                  <button
+                    onClick={() => addRow("more")}
+                    title={t("add_new_field")}
+                    className="flex items-center gap-1 text-blue-600 rounded-lg text-sm  py-1.5  mb-2 "
+                  >
+                    <Icon
+                      icon="ei:plus"
+                      className="w-8 h-8  hover:text-blue-400"
+                    />
+                  </button>
 
-                      <button
-                        onClick={() => deleteRow('more')}
-                        title={t('delete_field')}
-                        className="flex items-center gap-1 rounded-lg text-sm  py-1.5  mb-2 "
-                      >
-                        <Icon
-                          icon="material-symbols:delete"
-                          className="text-red-500 dark:text-red-600 hover:text-red-800  h-7 w-7"
-                        />
-                      </button>
-                    </div>
+                  <button
+                    onClick={() => deleteRow("more")}
+                    title={t("delete_field")}
+                    className="flex items-center gap-1 rounded-lg text-sm  py-1.5  mb-2 "
+                  >
+                    <Icon
+                      icon="material-symbols:delete"
+                      className="text-red-500 dark:text-red-600 hover:text-red-800  h-7 w-7"
+                    />
+                  </button>
+                </div>
               </div>
+
+              <label class="inline-flex items-center cursor-pointer gpa-5 mb-4">
+                <span class="ms-3 text-lg font-medium text-gray-900 dark:text-gray-300 mr-3">
+                  Enable Landing Page
+                </span>
+                <input
+                  type="checkbox"
+                  checked={isToggleOn}
+                  onChange={(e) => {
+                    SetIsToggleOn(e.target.checked);
+                  }}
+                  class="sr-only peer"
+                />
+                <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+              </label>
+
+              {isToggleOn && (
+                <div className="space-y-3">
+                  <div className="grid gap-4 sm:grid-cols-2 mb-5">
+                    <div>
+                      <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        CTA Button Text
+                      </span>
+                      <input
+                        type="url"
+                        onChange={(e) =>
+                          updateCtaButtonText(
+                            "ctaButtonLinkLabel",
+                            e.target.value
+                          )
+                        }
+                        value={landingPage?.ctaButtonText?.ctaButtonLinkLabel}
+                        name="favicon"
+                        placeholder={t("favicon_placeholder")}
+                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                      />
+                    </div>
+
+                    <div>
+                      <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        CTA Button Link
+                      </span>
+                      <input
+                        onChange={(e) =>
+                          updateCtaButtonText("ctaButtonLink", e.target.value)
+                        }
+                        value={landingPage?.ctaButtonText?.ctaButtonLink}
+                        type="url"
+                        name="navImage"
+                        placeholder={t("navbar_icon_placeholder")}
+                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2 mb-5">
+                    <div>
+                      <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Second CTA Button Text
+                      </span>
+                      <input
+                        type="url"
+                        onChange={(e) =>
+                          updateSecondCtaButtonText(
+                            "ctaButtonLinkLabel",
+                            e.target.value
+                          )
+                        }
+                        value={
+                          landingPage?.secondCtaButtonText?.ctaButtonLinkLabel
+                        }
+                        name="favicon"
+                        placeholder={t("favicon_placeholder")}
+                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                      />
+                    </div>
+
+                    <div>
+                      <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Second CTA Button Link
+                      </span>
+                      <input
+                        onChange={(e) =>
+                          updateSecondCtaButtonText(
+                            "ctaButtonLink",
+                            e.target.value
+                          )
+                        }
+                        value={landingPage?.secondCtaButtonText?.ctaButtonLink}
+                        type="url"
+                        name="navImage"
+                        placeholder={t("navbar_icon_placeholder")}
+                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-start items-center">
+                    <span className="block text-md font-medium text-gray-700 dark:text-gray-300 ">
+                      Features
+                    </span>
+                  </div>
+                  <hr className="mt-2 mb-4 border-t-1 dark:border-gray-500" />
+
+                  {landingPage.features.map((obj, index) => (
+                    <div className="grid gap-4 sm:grid-cols-3 h-20" key={index}>
+                      <div>
+                        <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Emoji
+                        </span>
+                        <input
+                          ref={(el) => (inputRefs.current[index] = el)}
+                          onFocus={() => toggleEmojiPicker(index)}
+                          placeholder="Click to add emoji"
+                          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                          value={obj.emoji}
+                          readOnly
+                        />
+                        {activeFieldIndex === index && showEmojiPicker && (
+                          <div
+                          className={`absolute ${
+                            emojiPickerPosition === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'
+                          } left-0 bg-white rounded-lg shadow w-52 dark:bg-gray-700 z-30`}
+                          >
+                            <EmojiPicker
+                              onEmojiClick={(emoji) =>
+                                handleEmojiClick(index, emoji)
+                              }
+                              disableSearchBar
+                              disableSkinTonePicker
+                              previewConfig={{ showPreview: false }}
+                              emojiStyle="google"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Title
+                        </span>
+                        <input
+                          onChange={(e) =>
+                            updateFeature(index, "title", e.target.value)
+                          }
+                          value={obj.title}
+                          type="text"
+                          placeholder="Feature Title"
+                          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                        />
+                      </div>
+
+                      <div>
+                        <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Text
+                        </span>
+                        <input
+                          onChange={(e) =>
+                            updateFeature(index, "text", e.target.value)
+                          }
+                          value={obj.text}
+                          type="text"
+                          placeholder="Feature Description"
+                          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  <div className="flex justify-end gap-3">
+                    <button
+                      onClick={() => addRow("feature-filed")}
+                      title={t("add_new_field")}
+                      className="flex items-center gap-1 text-blue-600 rounded-lg text-sm  py-1.5  mb-2 "
+                    >
+                      <Icon
+                        icon="ei:plus"
+                        className="w-8 h-8  hover:text-blue-400"
+                      />
+                    </button>
+
+                    <button
+                      onClick={() => deleteRow("feature-filed")}
+                      title={t("delete_field")}
+                      className="flex items-center gap-1 rounded-lg text-sm  py-1.5  mb-2 "
+                    >
+                      <Icon
+                        icon="material-symbols:delete"
+                        className="text-red-500 dark:text-red-600 hover:text-red-800  h-7 w-7"
+                      />
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <div className="flex justify-center items-center mt-7">
                 <button
@@ -574,7 +911,11 @@ export default function CreateDocModal () {
                   type="submit"
                   className="flex justify-center items-center text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
                 >
-                  <span>{mode === 'edit' ? t('update_documentation') : t('new_documentation')}</span>
+                  <span>
+                    {mode === "edit"
+                      ? t("update_documentation")
+                      : t("new_documentation")}
+                  </span>
                   {!mode && <Icon icon="ei:plus" className="w-6 h-6" />}
                 </button>
               </div>

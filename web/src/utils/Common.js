@@ -253,18 +253,20 @@ export const validateFormData = (formData) => {
 };
 
 export const validateCommunityFields = (footerField, moreField) => {
+  console.log(footerField);
+  
   const errors = {
     status: false,
     message: ''
   };
 
   for (const field of footerField) {
-    if (!field.label) {
+    if (!field.icon) {
       errors.status = true;
       errors.message = 'footer_field_label_required';
       return errors;
     }
-    if (!field.link || !isValidURL(field.link)) {
+    if (!field.community || !isValidURL(field.community)) {
       errors.status = true;
       errors.message = 'valid_footer_community_url_required';
       return errors;

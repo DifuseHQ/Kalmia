@@ -48,3 +48,7 @@ export function customCSSInitial () {
 
   return customCSS;
 }
+
+export const SocialLinkIcon = ['lark' ,'discord',
+  'facebook','github','instagram','linkedin','slack','twitter','youtube',
+  'wechat', 'qq','juejin','zhihu' ,'bilibili','weibo', 'gitlab' ,'X' ];
