@@ -27,6 +27,10 @@ import { toastMessage } from "../../utils/Toast";
 import { customCSSInitial, SocialLinkIcon } from "../../utils/Utils";
 import Breadcrumb from "../Breadcrumb/Breadcrumb";
 import EmojiPicker from "emoji-picker-react";
+import data from '@emoji-mart/data'
+import Picker from '@emoji-mart/react'
+import EmojiDictionary from 'emoji-dictionary';
+
 const LabelAndCommunityComponent = ({
   index,
   labelId,
@@ -349,7 +353,7 @@ export default function CreateDocModal() {
   };
 
   const handleEmojiClick = (index, emojiObject) => {
-    updateFeature(index, "emoji", emojiObject.emoji);
+    updateFeature(index, "emoji", emojiObject.unified);
     setShowEmojiPicker(false);
   };
 
@@ -372,6 +376,14 @@ export default function CreateDocModal() {
     setSocialPlatformField(updatedFields);
   };
 
+  const convertToEmoji = (codePoint) => {
+    if (/^[0-9a-fA-F]+$/.test(codePoint)) {
+      return String.fromCodePoint(parseInt(codePoint, 16));
+    } else {
+      return "Invalid code point";
+    }
+  };
+  
   return (
     <AnimatePresence>
       <Breadcrumb />
@@ -880,7 +892,7 @@ export default function CreateDocModal() {
 
                   {landingPage.features.map((obj, index) => (
                     <div className="grid gap-4 sm:grid-cols-3 h-20" key={index}>
-                      <div>
+                      <div className="relative">
                         <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                           Emoji
                         </span>
@@ -889,14 +901,15 @@ export default function CreateDocModal() {
                           onFocus={() => toggleEmojiPicker(index)}
                           placeholder="Click to add emoji"
                           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                          value={obj.emoji}
+                          value={convertToEmoji(obj.emoji) || ""}
                           readOnly
                         />
-                        {showEmojiPicker && (
+                        {activeFieldIndex === index && showEmojiPicker && (
                           <div
-                            className={`absolute left-0 bg-white rounded-lg shadow w-52 dark:bg-gray-700 z-30`}
-                          >
-                            <EmojiPicker
+                          className={`absolute left-0 bg-white rounded-lg shadow w-52 dark:bg-gray-700 z-30`}
+                          style={{ transform: 'translateY(-110%)' }}
+                        >
+                            {/* <EmojiPicker
                               onEmojiClick={(emoji) =>
                                 handleEmojiClick(index, emoji)
                               }
@@ -904,7 +917,9 @@ export default function CreateDocModal() {
                               disableSkinTonePicker
                               previewConfig={{ showPreview: false }}
                               emojiStyle="google"
-                            />
+                            /> */}
+                              <Picker data={data} onEmojiSelect={(emoji) =>
+                                handleEmojiClick(index, emoji)} />
                           </div>
                         )}
                       </div>

@@ -312,29 +312,24 @@ export const landingPagevalidate = (data) => {
 
   if (
     data.ctaButtonText.ctaButtonLink &&
-    !isValidBaseURL(data.ctaButtonText.ctaButtonLink)
+    !isValidURL(data.ctaButtonText.ctaButtonLink)
   ) {
     errors.status = true;
     errors.message = "Valid CTA Button Link required";
     return errors;
   }
 
-  if (data.secondCtaButtonText.ctaButtonLinkLabel) {
-    errors.status = true;
-    errors.message = "valid second CTA button text is required";
-    return errors;
-  }
 
   if (
     data.secondCtaButtonText.ctaButtonLink &&
-    !isValidBaseURL(data.secondCtaButtonText.ctaButtonLink)
+    !isValidURL(data.secondCtaButtonText.ctaButtonLink)
   ) {
     errors.status = true;
     errors.message = "Valid second CTA Button Link required";
     return errors;
   }
 
-  if (data.ctaImageLink && !isValidBaseURL(data.ctaImageLink)) {
+  if (data.ctaImageLink && !isValidURL(data.ctaImageLink)) {
     errors.status = true;
     errors.message = "Valid CTA image url Required";
     return errors;
