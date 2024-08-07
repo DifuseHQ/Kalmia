@@ -5,9 +5,9 @@ tmp_dir = "tmp"
 [build]
   args_bin = []
   bin = "./tmp/main"
-  cmd = "npm run build --prefix web/ && go build -o ./tmp/main main.go"
+  cmd = "go build -o ./tmp/main main.go"
   delay = 2000
-  exclude_dir = ["assets", "tmp", "vendor", "testdata", "views", "node_modules", "data", "web/node_modules", "web/build"]
+  exclude_dir = ["assets", "tmp", "vendor", "testdata", "views", "node_modules", "data", "web"]
   exclude_unchanged = false
   follow_symlink = false
   full_bin = ""
