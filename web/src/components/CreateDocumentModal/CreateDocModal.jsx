@@ -18,6 +18,8 @@ import { ModalContext } from "../../context/ModalContext";
 import { ThemeContext } from "../../context/ThemeContext";
 import {
   handleError,
+  landingPagevalidate,
+  prepareLandingPageData,
   validateCommunityFields,
   validateFormData,
 } from "../../utils/Common";
@@ -86,7 +88,7 @@ export default function CreateDocModal() {
   const [activeFieldIndex, setActiveFieldIndex] = useState(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const inputRefs = useRef([]);
-
+  const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -104,7 +106,9 @@ export default function CreateDocModal() {
   });
 
   const [moreField, setMoreField] = useState([{ label: "", link: "" }]);
-
+  const [socialPlatformField, setSocialPlatformField] = useState([
+    { icon: "", link: "" },
+  ]);
   const [landingPage, setLandingPage] = useState({
     ctaButtonText: {
       ctaButtonLinkLabel: "",
@@ -114,21 +118,27 @@ export default function CreateDocModal() {
       ctaButtonLinkLabel: "",
       ctaButtonLink: "",
     },
-    socialPlatform: [{ icon: "", community: "" }],
+    ctaImageLink: "",
     features: [{ emoji: "", title: "", text: "" }],
   });
-  const [emojiPickerPosition, setEmojiPickerPosition] = useState('bottom');
+
   useEffect(() => {
     if (mode === "edit") {
       const fetchDoc = async () => {
         const result = await getDocumentation(Number(docId));
         if (result.status === "success") {
           setFormData(result?.data);
+          const footerLabelLinks = result?.data?.footerLabelLinks;
+          setSocialPlatformField(
+            footerLabelLinks
+              ? JSON.parse(footerLabelLinks)
+              : [{ icon: "", link: "" }]
+          );
           const moreLabelLinks = result?.data?.moreLabelLinks;
           setMoreField(
             moreLabelLinks
               ? JSON.parse(moreLabelLinks)
-              : [{ label: "", community: "" }]
+              : [{ label: "", link: "" }]
           );
         } else {
           handleError(result, navigate, t);
@@ -150,21 +160,16 @@ export default function CreateDocModal() {
         copyrightText: "",
         metaImage: "",
       });
-      setMoreField([{ label: "", community: "" }]);
+      setSocialPlatformField([{ icon: "", link: "" }]);
+      setMoreField([{ label: "", link: "" }]);
     }
   }, [docId, mode, navigate]); //eslint-disable-line
 
   const addRow = (fieldType) => {
-    if (fieldType === "social-platform-link") {
-      setLandingPage((prevState) => ({
-        ...prevState,
-        socialPlatform: [
-          ...prevState.socialPlatform,
-          { icon: "", community: "" },
-        ],
-      }));
+    if (fieldType === "social-platform-field") {
+      setSocialPlatformField([...socialPlatformField, { icon: "", link: "" }]);
     } else if (fieldType === "more") {
-      setMoreField([...moreField, { label: "", community: "" }]);
+      setMoreField([...moreField, { label: "", link: "" }]);
     } else if (fieldType === "feature-filed") {
       setLandingPage((prevState) => ({
         ...prevState,
@@ -174,14 +179,9 @@ export default function CreateDocModal() {
   };
 
   const deleteRow = (fieldType) => {
-    console.log(fieldType);
-
-    if (fieldType === "social-platform-link") {
-      if (landingPage.socialPlatform.length > 1) {
-        setLandingPage((prevState) => ({
-          ...prevState,
-          socialPlatform: prevState.socialPlatform.slice(0, -1),
-        }));
+    if (fieldType === "social-platform-field") {
+      if (socialPlatformField.length > 1) {
+        setSocialPlatformField(socialPlatformField.slice(0, -1));
       }
     } else if (fieldType === "more") {
       if (moreField.length > 1) {
@@ -215,9 +215,6 @@ export default function CreateDocModal() {
   };
 
   const handleCreateDocument = async () => {
-    const data = JSON.stringify(landingPage);
-    console.log("data", data);
-
     const validate = validateFormData(formData);
     if (validate.status) {
       toastMessage(t(validate.message), "error");
@@ -225,7 +222,7 @@ export default function CreateDocModal() {
     }
 
     const validateCommunity = validateCommunityFields(
-      landingPage.socialPlatform,
+      socialPlatformField,
       moreField
     );
 
@@ -233,6 +230,16 @@ export default function CreateDocModal() {
       toastMessage(t(validateCommunity.message), "error");
       return;
     }
+
+    if (isToggleOn) {
+      const validate = landingPagevalidate(landingPage);
+      if (validate.status) {
+        toastMessage(t(validate.message), "error");
+        return;
+      }
+    }
+
+    const landingData = prepareLandingPageData(landingPage);
 
     const payload = {
       id: Number(docId),
@@ -248,10 +255,13 @@ export default function CreateDocModal() {
       navImage: formData.navImage || "",
       copyrightText: formData.copyrightText || "",
       metaImage: formData.metaImage || "",
-      landerDetails: JSON.stringify(landingPage) || "",
+      landerDetails: JSON.stringify(landingData),
+      footerLabelLinks: socialPlatformField
+        ? JSON.stringify(socialPlatformField)
+        : [{ icon: "", link: "" }],
       moreLabelLinks: moreField
         ? JSON.stringify(moreField)
-        : [{ label: "", community: "" }],
+        : [{ label: "", link: "" }],
     };
     let result;
 
@@ -305,21 +315,6 @@ export default function CreateDocModal() {
     setMoreField(updatedFields);
   };
 
-  const updateSocialPlatform = (index, key, value) => {
-    const updatedSocialPlatforms = landingPage.socialPlatform.map(
-      (platform, i) => {
-        if (i === index) {
-          return { ...platform, [key]: value };
-        }
-        return platform;
-      }
-    );
-    setLandingPage((prevState) => ({
-      ...prevState,
-      socialPlatform: updatedSocialPlatforms,
-    }));
-  };
-
   const updateCtaButtonText = (key, value) => {
     setLandingPage((prevState) => ({
       ...prevState,
@@ -354,11 +349,29 @@ export default function CreateDocModal() {
   };
 
   const handleEmojiClick = (index, emojiObject) => {
-    console.log(emojiObject);
     updateFeature(index, "emoji", emojiObject.emoji);
     setShowEmojiPicker(false);
   };
-  
+
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleOptionClick = (option, index) => {
+    setIsOpen(false);
+    const updatedSocialPlatformField = [...socialPlatformField];
+    updatedSocialPlatformField[index] = {
+      ...updatedSocialPlatformField[index],
+      icon: option,
+    };
+    setSocialPlatformField(updatedSocialPlatformField);
+  };
+
+  const handleSocialPlatformLinkChange = (index, newValue) => {
+    const updatedFields = socialPlatformField.map((field, i) =>
+      i === index ? { ...field, link: newValue } : field
+    );
+    setSocialPlatformField(updatedFields);
+  };
+
   return (
     <AnimatePresence>
       <Breadcrumb />
@@ -590,35 +603,67 @@ export default function CreateDocModal() {
                   </div>
                 </div>
                 <hr className="mt-2 mb-4 border-t-1 dark:border-gray-500" />
-                {landingPage.socialPlatform &&
-                  landingPage.socialPlatform.map((obj, index) => (
+                {socialPlatformField &&
+                  socialPlatformField.map((obj, index) => (
                     <div className="grid gap-4 sm:grid-cols-2" key={index}>
-                      <div>
-                        <>
-                          <label
-                            for="countries"
-                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                          >
-                            Select social link icon
-                          </label>
-                          <select
-                            id="countries"
-                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            onChange={(e) =>
-                              updateSocialPlatform(
-                                index,
-                                "icon",
-                                e.target.value
-                              )
-                            }
-                          >
-                            {SocialLinkIcon.map((icon) => (
-                              <option value={icon} className="m-3 text-sm">
-                                {icon}
-                              </option>
+                      <div className="relative">
+                        <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Icon
+                        </span>
+                        <button
+                          onClick={() => {
+                            setIsOpen(!isOpen);
+                            setOpenDropdownIndex(index);
+                          }}
+                          className=" bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg w-full p-2.5 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        >
+                          {obj.icon ? (
+                            <div className="w-full flex justify-start items-center">
+                              {(() => {
+                                const matchingIcon = SocialLinkIcon.find(
+                                  (val) => val.value === obj.icon
+                                );
+                                return matchingIcon ? (
+                                  <>
+                                    <span>{matchingIcon.icon}</span>
+                                    <span className="ml-2">
+                                      {matchingIcon.iconName}
+                                    </span>
+                                  </>
+                                ) : (
+                                  <span className="text-gray-500">
+                                    Icon not found
+                                  </span>
+                                );
+                              })()}
+                            </div>
+                          ) : (
+                            <ul className="w-full flex justify-between items-center">
+                              <li className="ml-2">Choose an icon</li>
+                              <li>
+                                <Icon icon="mingcute:down-fill" />
+                              </li>
+                            </ul>
+                          )}
+                        </button>
+                        {openDropdownIndex === index && isOpen && (
+                          <div className="absolute z-10 w-full min-h-48 max-h-48 overflow-auto bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg mt-1">
+                            {SocialLinkIcon.map((option) => (
+                              <div
+                                key={option.value}
+                                onClick={() =>
+                                  handleOptionClick(option.value, index)
+                                }
+                                className="flex items-center py-2 px-4 hover:bg-gray-200 dark:hover:bg-gray-800 cursor-pointer"
+                              >
+                                {option.icon}
+                                <span className="ml-2 text-md text-black dark:text-white">
+                                  {option.iconName}
+                                </span>
+                              </div>
                             ))}
-                          </select>
-                        </>
+                          </div>
+                        )}
                       </div>
 
                       <div>
@@ -627,13 +672,12 @@ export default function CreateDocModal() {
                         </span>
                         <input
                           onChange={(e) =>
-                            updateSocialPlatform(
+                            handleSocialPlatformLinkChange(
                               index,
-                              "community",
                               e.target.value
                             )
                           }
-                          value={obj.community}
+                          value={obj.link}
                           type="text"
                           name="url"
                           placeholder={t("social_link_placeholder")}
@@ -644,7 +688,7 @@ export default function CreateDocModal() {
                   ))}
                 <div className="flex justify-end gap-3">
                   <button
-                    onClick={() => addRow("social-platform-link")}
+                    onClick={() => addRow("social-platform-field")}
                     title={t("add_new_field")}
                     className="flex items-center gap-1 text-blue-600 rounded-lg text-sm"
                   >
@@ -655,7 +699,7 @@ export default function CreateDocModal() {
                   </button>
 
                   <button
-                    onClick={() => deleteRow("social-platform-link")}
+                    onClick={() => deleteRow("social-platform-field")}
                     title={t("delete_field")}
                     className="flex items-center gap-1 rounded-lg text-sm "
                   >
@@ -766,7 +810,7 @@ export default function CreateDocModal() {
                     </div>
                   </div>
 
-                  <div className="grid gap-4 sm:grid-cols-2 mb-5">
+                  <div className="grid gap-4 sm:grid-cols-3 mb-5">
                     <div>
                       <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Second CTA Button Text
@@ -806,6 +850,25 @@ export default function CreateDocModal() {
                         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                       />
                     </div>
+
+                    <div>
+                      <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        CTA Image Link
+                      </span>
+                      <input
+                        onChange={(e) =>
+                          updateSecondCtaButtonText(
+                            "ctaImageLink",
+                            e.target.value
+                          )
+                        }
+                        value={landingPage?.secondCtaButtonText?.ctaButtonLink}
+                        type="url"
+                        name="navImage"
+                        placeholder={t("navbar_icon_placeholder")}
+                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                      />
+                    </div>
                   </div>
 
                   <div className="flex justify-start items-center">
@@ -829,11 +892,9 @@ export default function CreateDocModal() {
                           value={obj.emoji}
                           readOnly
                         />
-                        {activeFieldIndex === index && showEmojiPicker && (
+                        {showEmojiPicker && (
                           <div
-                          className={`absolute ${
-                            emojiPickerPosition === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'
-                          } left-0 bg-white rounded-lg shadow w-52 dark:bg-gray-700 z-30`}
+                            className={`absolute left-0 bg-white rounded-lg shadow w-52 dark:bg-gray-700 z-30`}
                           >
                             <EmojiPicker
                               onEmojiClick={(emoji) =>

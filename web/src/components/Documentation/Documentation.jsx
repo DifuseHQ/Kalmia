@@ -354,7 +354,6 @@ export default function Documentation () {
     const dragItem = reorderedItem;
     newItems.splice(result.destination.index, 0, reorderedItem);
 
-    console.log('---------------------------------newItems:', newItems);
     setGroupsAndPageData(newItems);
 
     const pageGroups = [];
