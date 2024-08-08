@@ -1,5 +1,31 @@
+async function authenticateUser(username, password) {
+  try {
+    const response = await fetch('/auth/jwt/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username: username,
+        password: password,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.token;
+  } catch (error) {
+    console.error('Authentication error:', error);
+    throw error;
+  }
+}
+
+
 import { LoremIpsum } from 'lorem-ipsum';
-const TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MjMyMjQ3MTAsImN1c3RvbV9jbGFpbXMiOnsiZW1haWwiOiJhZG1pbkBleGFtcGxlLmNvbSIsInVzZXJfaWQiOiJhZG1pbiJ9LCJ1c2VySWQiOiIxIiwidXNlcm5hbWUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJwaG90byI6IiIsImFkbWluIjp0cnVlfQ._lCJlbBFtTtuRYBmIOT7bZitd56YkVepar63FGxr9aM';
+const TOKEN = authenticateUser('admin', 'admin');
 const ENDPOINT = 'http://127.0.0.1:2727/docs/page/create';
 const CreateDocumentationEndpoint = 'http://127.0.0.1:2727/docs/documentation/create'
 const START_ORDER = 1;
