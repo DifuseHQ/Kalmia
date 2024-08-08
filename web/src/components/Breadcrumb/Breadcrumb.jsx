@@ -1,10 +1,21 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams
+} from 'react-router-dom';
 import { Icon } from '@iconify/react/dist/iconify.js';
 import { motion } from 'framer-motion';
 
-import { getDocumentations, getPageGroups, getPages, getUser } from '../../api/Requests';
+import {
+  getDocumentations,
+  getPageGroups,
+  getPages,
+  getUser
+} from '../../api/Requests';
 import { AuthContext } from '../../context/AuthContext';
 import { toastMessage } from '../../utils/Toast';
 
@@ -55,7 +66,7 @@ export default function Breadcrumb () {
           });
         } else if (location.pathname.includes('/edit-user')) {
           if (user.admin) {
-            const user = await getUser(parseInt(userIdFromParam));
+            const user = await getUser(Number.parseInt(userIdFromParam));
             newBreadcrumb.push({
               title: `${user.data.username}`,
               path: location.pathname + location.search,
@@ -68,17 +79,17 @@ export default function Breadcrumb () {
         return;
       }
 
-      const [documentations, pageGroups, pages] = await Promise.all([
-        getDocumentations(),
-        getPageGroups(),
-        getPages()
-      ].map(async (promise) => {
-        const result = await promise;
-        if (result.status === 'error') {
-          throw new Error(result.message);
-        }
-        return result.data;
-      })).catch(error => {
+      const [documentations, pageGroups, pages] = await Promise.all(
+        [getDocumentations(), getPageGroups(), getPages()].map(
+          async (promise) => {
+            const result = await promise;
+            if (result.status === 'error') {
+              throw new Error(result.message);
+            }
+            return result.data;
+          }
+        )
+      ).catch((error) => {
         toastMessage(t(error.message), 'error');
         return [null, null, null];
       });
@@ -95,17 +106,29 @@ export default function Breadcrumb () {
       const isCreatePage = location.pathname.includes('/create-page');
       const versionId = searchParams.get('versionId');
       const version = searchParams.get('version');
-      const clonedFrom = (versionId && version) ? (documentations?.find(d => parseInt(d.id) === parseInt(versionId)))?.clonedFrom : null;
+      const clonedFrom =
+        versionId && version
+          ? documentations?.find(
+            (d) => Number.parseInt(d.id) === Number.parseInt(versionId)
+          )?.clonedFrom
+          : null;
 
       if (clonedFrom !== null) {
-        const parentDoc = documentations?.find(d => parseInt(d.id) === parseInt(clonedFrom));
-        const doc = documentations?.find(d => parseInt(d.id) === parseInt(versionId));
+        const parentDoc = documentations?.find(
+          (d) => Number.parseInt(d.id) === Number.parseInt(clonedFrom)
+        );
+        const doc = documentations?.find(
+          (d) => Number.parseInt(d.id) === Number.parseInt(versionId)
+        );
         newBreadcrumb.push({
           title: doc.name,
           path: `/dashboard/documentation?id=${parentDoc?.id}&versionId=${doc?.id}&version=${doc?.version}`,
           icon: 'uiw:document'
         });
-      } else if (location.pathname.includes('/create-documentation') || location.pathname.includes('/edit-documentation')) {
+      } else if (
+        location.pathname.includes('/create-documentation') ||
+        location.pathname.includes('/edit-documentation')
+      ) {
         if (location.pathname.includes('/create-documentation')) {
           newBreadcrumb.push({
             title: 'Create Documentation',
@@ -113,7 +136,9 @@ export default function Breadcrumb () {
             icon: 'pajamas:doc-new'
           });
         } else {
-          const doc = documentations?.find(d => d.id === parseInt(docId));
+          const doc = documentations?.find(
+            (d) => d.id === Number.parseInt(docId)
+          );
           if (doc) {
             newBreadcrumb.push({
               title: doc.name,
@@ -129,7 +154,9 @@ export default function Breadcrumb () {
         }
       } else {
         if (docId) {
-          const doc = documentations?.find(d => d.id === parseInt(docId));
+          const doc = documentations?.find(
+            (d) => d.id === Number.parseInt(docId)
+          );
           if (doc) {
             newBreadcrumb.push({
               title: doc.name,
@@ -138,14 +165,27 @@ export default function Breadcrumb () {
             });
           }
         } else {
-          const smallestId = await documentations?.reduce((min, doc) => (doc.id < min ? doc.id : min), documentations[0]?.id);
-          navigate(smallestId ? `/dashboard/documentation?id=${smallestId}` : '/dashboard/documentation');
+          const smallestId = await documentations?.reduce(
+            (min, doc) => (doc.id < min ? doc.id : min),
+            documentations[0]?.id
+          );
+          navigate(
+            smallestId
+              ? `/dashboard/documentation?id=${smallestId}`
+              : '/dashboard/documentation'
+          );
         }
       }
 
       if (isCreatePage) {
         if (pageGroupId) {
-          addPageGroupsBreadcrumb(parseInt(pageGroupId), pageGroups, newBreadcrumb, versionId, version);
+          addPageGroupsBreadcrumb(
+            Number.parseInt(pageGroupId),
+            pageGroups,
+            newBreadcrumb,
+            versionId,
+            version
+          );
         }
         newBreadcrumb.push({
           title: 'Create Page',
@@ -153,10 +193,16 @@ export default function Breadcrumb () {
           icon: 'mdi:file-document-plus'
         });
       } else if (location.pathname.includes('/edit-page') && pageId) {
-        const page = pages?.find(p => p.id === parseInt(pageId));
+        const page = pages?.find((p) => p.id === Number.parseInt(pageId));
         if (page) {
           if (page.pageGroupId != null && page.pageGroupId !== undefined) {
-            addPageGroupsBreadcrumb(page.pageGroupId, pageGroups, newBreadcrumb, versionId, version);
+            addPageGroupsBreadcrumb(
+              page.pageGroupId,
+              pageGroups,
+              newBreadcrumb,
+              versionId,
+              version
+            );
           }
           newBreadcrumb.push({
             title: page.title,
@@ -165,13 +211,25 @@ export default function Breadcrumb () {
           });
         }
       } else if (location.pathname.includes('/page-group') && pageGroupId) {
-        addPageGroupsBreadcrumb(parseInt(pageGroupId), pageGroups, newBreadcrumb, versionId, version);
+        addPageGroupsBreadcrumb(
+          Number.parseInt(pageGroupId),
+          pageGroups,
+          newBreadcrumb,
+          versionId,
+          version
+        );
       }
 
       setBreadcrumb(newBreadcrumb);
     }
 
-    function addPageGroupsBreadcrumb (pageGroupId, pageGroups, newBreadcrumb, versionId, version) {
+    function addPageGroupsBreadcrumb (
+      pageGroupId,
+      pageGroups,
+      newBreadcrumb,
+      versionId,
+      version
+    ) {
       function findPageGroup (groups, id) {
         for (const group of groups) {
           if (group.id === id) return group;
@@ -204,14 +262,24 @@ export default function Breadcrumb () {
     }
 
     updateBreadcrumb();
-  }, [location.search, navigate, location.pathname, searchParams, user, userIdFromParam, setBreadcrumb, t]);
+  }, [
+    location.search,
+    navigate,
+    location.pathname,
+    searchParams,
+    user,
+    userIdFromParam,
+    setBreadcrumb,
+    t
+  ]);
 
   useEffect(() => {
     const firstTitle = breadcrumb[0]?.title || 'Kalmia';
     const lastTitle = breadcrumb[breadcrumb.length - 1]?.title || '';
-    document.title = breadcrumb.length === 1
-      ? `Kalmia ${`- ${firstTitle}`}`
-      : `${firstTitle} - ${lastTitle}`;
+    document.title =
+      breadcrumb.length === 1
+        ? `Kalmia ${`- ${firstTitle}`}`
+        : `${firstTitle} - ${lastTitle}`;
   }, [breadcrumb]);
 
   return (
@@ -219,25 +287,29 @@ export default function Breadcrumb () {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className='mb-5'
-      aria-label='Breadcrumb'
-      key='breadcrumb-fin'
+      className="mb-5"
+      aria-label="Breadcrumb"
+      key="breadcrumb-fin"
     >
-      <ol className='flex flex-wrap items-center gap-y-2'
-        key="breadcrum-list">
+      <ol className="flex flex-wrap items-center gap-y-2" key="breadcrum-list">
         {breadcrumb.map((crumb, index) => (
-          <li key={`breadcrumb-${index}`} className='flex items-center'>
+          <li key={`breadcrumb-${index}`} className="flex items-center">
             <Link
               to={crumb.path}
-              className='flex items-center text-sm md:text-base font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white whitespace-nowrap py-1'
+              className="flex items-center text-sm md:text-base font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white whitespace-nowrap py-1"
             >
-              <Icon icon={crumb.icon} className='w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2 flex-shrink-0' />
-              <span className='truncate max-w-[150px] md:max-w-[200px]'>{crumb.title}</span>
+              <Icon
+                icon={crumb.icon}
+                className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2 flex-shrink-0"
+              />
+              <span className="truncate max-w-[150px] md:max-w-[200px]">
+                {crumb.title}
+              </span>
             </Link>
             {index !== breadcrumb.length - 1 && (
               <Icon
-                icon='mingcute:right-fill'
-                className='text-gray-500 mx-1 md:mx-2 flex-shrink-0'
+                icon="mingcute:right-fill"
+                className="text-gray-500 mx-1 md:mx-2 flex-shrink-0"
               />
             )}
           </li>

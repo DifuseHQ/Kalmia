@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }) => {
   const [refresh, setRefresh] = useState(false);
 
   const refreshData = () => {
-    setRefresh(prev => !prev);
+    setRefresh((prev) => !prev);
   };
 
   const login = async (username, password) => {
@@ -43,13 +43,13 @@ export const AuthProvider = ({ children }) => {
       setUser(data);
       Cookies.set('accessToken', JSON.stringify(response?.data), {
         expires: 1,
-        secure: !(window.location.href.includes('http://'))
+        secure: !window.location.href.includes('http://')
       });
       navigate('/dashboard', { replace: true });
     }
   };
 
-  const loginGitHub = async (code) => {
+  const loginOAuth = async (code) => {
     const response = await validateJWT(code);
     if (handleError(response, navigate, t)) return;
     if (response.status === 'success') {
@@ -58,7 +58,7 @@ export const AuthProvider = ({ children }) => {
       setUser(data);
       Cookies.set('accessToken', JSON.stringify(response?.data), {
         expires: 1,
-        secure: !(window.location.href.includes('http://'))
+        secure: !window.location.href.includes('http://')
       });
       navigate('/dashboard', { replace: true });
     }
@@ -93,40 +93,43 @@ export const AuthProvider = ({ children }) => {
   }, [navigate, token, t]);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      const validateToken = async () => {
-        if (!token) {
-          Cookies.remove('accessToken');
-          setUser(null);
-          navigate('/login');
-          clearInterval(interval);
-          return;
-        }
-
-        const result = await validateJWT(token);
-
-        if (handleError(result, navigate, t)) return;
-
-        if (result.status === 'success') {
-          const data = result.data;
-          const isExpiringSoon = await isTokenExpiringSoon(data);
-          if (isExpiringSoon) {
-            refreshToken();
+    const interval = setInterval(
+      () => {
+        const validateToken = async () => {
+          if (!token) {
+            Cookies.remove('accessToken');
+            setUser(null);
+            navigate('/login');
+            clearInterval(interval);
+            return;
           }
-        }
-      };
 
-      validateToken();
-    }, 5 * 60 * 1000);
+          const result = await validateJWT(token);
+
+          if (handleError(result, navigate, t)) return;
+
+          if (result.status === 'success') {
+            const data = result.data;
+            const isExpiringSoon = await isTokenExpiringSoon(data);
+            if (isExpiringSoon) {
+              refreshToken();
+            }
+          }
+        };
+
+        validateToken();
+      },
+      5 * 60 * 1000
+    );
 
     return () => clearInterval(interval);
-  }, [navigate, refreshToken, setUser, token ]); //eslint-disable-line
+  }, [navigate, refreshToken, setUser, token]); //eslint-disable-line
 
   return (
     <AuthContext.Provider
       value={{
         login,
-        loginGitHub,
+        loginOAuth,
         user,
         setUser,
         logout,

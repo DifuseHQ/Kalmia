@@ -42,13 +42,17 @@ export default function AdminAuth () {
     };
 
     fetchData();
-  }, [navigate]); //eslint-disable-line
+	}, [navigate]); //eslint-disable-line
 
   if (isLoading) {
-    return <div><Loading /></div>;
+    return (
+      <div>
+        <Loading />
+      </div>
+    );
   } else if (isAdmin) {
     return <Outlet />;
   } else {
-    return <Navigate to='/dashboard' state={{ from: location }} replace />;
+    return <Navigate to="/dashboard" state={{ from: location }} replace />;
   }
 }

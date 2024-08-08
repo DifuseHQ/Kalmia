@@ -15,7 +15,7 @@ i18n
     }
   });
 
-const savedLang = localStorage.getItem('i18nextLng') || 'en';
+const savedLang = window.localStorage.getItem('i18nextLng') || 'en';
 i18n.changeLanguage(savedLang);
 
 export default i18n;

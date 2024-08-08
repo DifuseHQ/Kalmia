@@ -33,6 +33,8 @@ module.exports = {
             ],
           },
         ],
+        "no-tabs": "error",
+        "indent": ["error", 2]
       },
     },
   ],

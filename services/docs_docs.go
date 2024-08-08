@@ -178,6 +178,10 @@ func (service *DocService) CreateDocumentation(documentation *models.Documentati
 		return fmt.Errorf("documentation_name_already_exists")
 	}
 
+	if !utils.IsBaseURLValid(documentation.BaseURL) {
+		return fmt.Errorf("invalid_base_url")
+	}
+
 	if err := db.Create(documentation).Error; err != nil {
 		return fmt.Errorf("failed_to_create_documentation")
 	}
@@ -222,6 +226,10 @@ func (service *DocService) CreateDocumentation(documentation *models.Documentati
 
 func (service *DocService) EditDocumentation(user models.User, id uint, name, description, version, favicon, metaImage, navImage, customCSS, footerLabelLinks, moreLabelLinks, copyrightText, url, organizationName, projectName, baseURL, landerDetails string) error {
 	tx := service.DB.Begin()
+
+	if !utils.IsBaseURLValid(baseURL) {
+		return fmt.Errorf("invalid_base_url")
+	}
 
 	updateDoc := func(doc *models.Documentation, isTarget bool) error {
 		doc.LastEditorID = &user.ID

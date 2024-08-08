@@ -4,33 +4,25 @@
   "private": true,
   "homepage": "/admin",
   "dependencies": {
+    "@blocknote/core": "^0.15.3",
     "@blocknote/mantine": "^0.15.3",
     "@blocknote/react": "^0.15.3",
-    "@blocknote/shadcn": "^0.15.3",
     "@emoji-mart/data": "^1.2.1",
     "@emoji-mart/react": "^1.1.1",
     "@hello-pangea/dnd": "^16.6.0",
     "@iconify/icons-mdi": "^1.2.48",
     "@iconify/react": "^5.0.1",
-    "@testing-library/jest-dom": "^5.17.0",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
+    "@mantine/core": "^7.12.0",
     "ace-builds": "^1.35.4",
     "axios": "^1.7.2",
     "class-variance-authority": "^0.7.0",
     "emoji-mart": "^5.6.0",
-    "emoji-picker-react": "^4.11.1",
     "framer-motion": "^11.2.13",
     "i18next": "^23.12.2",
     "i18next-browser-languagedetector": "^8.0.0",
     "i18next-http-backend": "^2.5.2",
     "js-cookie": "^3.0.5",
     "jwt-decode": "^4.0.0",
-    "luxon": "^3.4.4",
-    "novel": "^0.4.3",
-    "primeicons": "^7.0.0",
-    "primereact": "^10.7.0",
-    "quill": "^2.0.2",
     "react": "^18.3.1",
     "react-ace": "^12.0.0",
     "react-avatar-editor": "^13.0.2",
@@ -38,19 +30,15 @@
     "react-dom": "^18.3.1",
     "react-i18next": "^15.0.0",
     "react-router-dom": "^6.24.0",
-    "react-toastify": "^10.0.5",
-    "sass": "^1.77.8",
-    "semistandard": "^17.0.0",
-    "title-editorjs": "^1.0.2",
-    "web-vitals": "^2.1.4"
+    "react-toastify": "^10.0.5"
   },
   "scripts": {
     "start": "rsbuild dev",
     "build": "rsbuild build",
+    "build:watch": "rsbuild build --watch",
     "preview": "rsbuild preview",
     "lint": "eslint \"src/**/*.{js,jsx,ts,tsx}\"",
-    "lint:fix": "eslint \"src/**/*.{js,jsx,ts,tsx}\" --fix",
-    "prepare": "husky"
+    "lint:fix": "eslint \"src/**/*.{js,jsx,ts,tsx}\" --fix"
   },
   "eslintConfig": {
     "extends": [
@@ -73,21 +61,24 @@
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@rsbuild/core": "^1.0.1-beta.10",
+    "@rsbuild/plugin-image-compress": "^1.0.2",
     "@rsbuild/plugin-react": "^1.0.1-beta.10",
     "autoprefixer": "^10.4.19",
-    "editorjs-hyperlink": "^1.0.6",
-    "editorjs-undo": "^2.0.28",
+    "eslint-config-react-app": "^7.0.1",
     "eslint-config-semistandard": "^17.0.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
-    "husky": "^9.1.1",
     "postcss": "^8.4.38",
+    "sass": "^1.77.8",
+    "semistandard": "^17.0.0",
     "tailwindcss": "^3.4.4"
   },
+
   "browserslist": {
     "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
+      "chrome >= 87",
+      "edge >= 88",
+      "firefox >= 78",
+      "safari >= 14"
     ],
     "development": [
       "last 1 chrome version",

@@ -65,6 +65,10 @@ func main() {
 	oAuthRouter := r.PathPrefix("/oauth").Subrouter()
 	oAuthRouter.HandleFunc("/github", func(w http.ResponseWriter, r *http.Request) { handlers.GithubLogin(aS, w, r) }).Methods("GET")
 	oAuthRouter.HandleFunc("/github/callback", func(w http.ResponseWriter, r *http.Request) { handlers.GithubCallback(aS, w, r) }).Methods("GET")
+	oAuthRouter.HandleFunc("/microsoft", func(w http.ResponseWriter, r *http.Request) { handlers.MicrosoftLogin(aS, w, r) }).Methods("GET")
+	oAuthRouter.HandleFunc("/microsoft/callback", func(w http.ResponseWriter, r *http.Request) { handlers.MicrosoftCallback(aS, w, r) }).Methods("GET")
+	oAuthRouter.HandleFunc("/google", func(w http.ResponseWriter, r *http.Request) { handlers.GoogleLogin(aS, w, r) }).Methods("GET")
+	oAuthRouter.HandleFunc("/google/callback", func(w http.ResponseWriter, r *http.Request) { handlers.GoogleCallback(aS, w, r) }).Methods("GET")
 
 	authRouter := r.PathPrefix("/auth").Subrouter()
 	authRouter.Use(middleware.EnsureAuthenticated(aS))

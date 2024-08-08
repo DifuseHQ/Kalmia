@@ -67,16 +67,18 @@ export const Alert = createReactBlockSpec(
   },
   {
     render: (props) => {
-      const alertType = alertTypes?.find((a) => a.value === props.block.props.type);
+      const alertType = alertTypes?.find(
+        (a) => a.value === props.block.props.type
+      );
       return (
-        <div className='alert' data-alert-type={props.block.props.type}>
+        <div className="alert" data-alert-type={props.block.props.type}>
           {/* Icon which opens a menu to choose the Alert type */}
           <Menu withinPortal={false} zIndex={999999}>
             <Menu.Target>
-              <div className='alert-icon-wrapper' contentEditable={false}>
+              <div className="alert-icon-wrapper" contentEditable={false}>
                 <Icon
                   icon={alertType.icon}
-                  className='alert-icon'
+                  className="alert-icon"
                   data-alert-icon-type={props.block.props.type}
                   fontSize={32}
                 />
@@ -90,16 +92,21 @@ export const Alert = createReactBlockSpec(
                 return (
                   <Menu.Item
                     key={type.value}
-                    leftSection={<Icon
-                      icon={type.icon} className='alert-icon' data-alert-icon-type={type.value}
-                      width={26}
-                      height={26}
-                                 />}
+                    leftSection={
+                      <Icon
+                        icon={type.icon}
+                        className="alert-icon"
+                        data-alert-icon-type={type.value}
+                        width={26}
+                        height={26}
+                      />
+                    }
                     onClick={() =>
                       props.editor.updateBlock(props.block, {
                         type: 'alert',
                         props: { type: type.value }
-                      })}
+                      })
+                    }
                   >
                     {type.title}
                   </Menu.Item>
@@ -108,7 +115,7 @@ export const Alert = createReactBlockSpec(
             </Menu.Dropdown>
           </Menu>
           {/* Rich text field for user to type in */}
-          <div className='inline-content' ref={props.contentRef} />
+          <div className="inline-content" ref={props.contentRef} />
         </div>
       );
     }

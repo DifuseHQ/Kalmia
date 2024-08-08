@@ -913,16 +913,17 @@ func (service *DocService) WriteContents(docId uint) error {
 		/* End Cleanup Stuff */
 
 		/* Root of Version folder stuff */
-		rootMeta := `[{"text": "Documentation","link": "/documentation/index","activeMatch": "/documentation/"}]`
+		rootMeta := fmt.Sprintf(`[{"text": "Documentation","link": "/%s/index","activeMatch": "/%s/"}]`,
+			utils.StringToFileString(versionDoc.BaseURL), utils.StringToFileString(versionDoc.BaseURL))
 		if err := utils.WriteToFile(filepath.Join(versionedDocPath, "_meta.json"), rootMeta); err != nil {
 			return err
 		}
 
-		if err := service.WriteHomePage(docId, versionInfo.Version, versionDoc.LanderDetails, versionDoc.BaseURL); err != nil {
+		if err := service.WriteHomePage(versionDoc); err != nil {
 			return err
 		}
 
-		userContentPath := filepath.Join(versionedDocPath, "documentation")
+		userContentPath := filepath.Join(versionedDocPath, utils.StringToFileString(versionDoc.BaseURL))
 
 		if !utils.PathExists(userContentPath) {
 			if err := utils.MakeDir(userContentPath); err != nil {
@@ -1038,11 +1039,11 @@ func removeOldContent(currentItems map[string]bool, dirPath string) error {
 	return nil
 }
 
-func (service *DocService) WriteHomePage(docId uint, version string, landerDetails string, baseURL string) error {
+func (service *DocService) WriteHomePage(documentation models.Documentation) error {
 	var homePage string
 
-	if landerDetails != "" {
-		homePage = `---
+	if documentation.LanderDetails != "" && documentation.LanderDetails != "{}" {
+		homePage = fmt.Sprintf(`---
 		pageType: home
 		
 		hero:
@@ -1057,7 +1058,7 @@ func (service *DocService) WriteHomePage(docId uint, version string, landerDetai
 			  text: GitHub
 			  link: https://github.com/web-infra-dev/rspress
 		  image:
-			src: /rspress-icon.png
+			src: https://difuse.io/assets/images/meta/meta.webp
 			alt: Rspress Logo
 		features:
 		  - title: Blazing fast build speed
@@ -1078,14 +1079,13 @@ func (service *DocService) WriteHomePage(docId uint, version string, landerDetai
 		  - title: Providing multiple custom capabilities
 			details: Through its extension mechanism, you can easily extend theme UI and build process.
 			icon: 🔥
-		---
-			`
+		---`)
 	} else {
-		//redirect to /documentation/
-		homePage = fmt.Sprintf("<meta http-equiv=\"refresh\" content=\"0;url=%s/documentation/\" />", baseURL)
+		homePage = fmt.Sprintf("<meta http-equiv=\"refresh\" content=\"0;url=%s\" />", documentation.BaseURL)
 	}
 
-	homePagePath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data", "doc_"+strconv.Itoa(int(docId)), "docs", version, "index.mdx")
+	homePagePath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data", "doc_"+strconv.Itoa(int(documentation.ID)),
+		"docs", documentation.Version, "index.mdx")
 
 	if err := utils.WriteToFile(homePagePath, homePage); err != nil {
 		return err

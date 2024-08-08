@@ -96,7 +96,7 @@ func (service *AuthService) CreateUser(username, email, password string, admin b
 	return nil
 }
 
-func (service *AuthService) EditUser(id uint, username, email, password, photo string, admin bool) error {
+func (service *AuthService) EditUser(id uint, username, email, password, photo string, admin int) error {
 	var user models.User
 
 	if err := service.DB.Where("id = ?", id).First(&user).Error; err != nil {
@@ -124,7 +124,13 @@ func (service *AuthService) EditUser(id uint, username, email, password, photo s
 		user.Photo = photo
 	}
 
-	user.Admin = admin
+	if admin != 0 {
+		if admin == 1 {
+			user.Admin = false
+		} else {
+			user.Admin = true
+		}
+	}
 
 	if err := service.DB.Save(&user).Error; err != nil {
 		return fmt.Errorf("failed_to_edit_user")

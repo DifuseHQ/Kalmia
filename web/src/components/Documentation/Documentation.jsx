@@ -1,4 +1,10 @@
-import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd';
@@ -6,6 +12,7 @@ import { Icon } from '@iconify/react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 import {
+  commonReorderBulk,
   createDocumentationVersion,
   createPage as createPageAPI,
   createPageGroup,
@@ -15,7 +22,6 @@ import {
   getDocumentations,
   getPageGroups,
   getPages,
-  commonReorderBulk,
   updatePageGroup
 } from '../../api/Requests';
 import { AuthContext } from '../../context/AuthContext';
@@ -107,14 +113,19 @@ export default function Documentation () {
 
           const addVersion = (doc) => {
             versions.push(doc);
-            const children = data.filter(item => item.clonedFrom === doc.id);
+            const children = data.filter((item) => item.clonedFrom === doc.id);
             children.forEach(addVersion);
           };
 
-          const startDoc = data?.find(doc => doc.id === startId);
+          const startDoc = data?.find((doc) => doc.id === startId);
           if (startDoc) {
-            if (startDoc.clonedFrom !== null && startDoc.clonedFrom !== undefined) {
-              const parent = data?.find(doc => doc.id === startDoc.clonedFrom);
+            if (
+              startDoc.clonedFrom !== null &&
+              startDoc.clonedFrom !== undefined
+            ) {
+              const parent = data?.find(
+                (doc) => doc.id === startDoc.clonedFrom
+              );
               if (parent) {
                 addVersion(parent);
               } else {
@@ -126,7 +137,10 @@ export default function Documentation () {
           }
 
           return versions.sort((a, b) => {
-            return a.version.localeCompare(b.version, undefined, { numeric: true, sensitivity: 'base' });
+            return a.version.localeCompare(b.version, undefined, {
+              numeric: true,
+              sensitivity: 'base'
+            });
           });
         };
 
@@ -247,11 +261,7 @@ export default function Documentation () {
       refreshData();
     }
   };
-  const handlePageGroupUpdate = async (
-    editTitle,
-    version,
-    id
-  ) => {
+  const handlePageGroupUpdate = async (editTitle, version, id) => {
     const result = await updatePageGroup({
       id: Number(id),
       name: editTitle,
@@ -271,17 +281,14 @@ export default function Documentation () {
 
   const handleCreatePageGroup = async (title) => {
     if (title === '') {
-      toastMessage(
-        t('title_is_required'),
-        'warning'
-      );
+      toastMessage(t('title_is_required'), 'warning');
       return;
     }
     const lastOrder = getLastPageOrder(groupsAndPageData);
     const result = await createPageGroup({
       name: title,
       documentationId: Number(selectedVersion.id),
-      order: parseInt(lastOrder)
+      order: Number.parseInt(lastOrder)
     });
 
     if (handleError(result, navigate, t)) {
@@ -297,17 +304,11 @@ export default function Documentation () {
 
   const handleCreatePage = async (title, slug) => {
     if (title === '') {
-      toastMessage(
-        t('title_is_required'),
-        'warning'
-      );
+      toastMessage(t('title_is_required'), 'warning');
       return;
     }
     if (slug === '') {
-      toastMessage(
-        t('slug_is_required'),
-        'warning'
-      );
+      toastMessage(t('slug_is_required'), 'warning');
       return;
     }
     const lastOrder = getLastPageOrder(groupsAndPageData);
@@ -317,8 +318,8 @@ export default function Documentation () {
       title,
       slug,
       content: JSON.stringify([]),
-      documentationId: parseInt(docIdOrVersionId),
-      order: parseInt(lastOrder)
+      documentationId: Number.parseInt(docIdOrVersionId),
+      order: Number.parseInt(lastOrder)
     });
 
     if (handleError(result, navigate, t)) {
@@ -380,11 +381,14 @@ export default function Documentation () {
     const allItems = pageGroups.concat(pages);
 
     try {
-      let result = await commonReorderBulk({ order: allItems });
+      const result = await commonReorderBulk({ order: allItems });
 
       if (handleError(result, navigate, t)) return;
 
-      toastMessage(t(`${dragItem.slug ? 'page_reordered' : 'page_group_reordered'}`), 'success');
+      toastMessage(
+        t(`${dragItem.slug ? 'page_reordered' : 'page_group_reordered'}`),
+        'success'
+      );
     } catch (err) {
       console.error('Error in bulk reordering:', err);
     }
@@ -415,12 +419,15 @@ export default function Documentation () {
     closeModal('pageSizeDropdown');
   };
 
-  const handleClickOutside = useCallback((event) => {
-    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-      setShowVersionDropdown(false);
-      closeModal('pageSizeDropdown');
-    }
-  }, [closeModal]);
+  const handleClickOutside = useCallback(
+    (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowVersionDropdown(false);
+        closeModal('pageSizeDropdown');
+      }
+    },
+    [closeModal]
+  );
 
   const dropdownRef = useRef(null);
   useEffect(() => {
@@ -433,7 +440,7 @@ export default function Documentation () {
     <AnimatePresence className="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5">
       <Breadcrumb key="breadcrumb-container" />
 
-      {!loading &&
+      {!loading && (
         <>
           {documentData.length !== 0 ? (
             <motion.div
@@ -468,7 +475,9 @@ export default function Documentation () {
                   title={t('edit_documentation')}
                   key="edit-document-button"
                 >
-                  <Link to={`/dashboard/edit-documentation?id=${selectedVersion.id}&mode=edit`}>
+                  <Link
+                    to={`/dashboard/edit-documentation?id=${selectedVersion.id}&mode=edit`}
+                  >
                     <Icon
                       icon="material-symbols:edit-outline"
                       className="w-6 h-6 text-yellow-500 dark:text-yellow-400 hover:text-yellow-600 dark:hover:text-yellow-600"
@@ -543,7 +552,8 @@ export default function Documentation () {
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       key="documentation-version-listing-container"
-                      className="relative inline-block z-20">
+                      className="relative inline-block z-20"
+                    >
                       <div
                         id="dropdownSelect"
                         className="flex items-center border gap-2 border-gray-400 hover:bg-gray-200 px-3 py-1.5 rounded-lg cursor-pointer dark:bg-gray-600 dark:border-gray-700 dark:hover:bg-gray-800 dark:text-white"
@@ -594,31 +604,32 @@ export default function Documentation () {
                               aria-labelledby="dropdownSelect"
                             >
                               {filteredVersions.length > 0 ? (
-                                filteredVersions
-                                  .map((option) => (
-                                    <motion.li
-                                      initial={{ opacity: 0 }}
-                                      animate={{ opacity: 1 }}
-                                      exit={{ opacity: 0 }}
-                                      key={`version-${option.id}`}
-                                      className="relative w-full"
+                                filteredVersions.map((option) => (
+                                  <motion.li
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    key={`version-${option.id}`}
+                                    className="relative w-full"
+                                  >
+                                    <div
+                                      className={`flex items-center ps-2 rounded hover:bg-gray-200 cursor-pointer ${selectedVersion.version === option.version ? 'bg-gray-400 hover:bg-gray-400 dark:bg-gray-900 cursor-text dark:hover:bg-gray-900' : 'dark:hover:bg-gray-800'}`}
+                                      onClick={() =>
+                                        handleVersionSelect(option)
+                                      }
                                     >
-                                      <div
-                                        className={`flex items-center ps-2 rounded hover:bg-gray-200 cursor-pointer ${selectedVersion.version === option.version ? 'bg-gray-400 hover:bg-gray-400 dark:bg-gray-900 cursor-text dark:hover:bg-gray-900' : 'dark:hover:bg-gray-800'}`}
-                                        onClick={() => handleVersionSelect(option)}
-                                      >
-                                        <p className="w-full p-2.5 ms-2 text-md font-medium text-gray-900 rounded dark:text-gray-300">
-                                          {option.version}
-                                        </p>
-                                      </div>
-                                    </motion.li>
-                                  ))
+                                      <p className="w-full p-2.5 ms-2 text-md font-medium text-gray-900 rounded dark:text-gray-300">
+                                        {option.version}
+                                      </p>
+                                    </div>
+                                  </motion.li>
+                                ))
                               ) : (
                                 <motion.li
                                   initial={{ opacity: 0 }}
                                   animate={{ opacity: 1 }}
                                   exit={{ opacity: 0 }}
-                                  key='no-version-found-message'
+                                  key="no-version-found-message"
                                 >
                                   <div className="flex items-center ps-2 rounded">
                                     <span className="w-full py-2 ms-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300">
@@ -645,7 +656,10 @@ export default function Documentation () {
                       <span className="px-1 text-left items-center dark:text-white text-md">
                         {t('new_group')}
                       </span>
-                      <Icon icon="ei:plus" className="w-6 h-6 dark:text-white" />
+                      <Icon
+                        icon="ei:plus"
+                        className="w-6 h-6 dark:text-white"
+                      />
                     </motion.button>
 
                     <motion.button
@@ -658,7 +672,10 @@ export default function Documentation () {
                       <span className="px-1 text-left items-center dark:text-white text-md">
                         {t('new_page')}
                       </span>
-                      <Icon icon="ei:plus" className="w-6 h-6 dark:text-white" />
+                      <Icon
+                        icon="ei:plus"
+                        className="w-6 h-6 dark:text-white"
+                      />
                     </motion.button>
                   </div>
                 </div>
@@ -669,7 +686,8 @@ export default function Documentation () {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     key="documentation-table-container"
-                    className="overflow-x-auto h-auto">
+                    className="overflow-x-auto h-auto"
+                  >
                     <DragDropContext onDragEnd={handleDragEnd}>
                       <Droppable droppableId="table" type="TABLE">
                         {(provided) => (
@@ -678,18 +696,26 @@ export default function Documentation () {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             key="table-documentation-table-tag"
-                            className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                            className="w-full text-sm text-left text-gray-500 dark:text-gray-400"
+                          >
                             <motion.thead
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
                               exit={{ opacity: 0 }}
                               key="table-documentation-head"
-                              className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                              className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"
+                            >
                               <tr>
                                 <th className="w-1/12 whitespace-nowrap" />
-                                <th className="w-3/12 px-4 py-3 whitespace-nowrap">{t('title')}</th>
-                                <th className="w-3/12 px-4 py-3 whitespace-nowrap">{t('author_editor')}</th>
-                                <th className="w-2/12 px-4 py-3 whitespace-nowrap">{t('create_update')}</th>
+                                <th className="w-3/12 px-4 py-3 whitespace-nowrap">
+                                  {t('title')}
+                                </th>
+                                <th className="w-3/12 px-4 py-3 whitespace-nowrap">
+                                  {t('author_editor')}
+                                </th>
+                                <th className="w-2/12 px-4 py-3 whitespace-nowrap">
+                                  {t('create_update')}
+                                </th>
                                 <th className="w-3/12 px-4 py-3 whitespace-nowrap" />
                               </tr>
                             </motion.thead>
@@ -703,8 +729,7 @@ export default function Documentation () {
                               ref={provided.innerRef}
                             >
                               {!pageGroupLoading ? (
-                                filteredItems &&
-                                  filteredItems.length <= 0 ? (
+                                filteredItems && filteredItems.length <= 0 ? (
                                   <motion.tr
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
@@ -712,39 +737,46 @@ export default function Documentation () {
                                     className="border-b dark:bg-gray-700"
                                     key="no-pages-found-message"
                                   >
-                                    <td colSpan="5" className="w-12/12 text-center py-12">No Pages Found</td>
-                                  </motion.tr>
-                                    ) : (
-                                      filteredItems.slice(startIdx, endIdx).map((obj, index) => (
-                                    <Draggable
-                                      key={
-                                        obj.name
-                                          ? `pageGroup-${obj.id}`
-                                          : `page-${obj.id}`
-                                      }
-                                      draggableId={
-                                        obj.name
-                                          ? `pageGroup-${obj.id}`
-                                          : `page-${obj.id}`
-                                      }
-                                      index={index}
-                                      isDragDisabled={obj.isIntroPage}
+                                    <td
+                                      colSpan="5"
+                                      className="w-12/12 text-center py-12"
                                     >
-                                      {(provided, snapshot) => (
-                                        <Table
-                                          provided={provided}
-                                          snapshot={snapshot}
-                                          obj={obj}
-                                          index={index}
-                                          dir="true"
-                                          docId={selectedVersion.id}
-                                          pageGroupId={obj.id}
-                                          version={selectedVersion.version}
-                                        />
-                                      )}
-                                    </Draggable>
-                                      ))
-                                    )
+                                      No Pages Found
+                                    </td>
+                                  </motion.tr>
+                                ) : (
+                                  filteredItems
+                                    .slice(startIdx, endIdx)
+                                    .map((obj, index) => (
+                                      <Draggable
+                                        key={
+                                          obj.name
+                                            ? `pageGroup-${obj.id}`
+                                            : `page-${obj.id}`
+                                        }
+                                        draggableId={
+                                          obj.name
+                                            ? `pageGroup-${obj.id}`
+                                            : `page-${obj.id}`
+                                        }
+                                        index={index}
+                                        isDragDisabled={obj.isIntroPage}
+                                      >
+                                        {(provided, snapshot) => (
+                                          <Table
+                                            provided={provided}
+                                            snapshot={snapshot}
+                                            obj={obj}
+                                            index={index}
+                                            dir="true"
+                                            docId={selectedVersion.id}
+                                            pageGroupId={obj.id}
+                                            version={selectedVersion.version}
+                                          />
+                                        )}
+                                      </Draggable>
+                                    ))
+                                )
                               ) : (
                                 <motion.tr
                                   initial={{ opacity: 0 }}
@@ -752,7 +784,9 @@ export default function Documentation () {
                                   exit={{ opacity: 0 }}
                                   key="documentation-data-loading-message"
                                 >
-                                  <td colSpan="5" className="text-center py-12">Loading...</td>
+                                  <td colSpan="5" className="text-center py-12">
+                                    Loading...
+                                  </td>
                                 </motion.tr>
                               )}
                               {provided.placeholder}
@@ -764,43 +798,49 @@ export default function Documentation () {
                   </motion.div>
                 )}
 
-                {filteredItems.length > 0 &&
+                {filteredItems.length > 0 && (
                   <motion.section
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     key="documnetation-table-pagination"
-                    className='flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4'
-                    aria-label='Table navigation'
+                    className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4"
+                    aria-label="Table navigation"
                   >
-                    <span className='text-sm font-normal text-gray-500 dark:text-gray-400'>
+                    <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
                       {t('showing')}
-                      <span className='font-semibold text-gray-900 dark:text-white mx-1'>
+                      <span className="font-semibold text-gray-900 dark:text-white mx-1">
                         {startIdx + 1}-{Math.min(endIdx, totalItems)}
                       </span>{' '}
                       {t('of')}
-                      <span className='font-semibold text-gray-900 dark:text-white mx-1'>
+                      <span className="font-semibold text-gray-900 dark:text-white mx-1">
                         {totalItems}
                       </span>{' '}
                       {t('items')}
                     </span>
 
-                    <ul className='inline-flex items-stretch -space-x-px'>
+                    <ul className="inline-flex items-stretch -space-x-px">
                       <li>
-                        <div className='flex items-center sm:mx-3 gap-3'>
-                          <span className='text-sm font-normal text-gray-500 dark:text-gray-400'>{t('page_size')}</span>
+                        <div className="flex items-center sm:mx-3 gap-3">
+                          <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
+                            {t('page_size')}
+                          </span>
                           <div className="relative inline-block">
                             <button
                               onClick={() => openModal('pageSizeDropdown')}
                               className="flex items-center justify-between sm:w-16 py-1 px-1 bg-white border dark:text-white border-gray-300 rounded-md shadow-sm hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-600 dark:hover:bg-gray-700 text-left"
                             >
                               <span>{selectPageSize}</span>
-                              <Icon icon="mingcute:down-fill" className="h-5 w-5" />
+                              <Icon
+                                icon="mingcute:down-fill"
+                                className="h-5 w-5"
+                              />
                             </button>
                             {pageSizeDropdown && (
                               <div
                                 ref={dropdownRef}
-                                className="absolute w-28 bg-white border border-gray-300 rounded-md shadow-lg z-10 dark:bg-gray-700 dark:border-gray-600 bottom-full mb-1 max-h-36 overflow-y-auto" >
+                                className="absolute w-28 bg-white border border-gray-300 rounded-md shadow-lg z-10 dark:bg-gray-700 dark:border-gray-600 bottom-full mb-1 max-h-36 overflow-y-auto"
+                              >
                                 {pageSize().map((option) => (
                                   <div
                                     key={option}
@@ -819,10 +859,10 @@ export default function Documentation () {
                         <button
                           onClick={() => handlePageChange(currentPage - 1)}
                           disabled={currentPage === 1}
-                          className='flex items-center justify-center h-full py-1.5 px-3 ml-0 text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'
+                          className="flex items-center justify-center h-full py-1.5 px-3 ml-0 text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
                         >
-                          <span className='sr-only'>Previous</span>
-                          <Icon icon='mingcute:left-fill' />
+                          <span className="sr-only">Previous</span>
+                          <Icon icon="mingcute:left-fill" />
                         </button>
                       </li>
                       {Array.from({ length: totalPages }, (_, i) => (
@@ -832,7 +872,7 @@ export default function Documentation () {
                             className={`flex items-center justify-center text-sm py-2 px-3 leading-tight ${currentPage === i + 1
                               ? 'text-primary-600 bg-primary-50 border border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white'
                               : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'
-                              }`}
+                            }`}
                           >
                             {i + 1}
                           </button>
@@ -842,14 +882,14 @@ export default function Documentation () {
                         <button
                           onClick={() => handlePageChange(currentPage + 1)}
                           disabled={currentPage === totalPages}
-                          className='flex items-center justify-center h-full py-1.5 px-3 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'
+                          className="flex items-center justify-center h-full py-1.5 px-3 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
                         >
-                          <Icon icon='mingcute:right-fill' />
+                          <Icon icon="mingcute:right-fill" />
                         </button>
                       </li>
                     </ul>
                   </motion.section>
-                }
+                )}
                 {/* Edit Component */}
                 {editModal && (
                   <EditDocumentModal
@@ -872,14 +912,16 @@ export default function Documentation () {
                     deleteDoc={
                       currentModalItem
                         ? () =>
-                            handleDeletePageGroup(
-                              currentModalItem.id,
-                              currentModalItem
-                            )
+                          handleDeletePageGroup(
+                            currentModalItem.id,
+                            currentModalItem
+                          )
                         : handleDelete
                     }
                     id={
-                      currentModalItem ? currentModalItem.id : documentData[0]?.id
+                      currentModalItem
+                        ? currentModalItem.id
+                        : documentData[0]?.id
                     }
                     message={`${currentModalItem ? `"${currentModalItem.name || currentModalItem.title}"` : `"${documentData[0]?.name}" version ${selectedVersion.version}`}`}
                   />
@@ -910,8 +952,7 @@ export default function Documentation () {
             <CreatePage handleCreate={handleCreatePage} key="create-page-0" />
           )}
         </>
-      }
-
+      )}
     </AnimatePresence>
   );
 }

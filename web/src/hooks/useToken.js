@@ -15,7 +15,7 @@ export const useToken = () => {
     if (newToken) {
       Cookies.set('accessToken', JSON.stringify({ token: newToken }), {
         expires: 1,
-        secure: !(window.location.href.includes('http://'))
+        secure: !window.location.href.includes('http://')
       });
     } else {
       Cookies.remove('accessToken');

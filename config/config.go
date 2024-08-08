@@ -20,20 +20,35 @@ type Cloudflare struct {
 type GithubOAuth struct {
 	ClientID     string `json:"clientId"`
 	ClientSecret string `json:"clientSecret"`
-	RedirectURL  string `json:"redirectURL"`
+	RedirectURL  string `json:"callbackUrl"`
+}
+
+type MicrosoftOAuth struct {
+	ClientID     string `json:"clientId"`
+	ClientSecret string `json:"clientSecret"`
+	DirectoryID  string `json:"directoryId"`
+	RedirectURL  string `json:"callbackUrl"`
+}
+
+type GoogleOAuth struct {
+	ClientID     string `json:"clientId"`
+	ClientSecret string `json:"clientSecret"`
+	RedirectURL  string `json:"callbackUrl"`
 }
 
 type Config struct {
-	Environment   string      `json:"environment"`
-	Port          int         `json:"port"`
-	Database      string      `json:"database"`
-	LogLevel      string      `json:"logLevel"`
-	SessionSecret string      `json:"sessionSecret"`
-	Admins        []User      `json:"users"`
-	DataPath      string      `json:"dataPath"`
-	AddDummyData  bool        `json:"addDummyData"`
-	Cloudflare    Cloudflare  `json:"cloudflare"`
-	GithubOAuth   GithubOAuth `json:"githubOAuth"`
+	Environment    string         `json:"environment"`
+	Port           int            `json:"port"`
+	Database       string         `json:"database"`
+	LogLevel       string         `json:"logLevel"`
+	SessionSecret  string         `json:"sessionSecret"`
+	Admins         []User         `json:"users"`
+	DataPath       string         `json:"dataPath"`
+	AddDummyData   bool           `json:"addDummyData"`
+	Cloudflare     Cloudflare     `json:"cloudflare"`
+	GithubOAuth    GithubOAuth    `json:"githubOAuth"`
+	MicrosoftOAuth MicrosoftOAuth `json:"microsoftOAuth"`
+	GoogleOAuth    GoogleOAuth    `json:"googleOAuth"`
 }
 
 var ParsedConfig *Config

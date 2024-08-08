@@ -1,35 +1,34 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
-import AceEditor from "react-ace";
-import { useTranslation } from "react-i18next";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { Icon } from "@iconify/react";
-import { AnimatePresence, motion } from "framer-motion";
+import React, { useContext, useEffect, useRef, useState } from 'react';
+import AceEditor from 'react-ace';
+import { useTranslation } from 'react-i18next';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import data from '@emoji-mart/data';
+import Picker from '@emoji-mart/react';
+import { Icon } from '@iconify/react';
+import { AnimatePresence, motion } from 'framer-motion';
 
-import "ace-builds/src-noconflict/mode-css";
-import "ace-builds/src-noconflict/theme-monokai";
-import "ace-builds/src-noconflict/theme-github";
+import 'ace-builds/src-noconflict/mode-css';
+import 'ace-builds/src-noconflict/theme-monokai';
+import 'ace-builds/src-noconflict/theme-github';
 
 import {
   createDocumentation,
   getDocumentation,
-  updateDocumentation,
-} from "../../api/Requests";
-import { ModalContext } from "../../context/ModalContext";
-import { ThemeContext } from "../../context/ThemeContext";
+  updateDocumentation
+} from '../../api/Requests';
+import { ModalContext } from '../../context/ModalContext';
+import { ThemeContext } from '../../context/ThemeContext';
 import {
   handleError,
   landingPagevalidate,
   prepareLandingPageData,
   validateCommunityFields,
   validateFormData,
-} from "../../utils/Common";
-import { toastMessage } from "../../utils/Toast";
-import { customCSSInitial, SocialLinkIcon } from "../../utils/Utils";
-import Breadcrumb from "../Breadcrumb/Breadcrumb";
-import EmojiPicker from "emoji-picker-react";
-import data from '@emoji-mart/data'
-import Picker from '@emoji-mart/react'
-import EmojiDictionary from 'emoji-dictionary';
+  useOutsideAlerter
+} from '../../utils/Common';
+import { toastMessage } from '../../utils/Toast';
+import { customCSSInitial, SocialLinkIcon } from '../../utils/Utils';
+import Breadcrumb from '../Breadcrumb/Breadcrumb';
 
 const LabelAndCommunityComponent = ({
   index,
@@ -37,7 +36,7 @@ const LabelAndCommunityComponent = ({
   linkId,
   data,
   onLabelChange,
-  onLinkChange,
+  onLinkChange
 }) => {
   const { t } = useTranslation();
   return (
@@ -50,29 +49,29 @@ const LabelAndCommunityComponent = ({
     >
       <div>
         <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          {t("label")}
+          {t('label')}
         </span>
         <input
           type="text"
           id={labelId}
-          value={data?.label || ""}
+          value={data?.label || ''}
           name={index}
           onChange={(e) => onLabelChange(index, e.target.value)}
-          placeholder={t("label_placeholder")}
+          placeholder={t('label_placeholder')}
           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
         />
       </div>
       <div>
         <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          {t("link")}
+          {t('link')}
         </span>
         <input
           type="text"
-          value={data?.link || ""}
+          value={data?.link || ''}
           id={linkId}
           name={index}
           onChange={(e) => onLinkChange(index, e.target.value)}
-          placeholder={t("community_placeholder")}
+          placeholder={t('community_placeholder')}
           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
         />
       </div>
@@ -80,12 +79,12 @@ const LabelAndCommunityComponent = ({
   );
 };
 
-export default function CreateDocModal() {
+export default function CreateDocModal () {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParam] = useSearchParams();
-  const docId = searchParam.get("id");
-  const mode = searchParam.get("mode");
+  const docId = searchParam.get('id');
+  const mode = searchParam.get('mode');
   const { openModal, closeModal, setLoadingMessage } = useContext(ModalContext);
   const { darkMode } = useContext(ThemeContext);
   const [isToggleOn, SetIsToggleOn] = useState(false);
@@ -95,54 +94,73 @@ export default function CreateDocModal() {
   const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
 
   const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    version: "",
-    baseURL: "",
-    url: "",
-    organizationName: "",
-    projectName: "",
+    name: '',
+    description: '',
+    version: '',
+    baseURL: '',
+    url: '',
+    organizationName: '',
+    projectName: '',
     customCSS: customCSSInitial(),
-    favicon: "",
-    navImage: "",
-    copyrightText: "",
-    metaImage: "",
+    favicon: '',
+    navImage: '',
+    copyrightText: '',
+    metaImage: ''
   });
 
-  const [moreField, setMoreField] = useState([{ label: "", link: "" }]);
+  const [moreField, setMoreField] = useState([{ label: '', link: '' }]);
   const [socialPlatformField, setSocialPlatformField] = useState([
-    { icon: "", link: "" },
+    { icon: '', link: '' }
   ]);
+  
   const [landingPage, setLandingPage] = useState({
     ctaButtonText: {
-      ctaButtonLinkLabel: "",
-      ctaButtonLink: "",
+      ctaButtonLinkLabel: '',
+      ctaButtonLink: ''
     },
     secondCtaButtonText: {
-      ctaButtonLinkLabel: "",
-      ctaButtonLink: "",
+      ctaButtonLinkLabel: '',
+      ctaButtonLink: ''
     },
-    ctaImageLink: "",
-    features: [{ emoji: "", title: "", text: "" }],
+    ctaImageLink: '',
+    features: [{ emoji: '26A1', title: '', text: '' }]
   });
 
+  const pickerRef = useRef(null);
+  useOutsideAlerter(pickerRef, () => setShowEmojiPicker(false));
+
+
   useEffect(() => {
-    if (mode === "edit") {
+    if (isToggleOn) {
+      window.scrollTo({
+        top: document.documentElement.scrollHeight,
+        behavior: 'smooth'
+      });
+    } else {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
+  }, [isToggleOn]);
+
+  useEffect(() => {
+    if (mode === 'edit') {
       const fetchDoc = async () => {
         const result = await getDocumentation(Number(docId));
-        if (result.status === "success") {
+        if (result.status === 'success') {
           setFormData(result?.data);
           const footerLabelLinks = result?.data?.footerLabelLinks;
           setSocialPlatformField(
             footerLabelLinks
               ? JSON.parse(footerLabelLinks)
-              : [{ icon: "", link: "" }]
+              : [{ icon: '', link: '' }]
           );
           const moreLabelLinks = result?.data?.moreLabelLinks;
           setMoreField(
             moreLabelLinks
               ? JSON.parse(moreLabelLinks)
-              : [{ label: "", link: "" }]
+              : [{ label: '', link: '' }]
           );
         } else {
           handleError(result, navigate, t);
@@ -151,51 +169,51 @@ export default function CreateDocModal() {
       fetchDoc();
     } else {
       setFormData({
-        name: "",
-        description: "",
-        version: "",
-        baseURL: "",
-        url: "",
-        organizationName: "",
-        projectName: "",
+        name: '',
+        description: '',
+        version: '',
+        baseURL: '',
+        url: '',
+        organizationName: '',
+        projectName: '',
         customCSS: customCSSInitial(),
-        favicon: "",
-        navImage: "",
-        copyrightText: "",
-        metaImage: "",
+        favicon: '',
+        navImage: '',
+        copyrightText: '',
+        metaImage: ''
       });
-      setSocialPlatformField([{ icon: "", link: "" }]);
-      setMoreField([{ label: "", link: "" }]);
+      setSocialPlatformField([{ icon: '', link: '' }]);
+      setMoreField([{ label: '', link: '' }]);
     }
   }, [docId, mode, navigate]); //eslint-disable-line
 
   const addRow = (fieldType) => {
-    if (fieldType === "social-platform-field") {
-      setSocialPlatformField([...socialPlatformField, { icon: "", link: "" }]);
-    } else if (fieldType === "more") {
-      setMoreField([...moreField, { label: "", link: "" }]);
-    } else if (fieldType === "feature-filed") {
+    if (fieldType === 'social-platform-field') {
+      setSocialPlatformField([...socialPlatformField, { icon: '', link: '' }]);
+    } else if (fieldType === 'more') {
+      setMoreField([...moreField, { label: '', link: '' }]);
+    } else if (fieldType === 'feature-filed') {
       setLandingPage((prevState) => ({
         ...prevState,
-        features: [...prevState.features, { emoji: "", title: "", text: "" }],
+        features: [...prevState.features, { emoji: '', title: '', text: '' }]
       }));
     }
   };
 
   const deleteRow = (fieldType) => {
-    if (fieldType === "social-platform-field") {
+    if (fieldType === 'social-platform-field') {
       if (socialPlatformField.length > 1) {
         setSocialPlatformField(socialPlatformField.slice(0, -1));
       }
-    } else if (fieldType === "more") {
+    } else if (fieldType === 'more') {
       if (moreField.length > 1) {
         setMoreField(moreField.slice(0, -1));
       }
-    } else if (fieldType === "feature-filed") {
+    } else if (fieldType === 'feature-filed') {
       if (landingPage.features.length > 1) {
         setLandingPage((prevState) => ({
           ...prevState,
-          features: prevState.features.slice(0, -1),
+          features: prevState.features.slice(0, -1)
         }));
       }
     }
@@ -214,14 +232,14 @@ export default function CreateDocModal() {
 
     setFormData({
       ...formData,
-      [name]: value || "",
+      [name]: value || ''
     });
   };
 
   const handleCreateDocument = async () => {
     const validate = validateFormData(formData);
     if (validate.status) {
-      toastMessage(t(validate.message), "error");
+      toastMessage(t(validate.message), 'error');
       return;
     }
 
@@ -231,14 +249,14 @@ export default function CreateDocModal() {
     );
 
     if (validateCommunity.status) {
-      toastMessage(t(validateCommunity.message), "error");
+      toastMessage(t(validateCommunity.message), 'error');
       return;
     }
 
     if (isToggleOn) {
       const validate = landingPagevalidate(landingPage);
       if (validate.status) {
-        toastMessage(t(validate.message), "error");
+        toastMessage(t(validate.message), 'error');
         return;
       }
     }
@@ -247,52 +265,52 @@ export default function CreateDocModal() {
 
     const payload = {
       id: Number(docId),
-      name: formData.name || "",
-      description: formData.description || "",
-      version: formData.version || "",
-      baseURL: formData.baseURL || "",
-      url: formData.url || "",
-      organizationName: formData.organizationName || "",
-      projectName: formData.projectName || "",
+      name: formData.name || '',
+      description: formData.description || '',
+      version: formData.version || '',
+      baseURL: formData.baseURL || '',
+      url: formData.url || '',
+      organizationName: formData.organizationName || '',
+      projectName: formData.projectName || '',
       customCSS: formData.customCSS || customCSSInitial(),
-      favicon: formData.favicon || "",
-      navImage: formData.navImage || "",
-      copyrightText: formData.copyrightText || "",
-      metaImage: formData.metaImage || "",
+      favicon: formData.favicon || '',
+      navImage: formData.navImage || '',
+      copyrightText: formData.copyrightText || '',
+      metaImage: formData.metaImage || '',
       landerDetails: JSON.stringify(landingData),
       footerLabelLinks: socialPlatformField
         ? JSON.stringify(socialPlatformField)
-        : [{ icon: "", link: "" }],
+        : [{ icon: '', link: '' }],
       moreLabelLinks: moreField
         ? JSON.stringify(moreField)
-        : [{ label: "", link: "" }],
+        : [{ label: '', link: '' }]
     };
     let result;
 
-    setLoadingMessage("Please wait while we preparing your documentation...");
-    openModal("loadingModal");
-    if (mode === "edit") {
+    setLoadingMessage(t('create_documentation_loading'));
+    openModal('loadingModal');
+    if (mode === 'edit') {
       result = await updateDocumentation(payload);
     } else {
       result = await createDocumentation(payload);
     }
 
     if (handleError(result, navigate, t)) {
-      closeModal("loadingModal");
+      closeModal('loadingModal');
       return;
     }
 
-    if (result.status === "success") {
-      closeModal("loadingModal");
+    if (result.status === 'success') {
+      closeModal('loadingModal');
       if (docId) {
         navigate(`/dashboard/documentation?id=${docId}`);
       } else {
-        navigate("/");
+        navigate('/');
       }
-      if (mode === "edit") {
-        toastMessage(t("documentation_updated"), "success");
+      if (mode === 'edit') {
+        toastMessage(t('documentation_updated'), 'success');
       } else {
-        toastMessage(t("documentation_created"), "success");
+        toastMessage(t('documentation_created'), 'success');
       }
     }
   };
@@ -324,8 +342,8 @@ export default function CreateDocModal() {
       ...prevState,
       ctaButtonText: {
         ...prevState.ctaButtonText,
-        [key]: value,
-      },
+        [key]: value
+      }
     }));
   };
 
@@ -334,8 +352,15 @@ export default function CreateDocModal() {
       ...prevState,
       secondCtaButtonText: {
         ...prevState.secondCtaButtonText,
-        [key]: value,
-      },
+        [key]: value
+      }
+    }));
+  };
+
+  const updateCtaImageLink = (value) => {
+    setLandingPage((prevState) => ({
+      ...prevState,
+      ctaImageLink: value
     }));
   };
 
@@ -348,12 +373,12 @@ export default function CreateDocModal() {
     });
     setLandingPage((prevState) => ({
       ...prevState,
-      features: updatedFeatures,
+      features: updatedFeatures
     }));
   };
 
   const handleEmojiClick = (index, emojiObject) => {
-    updateFeature(index, "emoji", emojiObject.unified);
+    updateFeature(index, 'emoji', emojiObject.unified);
     setShowEmojiPicker(false);
   };
 
@@ -364,7 +389,7 @@ export default function CreateDocModal() {
     const updatedSocialPlatformField = [...socialPlatformField];
     updatedSocialPlatformField[index] = {
       ...updatedSocialPlatformField[index],
-      icon: option,
+      icon: option
     };
     setSocialPlatformField(updatedSocialPlatformField);
   };
@@ -378,12 +403,12 @@ export default function CreateDocModal() {
 
   const convertToEmoji = (codePoint) => {
     if (/^[0-9a-fA-F]+$/.test(codePoint)) {
-      return String.fromCodePoint(parseInt(codePoint, 16));
+      return String.fromCodePoint(Number.parseInt(codePoint, 16));
     } else {
-      return "Invalid code point";
+      return 'Invalid code point';
     }
   };
-  
+
   return (
     <AnimatePresence>
       <Breadcrumb />
@@ -397,9 +422,9 @@ export default function CreateDocModal() {
         <div className="relative w-full h-full md:h-auto">
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-400">
-              {mode === "edit"
-                ? t("edit_documentation")
-                : t("new_documentation")}
+              {mode === 'edit'
+                ? t('edit_documentation')
+                : t('new_documentation')}
             </h3>
           </div>
 
@@ -409,24 +434,24 @@ export default function CreateDocModal() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t("title_label")}
+                      {t('title_label')}
                     </span>
                     <input
                       ref={titleRef}
                       onChange={handleChange}
                       type="text"
-                      value={formData?.name || ""}
+                      value={formData?.name || ''}
                       name="name"
                       id="name"
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
-                      placeholder={t("title_placeholder")}
+                      placeholder={t('title_placeholder')}
                       required
                     />
                   </div>
 
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t("version")}
+                      {t('version')}
                     </span>
                     <input
                       onChange={handleChange}
@@ -435,7 +460,7 @@ export default function CreateDocModal() {
                       name="version"
                       id="version"
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
-                      placeholder={t("version_placeholder")}
+                      placeholder={t('version_placeholder')}
                       required
                     />
                   </div>
@@ -444,7 +469,7 @@ export default function CreateDocModal() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t("description")}
+                      {t('description')}
                     </span>
                     <div>
                       <textarea
@@ -453,7 +478,7 @@ export default function CreateDocModal() {
                         name="description"
                         id="description"
                         className="bg-gray-50 border min-h-36 border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
-                        placeholder={t("description_placeholder")}
+                        placeholder={t('description_placeholder')}
                         rows="3"
                       />
                     </div>
@@ -461,14 +486,14 @@ export default function CreateDocModal() {
 
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t("custom_css")}
+                      {t('custom_css')}
                     </span>
                     <AceEditor
                       mode="css"
-                      theme={darkMode ? "monokai" : "github"}
+                      theme={darkMode ? 'monokai' : 'github'}
                       onChange={(newValue) =>
                         handleChange({
-                          target: { name: "customCSS", value: newValue },
+                          target: { name: 'customCSS', value: newValue }
                         })
                       }
                       value={formData.customCSS}
@@ -477,9 +502,9 @@ export default function CreateDocModal() {
                       setOptions={{
                         useWorker: false,
                         showLineNumbers: true,
-                        tabSize: 2,
+                        tabSize: 2
                       }}
-                      style={{ width: "100%", height: "200px" }}
+                      style={{ width: '100%', height: '200px' }}
                       className="rounded-lg border border-gray-600"
                     />
                   </div>
@@ -488,28 +513,28 @@ export default function CreateDocModal() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t("favicon")}
+                      {t('favicon')}
                     </span>
                     <input
                       type="url"
                       onChange={handleChange}
                       value={formData?.favicon}
                       name="favicon"
-                      placeholder={t("favicon_placeholder")}
+                      placeholder={t('favicon_placeholder')}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     />
                   </div>
 
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t("navbar_icon")}
+                      {t('navbar_icon')}
                     </span>
                     <input
                       onChange={handleChange}
                       value={formData?.navImage}
                       type="url"
                       name="navImage"
-                      placeholder={t("navbar_icon_placeholder")}
+                      placeholder={t('navbar_icon_placeholder')}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     />
                   </div>
@@ -518,28 +543,28 @@ export default function CreateDocModal() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t("copyright_text")}
+                      {t('copyright_text')}
                     </span>
                     <input
                       onChange={handleChange}
                       value={formData?.copyrightText}
                       type="text"
                       name="copyrightText"
-                      placeholder={t("copyright_text_placeholder")}
+                      placeholder={t('copyright_text_placeholder')}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     />
                   </div>
 
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t("social_card_image")}
+                      {t('social_card_image')}
                     </span>
                     <input
                       onChange={handleChange}
                       value={formData?.metaImage}
                       type="url"
                       name="metaImage"
-                      placeholder={t("social_card_image_palceholder")}
+                      placeholder={t('social_card_image_palceholder')}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     />
                   </div>
@@ -548,28 +573,28 @@ export default function CreateDocModal() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t("organization_name")}
+                      {t('organization_name')}
                     </span>
                     <input
                       onChange={handleChange}
                       value={formData?.organizationName}
                       type="text"
                       name="organizationName"
-                      placeholder={t("enter_organization_name")}
+                      placeholder={t('enter_organization_name')}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     />
                   </div>
 
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t("project_name")}
+                      {t('project_name')}
                     </span>
                     <input
                       onChange={handleChange}
                       value={formData?.projectName}
                       type="url"
                       name="projectName"
-                      placeholder={t("enter_project_name")}
+                      placeholder={t('enter_project_name')}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     />
                   </div>
@@ -578,28 +603,28 @@ export default function CreateDocModal() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t("base_url")}
+                      {t('base_url')}
                     </span>
                     <input
                       onChange={handleChange}
                       value={formData?.baseURL}
                       type="text"
                       name="baseURL"
-                      placeholder={t("paste_your_base_url")}
+                      placeholder={t('paste_your_base_url')}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     />
                   </div>
 
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t("url")}
+                      {t('url')}
                     </span>
                     <input
                       onChange={handleChange}
                       value={formData?.url}
                       type="text"
                       name="url"
-                      placeholder={t("paste_your_url")}
+                      placeholder={t('paste_your_url')}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     />
                   </div>
@@ -610,7 +635,7 @@ export default function CreateDocModal() {
                 <div>
                   <div className="flex justify-between items-center">
                     <p className="block text-md font-medium text-gray-700 dark:text-gray-300 ">
-                      {t("social_media_platform")}
+                      {t('social_media_platform')}
                     </p>
                   </div>
                 </div>
@@ -680,7 +705,7 @@ export default function CreateDocModal() {
 
                       <div>
                         <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          {t("link")}
+                          {t('link')}
                         </span>
                         <input
                           onChange={(e) =>
@@ -692,7 +717,7 @@ export default function CreateDocModal() {
                           value={obj.link}
                           type="text"
                           name="url"
-                          placeholder={t("social_link_placeholder")}
+                          placeholder={t('social_link_placeholder')}
                           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                         />
                       </div>
@@ -700,8 +725,8 @@ export default function CreateDocModal() {
                   ))}
                 <div className="flex justify-end gap-3">
                   <button
-                    onClick={() => addRow("social-platform-field")}
-                    title={t("add_new_field")}
+                    onClick={() => addRow('social-platform-field')}
+                    title={t('add_new_field')}
                     className="flex items-center gap-1 text-blue-600 rounded-lg text-sm"
                   >
                     <Icon
@@ -711,8 +736,8 @@ export default function CreateDocModal() {
                   </button>
 
                   <button
-                    onClick={() => deleteRow("social-platform-field")}
-                    title={t("delete_field")}
+                    onClick={() => deleteRow('social-platform-field')}
+                    title={t('delete_field')}
                     className="flex items-center gap-1 rounded-lg text-sm "
                   >
                     <Icon
@@ -724,7 +749,7 @@ export default function CreateDocModal() {
                 <div>
                   <div className="flex justify-start items-center">
                     <span className="block text-md font-medium text-gray-700 dark:text-gray-300 ">
-                      {t("more_footer")}
+                      {t('more_footer')}
                     </span>
                   </div>
 
@@ -745,8 +770,8 @@ export default function CreateDocModal() {
                 </div>
                 <div className="flex justify-end gap-3">
                   <button
-                    onClick={() => addRow("more")}
-                    title={t("add_new_field")}
+                    onClick={() => addRow('more')}
+                    title={t('add_new_field')}
                     className="flex items-center gap-1 text-blue-600 rounded-lg text-sm  py-1.5  mb-2 "
                   >
                     <Icon
@@ -756,8 +781,8 @@ export default function CreateDocModal() {
                   </button>
 
                   <button
-                    onClick={() => deleteRow("more")}
-                    title={t("delete_field")}
+                    onClick={() => deleteRow('more')}
+                    title={t('delete_field')}
                     className="flex items-center gap-1 rounded-lg text-sm  py-1.5  mb-2 "
                   >
                     <Icon
@@ -769,8 +794,8 @@ export default function CreateDocModal() {
               </div>
 
               <label class="inline-flex items-center cursor-pointer gpa-5 mb-4">
-                <span class="ms-3 text-lg font-medium text-gray-900 dark:text-gray-300 mr-3">
-                  Enable Landing Page
+                <span class="text-lg font-medium text-gray-900 dark:text-gray-300 mr-3">
+                  {t('enable_landing_page')}
                 </span>
                 <input
                   type="checkbox"
@@ -788,35 +813,35 @@ export default function CreateDocModal() {
                   <div className="grid gap-4 sm:grid-cols-2 mb-5">
                     <div>
                       <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        CTA Button Text
+                        {t('cta_button_text')}
                       </span>
                       <input
                         type="url"
                         onChange={(e) =>
                           updateCtaButtonText(
-                            "ctaButtonLinkLabel",
+                            'ctaButtonLinkLabel',
                             e.target.value
                           )
                         }
                         value={landingPage?.ctaButtonText?.ctaButtonLinkLabel}
                         name="favicon"
-                        placeholder={t("favicon_placeholder")}
+                        placeholder={t('cta_button_text_placeholder')}
                         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                       />
                     </div>
 
                     <div>
                       <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        CTA Button Link
+                        {t('cta_button_link')}
                       </span>
                       <input
                         onChange={(e) =>
-                          updateCtaButtonText("ctaButtonLink", e.target.value)
+                          updateCtaButtonText('ctaButtonLink', e.target.value)
                         }
                         value={landingPage?.ctaButtonText?.ctaButtonLink}
                         type="url"
                         name="navImage"
-                        placeholder={t("navbar_icon_placeholder")}
+                        placeholder={'/documentation'}
                         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                       />
                     </div>
@@ -825,40 +850,40 @@ export default function CreateDocModal() {
                   <div className="grid gap-4 sm:grid-cols-3 mb-5">
                     <div>
                       <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Second CTA Button Text
+                        {t('second_cta_button_text')}
                       </span>
                       <input
                         type="url"
                         onChange={(e) =>
                           updateSecondCtaButtonText(
-                            "ctaButtonLinkLabel",
+                            'ctaButtonLinkLabel',
                             e.target.value
                           )
                         }
                         value={
                           landingPage?.secondCtaButtonText?.ctaButtonLinkLabel
                         }
-                        name="favicon"
-                        placeholder={t("favicon_placeholder")}
+                        name="second_cta_button_text"
+                        placeholder={t('second_cta_button_text_placeholder')}
                         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                       />
                     </div>
 
                     <div>
                       <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Second CTA Button Link
+                        {t('second_cta_button_link')}
                       </span>
                       <input
                         onChange={(e) =>
                           updateSecondCtaButtonText(
-                            "ctaButtonLink",
+                            'ctaButtonLink',
                             e.target.value
                           )
                         }
                         value={landingPage?.secondCtaButtonText?.ctaButtonLink}
                         type="url"
                         name="navImage"
-                        placeholder={t("navbar_icon_placeholder")}
+                        placeholder={t('navbar_icon_placeholder')}
                         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                       />
                     </div>
@@ -868,16 +893,11 @@ export default function CreateDocModal() {
                         CTA Image Link
                       </span>
                       <input
-                        onChange={(e) =>
-                          updateSecondCtaButtonText(
-                            "ctaImageLink",
-                            e.target.value
-                          )
-                        }
-                        value={landingPage?.secondCtaButtonText?.ctaButtonLink}
+                        onChange={(e) => updateCtaImageLink(e.target.value)}
+                        value={landingPage.ctaImageLink || ''}
                         type="url"
-                        name="navImage"
-                        placeholder={t("navbar_icon_placeholder")}
+                        name="ctaImageLink"
+                        placeholder={t('cta_image_link')}
                         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                       />
                     </div>
@@ -901,25 +921,18 @@ export default function CreateDocModal() {
                           onFocus={() => toggleEmojiPicker(index)}
                           placeholder="Click to add emoji"
                           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                          value={convertToEmoji(obj.emoji) || ""}
+                          value={convertToEmoji(obj.emoji) || ''}
                           readOnly
                         />
                         {activeFieldIndex === index && showEmojiPicker && (
                           <div
-                          className={`absolute left-0 bg-white rounded-lg shadow w-52 dark:bg-gray-700 z-30`}
-                          style={{ transform: 'translateY(-110%)' }}
-                        >
-                            {/* <EmojiPicker
-                              onEmojiClick={(emoji) =>
-                                handleEmojiClick(index, emoji)
-                              }
-                              disableSearchBar
-                              disableSkinTonePicker
-                              previewConfig={{ showPreview: false }}
-                              emojiStyle="google"
-                            /> */}
-                              <Picker data={data} onEmojiSelect={(emoji) =>
-                                handleEmojiClick(index, emoji)} />
+                            ref={pickerRef}
+                            className={
+                              'absolute left-0 bg-white rounded-lg shadow w-52 dark:bg-gray-700 z-30'
+                            }
+                            style={{ transform: 'translateY(-110%)' }}
+                          >
+                          <Picker data={data} onEmojiSelect={(emoji) => handleEmojiClick(index, emoji)}/>
                           </div>
                         )}
                       </div>
@@ -930,7 +943,7 @@ export default function CreateDocModal() {
                         </span>
                         <input
                           onChange={(e) =>
-                            updateFeature(index, "title", e.target.value)
+                            updateFeature(index, 'title', e.target.value)
                           }
                           value={obj.title}
                           type="text"
@@ -945,10 +958,11 @@ export default function CreateDocModal() {
                         </span>
                         <input
                           onChange={(e) =>
-                            updateFeature(index, "text", e.target.value)
+                            updateFeature(index, 'text', e.target.value)
                           }
                           value={obj.text}
                           type="text"
+                          id="feature_desc"
                           placeholder="Feature Description"
                           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                         />
@@ -957,8 +971,8 @@ export default function CreateDocModal() {
                   ))}
                   <div className="flex justify-end gap-3">
                     <button
-                      onClick={() => addRow("feature-filed")}
-                      title={t("add_new_field")}
+                      onClick={() => addRow('feature-filed')}
+                      title={t('add_new_field')}
                       className="flex items-center gap-1 text-blue-600 rounded-lg text-sm  py-1.5  mb-2 "
                     >
                       <Icon
@@ -968,8 +982,8 @@ export default function CreateDocModal() {
                     </button>
 
                     <button
-                      onClick={() => deleteRow("feature-filed")}
-                      title={t("delete_field")}
+                      onClick={() => deleteRow('feature-filed')}
+                      title={t('delete_field')}
                       className="flex items-center gap-1 rounded-lg text-sm  py-1.5  mb-2 "
                     >
                       <Icon
@@ -988,9 +1002,9 @@ export default function CreateDocModal() {
                   className="flex justify-center items-center text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
                 >
                   <span>
-                    {mode === "edit"
-                      ? t("update_documentation")
-                      : t("new_documentation")}
+                    {mode === 'edit'
+                      ? t('update_documentation')
+                      : t('new_documentation')}
                   </span>
                   {!mode && <Icon icon="ei:plus" className="w-6 h-6" />}
                 </button>

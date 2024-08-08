@@ -6,18 +6,21 @@ import { Icon } from '@iconify/react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 import {
+  commonReorderBulk,
   createPage as createPageAPI,
   createPageGroup,
   deletePage,
   deletePageGroup,
   getPageGroup,
-  pageGroupReorder,
-  commonReorderBulk,
   updatePageGroup
 } from '../../api/Requests';
 import { AuthContext } from '../../context/AuthContext';
 import { ModalContext } from '../../context/ModalContext';
-import { getLastPageOrder, handleError, sortGroupAndPage } from '../../utils/Common';
+import {
+  getLastPageOrder,
+  handleError,
+  sortGroupAndPage
+} from '../../utils/Common';
 import { toastMessage } from '../../utils/Toast';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
 import EditDocumentModal from '../CreateDocumentModal/EditDocumentModal';
@@ -38,10 +41,7 @@ export default function PageGroupTable () {
   const [groupDetail, setGroupDetail] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [data, setData] = useState([]);
-  const {
-    refresh,
-    refreshData
-  } = useContext(AuthContext);
+  const { refresh, refreshData } = useContext(AuthContext);
 
   const {
     openModal,
@@ -76,7 +76,7 @@ export default function PageGroupTable () {
     if (docId) {
       fetchData();
     }
-  }, [docId, pageGroupId, navigate, refresh ]);//eslint-disable-line
+  }, [docId, pageGroupId, navigate, refresh]); //eslint-disable-line
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
@@ -92,10 +92,7 @@ export default function PageGroupTable () {
 
   const handleCreatePageGroup = async (title) => {
     if (title === '') {
-      toastMessage(
-        t('title_is_required'),
-        'warning'
-      );
+      toastMessage(t('title_is_required'), 'warning');
       return;
     }
 
@@ -104,7 +101,7 @@ export default function PageGroupTable () {
       name: title,
       documentationId: Number(docId),
       parentId: Number(pageGroupId),
-      order: parseInt(lastOrder)
+      order: Number.parseInt(lastOrder)
     });
 
     if (handleError(result, navigate, t)) {
@@ -159,18 +156,12 @@ export default function PageGroupTable () {
 
   const handleCreatePage = async (title, slug) => {
     if (title === '') {
-      toastMessage(
-        t('title_is_required'),
-        'warning'
-      );
+      toastMessage(t('title_is_required'), 'warning');
       return;
     }
 
     if (slug === '') {
-      toastMessage(
-        t('slug_is_required'),
-        'warning'
-      );
+      toastMessage(t('slug_is_required'), 'warning');
       return;
     }
 
@@ -181,9 +172,9 @@ export default function PageGroupTable () {
       title,
       slug,
       content: JSON.stringify([]),
-      documentationId: parseInt(docIdOrVersionId),
-      pageGroupId: parseInt(pageGroupId),
-      order: parseInt(lastOrder)
+      documentationId: Number.parseInt(docIdOrVersionId),
+      pageGroupId: Number.parseInt(pageGroupId),
+      order: Number.parseInt(lastOrder)
     });
 
     if (handleError(result, navigate, t)) {
@@ -223,14 +214,19 @@ export default function PageGroupTable () {
       }
 
       // make payload an array
-      const result = await commonReorderBulk({order: [payload]});
+      const result = await commonReorderBulk({ order: [payload] });
 
       if (handleError(result, navigate, t)) return; //eslint-disable-line
     };
 
     try {
-      await Promise.all(newItems.map((item, index) => updateOrder(item, index)));
-      toastMessage(t(`${dragItem.slug ? 'page_reordered' : 'page_group_reordered'}`), 'success');
+      await Promise.all(
+        newItems.map((item, index) => updateOrder(item, index))
+      );
+      toastMessage(
+        t(`${dragItem.slug ? 'page_reordered' : 'page_group_reordered'}`),
+        'success'
+      );
     } catch (err) {
       console.error('Error in Promise.all:', err);
     }
@@ -238,7 +234,7 @@ export default function PageGroupTable () {
   };
 
   return (
-    <AnimatePresence className='bg-gray-50 dark:bg-gray-900 p-3 sm:p-5'>
+    <AnimatePresence className="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5">
       <Breadcrumb />
 
       {createPageGroupModal && (
@@ -256,11 +252,11 @@ export default function PageGroupTable () {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className='grid max-w-screen-xl'
-        key='pageGroupName'
+        className="grid max-w-screen-xl"
+        key="pageGroupName"
       >
-        <div className='mr-auto place-self-center lg:col-span-7'>
-          <h1 className='max-w-xl mb-4 text-4xl font-bold tracking-tight leading-none md:text-4xl xl:text-4xl dark:text-white'>
+        <div className="mr-auto place-self-center lg:col-span-7">
+          <h1 className="max-w-xl mb-4 text-4xl font-bold tracking-tight leading-none md:text-4xl xl:text-4xl dark:text-white">
             {groupDetail.name}
           </h1>
         </div>
@@ -271,46 +267,49 @@ export default function PageGroupTable () {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ delay: 0.1 }}
-        className=''
-        key='pageGroupTable'
+        className=""
+        key="pageGroupTable"
       >
-        <div className='bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden'>
-          <div className='flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4'>
-            <div className='flex items-center w-full md:w-auto space-x-2'>
-              <div className='relative w-full md:w-64'>
-                <div className='absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none'>
+        <div className="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
+          <div className="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
+            <div className="flex items-center w-full md:w-auto space-x-2">
+              <div className="relative w-full md:w-64">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                   <Icon
-                    icon='material-symbols:search'
-                    className='w-6 h-6 text-gray-400 dark:text-gray-500'
+                    icon="material-symbols:search"
+                    className="w-6 h-6 text-gray-400 dark:text-gray-500"
                   />
                 </div>
                 <input
-                  type='text'
-                  id='simple-search'
+                  type="text"
+                  id="simple-search"
                   value={searchTerm}
                   onChange={handleSearchChange}
-                  className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500'
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                   placeholder={t('search_placeholder')}
-                  required=''
+                  required=""
                 />
               </div>
 
-              <div className='px-5 py-1.5 rounded-lg font-semibold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300' title='Version'>
+              <div
+                className="px-5 py-1.5 rounded-lg font-semibold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                title="Version"
+              >
                 {version}
               </div>
             </div>
 
-            <div className='flex items-center space-x-2'>
+            <div className="flex items-center space-x-2">
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 onClick={() => openModal('createPageGroup')}
-                type='button'
-                className='flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800'
+                type="button"
+                className="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
               >
-                <span className='px-1 text-left items-center dark:text-white text-md'>
+                <span className="px-1 text-left items-center dark:text-white text-md">
                   {t('new_group')}
                 </span>
-                <Icon icon='ei:plus' className='w-6 h-6 dark:text-white' />
+                <Icon icon="ei:plus" className="w-6 h-6 dark:text-white" />
               </motion.button>
 
               <motion.button
@@ -328,31 +327,31 @@ export default function PageGroupTable () {
             </div>
           </div>
 
-          <div className='overflow-x-auto h-auto'>
+          <div className="overflow-x-auto h-auto">
             <DragDropContext onDragEnd={handleDragEnd}>
-              <Droppable droppableId='table' type='TABLE'>
+              <Droppable droppableId="table" type="TABLE">
                 {(provided) => (
-                  <table className='w-full text-sm text-left text-gray-500 dark:text-gray-400'>
-                    <thead className='text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400'>
+                  <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                    <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                       <tr>
-                        <th scope='col' className='px-4 py-3' />
-                        <th scope='col' className='px-4 py-3'>
+                        <th scope="col" className="px-4 py-3" />
+                        <th scope="col" className="px-4 py-3">
                           {t('title')}
                         </th>
-                        <th scope='col' className='px-4 py-3'>
+                        <th scope="col" className="px-4 py-3">
                           {t('author_editor')}
                         </th>
-                        <th scope='col' className='px-4 py-3'>
+                        <th scope="col" className="px-4 py-3">
                           {t('create_update')}
                         </th>
-                        <th scope='col' className='px-4 py-3' />
+                        <th scope="col" className="px-4 py-3" />
                       </tr>
                     </thead>
                     <tbody {...provided.droppableProps} ref={provided.innerRef}>
                       {filteredItems.length <= 0 && (
-                        <tr className='border-b dark:border-gray-700'>
-                          <td colSpan='4' className='text-center p-8'>
-                            <h1 className='text-center text-gray-600 sm:text-lg font-semibold'>
+                        <tr className="border-b dark:border-gray-700">
+                          <td colSpan="4" className="text-center p-8">
+                            <h1 className="text-center text-gray-600 sm:text-lg font-semibold">
                               {t('no_pages_found')}
                             </h1>
                           </td>
@@ -396,20 +395,22 @@ export default function PageGroupTable () {
 
       {editModal && currentModalItem && (
         <EditDocumentModal
-          heading='Rename Page Group'
+          heading="Rename Page Group"
           title={currentModalItem.name}
           id={currentModalItem.id}
           updateData={handlePageGroupUpdate}
-          key='editPageGroup'
+          key="editPageGroup"
         />
       )}
 
       {deleteModal && currentModalItem && (
         <DeleteModal
-          deleteDoc={() => handleDeletePageGroup(currentModalItem.id, currentModalItem)}
+          deleteDoc={() =>
+            handleDeletePageGroup(currentModalItem.id, currentModalItem)
+          }
           id={currentModalItem.id}
           message={currentModalItem.name || currentModalItem.title}
-          key='deletePageGroup'
+          key="deletePageGroup"
         />
       )}
     </AnimatePresence>

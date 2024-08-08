@@ -6,11 +6,9 @@ import { AuthContext } from '../context/AuthContext';
 export default function RequireAuth () {
   const location = useLocation();
   const { user } = useContext(AuthContext);
-  return user
-    ? (
-      <Outlet />
-      )
-    : (
-      <Navigate to='/login' state={{ from: location }} replace />
-      );
+  return user ? (
+    <Outlet />
+  ) : (
+    <Navigate to="/login" state={{ from: location }} replace />
+  );
 }

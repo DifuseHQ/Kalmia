@@ -9,7 +9,6 @@ import (
 	"git.difuse.io/Difuse/kalmia/db/models"
 	"git.difuse.io/Difuse/kalmia/logger"
 	"git.difuse.io/Difuse/kalmia/services"
-	"go.uber.org/zap"
 )
 
 func GetDocumentations(service *services.DocService, w http.ResponseWriter, r *http.Request) {
@@ -513,17 +512,7 @@ func GetDocusaurus(service *services.DocService, w http.ResponseWriter, r *http.
 
 	docPath, baseURL, err := service.GetDocusaurus(urlPath)
 	if err != nil {
-		switch err.Error() {
-		case "doc_does_not_exist":
-			SendJSONResponse(http.StatusNotFound, w, map[string]string{"status": "error", "message": "Documentation doesn't exist?"})
-		case "docusaurus_build_not_found":
-			SendJSONResponse(http.StatusNotFound, w, map[string]string{"status": "error", "message": "Docusaurus build not found"})
-		case "docusaurus_build_empty":
-			SendJSONResponse(http.StatusNotFound, w, map[string]string{"status": "error", "message": "Docusaurus build is empty"})
-		default:
-			logger.Error("Error getting docusaurus", zap.Error(err))
-			SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "Internal server error"})
-		}
+		http.Redirect(w, r, "/admin/", http.StatusPermanentRedirect)
 		return
 	}
 

@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
@@ -10,12 +12,17 @@ import (
 	"git.difuse.io/Difuse/kalmia/services"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
+
+	"golang.org/x/oauth2/google"
+	"golang.org/x/oauth2/microsoft"
 	"gorm.io/gorm"
 
 	githubClient "github.com/google/go-github/v39/github"
 )
 
 var githubOauthConfig *oauth2.Config
+var microsoftOauthConfig *oauth2.Config
+var googleOAuthConfig *oauth2.Config
 
 func CreateUser(authService *services.AuthService, w http.ResponseWriter, r *http.Request) {
 	type Request struct {
@@ -44,11 +51,11 @@ func CreateUser(authService *services.AuthService, w http.ResponseWriter, r *htt
 func EditUser(authService *services.AuthService, w http.ResponseWriter, r *http.Request) {
 	type Request struct {
 		ID       uint   `json:"id" validate:"required"`
-		Username string `json:"username" validate:"alphanum"`
-		Email    string `json:"email" validate:"email"`
+		Username string `json:"username" validate:"omitempty,alphanum"`
+		Email    string `json:"email" validate:"omitempty,email"`
 		Password string `json:"password" validate:"omitempty,min=8,max=32"`
-		Photo    string `json:"photo" validate:"http_url"`
-		Admin    bool   `json:"admin" validate:"boolean"`
+		Photo    string `json:"photo" validate:"omitempty,http_url"`
+		Admin    int    `json:"admin" validate:"omitempty"`
 	}
 
 	req, err := ValidateRequest[Request](w, r)
@@ -296,7 +303,7 @@ func GithubCallback(aS *services.AuthService, w http.ResponseWriter, r *http.Req
 
 	if email == "" {
 		fmt.Println("No email found")
-		http.Redirect(w, r, "/admin/401", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, "/admin/error/401", http.StatusTemporaryRedirect)
 		return
 	}
 
@@ -304,7 +311,7 @@ func GithubCallback(aS *services.AuthService, w http.ResponseWriter, r *http.Req
 
 	if err != nil {
 		fmt.Println("User not found")
-		http.Redirect(w, r, "/admin/401", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, "/admin/error/401", http.StatusTemporaryRedirect)
 		return
 	}
 
@@ -312,9 +319,178 @@ func GithubCallback(aS *services.AuthService, w http.ResponseWriter, r *http.Req
 
 	if err != nil {
 		fmt.Println("Failed to create token")
-		http.Redirect(w, r, "/admin/401", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, "/admin/error/401", http.StatusTemporaryRedirect)
 		return
 	}
 
 	http.Redirect(w, r, fmt.Sprintf("/admin/login/gh?token=%s", tokenDetails), http.StatusTemporaryRedirect)
+}
+
+func getMicrosoftOauthConfig() *oauth2.Config {
+	if microsoftOauthConfig == nil {
+		microsoftOauthConfig = &oauth2.Config{
+			ClientID:     config.ParsedConfig.MicrosoftOAuth.ClientID,
+			ClientSecret: config.ParsedConfig.MicrosoftOAuth.ClientSecret,
+			RedirectURL:  config.ParsedConfig.MicrosoftOAuth.RedirectURL,
+			Scopes:       []string{"https://graph.microsoft.com/User.Read"},
+			Endpoint:     microsoft.AzureADEndpoint("common"),
+		}
+	}
+
+	return microsoftOauthConfig
+}
+
+func MicrosoftLogin(aS *services.AuthService, w http.ResponseWriter, r *http.Request) {
+	if config.ParsedConfig.MicrosoftOAuth.ClientID == "" || config.ParsedConfig.MicrosoftOAuth.ClientSecret == "" {
+		http.Error(w, "Microsoft OAuth not configured", http.StatusInternalServerError)
+		return
+	}
+	microsoftOauthCfg := getMicrosoftOauthConfig()
+	url := microsoftOauthCfg.AuthCodeURL("")
+	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+}
+
+func MicrosoftCallback(aS *services.AuthService, w http.ResponseWriter, r *http.Request) {
+	if config.ParsedConfig.MicrosoftOAuth.ClientID == "" || config.ParsedConfig.MicrosoftOAuth.ClientSecret == "" {
+		http.Error(w, "Microsoft OAuth not configured", http.StatusInternalServerError)
+		return
+	}
+	microsoftOauthCfg := getMicrosoftOauthConfig()
+	code := r.FormValue("code")
+	token, err := microsoftOauthCfg.Exchange(context.Background(), code)
+	if err != nil {
+		http.Error(w, "Failed to exchange token: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	client := microsoftOauthCfg.Client(context.Background(), token)
+	resp, err := client.Get("https://graph.microsoft.com/v1.0/me")
+	if err != nil {
+		http.Error(w, "Failed to get user info: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		http.Error(w, "Failed to read response body: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var userInfo struct {
+		Email string `json:"mail"`
+	}
+	if err := json.Unmarshal(body, &userInfo); err != nil {
+		http.Error(w, "Failed to parse user info: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	email := userInfo.Email
+	if email == "" {
+		http.Redirect(w, r, "/admin/error/401", http.StatusUnauthorized)
+		return
+	}
+
+	dbUser, err := aS.FindUserByEmail(email)
+	if err != nil {
+		http.Redirect(w, r, "/admin/error/401", http.StatusUnauthorized)
+		return
+	}
+
+	tokenDetails, err := aS.CreateJWTFromEmail(dbUser.Email)
+	if err != nil {
+		fmt.Println("Failed to create token")
+		http.Redirect(w, r, "/admin/error/401", http.StatusTemporaryRedirect)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/admin/login/ms?token=%s", tokenDetails), http.StatusTemporaryRedirect)
+}
+
+func getGoogleOAuthConfig() *oauth2.Config {
+	if googleOAuthConfig == nil {
+		googleOAuthConfig = &oauth2.Config{
+			ClientID:     config.ParsedConfig.GoogleOAuth.ClientID,
+			ClientSecret: config.ParsedConfig.GoogleOAuth.ClientSecret,
+			RedirectURL:  config.ParsedConfig.GoogleOAuth.RedirectURL,
+			Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
+			Endpoint:     google.Endpoint,
+		}
+	}
+	return googleOAuthConfig
+}
+
+func GoogleLogin(aS *services.AuthService, w http.ResponseWriter, r *http.Request) {
+	if config.ParsedConfig.GoogleOAuth.ClientID == "" || config.ParsedConfig.GoogleOAuth.ClientSecret == "" {
+		http.Error(w, "Google OAuth not configured", http.StatusInternalServerError)
+		return
+	}
+	googleOAuthCfg := getGoogleOAuthConfig()
+	url := googleOAuthCfg.AuthCodeURL("state", oauth2.AccessTypeOffline)
+	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+}
+
+func GoogleCallback(aS *services.AuthService, w http.ResponseWriter, r *http.Request) {
+	if config.ParsedConfig.GoogleOAuth.ClientID == "" || config.ParsedConfig.GoogleOAuth.ClientSecret == "" {
+		http.Error(w, "Google OAuth not configured", http.StatusInternalServerError)
+		return
+	}
+
+	googleOAuthCfg := getGoogleOAuthConfig()
+	code := r.FormValue("code")
+	token, err := googleOAuthCfg.Exchange(context.Background(), code)
+	if err != nil {
+		http.Error(w, "Failed to exchange token: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	email, err := getGoogleUserEmail(token.AccessToken)
+	if err != nil {
+		http.Error(w, "Failed to get user email: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if email == "" {
+		fmt.Println("No email found")
+		http.Redirect(w, r, "/admin/error/401", http.StatusTemporaryRedirect)
+		return
+	}
+
+	dbUser, err := aS.FindUserByEmail(email)
+	if err != nil {
+		fmt.Println("User not found")
+		http.Redirect(w, r, "/admin/error/401", http.StatusTemporaryRedirect)
+		return
+	}
+
+	tokenDetails, err := aS.CreateJWTFromEmail(dbUser.Email)
+	if err != nil {
+		fmt.Println("Failed to create token")
+		http.Redirect(w, r, "/admin/error/401", http.StatusTemporaryRedirect)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/admin/login/gg?token=%s", tokenDetails), http.StatusTemporaryRedirect)
+}
+
+func getGoogleUserEmail(accessToken string) (string, error) {
+	resp, err := http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + accessToken)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	var result struct {
+		Email string `json:"email"`
+	}
+	if err := json.Unmarshal(body, &result); err != nil {
+		return "", err
+	}
+
+	return result.Email, nil
 }

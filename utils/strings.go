@@ -2,6 +2,8 @@ package utils
 
 import (
 	"fmt"
+	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -50,8 +52,20 @@ func StringToUint(input string) (uint, error) {
 }
 
 func StringToFileString(input string) string {
+	input = strings.TrimSpace(input)
 	input = strings.ToLower(input)
-	return strings.ReplaceAll(input, " ", "_")
+	reg := regexp.MustCompile(`[^\p{L}\p{N}]+`)
+	input = reg.ReplaceAllString(input, "-")
+	input = strings.Trim(input, "-")
+	reg = regexp.MustCompile(`-+`)
+	input = reg.ReplaceAllString(input, "-")
+	if len(input) > 50 {
+		input = input[:50]
+	}
+	if input == "" {
+		return "unnamed-file"
+	}
+	return url.PathEscape(input)
 }
 
 func StringToURLString(input string) string {
@@ -72,4 +86,20 @@ func ReplaceMany(input string, replacements map[string]string) string {
 		input = strings.ReplaceAll(input, k, v)
 	}
 	return input
+}
+
+func IsBaseURLValid(input string) bool {
+	invalidBaseURLs := []string{"admin", "/admin", "/admin/", "/docs", "/auth", "/oauth", "/health"}
+
+	if input == "/" {
+		return false
+	}
+
+	for _, invalidBaseURL := range invalidBaseURLs {
+		if input == invalidBaseURL || strings.HasPrefix(input, invalidBaseURL) {
+			return false
+		}
+	}
+
+	return true
 }

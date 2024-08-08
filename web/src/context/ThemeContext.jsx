@@ -6,19 +6,40 @@ export const ThemeProvider = ({ children }) => {
   const updateFavicon = (theme) => {
     const color = theme === 'dark' ? 'white' : 'black';
     const links = [
-      { rel: 'apple-touch-icon', sizes: '180x180', href: `/admin/assets/favicon/${color}/apple-touch-icon.png` },
-      { rel: 'icon', type: 'image/png', sizes: '32x32', href: `/admin/assets/favicon/${color}/favicon-32x32.png` },
-      { rel: 'icon', type: 'image/png', sizes: '16x16', href: `/admin/assets/favicon/${color}/favicon-16x16.png` },
-      { rel: 'manifest', href: `/admin/assets/favicon/${color}/site.webmanifest` }
+      {
+        rel: 'apple-touch-icon',
+        sizes: '180x180',
+        href: `/admin/assets/favicon/${color}/apple-touch-icon.png`
+      },
+      {
+        rel: 'icon',
+        type: 'image/png',
+        sizes: '32x32',
+        href: `/admin/assets/favicon/${color}/favicon-32x32.png`
+      },
+      {
+        rel: 'icon',
+        type: 'image/png',
+        sizes: '16x16',
+        href: `/admin/assets/favicon/${color}/favicon-16x16.png`
+      },
+      {
+        rel: 'manifest',
+        href: `/admin/assets/favicon/${color}/site.webmanifest`
+      }
     ];
 
-    links.forEach(link => {
-      const existingLink = document.querySelector(`link[rel='${link.rel}']${link.sizes ? `[sizes='${link.sizes}']` : ''}`);
+    links.forEach((link) => {
+      const existingLink = document.querySelector(
+        `link[rel='${link.rel}']${link.sizes ? `[sizes='${link.sizes}']` : ''}`
+      );
       if (existingLink) {
         existingLink.href = link.href;
       } else {
         const newLink = document.createElement('link');
-        Object.keys(link).forEach(attr => newLink.setAttribute(attr, link[attr]));
+        Object.keys(link).forEach((attr) =>
+          newLink.setAttribute(attr, link[attr])
+        );
         document.head.appendChild(newLink);
       }
     });
@@ -40,7 +61,9 @@ export const ThemeProvider = ({ children }) => {
   });
 
   useEffect(() => {
-    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const prefersDarkMode = window.matchMedia(
+      '(prefers-color-scheme: dark)'
+    ).matches;
     if (!window.localStorage.getItem('theme') && prefersDarkMode) {
       document.documentElement.classList.add('light');
       document.body.setAttribute('data-color-scheme', 'light');
