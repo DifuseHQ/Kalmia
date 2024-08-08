@@ -127,12 +127,22 @@ export default function EditPage () {
   const [editorContent, setEditorContent] = useState([
     { type: 'paragraph', content: '' }
   ]);
-
+  const generateSlug = (title) => {
+    return '/' + title
+      .toLowerCase()
+      .trim()
+      .replace(/[\s]+/g, '-')
+      .replace(/[^\w-]+/g, ''); 
+  };
   const updateContent = (newContent, name) => {
-    setPageData((prevPageData) => ({
-      ...prevPageData,
-      [name]: newContent
-    }));
+    setPageData((prevPageData) => {
+      const updatedPageData = { ...prevPageData, [name]: newContent };
+      if (name === 'title') {
+        updatedPageData.slug = generateSlug(newContent);
+      }
+  
+      return updatedPageData;
+    });
   };
 
   const editor = useCreateBlockNote({

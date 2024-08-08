@@ -10,11 +10,20 @@ export default function CreatePage ({ handleCreate }) {
 
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
-
+  
+  const generateSlug = (title) => {
+    return '/' + title
+      .toLowerCase()
+      .trim()
+      .replace(/[\s]+/g, '-')
+      .replace(/[^\w-]+/g, ''); 
+  };
   const handleKeyDown = (event) => {
     if (event.key === 'Enter') {
       event.preventDefault();
-      handleCreate(title, slug);
+      const generatedSlug = generateSlug(title);
+      setSlug(generatedSlug);
+      handleCreate(title, generatedSlug);
     }
   };
 
@@ -56,11 +65,17 @@ export default function CreatePage ({ handleCreate }) {
             <div className="grid gap-4 mb-4">
               <div>
                 <span className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                  {t('title_label')}
+                  {t('title_label')}df
                 </span>
                 <input
                   ref={inputRef}
-                  onChange={(e) => setTitle(e.target.value)}
+                  onChange={(e) => {
+                    console.log(e.target.value);
+                    
+                    const newTitle = e.target.value;
+                    setTitle(newTitle)
+                    setSlug(generateSlug(newTitle));
+                  }}
                   onKeyDown={handleKeyDown}
                   type="text"
                   name="title"
@@ -75,6 +90,7 @@ export default function CreatePage ({ handleCreate }) {
                   {t('slug')}
                 </span>
                 <input
+                 value={slug}
                   onChange={(e) => setSlug(e.target.value)}
                   onKeyDown={handleKeyDown}
                   type="text"
