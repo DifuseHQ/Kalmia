@@ -307,24 +307,24 @@ export const validateCommunityFields = (socialPlatformField, moreField) => {
   };
 
   for (const field of socialPlatformField) {
-    if (!field.icon) {
+    if (field.link && !field.icon) {
       errors.status = true;
       errors.message = 'social_media_icon_required';
       return errors;
     }
-    if (!field.link || !isValidURL(field.link)) {
+    if (field.icon && !field.link ||field.link && !isValidURL(field.link)) {
       errors.status = true;
       errors.message = 'valid_social_platform_url_required';
       return errors;
     }
   }
   for (const field of moreField) {
-    if (!field.label) {
+    if (field.link && !field.label) {
       errors.status = true;
       errors.message = 'more_field_label_required';
       return errors;
     }
-    if (!field.link || !isValidURL(field.link)) {
+    if (field.label && !field.link || field.link && !isValidURL(field.link)) {
       errors.status = true;
       errors.message = 'valid_more_community_url_required';
       return errors;
