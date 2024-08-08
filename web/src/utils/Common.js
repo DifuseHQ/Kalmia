@@ -419,9 +419,11 @@ export function useOutsideAlerter(ref, onOutsideClick) {
   }, [ref, onOutsideClick]);
 }
 
+
 export const convertToEmoji = (codePoint) => {
-  if (/^[0-9a-fA-F]+$/i.test(codePoint)) {
-    return String.fromCodePoint(parseInt(codePoint, 16));
+  if (/^[0-9a-fA-F]+$/.test(codePoint)) {
+    return String.fromCodePoint(Number.parseInt(codePoint, 16));
+  } else {
+    return '';
   }
-  return '';
 };
