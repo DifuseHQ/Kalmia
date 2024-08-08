@@ -15,11 +15,12 @@ export default function LoginPage () {
   const [availableProviders, setAvailableProviders] = useState([]);
   const { login, loginOAuth } = useContext(AuthContext);
 
+
   useEffect(() => {
     const fetchOAuthProviders = async () => {
       try {
         const response = await oAuthProviders();
-        setAvailableProviders(response.data || []);
+        setAvailableProviders(Array.isArray(response.data) ? response.data : []);
       } catch (error) {
         console.error('Failed to fetch OAuth providers:', error);
         setAvailableProviders([]);
@@ -28,6 +29,7 @@ export default function LoginPage () {
 
     fetchOAuthProviders();
   }, []);
+
 
   useEffect(() => {
     if (window.location.pathname.startsWith('/admin/login/gh') ||
@@ -141,6 +143,7 @@ export default function LoginPage () {
                 </div>
 
                 {availableProviders.length > 0 && (
+                  
                   <div className={`grid gap-4 ${oAuthGridCols()}`}>
                     {availableProviders.map((provider) => (
                       <button
