@@ -346,7 +346,7 @@ export const landingPagevalidate = (data) => {
   }
 
   if (
-    data.ctaButtonText.ctaButtonLink &&
+    !data.ctaButtonText.ctaButtonLink ||
     !isValidURL(data.ctaButtonText.ctaButtonLink) &&
     !isValidBaseURL(data.ctaButtonText.ctaButtonLink)
   ) {
@@ -365,7 +365,7 @@ export const landingPagevalidate = (data) => {
     return errors;
   }
 
-  if (data.ctaImageLink && !isValidURL(data.ctaImageLink)) {
+  if (!data.ctaImageLink || !isValidURL(data.ctaImageLink)) {
     errors.status = true;
     errors.message = 'Valid CTA image url Required';
     return errors;

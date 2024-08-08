@@ -50,6 +50,7 @@ const LabelAndCommunityComponent = ({
       <div>
         <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           {t('label')}
+          <span className='text-red-500 ml-1'>*</span>
         </span>
         <input
           type="text"
@@ -64,6 +65,7 @@ const LabelAndCommunityComponent = ({
       <div>
         <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           {t('link')}
+          <span className='text-red-500 ml-1'>*</span>
         </span>
         <input
           type="text"
@@ -71,7 +73,7 @@ const LabelAndCommunityComponent = ({
           id={linkId}
           name={index}
           onChange={(e) => onLinkChange(index, e.target.value)}
-          placeholder={t('community_placeholder')}
+          placeholder={t('more_footer_link_placeholder')}
           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
         />
       </div>
@@ -123,7 +125,7 @@ export default function CreateDocModal () {
       ctaButtonLink: ''
     },
     ctaImageLink: '',
-    features: [{ emoji: '26A1', title: '', text: '' }]
+    features: [{ emoji: '', title: '', text: '' }]
   });
 
   const pickerRef = useRef(null);
@@ -149,6 +151,11 @@ export default function CreateDocModal () {
       const fetchDoc = async () => {
         const result = await getDocumentation(Number(docId));
         if (result.status === 'success') {
+          const landingPageDetails = JSON.parse(result.data.landerDetails);
+          const validateLandingDetails = prepareLandingPageData(landingPageDetails)
+          if (Object.keys(validateLandingDetails).length !== 0) {
+            SetIsToggleOn(true);
+          }
           setFormData(result?.data);
           const footerLabelLinks = result?.data?.footerLabelLinks;
           setSocialPlatformField(
@@ -162,12 +169,29 @@ export default function CreateDocModal () {
               ? JSON.parse(moreLabelLinks)
               : [{ label: '', link: '' }]
           );
+          setLandingPage({
+            ctaButtonText: {
+              ctaButtonLinkLabel: landingPageDetails.ctaButtonText.ctaButtonLinkLabel,
+              ctaButtonLink: landingPageDetails.ctaButtonText.ctaButtonLink
+            },
+            secondCtaButtonText: {
+              ctaButtonLinkLabel: landingPageDetails.secondCtaButtonText.ctaButtonLinkLabel,
+              ctaButtonLink: landingPageDetails.secondCtaButtonText.ctaButtonLink
+            },
+            ctaImageLink: landingPageDetails.ctaImageLink,
+            features: landingPageDetails.features.map(feature => ({
+              emoji: feature.emoji,
+              title: feature.title,
+              text: feature.text
+            }))
+          });
         } else {
           handleError(result, navigate, t);
         }
       };
       fetchDoc();
     } else {
+      SetIsToggleOn(false)
       setFormData({
         name: '',
         description: '',
@@ -184,6 +208,18 @@ export default function CreateDocModal () {
       });
       setSocialPlatformField([{ icon: '', link: '' }]);
       setMoreField([{ label: '', link: '' }]);
+      setLandingPage({
+        ctaButtonText: {
+          ctaButtonLinkLabel: '',
+          ctaButtonLink: ''
+        },
+        secondCtaButtonText: {
+          ctaButtonLinkLabel: '',
+          ctaButtonLink: ''
+        },
+        ctaImageLink: '',
+        features: [{ emoji: '', title: '', text: '' }]
+      });
     }
   }, [docId, mode, navigate]); //eslint-disable-line
 
@@ -402,10 +438,12 @@ export default function CreateDocModal () {
   };
 
   const convertToEmoji = (codePoint) => {
+    console.log(codePoint);
+    console.log(typeof(codePoint))
     if (/^[0-9a-fA-F]+$/.test(codePoint)) {
       return String.fromCodePoint(Number.parseInt(codePoint, 16));
     } else {
-      return 'Invalid code point';
+      return '';
     }
   };
 
@@ -434,7 +472,7 @@ export default function CreateDocModal () {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t('title_label')}
+                      {t('title_label')}<span className='text-red-500 ml-1'>*</span>
                     </span>
                     <input
                       ref={titleRef}
@@ -444,7 +482,7 @@ export default function CreateDocModal () {
                       name="name"
                       id="name"
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
-                      placeholder={t('title_placeholder')}
+                      placeholder={t('enter_new_document_name')}
                       required
                     />
                   </div>
@@ -452,6 +490,7 @@ export default function CreateDocModal () {
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       {t('version')}
+                      <span className='text-red-500 ml-1'>*</span>
                     </span>
                     <input
                       onChange={handleChange}
@@ -470,6 +509,7 @@ export default function CreateDocModal () {
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       {t('description')}
+                      <span className='text-red-500 ml-1'>*</span>
                     </span>
                     <div>
                       <textarea
@@ -544,6 +584,7 @@ export default function CreateDocModal () {
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       {t('copyright_text')}
+                      <span className='text-red-500 ml-1'>*</span>
                     </span>
                     <input
                       onChange={handleChange}
@@ -558,6 +599,7 @@ export default function CreateDocModal () {
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       {t('social_card_image')}
+                      <span className='text-red-500 ml-1'>*</span>
                     </span>
                     <input
                       onChange={handleChange}
@@ -574,13 +616,14 @@ export default function CreateDocModal () {
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       {t('organization_name')}
+                      <span className='text-red-500 ml-1'>*</span>
                     </span>
                     <input
                       onChange={handleChange}
                       value={formData?.organizationName}
                       type="text"
                       name="organizationName"
-                      placeholder={t('enter_organization_name')}
+                      placeholder={t('organization_name_placeholder')}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     />
                   </div>
@@ -588,13 +631,14 @@ export default function CreateDocModal () {
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       {t('project_name')}
+                      <span className='text-red-500 ml-1'>*</span>
                     </span>
                     <input
                       onChange={handleChange}
                       value={formData?.projectName}
                       type="url"
                       name="projectName"
-                      placeholder={t('enter_project_name')}
+                      placeholder={t('project_name_placeholder')}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     />
                   </div>
@@ -603,14 +647,15 @@ export default function CreateDocModal () {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t('base_url')}
+                      {t('documentation_base_url')}
+                      <span className='text-red-500 ml-1'>*</span>
                     </span>
                     <input
                       onChange={handleChange}
                       value={formData?.baseURL}
                       type="text"
                       name="baseURL"
-                      placeholder={t('paste_your_base_url')}
+                      placeholder={t('documentation_base_url_placeholder')}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     />
                   </div>
@@ -618,13 +663,14 @@ export default function CreateDocModal () {
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       {t('url')}
+                      <span className='text-red-500 ml-1'>*</span>
                     </span>
                     <input
                       onChange={handleChange}
                       value={formData?.url}
                       type="text"
                       name="url"
-                      placeholder={t('paste_your_url')}
+                      placeholder={t('url_placeholder')}
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                     />
                   </div>
@@ -645,14 +691,15 @@ export default function CreateDocModal () {
                     <div className="grid gap-4 sm:grid-cols-2" key={index}>
                       <div className="relative">
                         <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Icon
+                        {t('icon')}
+                          <span className='text-red-500 ml-1'>*</span>
                         </span>
                         <button
                           onClick={() => {
                             setIsOpen(!isOpen);
                             setOpenDropdownIndex(index);
                           }}
-                          className=" bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg w-full p-2.5 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                         >
                           {obj.icon ? (
                             <div className="w-full flex justify-start items-center">
@@ -669,14 +716,14 @@ export default function CreateDocModal () {
                                   </>
                                 ) : (
                                   <span className="text-gray-500">
-                                    Icon not found
+                                    {t('icon_not_found')}
                                   </span>
                                 );
                               })()}
                             </div>
                           ) : (
                             <ul className="w-full flex justify-between items-center">
-                              <li className="ml-2">Choose an icon</li>
+                              <li className="ml-2">{t('choose_an_icon')}</li>
                               <li>
                                 <Icon icon="mingcute:down-fill" />
                               </li>
@@ -706,6 +753,7 @@ export default function CreateDocModal () {
                       <div>
                         <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                           {t('link')}
+                          <span className='text-red-500 ml-1'>*</span>
                         </span>
                         <input
                           onChange={(e) =>
@@ -814,6 +862,7 @@ export default function CreateDocModal () {
                     <div>
                       <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         {t('cta_button_text')}
+                        <span className='text-red-500 ml-1'>*</span>
                       </span>
                       <input
                         type="url"
@@ -833,6 +882,7 @@ export default function CreateDocModal () {
                     <div>
                       <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         {t('cta_button_link')}
+                        <span className='text-red-500 ml-1'>*</span>
                       </span>
                       <input
                         onChange={(e) =>
@@ -841,7 +891,7 @@ export default function CreateDocModal () {
                         value={landingPage?.ctaButtonText?.ctaButtonLink}
                         type="url"
                         name="navImage"
-                        placeholder={'/documentation'}
+                        placeholder={t('cta_button_link_placeholder')}
                         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                       />
                     </div>
@@ -883,21 +933,22 @@ export default function CreateDocModal () {
                         value={landingPage?.secondCtaButtonText?.ctaButtonLink}
                         type="url"
                         name="navImage"
-                        placeholder={t('navbar_icon_placeholder')}
+                        placeholder={t('second_cta_link_placeholder')}
                         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                       />
                     </div>
 
                     <div>
                       <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        CTA Image Link
+                        {t('cta_image_link')}
+                        <span className='text-red-500 ml-1'>*</span>
                       </span>
                       <input
                         onChange={(e) => updateCtaImageLink(e.target.value)}
                         value={landingPage.ctaImageLink || ''}
                         type="url"
                         name="ctaImageLink"
-                        placeholder={t('cta_image_link')}
+                        placeholder={t('cta_image_link_palceholder')}
                         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                       />
                     </div>
@@ -905,7 +956,7 @@ export default function CreateDocModal () {
 
                   <div className="flex justify-start items-center">
                     <span className="block text-md font-medium text-gray-700 dark:text-gray-300 ">
-                      Features
+                      {t('features')}
                     </span>
                   </div>
                   <hr className="mt-2 mb-4 border-t-1 dark:border-gray-500" />
@@ -914,15 +965,14 @@ export default function CreateDocModal () {
                     <div className="grid gap-4 sm:grid-cols-3 h-20" key={index}>
                       <div className="relative">
                         <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Emoji
+                          {t('emoji')}
                         </span>
                         <input
                           ref={(el) => (inputRefs.current[index] = el)}
                           onFocus={() => toggleEmojiPicker(index)}
-                          placeholder="Click to add emoji"
+                          placeholder={convertToEmoji('26a1')}
                           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                          value={convertToEmoji(obj.emoji) || ''}
-                          readOnly
+                          value={convertToEmoji(obj.emoji)}
                         />
                         {activeFieldIndex === index && showEmojiPicker && (
                           <div
@@ -939,7 +989,7 @@ export default function CreateDocModal () {
 
                       <div>
                         <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Title
+                          {t('title_label')}
                         </span>
                         <input
                           onChange={(e) =>
@@ -947,14 +997,14 @@ export default function CreateDocModal () {
                           }
                           value={obj.title}
                           type="text"
-                          placeholder="Feature Title"
+                          placeholder={t('landing_page_title_placeholder')}
                           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                         />
                       </div>
 
                       <div>
                         <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Text
+                          {t('text')}
                         </span>
                         <input
                           onChange={(e) =>
@@ -963,7 +1013,7 @@ export default function CreateDocModal () {
                           value={obj.text}
                           type="text"
                           id="feature_desc"
-                          placeholder="Feature Description"
+                          placeholder="text_placeholder"
                           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                         />
                       </div>
