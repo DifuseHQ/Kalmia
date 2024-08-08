@@ -66,20 +66,20 @@ func CreateDocumentation(services *services.ServiceRegistry, w http.ResponseWrit
 
 	type Request struct {
 		Name             string `json:"name" validate:"required"`
-		Description      string `json:"description"`
+		Description      string `json:"description" validate:"required"`
 		Version          string `json:"version" validate:"required"`
-		URL              string `json:"url"`
-		OrganizationName string `json:"organizationName"`
+		URL              string `json:"url" validate:"required"`
+		OrganizationName string `json:"organizationName" validate:"required"`
 		LanderDetails    string `json:"landerDetails"`
-		ProjectName      string `json:"projectName"`
-		BaseURL          string `json:"baseURL"`
+		ProjectName      string `json:"projectName" validate:"required"`
+		BaseURL          string `json:"baseURL" validate:"required"`
 		Favicon          string `json:"favicon"`
-		MetaImage        string `json:"metaImage"`
+		MetaImage        string `json:"metaImage" validate:"required"`
 		NavImage         string `json:"navImage"`
-		CustomCSS        string `json:"customCSS"`
+		CustomCSS        string `json:"customCSS" validate:"required"`
 		FooterLabelLinks string `json:"footerLabelLinks"`
 		MoreLabelLinks   string `json:"moreLabelLinks"`
-		CopyrightText    string `json:"copyrightText"`
+		CopyrightText    string `json:"copyrightText" validate:"required"`
 	}
 
 	req, err := ValidateRequest[Request](w, r)
@@ -125,19 +125,19 @@ func EditDocumentation(services *services.ServiceRegistry, w http.ResponseWriter
 		ID               uint   `json:"id" validate:"required"`
 		Name             string `json:"name" validate:"required"`
 		Description      string `json:"description" validate:"required"`
-		URL              string `json:"url"`
-		OrganizationName string `json:"organizationName"`
+		URL              string `json:"url" validate:"required"`
+		OrganizationName string `json:"organizationName" validate:"required"`
 		LanderDetails    string `json:"landerDetails"`
-		ProjectName      string `json:"projectName"`
-		BaseURL          string `json:"baseURL"`
-		Version          string `json:"version"`
+		ProjectName      string `json:"projectName" validate:"required"`
+		BaseURL          string `json:"baseURL" validate:"required"`
+		Version          string `json:"version" validate:"required"`
 		Favicon          string `json:"favicon"`
-		MetaImage        string `json:"metaImage"`
+		MetaImage        string `json:"metaImage" validate:"required"`
 		NavImage         string `json:"navImage"`
-		CustomCSS        string `json:"customCSS"`
+		CustomCSS        string `json:"customCSS" validate:"required"`
 		FooterLabelLinks string `json:"footerLabelLinks"`
 		MoreLabelLinks   string `json:"moreLabelLinks"`
-		CopyrightText    string `json:"copyrightText"`
+		CopyrightText    string `json:"copyrightText" validate:"required"`
 	}
 
 	req, err := ValidateRequest[Request](w, r)

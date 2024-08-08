@@ -40,7 +40,7 @@ func (service *DocService) GetDocumentations() ([]models.Documentation, error) {
 		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
 	}).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID", "Version", "ClonedFrom",
 		"LastEditorID", "Favicon", "MetaImage", "NavImage", "CustomCSS", "FooterLabelLinks", "MoreLabelLinks",
-		"URL", "OrganizationName", "LanderDetails", "ProjectName").
+		"URL", "OrganizationName", "LanderDetails", "ProjectName", "BaseURL").
 		Find(&documentations).Error; err != nil {
 		return nil, fmt.Errorf("failed_to_get_documentations")
 	}
