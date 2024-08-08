@@ -31,13 +31,35 @@ import { toastMessage } from "../../utils/Toast";
 import { customCSSInitial, SocialLinkIcon } from "../../utils/Utils";
 import Breadcrumb from "../Breadcrumb/Breadcrumb";
 
+
+const FormField = ({ label, placeholder, value, onChange, name, type = 'text', required = false, ref }) => {
+  return (
+    <div>
+      <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        {label} {required && <span className='text-red-500 ml-1'>*</span>}
+      </span>
+      <input
+        ref={ref}
+        onChange={onChange}
+        value={value}
+        type={type}
+        name={name}
+        id={name}
+        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+        placeholder={placeholder}
+        required={required}
+      />
+    </div>
+  );
+};
+
 const LabelAndCommunityComponent = ({
   index,
   labelId,
   linkId,
   data,
-  onLabelChange,
-  onLinkChange,
+  onChange,
+  state
 }) => {
   const { t } = useTranslation();
   return (
@@ -58,7 +80,7 @@ const LabelAndCommunityComponent = ({
           id={labelId}
           value={data?.label || ""}
           name={index}
-          onChange={(e) => onLabelChange(index, e.target.value)}
+          onChange={(e) => onChange(index, "label", e.target.value, state, "moreFooter")}
           placeholder={t("label_placeholder")}
           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
         />
@@ -73,7 +95,7 @@ const LabelAndCommunityComponent = ({
           value={data?.link || ""}
           id={linkId}
           name={index}
-          onChange={(e) => onLinkChange(index, e.target.value)}
+          onChange={(e) => onChange(index, 'link', e.target.value, state, "moreFooter")}
           placeholder={t("more_footer_link_placeholder")}
           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
         />
@@ -81,6 +103,38 @@ const LabelAndCommunityComponent = ({
     </motion.div>
   );
 };
+
+const AddButton = ({ onClick }) => {
+  const { t } = useTranslation()
+  return (
+    <button
+      title={t("add_new_field")}
+      onClick={onClick}
+      className="flex items-center gap-1 text-blue-600 rounded-lg text-sm  "
+    >
+      <Icon
+        icon="ei:plus"
+        className="w-8 h-8  hover:text-blue-400"
+      />
+    </button>
+  )
+}
+
+const DeleteButton = ({ onClick }) => {
+  const { t } = useTranslation();
+  return (
+    <button
+      onClick={onClick}
+      title={t("delete_field")}
+      className="flex items-center gap-1 rounded-lg text-sm "
+    >
+      <Icon
+        icon="material-symbols:delete"
+        className="text-red-500 dark:text-red-600 hover:text-red-800 h-7 w-7"
+      />
+    </button>
+  )
+}
 
 export default function CreateDocModal() {
   const { t } = useTranslation();
@@ -98,6 +152,7 @@ export default function CreateDocModal() {
   const pickerRef = useRef(null);
   const socialMediaRef = useRef(null);
   const [isIconSelectOpen, setIsIconSelectOpen] = useState(false);
+  
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -364,6 +419,7 @@ export default function CreateDocModal() {
       }
     }
   };
+
   const toggleEmojiPicker = (index) => {
     if (activeFieldIndex === index) {
       setShowEmojiPicker(!showEmojiPicker);
@@ -373,44 +429,32 @@ export default function CreateDocModal() {
     }
   };
 
-  const handleMoreLabelChange = (index, newValue) => {
-    const updatedFields = moreField.map((field, i) =>
-      i === index ? { ...field, label: newValue } : field
-    );
-    setMoreField(updatedFields);
+  const handleOptionClick = (option, index) => {
+    setIsIconSelectOpen(false);
+    const updatedSocialPlatformField = [...socialPlatformField];
+    updatedSocialPlatformField[index] = {
+      ...updatedSocialPlatformField[index],
+      icon: option,
+    };
+    setSocialPlatformField(updatedSocialPlatformField);
   };
 
-  const handleMoreLinkChange = (index, newValue) => {
-    const updatedFields = moreField.map((field, i) =>
-      i === index ? { ...field, link: newValue } : field
+  const handleArrayFieldChange = (index, field, newValue, state, saveField) => {
+    console.log(index, field, state);
+
+    const updatedFields = state.map((item, i) =>
+      i === index ? { ...item, [field]: newValue } : item
     );
-    setMoreField(updatedFields);
+    saveField === "moreFooter" ? setMoreField(updatedFields) : setSocialPlatformField(updatedFields);
   };
 
-  const updateCtaButtonText = (key, value) => {
+  const updateCtaButtonText = (key, value, state) => {
     setLandingPage((prevState) => ({
       ...prevState,
-      ctaButtonText: {
-        ...prevState.ctaButtonText,
+      [state]: {
+        ...prevState[state],
         [key]: value,
       },
-    }));
-  };
-
-  const updateSecondCtaButtonText = (key, value) => {
-    setLandingPage((prevState) => ({
-      ...prevState,
-      secondCtaButtonText: {
-        ...prevState.secondCtaButtonText,
-        [key]: value,
-      },
-    }));
-  };
-
-  const updateCtaImageLink = (value) => {
-    setLandingPage((prevState) => ({
-      ...prevState,
-      ctaImageLink: value,
     }));
   };
 
@@ -430,23 +474,6 @@ export default function CreateDocModal() {
   const handleEmojiClick = (index, emojiObject) => {
     updateFeature(index, "emoji", emojiObject.unified);
     setShowEmojiPicker(false);
-  };
-
-  const handleOptionClick = (option, index) => {
-    setIsIconSelectOpen(false);
-    const updatedSocialPlatformField = [...socialPlatformField];
-    updatedSocialPlatformField[index] = {
-      ...updatedSocialPlatformField[index],
-      icon: option,
-    };
-    setSocialPlatformField(updatedSocialPlatformField);
-  };
-
-  const handleSocialPlatformLinkChange = (index, newValue) => {
-    const updatedFields = socialPlatformField.map((field, i) =>
-      i === index ? { ...field, link: newValue } : field
-    );
-    setSocialPlatformField(updatedFields);
   };
 
   return (
@@ -472,40 +499,20 @@ export default function CreateDocModal() {
             <div className="overflow-auto p-1">
               <div className="space-y-6">
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t("title_label")}
-                      <span className="text-red-500 ml-1">*</span>
-                    </span>
-                    <input
-                      ref={titleRef}
-                      onChange={handleChange}
-                      type="text"
-                      value={formData?.name || ""}
-                      name="name"
-                      id="name"
-                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
-                      placeholder={t("enter_new_document_name")}
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t("version")}
-                      <span className="text-red-500 ml-1">*</span>
-                    </span>
-                    <input
-                      onChange={handleChange}
-                      value={formData?.version}
-                      type="text"
-                      name="version"
-                      id="version"
-                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
-                      placeholder={t("version_placeholder")}
-                      required
-                    />
-                  </div>
+                  <FormField
+                    label={t("title_label")}
+                    placeholder={t("enter_new_document_name")}
+                    value={formData?.name || ""}
+                    onChange={handleChange}
+                    name="name"
+                  />
+                  <FormField
+                    label={t("version")}
+                    placeholder={t("version_placeholder")}
+                    value={formData?.version}
+                    onChange={handleChange}
+                    name="version"
+                  />
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -554,129 +561,76 @@ export default function CreateDocModal() {
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t("favicon")}
-                    </span>
-                    <input
-                      type="url"
-                      onChange={handleChange}
-                      value={formData?.favicon}
-                      name="favicon"
-                      placeholder={t("favicon_placeholder")}
-                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                    />
-                  </div>
-
-                  <div>
-                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t("navbar_icon")}
-                    </span>
-                    <input
-                      onChange={handleChange}
-                      value={formData?.navImage}
-                      type="url"
-                      name="navImage"
-                      placeholder={t("navbar_icon_placeholder")}
-                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                    />
-                  </div>
+                  <FormField
+                    label={t("favicon")}
+                    placeholder={t("favicon_placeholder")}
+                    value={formData?.favicon}
+                    onChange={handleChange}
+                    name="favicon"
+                    type="url"
+                  />
+                  <FormField
+                    label={t("navbar_icon")}
+                    placeholder={t("navbar_icon_placeholder")}
+                    value={formData?.navImage}
+                    onChange={handleChange}
+                    name="navImage"
+                    type="url"
+                  />
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t("copyright_text")}
-                      <span className="text-red-500 ml-1">*</span>
-                    </span>
-                    <input
-                      onChange={handleChange}
-                      value={formData?.copyrightText}
-                      type="text"
-                      name="copyrightText"
-                      placeholder={t("copyright_text_placeholder")}
-                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                    />
-                  </div>
-
-                  <div>
-                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t("social_card_image")}
-                      <span className="text-red-500 ml-1">*</span>
-                    </span>
-                    <input
-                      onChange={handleChange}
-                      value={formData?.metaImage}
-                      type="url"
-                      name="metaImage"
-                      placeholder={t("social_card_image_palceholder")}
-                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                    />
-                  </div>
+                  <FormField
+                    label={t("copyright_text")}
+                    placeholder={t("copyright_text_placeholder")}
+                    value={formData?.copyrightText}
+                    onChange={handleChange}
+                    name="copyrightText"
+                  />
+                  <FormField
+                    label={t("social_card_image")}
+                    placeholder={t("social_card_image_palceholder")}
+                    value={formData?.metaImage}
+                    onChange={handleChange}
+                    name="metaImage"
+                    type="url"
+                  />
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t("organization_name")}
-                      <span className="text-red-500 ml-1">*</span>
-                    </span>
-                    <input
-                      onChange={handleChange}
-                      value={formData?.organizationName}
-                      type="text"
-                      name="organizationName"
-                      placeholder={t("organization_name_placeholder")}
-                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                    />
-                  </div>
-
-                  <div>
-                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t("project_name")}
-                      <span className="text-red-500 ml-1">*</span>
-                    </span>
-                    <input
-                      onChange={handleChange}
-                      value={formData?.projectName}
-                      type="url"
-                      name="projectName"
-                      placeholder={t("project_name_placeholder")}
-                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                    />
-                  </div>
+                  <FormField
+                    label={t("organization_name")}
+                    placeholder={t("organization_name_placeholder")}
+                    value={formData?.organizationName}
+                    onChange={handleChange}
+                    name="organizationName"
+                  />
+                  <FormField
+                    label={t("project_name")}
+                    placeholder={t("project_name_placeholder")}
+                    value={formData?.projectName}
+                    onChange={handleChange}
+                    name="projectName"
+                    type="url"
+                  />
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t("documentation_base_url")}
-                      <span className="text-red-500 ml-1">*</span>
-                    </span>
-                    <input
-                      onChange={handleChange}
-                      value={formData?.baseURL}
-                      type="text"
-                      name="baseURL"
-                      placeholder={t("documentation_base_url_placeholder")}
-                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                    />
-                  </div>
-
-                  <div>
-                    <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t("url")}
-                      <span className="text-red-500 ml-1">*</span>
-                    </span>
-                    <input
-                      onChange={handleChange}
-                      value={formData?.url}
-                      type="text"
-                      name="url"
-                      placeholder={t("url_placeholder")}
-                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                    />
-                  </div>
+                  <FormField
+                    label={t("documentation_base_url")}
+                    placeholder={t("documentation_base_url_placeholder")}
+                    value={formData?.baseURL}
+                    onChange={handleChange}
+                    name="baseURL"
+                  />
+                  <FormField
+                    label={t("url")}
+                    placeholder={t("url_placeholder")}
+                    value={formData?.url}
+                    onChange={handleChange}
+                    name="url"
+                    type="url"
+                  />
                 </div>
               </div>
 
@@ -710,25 +664,20 @@ export default function CreateDocModal() {
                                 const matchingIcon = SocialLinkIcon.find(
                                   (val) => val.value === obj.icon
                                 );
-                                return matchingIcon ? (
+                                return  (
                                   <>
                                     <span>{matchingIcon.icon}</span>
                                     <span className="ml-2">
                                       {matchingIcon.iconName}
                                     </span>
                                   </>
-                                ) : (
-                                  <span className="text-gray-500">
-                                    {t("icon_not_found")}
-                                  </span>
-                                );
-                              })()}
+                                )})()}
                             </div>
                           ) : (
                             <ul className="w-full flex justify-between items-center">
                               <li className="ml-2">{t("choose_an_icon")}</li>
                               <li>
-                                <Icon icon="mingcute:down-fill" />
+                                <Icon icon="mingcute:down-fill" className="w-6 h-6" />
                               </li>
                             </ul>
                           )}
@@ -755,50 +704,19 @@ export default function CreateDocModal() {
                           </div>
                         )}
                       </div>
-
-                      <div>
-                        <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          {t("link")}
-                          <span className="text-red-500 ml-1">*</span>
-                        </span>
-                        <input
-                          onChange={(e) =>
-                            handleSocialPlatformLinkChange(
-                              index,
-                              e.target.value
-                            )
-                          }
-                          value={obj.link}
-                          type="text"
-                          name="url"
-                          placeholder={t("social_link_placeholder")}
-                          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                        />
-                      </div>
+                      <FormField
+                    label={t("link")}
+                    placeholder={t("social_link_placeholder")}
+                    value={obj.link}
+                    onChange={(e) => handleArrayFieldChange(index, "link", e.target.value, socialPlatformField, "socialPlatform")}
+                    name="url"
+                    type="text"
+                  />
                     </div>
                   ))}
-                <div className="flex justify-end gap-3">
-                  <button
-                    onClick={() => addRow("social-platform-field")}
-                    title={t("add_new_field")}
-                    className="flex items-center gap-1 text-blue-600 rounded-lg text-sm"
-                  >
-                    <Icon
-                      icon="ei:plus"
-                      className="w-8 h-8 hover:text-blue-400"
-                    />
-                  </button>
-
-                  <button
-                    onClick={() => deleteRow("social-platform-field")}
-                    title={t("delete_field")}
-                    className="flex items-center gap-1 rounded-lg text-sm "
-                  >
-                    <Icon
-                      icon="material-symbols:delete"
-                      className="text-red-500 dark:text-red-600 hover:text-red-800 h-7 w-7"
-                    />
-                  </button>
+                <div className="flex justify-end items-center gap-3 my-2">
+                  <AddButton onClick={() => addRow("social-platform-field")} />
+                  <DeleteButton onClick={() => deleteRow("social-platform-field")} />
                 </div>
                 <div>
                   <div className="flex justify-start items-center">
@@ -816,34 +734,15 @@ export default function CreateDocModal() {
                           linkId={`more-link-${index}`}
                           index={index}
                           data={obj}
-                          onLabelChange={handleMoreLabelChange}
-                          onLinkChange={handleMoreLinkChange}
+                          state={moreField}
+                          onChange={handleArrayFieldChange}
                         />
                       </div>
                     ))}
                 </div>
-                <div className="flex justify-end gap-3">
-                  <button
-                    onClick={() => addRow("more")}
-                    title={t("add_new_field")}
-                    className="flex items-center gap-1 text-blue-600 rounded-lg text-sm  py-1.5  mb-2 "
-                  >
-                    <Icon
-                      icon="ei:plus"
-                      className="w-8 h-8  hover:text-blue-400"
-                    />
-                  </button>
-
-                  <button
-                    onClick={() => deleteRow("more")}
-                    title={t("delete_field")}
-                    className="flex items-center gap-1 rounded-lg text-sm  py-1.5  mb-2 "
-                  >
-                    <Icon
-                      icon="material-symbols:delete"
-                      className="text-red-500 dark:text-red-600 hover:text-red-800  h-7 w-7"
-                    />
-                  </button>
+                <div className="flex justify-end gap-3 my-2">
+                  <AddButton onClick={() => addRow("more")} />
+                  <DeleteButton onClick={() => deleteRow("more")} />
                 </div>
               </div>
 
@@ -864,100 +763,44 @@ export default function CreateDocModal() {
 
               {isToggleOn && (
                 <div className="">
-                  <div className="grid gap-4 sm:grid-cols-3 mb-5">
-                    <div>
-                      <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        {t("cta_button_text")}
-                        <span className="text-red-500 ml-1">*</span>
-                      </span>
-                      <input
-                        type="url"
-                        onChange={(e) =>
-                          updateCtaButtonText(
-                            "ctaButtonLinkLabel",
-                            e.target.value
-                          )
-                        }
-                        value={landingPage?.ctaButtonText?.ctaButtonLinkLabel}
-                        name="favicon"
-                        placeholder={t("cta_button_text_placeholder")}
-                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                      />
-                    </div>
-
-                    <div>
-                      <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        {t("cta_button_link")}
-                        <span className="text-red-500 ml-1">*</span>
-                      </span>
-                      <input
-                        onChange={(e) =>
-                          updateCtaButtonText("ctaButtonLink", e.target.value)
-                        }
-                        value={landingPage?.ctaButtonText?.ctaButtonLink}
-                        type="url"
-                        name="navImage"
-                        placeholder={t("cta_button_link_placeholder")}
-                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                      />
-                    </div>
+                  <div className="grid gap-4 grid-cols-2 mb-5">
+                    <FormField
+                    label={t("cta_button_text")}
+                    placeholder={t("cta_button_text_placeholder")}
+                    value={landingPage?.ctaButtonText?.ctaButtonLinkLabel}
+                    onChange={(e) =>updateCtaButtonText("ctaButtonLinkLabel",e.target.value,"ctaButtonText")}
+                  />
+                  <FormField
+                    label={t("cta_button_link")}
+                    placeholder={t("cta_button_link_placeholder")}
+                    value={landingPage?.ctaButtonText?.ctaButtonLink}
+                    onChange={(e) =>updateCtaButtonText("ctaButtonLink", e.target.value, "ctaButtonText")}
+                    type="url"
+                  />
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-3 mb-5">
-                    <div>
-                      <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        {t("second_cta_button_text")}
-                      </span>
-                      <input
-                        type="url"
-                        onChange={(e) =>
-                          updateSecondCtaButtonText(
-                            "ctaButtonLinkLabel",
-                            e.target.value
-                          )
-                        }
-                        value={
-                          landingPage?.secondCtaButtonText?.ctaButtonLinkLabel
-                        }
-                        name="second_cta_button_text"
-                        placeholder={t("second_cta_button_text_placeholder")}
-                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                      />
-                    </div>
-
-                    <div>
-                      <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        {t("second_cta_button_link")}
-                      </span>
-                      <input
-                        onChange={(e) =>
-                          updateSecondCtaButtonText(
-                            "ctaButtonLink",
-                            e.target.value
-                          )
-                        }
-                        value={landingPage?.secondCtaButtonText?.ctaButtonLink}
-                        type="url"
-                        name="navImage"
-                        placeholder={t("second_cta_link_placeholder")}
-                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                      />
-                    </div>
-
-                    <div>
-                      <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        {t("cta_image_link")}
-                        <span className="text-red-500 ml-1">*</span>
-                      </span>
-                      <input
-                        onChange={(e) => updateCtaImageLink(e.target.value)}
-                        value={landingPage.ctaImageLink || ""}
-                        type="url"
-                        name="ctaImageLink"
-                        placeholder={t("cta_image_link_palceholder")}
-                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                      />
-                    </div>
+                    <FormField
+                    label= {t("second_cta_button_text")}
+                    placeholder={t("second_cta_button_text_placeholder")}
+                    value={landingPage?.secondCtaButtonText?.ctaButtonLinkLabel}
+                    onChange={(e) =>updateCtaButtonText("ctaButtonLinkLabel",e.target.value,"secondCtaButtonText")} 
+                    />
+                  <FormField
+                    label={t("second_cta_button_link")}
+                    placeholder={t("second_cta_link_placeholder")}
+                    value={landingPage?.secondCtaButtonText?.ctaButtonLink}
+                    onChange={(e) =>updateCtaButtonText("ctaButtonLink",e.target.value,"secondCtaButtonText")}                    
+                    type="url"
+                  />
+                   <FormField
+                    label= {t("cta_image_link")}
+                    placeholder={t("cta_image_link_palceholder")}
+                    value={landingPage.ctaImageLink || ""}
+                    onChange={(e) =>setLandingPage((prevState) => ({...prevState, ctaImageLink: e.target.value}))}
+                    name="ctaImageLink"
+                    type="url"
+                  />
                   </div>
 
                   <div className="flex justify-start items-center">
@@ -968,7 +811,7 @@ export default function CreateDocModal() {
                   <hr className="mt-2 mb-4 border-t-1 dark:border-gray-500" />
 
                   {landingPage.features.map((obj, index) => (
-                    <div className="grid gap-4 grid-cols-3" key={index}>
+                    <div className="grid gap-4 grid-cols-3 my-2" key={index}>
                       <div className="relative">
                         <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                           {t("emoji")}
@@ -1030,28 +873,9 @@ export default function CreateDocModal() {
                       </div>
                     </div>
                   ))}
-                  <div className="flex justify-end gap-3">
-                    <button
-                      onClick={() => addRow("feature-filed")}
-                      title={t("add_new_field")}
-                      className="flex items-center gap-1 text-blue-600 rounded-lg text-sm  py-1.5  mb-2 "
-                    >
-                      <Icon
-                        icon="ei:plus"
-                        className="w-8 h-8  hover:text-blue-400"
-                      />
-                    </button>
-
-                    <button
-                      onClick={() => deleteRow("feature-filed")}
-                      title={t("delete_field")}
-                      className="flex items-center gap-1 rounded-lg text-sm  py-1.5  mb-2 "
-                    >
-                      <Icon
-                        icon="material-symbols:delete"
-                        className="text-red-500 dark:text-red-600 hover:text-red-800  h-7 w-7"
-                      />
-                    </button>
+                  <div className="flex justify-end gap-3 my-2">
+                    <AddButton onClick={() => addRow("feature-filed")} />
+                    <DeleteButton onClick={() => deleteRow("feature-filed")} />
                   </div>
                 </div>
               )}

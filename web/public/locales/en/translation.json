@@ -44,6 +44,7 @@
         "second_cta_button_text_placeholder": "Github",
         "second_cta_button_link": "Second CTA Button Link",
         "second_cta_link_placeholder":"https://github.com",
+        "first_cta_button_link":"CTA button Link",
         "cta_image_link": "CTA Image Link",
         "cta_image_link_palceholder":"https://path.to/image.jpeg",
         "features":"Features",
