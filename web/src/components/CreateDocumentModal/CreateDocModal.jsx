@@ -240,10 +240,14 @@ export default function CreateDocModal () {
     if (fieldType === 'social-platform-field') {
       if (socialPlatformField.length > 1) {
         setSocialPlatformField(socialPlatformField.slice(0, -1));
+      } else {
+        setSocialPlatformField([{ icon: '', link: '' }]);
       }
     } else if (fieldType === 'more') {
       if (moreField.length > 1) {
         setMoreField(moreField.slice(0, -1));
+      }else {
+        setMoreField([{ label: '', link: '' }]);
       }
     } else if (fieldType === 'feature-filed') {
       if (landingPage.features.length > 1) {
@@ -251,7 +255,7 @@ export default function CreateDocModal () {
           ...prevState,
           features: prevState.features.slice(0, -1)
         }));
-      }else{
+      } else {
         setLandingPage(() => ({
           features: [{ emoji: '', title: '', text: '' }]
         }));
