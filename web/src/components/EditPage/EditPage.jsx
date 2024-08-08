@@ -132,7 +132,7 @@ export default function EditPage () {
       .toLowerCase()
       .trim()
       .replace(/[\s]+/g, '-')
-      .replace(/[^\w-]+/g, ''); 
+      .replace(/[^\w-]+/g, '');
   };
   const updateContent = (newContent, name) => {
     setPageData((prevPageData) => {
@@ -140,7 +140,7 @@ export default function EditPage () {
       if (name === 'title') {
         updatedPageData.slug = generateSlug(newContent);
       }
-  
+
       return updatedPageData;
     });
   };

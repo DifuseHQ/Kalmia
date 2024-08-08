@@ -494,3 +494,8 @@ func getGoogleUserEmail(accessToken string) (string, error) {
 
 	return result.Email, nil
 }
+
+func GetOAuthProviders(aS *services.AuthService, w http.ResponseWriter, r *http.Request) {
+	providers := aS.OAuthProviders()
+	SendJSONResponse(http.StatusOK, w, providers)
+}

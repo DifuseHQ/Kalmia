@@ -11,10 +11,10 @@ const errorConfig = {
   500: { title: 'Internal Server Error', icon: 'carbon:server-error' },
   502: { title: 'Bad Gateway', icon: 'carbon:network-3' },
   503: { title: 'Service Unavailable', icon: 'carbon:time' },
-  504: { title: 'Gateway Timeout', icon: 'carbon:hourglass' },
+  504: { title: 'Gateway Timeout', icon: 'carbon:hourglass' }
 };
 
-export default function Error() {
+export default function Error () {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();

@@ -69,6 +69,7 @@ func main() {
 	oAuthRouter.HandleFunc("/microsoft/callback", func(w http.ResponseWriter, r *http.Request) { handlers.MicrosoftCallback(aS, w, r) }).Methods("GET")
 	oAuthRouter.HandleFunc("/google", func(w http.ResponseWriter, r *http.Request) { handlers.GoogleLogin(aS, w, r) }).Methods("GET")
 	oAuthRouter.HandleFunc("/google/callback", func(w http.ResponseWriter, r *http.Request) { handlers.GoogleCallback(aS, w, r) }).Methods("GET")
+	oAuthRouter.HandleFunc("/providers", func(w http.ResponseWriter, r *http.Request) { handlers.GetOAuthProviders(aS, w, r) }).Methods("GET")
 
 	authRouter := r.PathPrefix("/auth").Subrouter()
 	authRouter.Use(middleware.EnsureAuthenticated(aS))

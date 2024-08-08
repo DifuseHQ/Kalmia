@@ -3,6 +3,7 @@ package services
 import (
 	"fmt"
 
+	"git.difuse.io/Difuse/kalmia/config"
 	"git.difuse.io/Difuse/kalmia/db/models"
 	"git.difuse.io/Difuse/kalmia/utils"
 	"gorm.io/gorm"
@@ -35,11 +36,8 @@ func (service *AuthService) VerifyTokenInDb(token string, needAdmin bool) bool {
 	}
 
 	_, err := utils.ValidateJWT(token)
-	if err != nil {
-		return false
-	}
 
-	return true
+	return err == nil
 }
 
 func (service *AuthService) IsTokenAdmin(token string) bool {
@@ -332,4 +330,24 @@ func (service *AuthService) FindUserByEmail(email string) (models.User, error) {
 	}
 
 	return user, nil
+}
+
+func (service *AuthService) OAuthProviders() []string {
+	config := config.ParsedConfig
+
+	var providers []string
+
+	if config.MicrosoftOAuth.ClientSecret != "" {
+		providers = append(providers, "microsoft")
+	}
+
+	if config.GoogleOAuth.ClientSecret != "" {
+		providers = append(providers, "google")
+	}
+
+	if config.GithubOAuth.ClientSecret != "" {
+		providers = append(providers, "github")
+	}
+
+	return providers
 }

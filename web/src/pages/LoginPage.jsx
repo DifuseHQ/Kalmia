@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Icon } from '@iconify/react/dist/iconify.js';
 
 import { baseURL } from '../api/AxiosInstance';
+import { oAuthProviders } from '../api/Requests';
 import Navbar from '../components/Navbar/Navbar';
 import { AuthContext } from '../context/AuthContext';
 
@@ -11,20 +12,33 @@ export default function LoginPage () {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [availableProviders, setAvailableProviders] = useState([]);
   const { login, loginOAuth } = useContext(AuthContext);
 
-  if (window.location.pathname.startsWith('/admin/login/gh') || 
-        window.location.pathname.startsWith('/admin/login/ms') ||
-        window.location.pathname.startsWith('/admin/login/gg')) {
-    const code = new URLSearchParams(window.location.search).get('token');
-    if (code) {
-      loginOAuth(code);
-    }
-  }
+  useEffect(() => {
+    const fetchOAuthProviders = async () => {
+      try {
+        const response = await oAuthProviders();
+        setAvailableProviders(response.data || []);
+      } catch (error) {
+        console.error('Failed to fetch OAuth providers:', error);
+        setAvailableProviders([]);
+      }
+    };
+
+    fetchOAuthProviders();
+  }, []);
 
   useEffect(() => {
-    document.title = 'Kalmia - Login';
-  }, []);
+    if (window.location.pathname.startsWith('/admin/login/gh') ||
+        window.location.pathname.startsWith('/admin/login/ms') ||
+        window.location.pathname.startsWith('/admin/login/gg')) {
+      const code = new URLSearchParams(window.location.search).get('token');
+      if (code) {
+        loginOAuth(code);
+      }
+    }
+  }, [loginOAuth]);
 
   const handleSubmit = async () => {
     setIsLoading(true);
@@ -47,19 +61,43 @@ export default function LoginPage () {
   const handleLogin = (provider) => {
     return () => {
       switch (provider) {
-        case 'github':
-          window.location.href = `${baseURL}/oauth/github`;
-          break;
-        case 'google':
-          window.location.href = `${baseURL}/oauth/google`;
-          break;
-        case 'microsoft':
-          window.location.href = `${baseURL}/oauth/microsoft`;
-          break;
-        default:
-          break;
+      case 'github':
+        window.location.href = `${baseURL}/oauth/github`;
+        break;
+      case 'google':
+        window.location.href = `${baseURL}/oauth/google`;
+        break;
+      case 'microsoft':
+        window.location.href = `${baseURL}/oauth/microsoft`;
+        break;
+      default:
+        break;
       }
     };
+  };
+
+  const getOAuthProviderIcon = (provider) => {
+    switch (provider) {
+    case 'github':
+      return 'mdi:github';
+    case 'google':
+      return 'mdi:google';
+    case 'microsoft':
+      return 'mdi:microsoft';
+    default:
+      return '';
+    }
+  };
+
+  const oAuthGridCols = () => {
+    switch (availableProviders.length) {
+    case 1:
+      return 'grid-cols-1';
+    case 2:
+      return 'grid-cols-2';
+    default:
+      return 'grid-cols-3';
+    }
   };
 
   return (
@@ -102,22 +140,19 @@ export default function LoginPage () {
                   />
                 </div>
 
-                <div className="grid gap-4 grid-cols-3">
-                  <button
-                    onClick={handleLogin('github')}
-                    className="w-full inline-flex items-center justify-center py-2.5 px-5 focus:ring-2 dark:focus:ring-2 focus:outline-none focus:ring-gray-700 dark:focus:ring-gray-700 font-medium text-gray-900 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-gray-900 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
-                  >
-                    <Icon icon="mdi:github" className="w-6 h-6" />
-                  </button>
-
-                  <button onClick={handleLogin('google')} className="w-full inline-flex items-center justify-center py-2.5 px-5 focus:ring-2 dark:focus:ring-2 focus:outline-none focus:ring-gray-700 dark:focus:ring-gray-700 font-medium text-gray-900  bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-gray-900 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-                    <Icon icon="mdi:google" className="w-6 h-6" />
-                  </button>
-
-                  <button onClick={handleLogin('microsoft')} className="w-full inline-flex items-center justify-center py-2.5 px-5 focus:ring-2 dark:focus:ring-2 focus:outline-none focus:ring-gray-700 dark:focus:ring-gray-700 font-medium text-gray-900 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-gray-900 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">
-                    <Icon icon="mdi:microsoft" className="w-6 h-6" />
-                  </button>
-                </div>
+                {availableProviders.length > 0 && (
+                  <div className={`grid gap-4 ${oAuthGridCols()}`}>
+                    {availableProviders.map((provider) => (
+                      <button
+                        key={provider}
+                        onClick={handleLogin(provider)}
+                        className="w-full inline-flex items-center justify-center py-2.5 px-5 focus:ring-2 dark:focus:ring-2 focus:outline-none focus:ring-gray-700 dark:focus:ring-gray-700 font-medium text-gray-900 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-gray-900 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
+                      >
+                        <Icon icon={getOAuthProviderIcon(provider)} className="w-6 h-6" />
+                      </button>
+                    ))}
+                  </div>
+                )}
 
                 <button
                   onClick={handleSubmit}

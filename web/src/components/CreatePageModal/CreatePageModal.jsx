@@ -10,13 +10,13 @@ export default function CreatePage ({ handleCreate }) {
 
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
-  
+
   const generateSlug = (title) => {
     return '/' + title
       .toLowerCase()
       .trim()
       .replace(/[\s]+/g, '-')
-      .replace(/[^\w-]+/g, ''); 
+      .replace(/[^\w-]+/g, '');
   };
   const handleKeyDown = (event) => {
     if (event.key === 'Enter') {
@@ -71,9 +71,9 @@ export default function CreatePage ({ handleCreate }) {
                   ref={inputRef}
                   onChange={(e) => {
                     console.log(e.target.value);
-                    
+
                     const newTitle = e.target.value;
-                    setTitle(newTitle)
+                    setTitle(newTitle);
                     setSlug(generateSlug(newTitle));
                   }}
                   onKeyDown={handleKeyDown}
@@ -90,7 +90,7 @@ export default function CreatePage ({ handleCreate }) {
                   {t('slug')}
                 </span>
                 <input
-                 value={slug}
+                  value={slug}
                   onChange={(e) => setSlug(e.target.value)}
                   onKeyDown={handleKeyDown}
                   type="text"

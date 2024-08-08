@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-
 import Cookies from 'js-cookie';
 
 import { toastMessage } from './Toast';
@@ -312,7 +311,7 @@ export const validateCommunityFields = (socialPlatformField, moreField) => {
       errors.message = 'social_media_icon_required';
       return errors;
     }
-    if (field.icon && !field.link ||field.link && !isValidURL(field.link)) {
+    if ((field.icon && !field.link) || (field.link && !isValidURL(field.link))) {
       errors.status = true;
       errors.message = 'valid_social_platform_url_required';
       return errors;
@@ -324,7 +323,7 @@ export const validateCommunityFields = (socialPlatformField, moreField) => {
       errors.message = 'more_field_label_required';
       return errors;
     }
-    if (field.label && !field.link || field.link && !isValidURL(field.link)) {
+    if ((field.label && !field.link) || (field.link && !isValidURL(field.link))) {
       errors.status = true;
       errors.message = 'valid_more_community_url_required';
       return errors;
@@ -346,8 +345,8 @@ export const landingPagevalidate = (data) => {
   }
 
   if (
-    !data.ctaButtonText.ctaButtonLink ||
-    !isValidURL(data.ctaButtonText.ctaButtonLink) &&
+    (!data.ctaButtonText.ctaButtonLink ||
+    !isValidURL(data.ctaButtonText.ctaButtonLink)) &&
     !isValidBaseURL(data.ctaButtonText.ctaButtonLink)
   ) {
     errors.status = true;
@@ -395,30 +394,29 @@ export const prepareLandingPageData = (data) => {
   return preparedData;
 };
 
-export function useOutsideAlerter(ref, onOutsideClick) {
+export function useOutsideAlerter (ref, onOutsideClick) {
   useEffect(() => {
-    function handleClickOutside(event) {
+    function handleClickOutside (event) {
       if (ref.current && !ref.current.contains(event.target)) {
         onOutsideClick();
       }
     }
 
-    function handleEscapeKey(event) {
+    function handleEscapeKey (event) {
       if (event.key === 'Escape') {
         onOutsideClick();
       }
     }
 
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleEscapeKey);
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscapeKey);
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleEscapeKey);
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscapeKey);
     };
   }, [ref, onOutsideClick]);
 }
-
 
 export const convertToEmoji = (codePoint) => {
   if (/^[0-9a-fA-F]+$/.test(codePoint)) {

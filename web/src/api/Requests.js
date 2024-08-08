@@ -109,3 +109,4 @@ export const uploadPhoto = (data) =>
   makeRequest('auth/user/upload-photo', 'post', data);
 export const deleteUser = (username) =>
   makeRequest('auth/user/delete', 'post', { username });
+export const oAuthProviders = () => makeRequest('/oauth/providers');
