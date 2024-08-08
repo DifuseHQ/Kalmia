@@ -44,7 +44,7 @@ const LabelAndCommunityComponent = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="grid gap-4 sm:grid-cols-2 my-2"
+      className="grid gap-4 grid-cols-2 my-2"
       key={`footer-more-field-${index}`}
     >
       <div>
@@ -250,6 +250,10 @@ export default function CreateDocModal () {
         setLandingPage((prevState) => ({
           ...prevState,
           features: prevState.features.slice(0, -1)
+        }));
+      }else{
+        setLandingPage(() => ({
+          features: [{ emoji: '', title: '', text: '' }]
         }));
       }
     }
@@ -688,7 +692,7 @@ export default function CreateDocModal () {
                 <hr className="mt-2 mb-4 border-t-1 dark:border-gray-500" />
                 {socialPlatformField &&
                   socialPlatformField.map((obj, index) => (
-                    <div className="grid gap-4 sm:grid-cols-2" key={index}>
+                    <div className="grid gap-4 grid-cols-2" key={index}>
                       <div className="relative">
                         <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         {t('icon')}
@@ -857,8 +861,8 @@ export default function CreateDocModal () {
               </label>
 
               {isToggleOn && (
-                <div className="space-y-3">
-                  <div className="grid gap-4 sm:grid-cols-2 mb-5">
+                <div className="">
+                  <div className="grid gap-4 sm:grid-cols-3 mb-5">
                     <div>
                       <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         {t('cta_button_text')}
@@ -962,7 +966,7 @@ export default function CreateDocModal () {
                   <hr className="mt-2 mb-4 border-t-1 dark:border-gray-500" />
 
                   {landingPage.features.map((obj, index) => (
-                    <div className="grid gap-4 sm:grid-cols-3 h-20" key={index}>
+                    <div className="grid gap-4 grid-cols-3" key={index}>
                       <div className="relative">
                         <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                           {t('emoji')}
@@ -987,7 +991,7 @@ export default function CreateDocModal () {
                         )}
                       </div>
 
-                      <div>
+                      <div className='relative'>
                         <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                           {t('title_label')}
                         </span>
@@ -1002,7 +1006,7 @@ export default function CreateDocModal () {
                         />
                       </div>
 
-                      <div>
+                      <div className='relative'> 
                         <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                           {t('text')}
                         </span>
@@ -1013,7 +1017,7 @@ export default function CreateDocModal () {
                           value={obj.text}
                           type="text"
                           id="feature_desc"
-                          placeholder="text_placeholder"
+                          placeholder={t('text_placeholder')}
                           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                         />
                       </div>
