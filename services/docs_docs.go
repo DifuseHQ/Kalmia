@@ -1,7 +1,6 @@
 package services
 
 import (
-	"errors"
 	"fmt"
 
 	"git.difuse.io/Difuse/kalmia/db/models"
@@ -9,6 +8,7 @@ import (
 	"git.difuse.io/Difuse/kalmia/utils"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func (service *DocService) GetDocumentations() ([]models.Documentation, error) {
@@ -574,53 +574,80 @@ func (service *DocService) BulkReorderPageOrPageGroup(pageOrder []struct {
 	IsPageGroup bool  `json:"isPageGroup"`
 }) error {
 	var docId uint
+	var pageGroupUpdates []models.PageGroup
+	var pageUpdates []models.Page
+
+	for _, item := range pageOrder {
+		if item.IsPageGroup {
+			pageGroupUpdates = append(pageGroupUpdates, models.PageGroup{
+				ID:       item.ID,
+				Order:    item.Order,
+				ParentID: item.ParentID,
+			})
+		} else {
+			pageUpdates = append(pageUpdates, models.Page{
+				ID:          item.ID,
+				Order:       item.Order,
+				PageGroupID: item.PageGroupID,
+			})
+		}
+	}
+
 	err := service.DB.Transaction(func(tx *gorm.DB) error {
-		for _, item := range pageOrder {
-			if item.IsPageGroup {
-				var pageGroup models.PageGroup
-				if err := tx.First(&pageGroup, item.ID).Error; err != nil {
-					return fmt.Errorf("failed_to_fetch_page_group")
+		if len(pageGroupUpdates) > 0 {
+			if err := tx.Clauses(clause.OnConflict{
+				Columns:   []clause.Column{{Name: "id"}},
+				DoUpdates: clause.AssignmentColumns([]string{"order", "parent_id"}),
+			}).Create(&pageGroupUpdates).Error; err != nil {
+				return fmt.Errorf("failed to update page groups: %w", err)
+			}
+
+			if docId == 0 && len(pageGroupUpdates) > 0 {
+				var pg models.PageGroup
+				if err := tx.Select("documentation_id").First(&pg, pageGroupUpdates[0].ID).Error; err != nil {
+					return fmt.Errorf("failed to fetch documentation ID: %w", err)
 				}
-				if docId == 0 {
-					docId = pageGroup.DocumentationID
-				}
-				pageGroup.Order = item.Order
-				pageGroup.ParentID = item.ParentID
-				if err := tx.Save(&pageGroup).Error; err != nil {
-					return fmt.Errorf("failed_to_update_page_group")
-				}
-			} else {
-				var page models.Page
-				if err := tx.First(&page, item.ID).Error; err != nil {
-					if errors.Is(err, gorm.ErrRecordNotFound) {
-						return fmt.Errorf("page_not_found")
-					}
-					return fmt.Errorf("failed_to_fetch_page")
-				}
-				if docId == 0 {
-					docId = page.DocumentationID
-				}
-				page.PageGroupID = item.PageGroupID
-				page.Order = item.Order
-				if err := tx.Save(&page).Error; err != nil {
-					return fmt.Errorf("failed_to_update_page")
-				}
+				docId = pg.DocumentationID
 			}
 		}
+
+		if len(pageUpdates) > 0 {
+			if err := tx.Clauses(clause.OnConflict{
+				Columns:   []clause.Column{{Name: "id"}},
+				DoUpdates: clause.AssignmentColumns([]string{"order", "page_group_id"}),
+			}).Create(&pageUpdates).Error; err != nil {
+				return fmt.Errorf("failed to update pages: %w", err)
+			}
+
+			if docId == 0 && len(pageUpdates) > 0 {
+				var p models.Page
+				if err := tx.Select("documentation_id").First(&p, pageUpdates[0].ID).Error; err != nil {
+					return fmt.Errorf("failed to fetch documentation ID: %w", err)
+				}
+				docId = p.DocumentationID
+			}
+		}
+
 		return nil
 	})
+
 	if err != nil {
 		return err
 	}
 
-	parentDocId, _ := service.GetParentDocId(docId)
-	if parentDocId == 0 {
-		err = service.AddBuildTrigger(docId)
-	} else {
-		err = service.AddBuildTrigger(parentDocId)
-	}
+	parentDocId, err := service.GetParentDocId(docId)
 	if err != nil {
-		return fmt.Errorf("failed_to_update_write_build")
+		return fmt.Errorf("failed to get parent doc ID: %w", err)
 	}
+
+	triggerDocId := docId
+	if parentDocId != 0 {
+		triggerDocId = parentDocId
+	}
+
+	if err := service.AddBuildTrigger(triggerDocId); err != nil {
+		return fmt.Errorf("failed to update write build: %w", err)
+	}
+
 	return nil
 }

@@ -512,7 +512,7 @@ func GetDocusaurus(service *services.DocService, w http.ResponseWriter, r *http.
 
 	docPath, baseURL, err := service.GetDocusaurus(urlPath)
 	if err != nil {
-		http.Redirect(w, r, "/admin/", http.StatusPermanentRedirect)
+		http.Redirect(w, r, "/admin/", http.StatusTemporaryRedirect)
 		return
 	}
 

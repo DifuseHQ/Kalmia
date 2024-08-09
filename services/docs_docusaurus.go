@@ -38,11 +38,13 @@ type VersionInfo struct {
 }
 
 type MetaElement struct {
-	Type  string `json:"type"`
-	Name  string `json:"name"`
-	Label string `json:"label"`
-	Path  string `json:"path"`
-	Order uint   `json:"-"`
+	Type        string `json:"type"`
+	Name        string `json:"name"`
+	Label       string `json:"label"`
+	Path        string `json:"path"`
+	Order       uint   `json:"-"`
+	Collapsible *bool  `json:"collapsible,omitempty"`
+	Collapsed   *bool  `json:"collapsed,omitempty"`
 }
 
 func copyInitFiles(to string) error {
@@ -782,11 +784,13 @@ func (service *DocService) writePageGroupsToDirectory(pageGroups []models.PageGr
 				order = *nestedGroup.Order
 			}
 			metaElements = append(metaElements, MetaElement{
-				Type:  "dir",
-				Name:  utils.StringToFileString(nestedGroup.Name),
-				Label: nestedGroup.Name,
-				Path:  utils.StringToFileString(nestedGroup.Name),
-				Order: order,
+				Type:        "dir",
+				Name:        utils.StringToFileString(nestedGroup.Name),
+				Label:       nestedGroup.Name,
+				Path:        utils.StringToFileString(nestedGroup.Name),
+				Order:       order,
+				Collapsible: &[]bool{true}[0],
+				Collapsed:   &[]bool{true}[0],
 			})
 		}
 
@@ -992,11 +996,13 @@ func (service *DocService) WriteContents(docId uint) error {
 				order = *group.Order
 			}
 			rootMetaElements = append(rootMetaElements, MetaElement{
-				Type:  "dir",
-				Name:  utils.StringToFileString(group.Name),
-				Label: group.Name,
-				Path:  utils.StringToFileString(group.Name),
-				Order: order,
+				Type:        "dir",
+				Name:        utils.StringToFileString(group.Name),
+				Label:       group.Name,
+				Path:        utils.StringToFileString(group.Name),
+				Order:       order,
+				Collapsible: &[]bool{true}[0],
+				Collapsed:   &[]bool{true}[0],
 			})
 		}
 
