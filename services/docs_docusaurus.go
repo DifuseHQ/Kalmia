@@ -82,17 +82,14 @@ func (service *DocService) RemoveDocFolder(docId uint) error {
 
 func (service *DocService) UpdateWriteBuild(docId uint) error {
 	key := fmt.Sprintf("update_write_build_%d", docId)
-
 	var mutex *sync.Mutex
 	mutexI, _ := service.UWBMutexMap.LoadOrStore(key, &sync.Mutex{})
 	mutex = mutexI.(*sync.Mutex)
-
 	acquired := make(chan bool, 1)
 	go func() {
 		mutex.Lock()
 		acquired <- true
 	}()
-
 	select {
 	case <-acquired:
 		defer mutex.Unlock()
@@ -102,7 +99,6 @@ func (service *DocService) UpdateWriteBuild(docId uint) error {
 
 	allDocsPath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data")
 	docsPath := filepath.Join(allDocsPath, "doc_"+strconv.Itoa(int(docId)))
-
 	if !utils.PathExists(docsPath) {
 		err := utils.MakeDir(docsPath)
 		if err != nil {
@@ -116,12 +112,10 @@ func (service *DocService) UpdateWriteBuild(docId uint) error {
 			if err := service.RemoveDocFolder(docId); err != nil {
 				return err
 			}
-
 			return nil
 		} else {
 			logger.Error("Failed to update basic data -> ", zap.Uint("doc_id", docId), zap.Error(err))
 		}
-
 		return err
 	}
 
@@ -426,7 +420,11 @@ func alertToMarkdown(props map[string]interface{}, content string) string {
 		alertType = "danger"
 	}
 
-	return fmt.Sprintf(":::%s\n%s\n:::\n", alertType, content)
+	if alertType == "success" {
+		alertType = `info SUCCESS`
+	}
+
+	return fmt.Sprintf("\n:::%s\n%s\n:::\n", alertType, content)
 }
 
 func tableToMarkdown(tableContent map[string]interface{}) string {
@@ -663,10 +661,28 @@ func (service *DocService) writePagesToDirectory(pages []models.Page, dirPath st
 			markdownExt = ".mdx"
 		}
 
+		oppositeExt := ""
+
+		if markdownExt == ".md" {
+			oppositeExt = ".mdx"
+			if utils.PathExists(filepath.Join(dirPath, "index"+oppositeExt)) {
+				os.Remove(filepath.Join(dirPath, "index"+oppositeExt))
+			}
+		} else {
+			oppositeExt = ".md"
+		}
+
 		if fullPage.IsIntroPage {
 			fileName = "index" + markdownExt
 		} else {
 			fileName = utils.StringToFileString(fullPage.Title) + markdownExt
+		}
+
+		if utils.PathExists(filepath.Join(dirPath, utils.StringToFileString(fullPage.Title)+oppositeExt)) {
+			err := os.Remove(filepath.Join(dirPath, utils.StringToFileString(fullPage.Title)+oppositeExt))
+			if err != nil {
+				return err
+			}
 		}
 
 		err = utils.WriteToFile(filepath.Join(dirPath, fileName), content)
@@ -1075,7 +1091,7 @@ func (service *DocService) DocusaurusBuild(docId uint) error {
 	}
 
 	if err := os.Rename(tmpBuildPath, buildPath); err != nil {
-		return fmt.Errorf("failed to rename new build directory: %w", err)
+		return fmt.Errorf("failed to rename build_tmp to build: %w", err)
 	}
 
 	return nil
