@@ -43,7 +43,7 @@ import DeleteModal from '../DeleteModal/DeleteModal';
 import Table from '../Table/Table';
 import BuildTrigger from '../BuildTrigger/BuildTrigger';
 
-export default function Documentation () {
+export default function Documentation() {
   const navigate = useNavigate();
   const { refresh, refreshData, user } = useContext(AuthContext);
   const { t } = useTranslation();
@@ -528,7 +528,7 @@ export default function Documentation () {
               >
                 <div className="flex flex-col xl:flex-row items-center justify-between space-y-3 xl:space-y-0 md:space-x-4 p-4">
                   <div
-                    className="flex justify-center xl:justify-start items-center w-full xl:w-auto space-x-2"
+                    className="flex justify-start items-center w-full xl:w-auto space-x-2"
                     key="versioning-container"
                   >
                     <div className="relative w-full xl:w-64">
@@ -644,10 +644,14 @@ export default function Documentation () {
                         </motion.div>
                       )}
                     </motion.div>
+                    <div className='hidden xl:block'>
+                      <BuildTrigger />
+                    </div>
 
-                    
                   </div>
-                  <BuildTrigger/>
+                  <div className='flex justify-center xl:hidden'>
+                    <BuildTrigger />
+                  </div>
                   <div className="flex items-center space-x-2">
                     <motion.button
                       whileHover={{ scale: 1.1 }}
@@ -875,7 +879,7 @@ export default function Documentation () {
                             className={`flex items-center justify-center text-sm py-2 px-3 leading-tight ${currentPage === i + 1
                               ? 'text-primary-600 bg-primary-50 border border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white'
                               : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'
-                            }`}
+                              }`}
                           >
                             {i + 1}
                           </button>

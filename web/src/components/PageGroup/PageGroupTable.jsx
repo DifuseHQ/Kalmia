@@ -30,7 +30,7 @@ import DeleteModal from '../DeleteModal/DeleteModal';
 import Table from '../Table/Table';
 import BuildTrigger from '../BuildTrigger/BuildTrigger';
 
-export default function PageGroupTable () {
+export default function PageGroupTable() {
   const [searchParams] = useSearchParams();
   const docId = searchParams.get('id');
   const pageGroupId = searchParams.get('pageGroupId');
@@ -298,8 +298,15 @@ export default function PageGroupTable () {
               >
                 {version}
               </div>
+
+
+              <div className='hidden xl:block'>
+                <BuildTrigger />
+              </div>
             </div>
-            <BuildTrigger/>
+            <div className='flex justify-center xl:hidden'>
+              <BuildTrigger />
+            </div>
             <div className="flex items-center space-x-2">
               <motion.button
                 whileHover={{ scale: 1.1 }}
