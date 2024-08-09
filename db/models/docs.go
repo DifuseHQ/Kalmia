@@ -82,11 +82,11 @@ func (s Documentation) MarshalJSON() ([]byte, error) {
 }
 
 type BuildTriggers struct {
-	ID              uint       `gorm:"primarykey" json:"id,omitempty"`
-	DocumentationID uint       `json:"documentationId,omitempty"`
-	Triggered       bool       `json:"triggered,omitempty"`
-	CreatedAt       *time.Time `gorm:"autoCreateTime" json:"createdAt,omitempty"`
-	CompletedAt     *time.Time
+	ID              uint       `gorm:"primarykey" json:"id"`
+	DocumentationID uint       `json:"documentationId"`
+	Triggered       bool       `json:"triggered"`
+	CreatedAt       *time.Time `gorm:"autoCreateTime" json:"createdAt"`
+	CompletedAt     *time.Time `json:"completedAt"`
 }
 
 func (s BuildTriggers) MarshalJSON() ([]byte, error) {
