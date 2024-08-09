@@ -38,11 +38,13 @@ type VersionInfo struct {
 }
 
 type MetaElement struct {
-	Type  string `json:"type"`
-	Name  string `json:"name"`
-	Label string `json:"label"`
-	Path  string `json:"path"`
-	Order uint   `json:"-"`
+	Type        string `json:"type"`
+	Name        string `json:"name"`
+	Label       string `json:"label"`
+	Path        string `json:"path"`
+	Order       uint   `json:"-"`
+	Collapsible *bool  `json:"collapsible,omitempty"`
+	Collapsed   *bool  `json:"collapsed,omitempty"`
 }
 
 func copyInitFiles(to string) error {
@@ -316,17 +318,21 @@ func (service *DocService) CraftPage(pageID uint, title string, slug string, con
 		markdown += blockToMarkdown(block, 0, nil)
 	}
 
-	imports := ""
+	top := "---\n"
+	top += "pageType: doc\n"
+	top += "footer: true\n"
+	top += "title: " + title + "\n"
+	top += "---\n"
 
 	if strings.Contains(markdown, "ReactPlayer") {
-		imports = "import ReactPlayer from 'react-player'"
+		top += "import ReactPlayer from 'react-player'"
 	}
 
-	if imports != "" {
-		imports += "\n\n"
+	if top != "" {
+		top += "\n\n"
 	}
 
-	return fmt.Sprintf("%s%s", imports, markdown), nil
+	return fmt.Sprintf("%s%s", top, markdown), nil
 }
 
 func blockToMarkdown(block Block, depth int, numbering *[]int) string {
@@ -610,18 +616,20 @@ func applyBlockStyles(content string, props map[string]interface{}, blockType st
 		styleString := ""
 
 		if len(style) > 0 {
-			styleString = "{"
-			for key, value := range style {
-				styleString += fmt.Sprintf("%s: '%s', ", key, value)
+			if _, ok := style["textAlign"]; !ok {
+				style["textAlign"] = "center"
 			}
-			styleString = styleString[:len(styleString)-2] + "}"
+
+			styleString = fmt.Sprintf("style={{ display: 'flex', justifyContent: '%s' }}", style["textAlign"])
 		}
 
-		if styleString != "" {
-			return fmt.Sprintf("<div style={%s}>\n%s</div>\n", styleString, content)
-		} else {
-			return fmt.Sprintf("<div>\n%s</div>\n", content)
-		}
+		// if styleString != "" {
+		// 	return fmt.Sprintf("<div style={%s}>\n%s</div>\n", styleString, content)
+		// } else {
+		// 	return fmt.Sprintf("<div>\n%s</div>\n", content)
+		// }
+
+		return fmt.Sprintf("<div %s>\n%s</div>\n", styleString, content)
 	}
 
 	if blockType == "video" || blockType == "audio" {
@@ -782,11 +790,13 @@ func (service *DocService) writePageGroupsToDirectory(pageGroups []models.PageGr
 				order = *nestedGroup.Order
 			}
 			metaElements = append(metaElements, MetaElement{
-				Type:  "dir",
-				Name:  utils.StringToFileString(nestedGroup.Name),
-				Label: nestedGroup.Name,
-				Path:  utils.StringToFileString(nestedGroup.Name),
-				Order: order,
+				Type:        "dir",
+				Name:        utils.StringToFileString(nestedGroup.Name),
+				Label:       nestedGroup.Name,
+				Path:        utils.StringToFileString(nestedGroup.Name),
+				Order:       order,
+				Collapsible: &[]bool{true}[0],
+				Collapsed:   &[]bool{true}[0],
 			})
 		}
 
@@ -992,11 +1002,13 @@ func (service *DocService) WriteContents(docId uint) error {
 				order = *group.Order
 			}
 			rootMetaElements = append(rootMetaElements, MetaElement{
-				Type:  "dir",
-				Name:  utils.StringToFileString(group.Name),
-				Label: group.Name,
-				Path:  utils.StringToFileString(group.Name),
-				Order: order,
+				Type:        "dir",
+				Name:        utils.StringToFileString(group.Name),
+				Label:       group.Name,
+				Path:        utils.StringToFileString(group.Name),
+				Order:       order,
+				Collapsible: &[]bool{true}[0],
+				Collapsed:   &[]bool{true}[0],
 			})
 		}
 
@@ -1209,39 +1221,32 @@ func (service *DocService) BuildJob() {
 }
 
 func (service *DocService) GetLastTrigger() ([]models.BuildTriggers, error) {
-	var trigger []models.BuildTriggers
+	var allTriggers []models.BuildTriggers
 
-	if err := service.DB.Where("triggered = ?", false).Find(&trigger).Error; err != nil {
+	if err := service.DB.Order("documentation_id, created_at DESC").Find(&allTriggers).Error; err != nil {
 		return nil, err
 	}
 
-	if len(trigger) == 0 {
-		var lastTrigger models.BuildTriggers
-		if err := service.DB.Order("created_at desc").First(&lastTrigger).Error; err != nil {
-			return nil, err
-		}
-		trigger = append(trigger, lastTrigger)
-	} else {
-		latestTriggers := make(map[uint]models.BuildTriggers)
-		for _, t := range trigger {
-			existing, exists := latestTriggers[t.DocumentationID]
-			if !exists {
-				latestTriggers[t.DocumentationID] = t
-			} else {
-				if t.CreatedAt != nil && existing.CreatedAt != nil {
-					if t.CreatedAt.After(*existing.CreatedAt) {
-						latestTriggers[t.DocumentationID] = t
-					}
-				} else if t.CreatedAt != nil {
+	latestTriggers := make(map[uint]models.BuildTriggers)
+	for _, t := range allTriggers {
+		existing, exists := latestTriggers[t.DocumentationID]
+		if !exists {
+			latestTriggers[t.DocumentationID] = t
+		} else {
+			if t.CreatedAt != nil && existing.CreatedAt != nil {
+				if t.CreatedAt.After(*existing.CreatedAt) {
 					latestTriggers[t.DocumentationID] = t
 				}
+			} else if t.CreatedAt != nil {
+				latestTriggers[t.DocumentationID] = t
 			}
 		}
-
-		trigger = make([]models.BuildTriggers, 0, len(latestTriggers))
-		for _, t := range latestTriggers {
-			trigger = append(trigger, t)
-		}
 	}
-	return trigger, nil
+
+	result := make([]models.BuildTriggers, 0, len(latestTriggers))
+	for _, t := range latestTriggers {
+		result = append(result, t)
+	}
+
+	return result, nil
 }
