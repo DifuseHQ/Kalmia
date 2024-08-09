@@ -500,13 +500,31 @@ const pageData = [
   }
 ];
 
-const pageGroups = [];
+function generatePageGroups(n) {
+  const pageGroups = [];
 
-async function sleep(ms) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
+  for (let i = 1; i <= n; i++) {
+    const children = [];
+    const shuffledOrders = [0, 1, 2].sort(() => Math.random() - 0.5);
+
+    for (let j = 1; j <= 3; j++) {
+      children.push({
+        name: `Page Group ${i}.${j}`,
+        order: shuffledOrders[j - 1]
+      });
+    }
+
+    pageGroups.push({
+      name: `Page Group ${i}`,
+      order: i,
+      children: children
+    });
+  }
+
+  return pageGroups;
 }
+
+const pageGroups = generatePageGroups(10);
 
 async function authenticateUser(username, password) {
   try {
@@ -549,16 +567,103 @@ async function createDocumentation(objData) {
   }
 }
 
-async function createPages(count, docId) {
+async function getPageGroups(docId) {
+  try {
+    const response = await fetch(`${ENDPOINT}/docs/page-groups`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${TOKEN}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.filter((pageGroup) => pageGroup.documentationId === docId);
+  } catch (error) {
+    console.error('Error fetching page groups:', error);
+  }
+}
+
+async function createPageGroups(docId) {
+  for (const pageGroup of pageGroups) {
+    try {
+      const response = await fetch(`${ENDPOINT}/docs/page-group/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${TOKEN}`
+        },
+        body: JSON.stringify({
+          documentationId: docId,
+          name: pageGroup.name,
+          parentId: pageGroup.parentId,
+          order: pageGroup.order
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      console.log(`Page Group ${pageGroup.name} created`);
+
+      const pageGroups = await getPageGroups(docId);
+      const parentData = pageGroups.find((pg) => pg.name === pageGroup.name);
+
+      if (pageGroup.children && pageGroup.children.length > 0) {
+        for (const child of pageGroup.children) {
+          try {
+            await fetch(`${ENDPOINT}/docs/page-group/create`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${TOKEN}`
+              },
+              body: JSON.stringify({
+                documentationId: docId,
+                name: child.name,
+                parentId: parentData.id,
+                order: child.order
+              })
+            });
+            console.log(`Child Page Group ${child.name} created`);
+          } catch (childError) {
+            console.error('Error creating child page group:', childError);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error creating page group:', error);
+    }
+  }
+}
+
+function generateRandomString(length) {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+
+  return result;
+}
+
+async function createPages(count, docId, groupId = null) {
   for (let i = 0; i < count; i++) {
     const modifiedPageData = JSON.parse(JSON.stringify(pageData));
     const pEl = modifiedPageData.find((element) => element.content[0].text === "Paragraph");
     if (pEl) {
-      pEl.content[0].text = new LoremIpsum().generateParagraphs(1); // Update the text with generated content
+      pEl.content[0].text = new LoremIpsum().generateParagraphs(1);
     }
 
+    const slug = '/page-' + generateRandomString(8);
+    
     try {
-      await fetch(`${ENDPOINT}/docs/page/create`, {
+      const response = await fetch(`${ENDPOINT}/docs/page/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -567,22 +672,19 @@ async function createPages(count, docId) {
         body: JSON.stringify({
           documentationId: parseInt(docId),
           title: `Page ${i}`,
-          slug: `/page-${i}`,
+          slug: slug,
           content: JSON.stringify(modifiedPageData),
-          order: i
+          order: i,
+          pageGroupId: parseInt(groupId) || undefined
         })
       });
-      console.log(`Page ${i} created`);
     } catch (error) {
       console.error('Error creating page:', error);
     }
   }
+
+  console.log(`Created ${count} pages`);
 }
-
-async function createPageGroups() {}
-
-// async function createPageGroup(objData) {
-// }
 
 const addDummyData = async () => {
   console.log('-----------------------------------');
@@ -591,15 +693,25 @@ const addDummyData = async () => {
 
   for (const documentation of documentations) {
     await createDocumentation(documentation);
+
+    console.log('-----------------------------------');
+    console.log('Creating Page Groups...');
+    console.log('-----------------------------------');
+    await createPageGroups(documentation.id);
+    console.log('-----------------------------------');
+
+    console.log('Creating Pages...');
+    console.log('-----------------------------------');
+
+    await createPages(16, documentation.id);
+
+    const allPageGroups = await getPageGroups(documentation.id);
+    const rootPageGroupIds = allPageGroups.filter((pg) => pg.parentId === null).map((pg) => pg.id);
+    
+    for (const rootPageGroupId of rootPageGroupIds) {
+      await createPages(16, documentation.id, rootPageGroupId);
+    }
   }
-
-  console.log('-----------------------------------');
-  console.log('Creating Pages...');
-  console.log('-----------------------------------');
-
-  await createPages(150, 1);
-  await createPages(150, 2);
-  await createPages(150, 3);
 }
 
 addDummyData();

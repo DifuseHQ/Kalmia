@@ -186,7 +186,7 @@ func (service *DocService) CreateDocumentation(documentation *models.Documentati
 		return fmt.Errorf("failed_to_create_documentation")
 	}
 
-	introPageContent := fmt.Sprintf(`[{"id":"fa01e096-3187-4628-8f1e-77728cee3aa6","type":"paragraph","props":{"textColor":"default","backgroundColor":"default","textAlignment":"left"},"content":[{"type":"text","text":"Welcome to the %s documentation!","styles":{}}],"children":[]},{"id":"90f28c74-6195-4074-8861-35b82b9bfb1c","type":"paragraph","props":{"textColor":"default","backgroundColor":"default","textAlignment":"left"},"content":[],"children":[]}]`, documentation.Name)
+	introPageContent := `[{"id":"fa01e096-3187-4628-8f1e-77728cee3aa6","type":"heading","props":{"textColor":"default","backgroundColor":"default","textAlignment":"left","level":1},"content":[{"type":"text","text":"Introduction","styles":{}}],"children":[]},{"id":"64a26e8f-7733-4f8a-b3fb-f2c9a770d727","type":"paragraph","props":{"textColor":"default","backgroundColor":"default","textAlignment":"left"},"content":[{"type":"text","text":"Welcome to the ","styles":{}},{"type":"text","text":"introductory page","styles":{"bold":true}},{"type":"text","text":" of this documentation!","styles":{}}],"children":[]},{"id":"90f28c74-6195-4074-8861-35b82b9bfb1c","type":"paragraph","props":{"textColor":"default","backgroundColor":"default","textAlignment":"left"},"content":[],"children":[]}]`
 
 	introPage := models.Page{
 		Title:           "Introduction",
