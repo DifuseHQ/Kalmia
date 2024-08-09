@@ -44,7 +44,6 @@ type Config struct {
 	SessionSecret  string         `json:"sessionSecret"`
 	Admins         []User         `json:"users"`
 	DataPath       string         `json:"dataPath"`
-	AddDummyData   bool           `json:"addDummyData"`
 	Cloudflare     Cloudflare     `json:"cloudflare"`
 	GithubOAuth    GithubOAuth    `json:"githubOAuth"`
 	MicrosoftOAuth MicrosoftOAuth `json:"microsoftOAuth"`
