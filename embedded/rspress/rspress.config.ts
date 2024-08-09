@@ -19,7 +19,7 @@ export default defineConfig({
       // { icon: 'facebook', mode: 'link', content: 'https://github.com/web-infra-dev/rspress' },
       // { icon: 'whatsapp', mode: 'link', content: 'https://github.com/web-infra-dev/rspress' },
     ],
-    footer: { message:'' },
+    footer: { message:'<p>This is a footer with a <a href="https://example.com">link</a> and <strong>bold text</strong></p>' },
   },
   mediumZoom: {
     selector: '.rspress-doc img',
