@@ -272,9 +272,9 @@ export default function PageGroupTable () {
         key="pageGroupTable"
       >
         <div className="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
-          <div className="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
-            <div className="flex items-center w-full md:w-auto space-x-2">
-              <div className="relative w-full md:w-64">
+          <div className="flex flex-col xl:flex-row items-center justify-between space-y-3 xl:space-y-0 md:space-x-4 p-4">
+            <div className="flex items-center w-full xl:w-auto space-x-2">
+              <div className="relative w-full xl:w-64">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                   <Icon
                     icon="material-symbols:search"
@@ -307,7 +307,7 @@ export default function PageGroupTable () {
                 type="button"
                 className="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
               >
-                <span className="px-1 text-left items-center dark:text-white text-md">
+                <span className="px-1 text-left items-center dark:text-white text-md whitespace-nowrap">
                   {t('new_group')}
                 </span>
                 <Icon icon="ei:plus" className="w-6 h-6 dark:text-white" />
@@ -320,7 +320,7 @@ export default function PageGroupTable () {
                 className="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
                 key="create-nest-page-button"
               >
-                <span className="px-1 text-left items-center dark:text-white text-md">
+                <span className="px-1 text-left items-center dark:text-white text-md whitespace-nowrap">
                   {t('new_page')}
                 </span>
                 <Icon icon="ei:plus" className="w-6 h-6 dark:text-white" />
