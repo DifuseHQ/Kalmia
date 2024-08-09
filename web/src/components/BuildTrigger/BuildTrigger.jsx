@@ -66,7 +66,7 @@ export default function BuildTrigger() {
 
             <Icon icon="carbon:checkmark-filled" className='w-6 h-6 text-green-600 dark:text-green-500 '/>
             <span className="dark:text-white text-md whitespace-nowrap">
-              Build {relativeTime}
+              Built {relativeTime}
             </span>
           </motion.div>
         ) : (
@@ -76,7 +76,7 @@ export default function BuildTrigger() {
 
             <Icon icon="line-md:loading-twotone-loop" className='w-6 h-6 text-black dark:text-white'/>
             <span className="dark:text-white text-md whitespace-nowrap">
-              Build in progress {relativeTime}
+              Building since {relativeTime}
             </span>
           </div>
         )}
