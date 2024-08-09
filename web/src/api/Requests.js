@@ -75,6 +75,7 @@ export const deleteDocumentation = (id) =>
   makeRequest('/docs/documentation/delete', 'post', { id });
 export const createDocumentationVersion = (data) =>
   makeRequest('/docs/documentation/version', 'post', data);
+export const buildTrigger = () => makeRequest('/health/last-trigger');
 
 export const getPageGroups = () => makeRequest('/docs/page-groups');
 export const getPageGroup = (id) =>

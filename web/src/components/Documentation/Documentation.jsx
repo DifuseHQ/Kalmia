@@ -41,6 +41,7 @@ import CreatePageGroup from '../CreatePageGroup/CreatePageGroup';
 import CreatePage from '../CreatePageModal/CreatePageModal';
 import DeleteModal from '../DeleteModal/DeleteModal';
 import Table from '../Table/Table';
+import BuildTrigger from '../BuildTrigger/BuildTrigger';
 
 export default function Documentation () {
   const navigate = useNavigate();
@@ -643,6 +644,8 @@ export default function Documentation () {
                         </motion.div>
                       )}
                     </motion.div>
+
+                    <BuildTrigger/>
                   </div>
 
                   <div className="flex items-center space-x-2">
