@@ -373,27 +373,6 @@ export const landingPagevalidate = (data) => {
   return errors;
 };
 
-export const prepareLandingPageData = (data) => {
-  // Create a copy of the data
-  let preparedData = { ...data };
-
-  // Check if each field is empty and set it to an empty object if so
-  if (
-    !preparedData.ctaButtonText.ctaButtonLinkLabel &&
-    !preparedData.ctaButtonText.ctaButtonLink &&
-    !preparedData.secondCtaButtonText.ctaButtonLinkLabel &&
-    !preparedData.secondCtaButtonText.ctaButtonLink &&
-    !preparedData.ctaImageLink &&
-    !preparedData.features.some(
-      (feature) => feature.emoji || feature.title || feature.text
-    )
-  ) {
-    preparedData = {};
-  }
-
-  return preparedData;
-};
-
 export function useOutsideAlerter (ref, onOutsideClick) {
   useEffect(() => {
     function handleClickOutside (event) {

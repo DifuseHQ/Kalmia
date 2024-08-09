@@ -28,6 +28,7 @@ import CreatePageGroup from '../CreatePageGroup/CreatePageGroup';
 import CreatePage from '../CreatePageModal/CreatePageModal';
 import DeleteModal from '../DeleteModal/DeleteModal';
 import Table from '../Table/Table';
+import BuildTrigger from '../BuildTrigger/BuildTrigger';
 
 export default function PageGroupTable () {
   const [searchParams] = useSearchParams();
@@ -298,7 +299,7 @@ export default function PageGroupTable () {
                 {version}
               </div>
             </div>
-
+            <BuildTrigger/>
             <div className="flex items-center space-x-2">
               <motion.button
                 whileHover={{ scale: 1.1 }}
