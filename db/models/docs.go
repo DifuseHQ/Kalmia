@@ -62,6 +62,7 @@ type Documentation struct {
 	Favicon          string      `json:"favicon,omitempty"`
 	MetaImage        string      `json:"metaImage,omitempty"`
 	NavImage         string      `json:"navImage,omitempty"`
+	NavImageDark     string      `json:"navImageDark,omitempty"`
 	CustomCSS        string      `json:"customCSS,omitempty"`
 	FooterLabelLinks string      `json:"footerLabelLinks,omitempty"`
 	MoreLabelLinks   string      `json:"moreLabelLinks,omitempty"`

@@ -103,3 +103,12 @@ func IsBaseURLValid(input string) bool {
 
 	return true
 }
+
+func ConvertToEmoji(codePoint string) string {
+	codePoint = strings.TrimPrefix(strings.ToUpper(codePoint), "U+")
+	codePointInt, err := strconv.ParseInt(codePoint, 16, 32)
+	if err != nil {
+		return "Invalid code point"
+	}
+	return string(rune(codePointInt))
+}

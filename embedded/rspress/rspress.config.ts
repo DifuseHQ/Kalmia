@@ -3,23 +3,18 @@ import { defineConfig } from 'rspress/config';
 
 export default defineConfig({
   root: path.join(__dirname, 'docs'),
+  globalStyles: path.join(__dirname, 'styles/output.css'),
   title: '__TITLE__',
-  base: '__BASE_URL__/',
+  base: '__BASE_URL__',
   description: '__TAG_LINE__',
   logo: {
-    light: 'https://difuse.io/assets/images/favicon/white/android-chrome-512x512.png',
-    dark: 'https://difuse.io/assets/images/favicon/white/android-chrome-512x512.png',
+    light: '__LOGO_LIGHT__',
+    dark: '__LOGO_DARK__',
   },
   __MULTI_VERSIONS__,
   themeConfig: {
-    socialLinks: [
-      // { icon: 'github', mode: 'link', content: 'https://github.com/web-infra-dev/rspress' },
-      // { icon: 'twitter', mode: 'link', content: 'https://github.com/web-infra-dev/rspress' },
-      // { icon: 'discord', mode: 'link', content: 'https://github.com/web-infra-dev/rspress' },
-      // { icon: 'facebook', mode: 'link', content: 'https://github.com/web-infra-dev/rspress' },
-      // { icon: 'whatsapp', mode: 'link', content: 'https://github.com/web-infra-dev/rspress' },
-    ],
-    footer: { message:'<p>This is a footer with a <a href="https://example.com">link</a> and <strong>bold text</strong></p>' },
+    socialLinks: __SOCIAL_LINKS__,
+    footer: { message:`__FOOTER_CONTENT__` },
   },
   mediumZoom: {
     selector: '.rspress-doc img',

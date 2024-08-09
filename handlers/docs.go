@@ -76,6 +76,7 @@ func CreateDocumentation(services *services.ServiceRegistry, w http.ResponseWrit
 		Favicon          string `json:"favicon"`
 		MetaImage        string `json:"metaImage" validate:"required"`
 		NavImage         string `json:"navImage"`
+		NavImageDark     string `json:"navImageDark"`
 		CustomCSS        string `json:"customCSS" validate:"required"`
 		FooterLabelLinks string `json:"footerLabelLinks"`
 		MoreLabelLinks   string `json:"moreLabelLinks"`
@@ -104,6 +105,7 @@ func CreateDocumentation(services *services.ServiceRegistry, w http.ResponseWrit
 		Favicon:          req.Favicon,
 		MetaImage:        req.MetaImage,
 		NavImage:         req.NavImage,
+		NavImageDark:     req.NavImageDark,
 		CustomCSS:        req.CustomCSS,
 		FooterLabelLinks: req.FooterLabelLinks,
 		MoreLabelLinks:   req.MoreLabelLinks,
@@ -134,6 +136,7 @@ func EditDocumentation(services *services.ServiceRegistry, w http.ResponseWriter
 		Favicon          string `json:"favicon"`
 		MetaImage        string `json:"metaImage" validate:"required"`
 		NavImage         string `json:"navImage"`
+		NavImageDark     string `json:"navImageDark"`
 		CustomCSS        string `json:"customCSS" validate:"required"`
 		FooterLabelLinks string `json:"footerLabelLinks"`
 		MoreLabelLinks   string `json:"moreLabelLinks"`
@@ -158,7 +161,7 @@ func EditDocumentation(services *services.ServiceRegistry, w http.ResponseWriter
 		return
 	}
 
-	err = services.DocService.EditDocumentation(user, req.ID, req.Name, req.Description, req.Version, req.Favicon, req.MetaImage, req.NavImage, req.CustomCSS, req.FooterLabelLinks, req.MoreLabelLinks, req.CopyrightText, req.URL, req.OrganizationName, req.ProjectName, req.BaseURL, req.LanderDetails)
+	err = services.DocService.EditDocumentation(user, req.ID, req.Name, req.Description, req.Version, req.Favicon, req.MetaImage, req.NavImage, req.NavImageDark, req.CustomCSS, req.FooterLabelLinks, req.MoreLabelLinks, req.CopyrightText, req.URL, req.OrganizationName, req.ProjectName, req.BaseURL, req.LanderDetails)
 
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})

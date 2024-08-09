@@ -39,7 +39,7 @@ func (service *DocService) GetDocumentations() ([]models.Documentation, error) {
 	}).Preload("Pages.Editors", func(db *gorm.DB) *gorm.DB {
 		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
 	}).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID", "Version", "ClonedFrom",
-		"LastEditorID", "Favicon", "MetaImage", "NavImage", "CustomCSS", "FooterLabelLinks", "MoreLabelLinks",
+		"LastEditorID", "Favicon", "MetaImage", "NavImage", "NavImageDark", "CustomCSS", "FooterLabelLinks", "MoreLabelLinks",
 		"URL", "OrganizationName", "LanderDetails", "ProjectName", "BaseURL").
 		Find(&documentations).Error; err != nil {
 		return nil, fmt.Errorf("failed_to_get_documentations")
@@ -85,7 +85,7 @@ func (service *DocService) GetDocumentation(id uint) (models.Documentation, erro
 	}).Preload("Pages.Editors", func(db *gorm.DB) *gorm.DB {
 		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
 	}).Where("id = ?", id).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID", "Version", "LastEditorID", "Favicon",
-		"MetaImage", "NavImage", "CustomCSS", "FooterLabelLinks", "MoreLabelLinks", "CopyrightText",
+		"MetaImage", "NavImage", "NavImageDark", "CustomCSS", "FooterLabelLinks", "MoreLabelLinks", "CopyrightText",
 		"BaseURL", "URL", "OrganizationName", "LanderDetails", "ProjectName").
 		Find(&documentation).Error; err != nil {
 		return models.Documentation{}, fmt.Errorf("failed_to_get_documentation")
@@ -224,7 +224,7 @@ func (service *DocService) CreateDocumentation(documentation *models.Documentati
 	return nil
 }
 
-func (service *DocService) EditDocumentation(user models.User, id uint, name, description, version, favicon, metaImage, navImage, customCSS, footerLabelLinks, moreLabelLinks, copyrightText, url, organizationName, projectName, baseURL, landerDetails string) error {
+func (service *DocService) EditDocumentation(user models.User, id uint, name, description, version, favicon, metaImage, navImage, navImageDark, customCSS, footerLabelLinks, moreLabelLinks, copyrightText, url, organizationName, projectName, baseURL, landerDetails string) error {
 	tx := service.DB.Begin()
 
 	if !utils.IsBaseURLValid(baseURL) {
@@ -243,6 +243,7 @@ func (service *DocService) EditDocumentation(user models.User, id uint, name, de
 		doc.Favicon = favicon
 		doc.MetaImage = metaImage
 		doc.NavImage = navImage
+		doc.NavImageDark = navImageDark
 		doc.CustomCSS = customCSS
 		doc.FooterLabelLinks = footerLabelLinks
 		doc.MoreLabelLinks = moreLabelLinks
@@ -375,6 +376,7 @@ func (service *DocService) CreateDocumentationVersion(originalDocId uint, newVer
 		Favicon:          originalDoc.Favicon,
 		MetaImage:        originalDoc.MetaImage,
 		NavImage:         originalDoc.NavImage,
+		NavImageDark:     originalDoc.NavImageDark,
 		CustomCSS:        originalDoc.CustomCSS,
 		FooterLabelLinks: originalDoc.FooterLabelLinks,
 		MoreLabelLinks:   originalDoc.MoreLabelLinks,

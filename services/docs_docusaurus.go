@@ -47,12 +47,29 @@ type MetaElement struct {
 	Collapsed   *bool  `json:"collapsed,omitempty"`
 }
 
+type SocialLink struct {
+	Label string `json:"icon"`
+	Link  string `json:"link"`
+}
+
+type MoreLink struct {
+	Label string `json:"label"`
+	Link  string `json:"link"`
+}
+
+type SocialLinkRsPress struct {
+	Icon    string `json:"icon"`
+	Mode    string `json:"mode"`
+	Content string `json:"content"`
+}
+
 func copyInitFiles(to string) error {
 	toCopy := []string{
 		"package.json",
-		"postcss.config.js",
 		"rspress.config.ts",
 		"tsconfig.json",
+		"tailwind.config.js",
+		"styles/",
 	}
 
 	for _, file := range toCopy {
@@ -174,7 +191,7 @@ func (service *DocService) StartupCheck() error {
 				}
 			}
 
-			err := service.UpdateWriteBuild(doc.ID)
+			err := service.AddBuildTrigger(doc.ID)
 
 			if err != nil {
 				return err
@@ -234,11 +251,22 @@ func (service *DocService) UpdateBasicData(docId uint) error {
 		"__FAVICON__":           "img/favicon.ico",
 		"__META_IMAGE__":        "img/meta.webp",
 		"__NAVBAR_TITLE__":      doc.Name,
-		"__NAVBAR_LOGO__":       "img/navbar.webp",
+		"__LOGO_LIGHT__":        "https://downloads-bucket.difuse.io/kalmia-sideways-black.png",
+		"__LOGO_DARK__":         "https://downloads-bucket.difuse.io/kalmia-sideways-white.png",
 		"__COPYRIGHT_TEXT__":    "Iridia Solutions Pvt. Ltd. Built With Kalmia",
 		"__URL__":               "http://localhost:3000",
 		"__ORGANIZATION_NAME__": "Iridia Solutions Pvt. Ltd.",
 		"__PROJECT_NAME__":      "Kalmia",
+		"__SOCIAL_LINKS__":      "[]",
+		"__FOOTER_CONTENT__":    "Made with ❤️ by Difuse",
+	}
+
+	if doc.NavImage != "" {
+		replacements["__LOGO_LIGHT__"] = doc.NavImage
+	}
+
+	if doc.NavImageDark != "" {
+		replacements["__LOGO_DARK__"] = doc.NavImageDark
 	}
 
 	if doc.Favicon != "" {
@@ -249,13 +277,6 @@ func (service *DocService) UpdateBasicData(docId uint) error {
 		replacements["__META_IMAGE__"] = doc.MetaImage
 	}
 
-	if doc.NavImage != "" {
-		replacements["__NAVBAR_LOGO__"] = fmt.Sprintf("logo: { alt: '%s Logo', src: '%s',},", doc.Name, doc.NavImage)
-		replacements["__NAVBAR_TITLE__"] = ""
-	} else {
-		replacements["__NAVBAR_LOGO__"] = ""
-	}
-
 	if doc.CopyrightText != "" {
 		replacements["__COPYRIGHT_TEXT__"] = doc.CopyrightText
 	}
@@ -264,18 +285,53 @@ func (service *DocService) UpdateBasicData(docId uint) error {
 		replacements["__URL__"] = doc.URL
 	}
 
-	if doc.MoreLabelLinks != "" {
-		moreLabelLinks := strings.ReplaceAll(doc.MoreLabelLinks, "link", "href")
-		replacements["__MORE_LABEL_HREF__"] = moreLabelLinks
-	} else {
-		replacements["__MORE_LABEL_HREF__"] = ""
+	if doc.FooterLabelLinks != "" {
+		var socialLinks []SocialLink
+		var socialLinksRsPress []SocialLinkRsPress
+
+		err := json.Unmarshal([]byte(doc.FooterLabelLinks), &socialLinks)
+
+		if err != nil {
+			replacements["__SOCIAL_LINKS__"] = "[]"
+		}
+
+		for _, link := range socialLinks {
+			socialLinksRsPress = append(socialLinksRsPress, SocialLinkRsPress{Icon: utils.ToLowerCase(link.Label), Mode: "link", Content: link.Link})
+		}
+
+		socialLinksJSON, err := json.Marshal(socialLinksRsPress)
+
+		if err != nil {
+			replacements["__SOCIAL_LINKS__"] = "[]"
+		}
+
+		replacements["__SOCIAL_LINKS__"] = string(socialLinksJSON)
 	}
 
-	if doc.FooterLabelLinks != "" {
-		footerLabelLinks := strings.ReplaceAll(doc.FooterLabelLinks, "link", "href")
-		replacements["__COMMUNITY_LABEL_HREF__"] = footerLabelLinks
+	if doc.MoreLabelLinks != "" {
+		var moreLinks []MoreLink
+		var links string
+		err := json.Unmarshal([]byte(doc.MoreLabelLinks), &moreLinks)
+
+		if err != nil {
+			links = ""
+		} else {
+			for _, link := range moreLinks {
+				links += fmt.Sprintf(`<a href="%s" target="_blank">%s</a>`, link.Link, link.Label)
+			}
+		}
+
+		replacements["__FOOTER_CONTENT__"] = fmt.Sprintf(`
+		<footer class="text-center">
+		  <div class="copyright">
+			<p class="text-sm">&copy; %d %s</p>
+		  </div>
+		  <nav class="flex justify-center flex-wrap mt-2 space-x-4">
+		%s
+		  </nav>
+		</footer>`, time.Now().UTC().Year(), doc.CopyrightText, links)
 	} else {
-		replacements["__COMMUNITY_LABEL_HREF__"] = ""
+		replacements["__FOOTER_CONTENT__"] = "Made with ❤️ by Iridia Solutions Pvt. Ltd."
 	}
 
 	if err := os.Remove(docConfig); err != nil {
@@ -964,6 +1020,20 @@ func (service *DocService) WriteContents(docId uint) error {
 			rootMeta = fmt.Sprintf(`[{"text": "Documentation","link": "/%s/index","activeMatch": "/%s/"}`, cleanedBase, cleanedBase)
 		}
 
+		var customCSS strings.Builder
+
+		customCSS.WriteString("@import 'tailwindcss/base';\n")
+		customCSS.WriteString("@import 'tailwindcss/components';\n")
+		customCSS.WriteString("@import 'tailwindcss/utilities';\n\n")
+
+		if versionDoc.CustomCSS != "" {
+			customCSS.WriteString(versionDoc.CustomCSS)
+		}
+
+		if err := utils.WriteToFile(filepath.Join(versionedDocPath, "../../", "styles", "input.css"), customCSS.String()); err != nil {
+			return err
+		}
+
 		if err := utils.WriteToFile(filepath.Join(versionedDocPath, "_meta.json"), rootMeta); err != nil {
 			return err
 		}
@@ -1111,6 +1181,7 @@ func (service *DocService) WriteHomePage(documentation models.Documentation, con
 		}
 
 		err := json.Unmarshal([]byte(documentation.LanderDetails), &landerDetails)
+
 		if err != nil {
 			return fmt.Errorf("error unmarshaling LanderDetails: %w", err)
 		}
@@ -1140,7 +1211,7 @@ func (service *DocService) WriteHomePage(documentation models.Documentation, con
 			for _, feature := range landerDetails.Features {
 				yamlBuilder.WriteString(fmt.Sprintf("  - title: %s\n", feature.Title))
 				yamlBuilder.WriteString(fmt.Sprintf("    details: %s\n", feature.Text))
-				yamlBuilder.WriteString(fmt.Sprintf("    icon: %s\n", feature.Emoji))
+				yamlBuilder.WriteString(fmt.Sprintf("    icon: %s\n", utils.ConvertToEmoji(feature.Emoji)))
 			}
 		}
 
@@ -1162,7 +1233,13 @@ func (service *DocService) DocusaurusBuild(docId uint) error {
 	buildPath := filepath.Join(docPath, "build")
 	tmpBuildPath := filepath.Join(docPath, "build_tmp")
 
-	err := utils.RunNpxCommand(docPath, "rspress", "build")
+	err := utils.RunNpxCommand(docPath, "tailwindcss", "build", "styles/input.css", "-o", "styles/output.css")
+
+	if err != nil {
+		return err
+	}
+
+	err = utils.RunNpxCommand(docPath, "rspress", "build")
 	if err != nil {
 		return err
 	}

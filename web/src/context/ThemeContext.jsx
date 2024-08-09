@@ -4,28 +4,27 @@ export const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
   const updateFavicon = (theme) => {
-    const color = theme === 'dark' ? 'white' : 'black';
     const links = [
       {
         rel: 'apple-touch-icon',
         sizes: '180x180',
-        href: `/admin/assets/favicon/${color}/apple-touch-icon.png`
+        href: `/admin/assets/favicon/apple-touch-icon.png`
       },
       {
         rel: 'icon',
         type: 'image/png',
         sizes: '32x32',
-        href: `/admin/assets/favicon/${color}/favicon-32x32.png`
+        href: `/admin/assets/favicon/favicon-32x32.png`
       },
       {
         rel: 'icon',
         type: 'image/png',
         sizes: '16x16',
-        href: `/admin/assets/favicon/${color}/favicon-16x16.png`
+        href: `/admin/assets/favicon/favicon-16x16.png`
       },
       {
         rel: 'manifest',
-        href: `/admin/assets/favicon/${color}/site.webmanifest`
+        href: `/admin/assets/favicon/site.webmanifest`
       }
     ];
 

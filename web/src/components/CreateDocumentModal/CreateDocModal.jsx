@@ -172,6 +172,7 @@ export default function CreateDocModal() {
     projectName: "",
     customCSS: customCSSInitial(),
     favicon: "",
+    navImageDark: "",
     navImage: "",
     copyrightText: "",
     metaImage: "",
@@ -270,6 +271,7 @@ export default function CreateDocModal() {
         projectName: "",
         customCSS: customCSSInitial(),
         favicon: "",
+        navImageDark: "",
         navImage: "",
         copyrightText: "",
         metaImage: "",
@@ -378,6 +380,7 @@ export default function CreateDocModal() {
       projectName: formData.projectName || "",
       customCSS: formData.customCSS || customCSSInitial(),
       favicon: formData.favicon || "",
+      navImageDark: formData.navImageDark || "",
       navImage: formData.navImage || "",
       copyrightText: formData.copyrightText || "",
       metaImage: formData.metaImage || "",
@@ -559,13 +562,21 @@ export default function CreateDocModal() {
                   </div>
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-3">
                   <FormField
                     label={t("favicon")}
                     placeholder={t("favicon_placeholder")}
                     value={formData?.favicon}
                     onChange={handleChange}
                     name="favicon"
+                    type="url"
+                  />
+                  <FormField
+                    label={t("navbar_icon_dark")}
+                    placeholder={t("navbar_icon_placeholder")}
+                    value={formData?.navImageDark}
+                    onChange={handleChange}
+                    name="navImageDark"
                     type="url"
                   />
                   <FormField

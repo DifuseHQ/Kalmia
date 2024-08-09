@@ -254,6 +254,12 @@ export const validateFormData = (formData) => {
     return errors;
   }
 
+  if (formData.navImageDark && !isValidURL(formData.navImageDark)) {
+    errors.status = true;
+    errors.message = 'valid_navbar_icon_url_required';
+    return errors;
+  }
+
   if (formData.navImage && !isValidURL(formData.navImage)) {
     errors.status = true;
     errors.message = 'valid_navbar_icon_url_required';
