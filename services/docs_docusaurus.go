@@ -358,7 +358,7 @@ func blockToMarkdown(block Block, depth int, numbering *[]int) string {
 		}
 		return applyBlockStyles(tableToMarkdown(tableContent), block.Props, block.Type) + "\n"
 	case "image":
-		return applyBlockStyles(imageToMarkdown(block.Props), block.Props, block.Type)
+		return imageToMarkdown(block.Props)
 	case "video":
 		return applyBlockStyles(videoToMarkdown(block.Props), block.Props, block.Type)
 	case "audio":
@@ -372,16 +372,35 @@ func blockToMarkdown(block Block, depth int, numbering *[]int) string {
 	}
 }
 
+func imageWithAlignment(url, alt, alignment, caption string) string {
+	return fmt.Sprintf(`
+   <div style={{display: 'flex', flexDirection: 'column', alignItems: '%s', width: '100%%'}}>
+	<img src='%s' alt='%s' style={{maxWidth: '640px', maxHeight: '360px', width: 'auto', height: 'auto'}} />
+	<span style={{textAlign: '%s'}}>%s</span>
+   </div>`, alignment, url, alt, alignment, caption)
+}
+
 func imageToMarkdown(props map[string]interface{}) string {
-	name, _ := props["name"].(string)
 	url, urlOK := props["url"].(string)
 	caption, _ := props["caption"].(string)
 
 	if !urlOK {
-		return "Invalid image URL"
+		return "\nInvalid image URL\n"
 	}
 
-	return fmt.Sprintf("<figure>\n![%s](%s)\n<figcaption>%s</figcaption>\n</figure>\n", name, url, caption)
+	alignment := "flex-start"
+
+	if textAlignment, ok := props["textAlignment"].(string); ok {
+		if textAlignment == "left" {
+			alignment = "flex-start"
+		} else if textAlignment == "center" {
+			alignment = "center"
+		} else if textAlignment == "right" {
+			alignment = "flex-end"
+		}
+	}
+
+	return imageWithAlignment(url, caption, alignment, caption) + "\n\n"
 }
 
 func videoToMarkdown(props map[string]interface{}) string {
@@ -593,9 +612,11 @@ func applyBlockStyles(content string, props map[string]interface{}, blockType st
 	if textColor, ok := props["textColor"].(string); ok && textColor != "default" {
 		style["color"] = textColor
 	}
+
 	if bgColor, ok := props["backgroundColor"].(string); ok && bgColor != "default" {
 		style["backgroundColor"] = bgColor
 	}
+
 	if textAlignment, ok := props["textAlignment"].(string); ok && textAlignment != "left" {
 		style["textAlign"] = textAlignment
 	}
@@ -622,12 +643,6 @@ func applyBlockStyles(content string, props map[string]interface{}, blockType st
 
 			styleString = fmt.Sprintf("style={{ display: 'flex', justifyContent: '%s' }}", style["textAlign"])
 		}
-
-		// if styleString != "" {
-		// 	return fmt.Sprintf("<div style={%s}>\n%s</div>\n", styleString, content)
-		// } else {
-		// 	return fmt.Sprintf("<div>\n%s</div>\n", content)
-		// }
 
 		return fmt.Sprintf("<div %s>\n%s</div>\n", styleString, content)
 	}
@@ -937,15 +952,19 @@ func (service *DocService) WriteContents(docId uint) error {
 			}
 		}
 		/* End Cleanup Stuff */
-
 		/* Root of Version folder stuff */
-		rootMeta := fmt.Sprintf(`[{"text": "Documentation","link": "/%s/index","activeMatch": "/%s/"}]`,
-			utils.StringToFileString(versionDoc.BaseURL), utils.StringToFileString(versionDoc.BaseURL))
-		if err := utils.WriteToFile(filepath.Join(versionedDocPath, "_meta.json"), rootMeta); err != nil {
-			return err
+
+		cleanedBase := utils.StringToFileString(versionDoc.BaseURL)
+
+		var rootMeta string
+
+		if versionDoc.LanderDetails != "" && versionDoc.LanderDetails != "{}" {
+			rootMeta = fmt.Sprintf(`[{"text": "Home","link": "/%s/home","activeMatch": "/%s/home"}, {"text": "Documentation","link": "/%s/index","activeMatch": "/%s/"}]`, cleanedBase, cleanedBase, cleanedBase, cleanedBase)
+		} else {
+			rootMeta = fmt.Sprintf(`[{"text": "Documentation","link": "/%s/index","activeMatch": "/%s/"}`, cleanedBase, cleanedBase)
 		}
 
-		if err := service.WriteHomePage(versionDoc); err != nil {
+		if err := utils.WriteToFile(filepath.Join(versionedDocPath, "_meta.json"), rootMeta); err != nil {
 			return err
 		}
 
@@ -955,6 +974,10 @@ func (service *DocService) WriteContents(docId uint) error {
 			if err := utils.MakeDir(userContentPath); err != nil {
 				return err
 			}
+		}
+
+		if err := service.WriteHomePage(versionDoc, userContentPath); err != nil {
+			return err
 		}
 
 		var rootMetaElements []MetaElement
@@ -1067,22 +1090,70 @@ func removeOldContent(currentItems map[string]bool, dirPath string) error {
 	return nil
 }
 
-func (service *DocService) WriteHomePage(documentation models.Documentation) error {
+func (service *DocService) WriteHomePage(documentation models.Documentation, contentPath string) error {
 	var homePage string
-
 	if documentation.LanderDetails != "" && documentation.LanderDetails != "{}" {
-		homePage = fmt.Sprintf("<meta http-equiv=\"refresh\" content=\"0;url=%s\" />", documentation.BaseURL)
+		var landerDetails struct {
+			CtaButtonText struct {
+				CtaButtonLinkLabel string `json:"ctaButtonLinkLabel"`
+				CtaButtonLink      string `json:"ctaButtonLink"`
+			} `json:"ctaButtonText"`
+			SecondCtaButtonText struct {
+				CtaButtonLinkLabel string `json:"ctaButtonLinkLabel"`
+				CtaButtonLink      string `json:"ctaButtonLink"`
+			} `json:"secondCtaButtonText"`
+			CtaImageLink string `json:"ctaImageLink"`
+			Features     []struct {
+				Emoji string `json:"emoji"`
+				Title string `json:"title"`
+				Text  string `json:"text"`
+			} `json:"features"`
+		}
+
+		err := json.Unmarshal([]byte(documentation.LanderDetails), &landerDetails)
+		if err != nil {
+			return fmt.Errorf("error unmarshaling LanderDetails: %w", err)
+		}
+
+		var yamlBuilder strings.Builder
+		yamlBuilder.WriteString("---\n")
+		yamlBuilder.WriteString("pageType: home\n")
+		yamlBuilder.WriteString("hero:\n")
+		yamlBuilder.WriteString(fmt.Sprintf("  name: %s\n", documentation.Name))
+		yamlBuilder.WriteString(fmt.Sprintf("  text: %s\n", documentation.Description))
+		yamlBuilder.WriteString("  actions:\n")
+		yamlBuilder.WriteString(fmt.Sprintf("    - theme: brand\n      text: %s\n      link: %s\n",
+			landerDetails.CtaButtonText.CtaButtonLinkLabel,
+			landerDetails.CtaButtonText.CtaButtonLink))
+		yamlBuilder.WriteString(fmt.Sprintf("    - theme: alt\n      text: %s\n      link: %s\n",
+			landerDetails.SecondCtaButtonText.CtaButtonLinkLabel,
+			landerDetails.SecondCtaButtonText.CtaButtonLink))
+
+		if landerDetails.CtaImageLink != "" {
+			yamlBuilder.WriteString("  image:\n")
+			yamlBuilder.WriteString(fmt.Sprintf("    src: %s\n", landerDetails.CtaImageLink))
+			yamlBuilder.WriteString("    alt: Kalmia Logo\n")
+		}
+
+		if len(landerDetails.Features) > 0 {
+			yamlBuilder.WriteString("features:\n")
+			for _, feature := range landerDetails.Features {
+				yamlBuilder.WriteString(fmt.Sprintf("  - title: %s\n", feature.Title))
+				yamlBuilder.WriteString(fmt.Sprintf("    details: %s\n", feature.Text))
+				yamlBuilder.WriteString(fmt.Sprintf("    icon: %s\n", feature.Emoji))
+			}
+		}
+
+		yamlBuilder.WriteString("---\n")
+		homePage = yamlBuilder.String()
 	} else {
 		homePage = fmt.Sprintf("<meta http-equiv=\"refresh\" content=\"0;url=%s\" />", documentation.BaseURL)
 	}
 
-	homePagePath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data", "doc_"+strconv.Itoa(int(documentation.ID)),
-		"docs", documentation.Version, "index.mdx")
-
+	homePagePath := filepath.Join(contentPath, "../", "home.mdx")
 	if err := utils.WriteToFile(homePagePath, homePage); err != nil {
 		return err
 	}
-
 	return nil
 }
 
