@@ -4,7 +4,7 @@ import { defineConfig } from 'rspress/config';
 export default defineConfig({
   root: path.join(__dirname, 'docs'),
   title: '__TITLE__',
-  base: '__BASE_URL__',
+  base: '__BASE_URL__/',
   description: '__TAG_LINE__',
   logo: {
     light: 'https://difuse.io/assets/images/favicon/white/android-chrome-512x512.png',

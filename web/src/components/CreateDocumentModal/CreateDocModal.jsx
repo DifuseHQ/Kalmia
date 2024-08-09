@@ -790,8 +790,13 @@ export default function CreateDocModal() {
                       }
                     />
                     <FormField
+<<<<<<< Updated upstream
                       label={t("cta_button_link")}
                       placeholder={t("cta_button_link_placeholder")}
+=======
+                      label={t('second_cta_button_link')}
+                      placeholder={t('cta_button_link_placeholder')}
+>>>>>>> Stashed changes
                       value={landingPage?.ctaButtonText?.ctaButtonLink}
                       onChange={(e) =>
                         updateCtaButtonText(

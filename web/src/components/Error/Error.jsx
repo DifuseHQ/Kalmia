@@ -53,7 +53,7 @@ export default function Error () {
             {errorCode}
           </h1>
           <p className="mb-4 text-3xl tracking-tight font-bold text-gray-900 md:text-4xl dark:text-white">
-            {t(title.toLowerCase().replace(' ', '_'))}
+            {t(title.toLowerCase().replaceAll(' ', '_'))}
           </p>
           <p className="mb-4 text-lg text-gray-500 dark:text-gray-400">
             {t('error_message', { context: isServerError ? 'server' : 'client' })}
