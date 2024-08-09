@@ -3,14 +3,21 @@ package handlers
 import (
 	"net/http"
 
-	"git.difuse.io/Difuse/kalmia/logger"
-	"go.uber.org/zap"
+	"git.difuse.io/Difuse/kalmia/services"
 )
 
 func HealthPing(w http.ResponseWriter, r *http.Request) {
+	SendJSONResponse(http.StatusOK, w, map[string]string{"pong": "1"})
+}
+
+func TriggerCheck(dS *services.DocService, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	_, err := w.Write([]byte(`{"pong":1}`))
+	lastTrigger, err := dS.GetLastTrigger()
+
 	if err != nil {
-		logger.Error("failed_to_write_response", zap.Error(err))
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "internal_error"})
+		return
 	}
+
+	SendJSONResponse(http.StatusOK, w, lastTrigger)
 }

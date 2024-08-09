@@ -1207,3 +1207,41 @@ func (service *DocService) BuildJob() {
 		}
 	}
 }
+
+func (service *DocService) GetLastTrigger() ([]models.BuildTriggers, error) {
+	var trigger []models.BuildTriggers
+
+	if err := service.DB.Where("triggered = ?", false).Find(&trigger).Error; err != nil {
+		return nil, err
+	}
+
+	if len(trigger) == 0 {
+		var lastTrigger models.BuildTriggers
+		if err := service.DB.Order("created_at desc").First(&lastTrigger).Error; err != nil {
+			return nil, err
+		}
+		trigger = append(trigger, lastTrigger)
+	} else {
+		latestTriggers := make(map[uint]models.BuildTriggers)
+		for _, t := range trigger {
+			existing, exists := latestTriggers[t.DocumentationID]
+			if !exists {
+				latestTriggers[t.DocumentationID] = t
+			} else {
+				if t.CreatedAt != nil && existing.CreatedAt != nil {
+					if t.CreatedAt.After(*existing.CreatedAt) {
+						latestTriggers[t.DocumentationID] = t
+					}
+				} else if t.CreatedAt != nil {
+					latestTriggers[t.DocumentationID] = t
+				}
+			}
+		}
+
+		trigger = make([]models.BuildTriggers, 0, len(latestTriggers))
+		for _, t := range latestTriggers {
+			trigger = append(trigger, t)
+		}
+	}
+	return trigger, nil
+}

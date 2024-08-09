@@ -61,6 +61,7 @@ func main() {
 	/* Health endpoints */
 	healthRouter := r.PathPrefix("/health").Subrouter()
 	healthRouter.HandleFunc("/ping", handlers.HealthPing).Methods("GET")
+	healthRouter.HandleFunc("/last-trigger", func(w http.ResponseWriter, r *http.Request) { handlers.TriggerCheck(dS, w, r) }).Methods("GET")
 
 	oAuthRouter := r.PathPrefix("/oauth").Subrouter()
 	oAuthRouter.HandleFunc("/github", func(w http.ResponseWriter, r *http.Request) { handlers.GithubLogin(aS, w, r) }).Methods("GET")

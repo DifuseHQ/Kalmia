@@ -549,7 +549,7 @@ async function createDocumentation(objData) {
   }
 }
 
-async function createPages(count) {
+async function createPages(count, docId) {
   for (let i = 0; i < count; i++) {
     const modifiedPageData = JSON.parse(JSON.stringify(pageData));
     const pEl = modifiedPageData.find((element) => element.content[0].text === "Paragraph");
@@ -565,7 +565,7 @@ async function createPages(count) {
           'Authorization': `Bearer ${TOKEN}`
         },
         body: JSON.stringify({
-          documentationId: 1,
+          documentationId: parseInt(docId),
           title: `Page ${i}`,
           slug: `/page-${i}`,
           content: JSON.stringify(modifiedPageData),
@@ -597,7 +597,9 @@ const addDummyData = async () => {
   console.log('Creating Pages...');
   console.log('-----------------------------------');
 
-  await createPages(150);
+  await createPages(150, 1);
+  await createPages(150, 2);
+  await createPages(150, 3);
 }
 
 addDummyData();
