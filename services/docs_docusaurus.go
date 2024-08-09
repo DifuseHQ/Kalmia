@@ -1187,7 +1187,7 @@ func (service *DocService) BuildJob() {
 				zap.Duration("elapsed", elapsed),
 				zap.Int("trigger_count", len(groupTriggers)))
 		} else {
-			logger.Info("UpdateWriteBuild completed",
+			logger.Info("RsPress Build completed",
 				zap.Uint("doc_id", docID),
 				zap.Duration("elapsed", elapsed),
 				zap.Int("trigger_count", len(groupTriggers)))
