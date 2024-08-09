@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
 
 import { getUsers } from '../api/Requests';
@@ -18,8 +17,9 @@ export default function AdminAuth () {
   useEffect(() => {
     const fetchData = async () => {
       let user;
-      if (Cookies.get('accessToken')) {
-        const tokenData = JSON.parse(Cookies.get('accessToken'));
+
+      if (localStorage.getItem('accessToken')) {
+        const tokenData = JSON.parse(localStorage.getItem('accessToken'));
         const accessToken = jwtDecode(tokenData.token);
         user = accessToken;
       }

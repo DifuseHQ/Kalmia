@@ -26,6 +26,7 @@ import { ModalContext } from '../../context/ModalContext';
 import { ThemeContext } from '../../context/ThemeContext';
 import { handleError } from '../../utils/Common';
 import { toastMessage } from '../../utils/Toast';
+import { uploadPhoto } from '../../api/Requests';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
 import DeleteModal from '../DeleteModal/DeleteModal';
 
@@ -147,7 +148,21 @@ export default function EditPage () {
 
   const editor = useCreateBlockNote({
     schema,
-    initialContent: editorContent
+    initialContent: editorContent,
+    // uploadFile: uploadPhoto
+    uploadFile: async (file) => {
+      const fileName = file.name;
+      const formData = new FormData();
+      formData.append('upload', file);
+      const result = await uploadPhoto(formData);
+
+      // result.data.photo
+      if (result?.status === 'success') {
+        if (result.data.photo) {
+          return result.data.photo;
+        }
+      }
+    }
   });
 
   const parsedContent = useCallback(

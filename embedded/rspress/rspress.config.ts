@@ -7,6 +7,7 @@ export default defineConfig({
   title: '__TITLE__',
   base: '__BASE_URL__',
   description: '__TAG_LINE__',
+  icon: '__FAVICON__',
   logo: {
     light: '__LOGO_LIGHT__',
     dark: '__LOGO_DARK__',

@@ -1,7 +1,6 @@
 import React, { createContext, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import Cookies from 'js-cookie';
 
 import { createJWT, refreshJWT, signOut, validateJWT } from '../api/Requests';
 import { useToken } from '../hooks/useToken';
@@ -41,10 +40,7 @@ export const AuthProvider = ({ children }) => {
       const data = response.data.token;
       setToken(data);
       setUser(data);
-      Cookies.set('accessToken', JSON.stringify(response?.data), {
-        expires: 1,
-        secure: !window.location.href.includes('http://')
-      });
+      localStorage.setItem('accessToken', JSON.stringify(response?.data));
       navigate('/dashboard', { replace: true });
     }
   };
@@ -56,10 +52,7 @@ export const AuthProvider = ({ children }) => {
       const data = response.data.token;
       setToken(data);
       setUser(data);
-      Cookies.set('accessToken', JSON.stringify(response?.data), {
-        expires: 1,
-        secure: !window.location.href.includes('http://')
-      });
+      localStorage.setItem('accessToken', JSON.stringify(response?.data));
       navigate('/dashboard', { replace: true });
     }
   };
@@ -84,10 +77,7 @@ export const AuthProvider = ({ children }) => {
 
     if (result.status === 'success') {
       const data = result.data;
-      Cookies.set('accessToken', JSON.stringify(data), {
-        expires: 1,
-        secure: true
-      });
+      localStorage.setItem('accessToken', JSON.stringify(data));
       window.location.reload();
     }
   }, [navigate, token, t]);
@@ -97,7 +87,7 @@ export const AuthProvider = ({ children }) => {
       () => {
         const validateToken = async () => {
           if (!token) {
-            Cookies.remove('accessToken');
+            localStorage.removeItem('accessToken');
             setUser(null);
             navigate('/login');
             clearInterval(interval);

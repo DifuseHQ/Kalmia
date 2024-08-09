@@ -1,6 +1,4 @@
 import { useEffect } from 'react';
-import Cookies from 'js-cookie';
-
 import { toastMessage } from './Toast';
 
 let isRedirecting = false;
@@ -16,7 +14,7 @@ export const handleError = (result, navigate = null, t) => {
     ) {
       isRedirecting = true;
       toastMessage(t(result.message), 'error');
-      Cookies.remove('accessToken');
+      localStorage.removeItem('accessToken');
       window.location.href = '/login';
       return true;
     } else if (result.code !== 401) {

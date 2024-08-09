@@ -1,5 +1,4 @@
 import axios from 'axios';
-import Cookies from 'js-cookie';
 
 export const baseURL = '';
 
@@ -22,7 +21,8 @@ instance.interceptors.response.use(
 
 instance.interceptors.request.use(
   (config) => {
-    const accessToken = Cookies.get('accessToken');
+    // const accessToken = Cookies.get('accessToken');
+    const accessToken = localStorage.getItem('accessToken');
 
     if (accessToken) {
       const parsedToken = JSON.parse(accessToken);

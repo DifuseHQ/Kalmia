@@ -248,7 +248,7 @@ func (service *DocService) UpdateBasicData(docId uint) error {
 		"__TITLE__":             doc.Name,
 		"__TAG_LINE__":          doc.Description,
 		"__BASE_URL__":          doc.BaseURL,
-		"__FAVICON__":           "img/favicon.ico",
+		"__FAVICON__":           "https://downloads-bucket.difuse.io/favicon-final-kalmia.ico",
 		"__META_IMAGE__":        "img/meta.webp",
 		"__NAVBAR_TITLE__":      doc.Name,
 		"__LOGO_LIGHT__":        "https://downloads-bucket.difuse.io/kalmia-sideways-black.png",
@@ -429,11 +429,37 @@ func blockToMarkdown(block Block, depth int, numbering *[]int) string {
 }
 
 func imageWithAlignment(url, alt, alignment, caption string) string {
+	var containerClass, imageClass, captionClass string
+
+	switch alignment {
+	case "left", "flex-start":
+		containerClass = "items-start"
+		imageClass = "mr-auto"
+		captionClass = "text-left mr-auto"
+	case "right", "flex-end":
+		containerClass = "items-end"
+		imageClass = "ml-auto"
+		captionClass = "text-right ml-auto"
+	case "center", "":
+		containerClass = "items-center"
+		imageClass = "mx-auto"
+		captionClass = "text-center mx-auto"
+	default:
+		containerClass = fmt.Sprintf("items-%s", alignment)
+		imageClass = "mx-auto"
+		captionClass = fmt.Sprintf("text-%s mx-auto", alignment)
+	}
+
 	return fmt.Sprintf(`
-   <div style={{display: 'flex', flexDirection: 'column', alignItems: '%s', width: '100%%'}}>
-	<img src='%s' alt='%s' style={{maxWidth: '640px', maxHeight: '360px', width: 'auto', height: 'auto'}} />
-	<span style={{textAlign: '%s'}}>%s</span>
-   </div>`, alignment, url, alt, alignment, caption)
+    <div className="flex flex-col w-full %s">
+        <img
+            src="%s"
+            alt="%s"
+            className="max-w-[640px] max-h-[360px] w-auto h-auto image-in-mdx %s"
+        />
+        <span className="%s">%s</span>
+    </div>
+    `, containerClass, url, alt, imageClass, captionClass, caption)
 }
 
 func imageToMarkdown(props map[string]interface{}) string {
@@ -736,7 +762,7 @@ func (service *DocService) writePagesToDirectory(pages []models.Page, dirPath st
 		}
 
 		markdownExt := ".md"
-		if strings.Contains(content, "import ReactPlayer from 'react-player'") {
+		if strings.Contains(content, "import ReactPlayer from 'react-player'") || strings.Contains(content, "image-in-mdx") {
 			markdownExt = ".mdx"
 		}
 
