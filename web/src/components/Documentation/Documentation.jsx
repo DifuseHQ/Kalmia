@@ -526,12 +526,12 @@ export default function Documentation () {
                 className="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg"
                 key="documentation-table"
               >
-                <div className="flex flex-col lg:flex-row items-center justify-between space-y-3 lg:space-y-0 md:space-x-4 p-4">
+                <div className="flex flex-col xl:flex-row items-center justify-between space-y-3 xl:space-y-0 md:space-x-4 p-4">
                   <div
-                    className="flex items-center w-full lg:w-auto space-x-2"
+                    className="flex justify-center xl:justify-start items-center w-full xl:w-auto space-x-2"
                     key="versioning-container"
                   >
-                    <div className="relative w-full lg:w-64">
+                    <div className="relative w-full xl:w-64">
                       <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                         <Icon
                           icon="material-symbols:search"
@@ -553,7 +553,7 @@ export default function Documentation () {
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       key="documentation-version-listing-container"
-                      className="relative inline-block z-20"
+                      className="relative inline-block z-20 "
                     >
                       <div
                         id="dropdownSelect"
@@ -645,9 +645,9 @@ export default function Documentation () {
                       )}
                     </motion.div>
 
-                    <BuildTrigger/>
+                    
                   </div>
-
+                  <BuildTrigger/>
                   <div className="flex items-center space-x-2">
                     <motion.button
                       whileHover={{ scale: 1.1 }}

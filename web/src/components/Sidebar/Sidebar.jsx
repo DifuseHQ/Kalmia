@@ -99,7 +99,7 @@ export default function Sidebar () {
         key="sidebar-aside-container"
       >
         <div
-          className="overflow-y-auto py-5 px-3 h-full bg-white dark:bg-gray-800"
+          className="flex flex-col overflow-y-auto py-5 px-3 h-full bg-white dark:bg-gray-800"
           key="sidebar-wrapper"
         >
           <ul className="space-y-2" key="documentation-sidebar-list">
@@ -194,6 +194,13 @@ export default function Sidebar () {
               </li>
             </ul>
           )}
+
+          <div className='mt-auto flex justify-center space-y-2 border-t border-gray-200 dark:border-gray-700'>
+          <hr />
+            
+              <p className='dark:text-white text-md'>kalmia</p>
+            
+          </div>
         </div>
       </motion.aside>
     </AnimatePresence>
