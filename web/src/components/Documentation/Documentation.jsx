@@ -36,14 +36,14 @@ import {
 import { toastMessage } from '../../utils/Toast';
 import { pageSize } from '../../utils/Utils';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
+import BuildTrigger from '../BuildTrigger/BuildTrigger';
 import EditDocumentModal from '../CreateDocumentModal/EditDocumentModal';
 import CreatePageGroup from '../CreatePageGroup/CreatePageGroup';
 import CreatePage from '../CreatePageModal/CreatePageModal';
 import DeleteModal from '../DeleteModal/DeleteModal';
 import Table from '../Table/Table';
-import BuildTrigger from '../BuildTrigger/BuildTrigger';
 
-export default function Documentation() {
+export default function Documentation () {
   const navigate = useNavigate();
   const { refresh, refreshData, user } = useContext(AuthContext);
   const { t } = useTranslation();
@@ -873,13 +873,13 @@ export default function Documentation() {
                         </button>
                       </li>
                       {Array.from({ length: totalPages }, (_, i) => (
-                        <li key={"pagination-" + i}>
+                        <li key={'pagination-' + i}>
                           <button
                             onClick={() => handlePageChange(i + 1)}
                             className={`flex items-center justify-center text-sm py-2 px-3 leading-tight ${currentPage === i + 1
                               ? 'text-primary-600 bg-primary-50 border border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white'
                               : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'
-                              }`}
+                            }`}
                           >
                             {i + 1}
                           </button>

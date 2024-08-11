@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosError, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
 export const baseURL: string = process.env.NODE_ENV === 'development' ? 'http://127.0.0.1:2727' : '';
 

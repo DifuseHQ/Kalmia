@@ -20,13 +20,12 @@ import warnIcon from '@iconify/icons-mdi/alert';
 import { Icon } from '@iconify/react/dist/iconify';
 import { AnimatePresence, motion } from 'framer-motion';
 
-import { deletePage, getPage, updatePage } from '../../api/Requests';
+import { deletePage, getPage, updatePage, uploadPhoto } from '../../api/Requests';
 import { AuthContext } from '../../context/AuthContext';
 import { ModalContext } from '../../context/ModalContext';
 import { ThemeContext } from '../../context/ThemeContext';
 import { handleError } from '../../utils/Common';
 import { toastMessage } from '../../utils/Toast';
-import { uploadPhoto } from '../../api/Requests';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
 import DeleteModal from '../DeleteModal/DeleteModal';
 
@@ -149,14 +148,11 @@ export default function EditPage () {
   const editor = useCreateBlockNote({
     schema,
     initialContent: editorContent,
-    // uploadFile: uploadPhoto
     uploadFile: async (file) => {
-      const fileName = file.name;
       const formData = new FormData();
       formData.append('upload', file);
       const result = await uploadPhoto(formData);
 
-      // result.data.photo
       if (result?.status === 'success') {
         if (result.data.photo) {
           return result.data.photo;

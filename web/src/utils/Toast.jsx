@@ -12,6 +12,6 @@ export const toastMessage = (message, type) => {
     pauseOnHover: true,
     draggable: true,
     progress: undefined,
-    className: 'custom-toast',
+    className: 'custom-toast'
   });
 };

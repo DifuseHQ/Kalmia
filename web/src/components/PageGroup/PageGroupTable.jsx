@@ -23,14 +23,14 @@ import {
 } from '../../utils/Common';
 import { toastMessage } from '../../utils/Toast';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
+import BuildTrigger from '../BuildTrigger/BuildTrigger';
 import EditDocumentModal from '../CreateDocumentModal/EditDocumentModal';
 import CreatePageGroup from '../CreatePageGroup/CreatePageGroup';
 import CreatePage from '../CreatePageModal/CreatePageModal';
 import DeleteModal from '../DeleteModal/DeleteModal';
 import Table from '../Table/Table';
-import BuildTrigger from '../BuildTrigger/BuildTrigger';
 
-export default function PageGroupTable() {
+export default function PageGroupTable () {
   const [searchParams] = useSearchParams();
   const docId = searchParams.get('id');
   const pageGroupId = searchParams.get('pageGroupId');
@@ -298,7 +298,6 @@ export default function PageGroupTable() {
               >
                 {version}
               </div>
-
 
               <div className='hidden xl:block'>
                 <BuildTrigger />

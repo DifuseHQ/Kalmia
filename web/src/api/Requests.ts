@@ -1,5 +1,6 @@
+import { AxiosError, AxiosResponse } from 'axios';
+
 import instance, { makeRequestWithCustomAuth } from './AxiosInstance';
-import { AxiosResponse, AxiosError } from 'axios';
 
 interface ErrorMessages {
   [key: number]: [string, string];
@@ -19,11 +20,11 @@ const ERROR_MESSAGES: ErrorMessages = {
   401: ['Unauthorized', '/401']
 };
 
-function getMessageAndPath(statusCode: number): [string, string] {
+function getMessageAndPath (statusCode: number): [string, string] {
   return ERROR_MESSAGES[statusCode] || ['Unknown Error', '/error'];
 }
 
-async function makeRequest(url: string, method: string = 'get', data: any = null): Promise<ApiResponse> {
+async function makeRequest (url: string, method: string = 'get', data: any = null): Promise<ApiResponse> {
   try {
     const response: AxiosResponse = await instance[method](url, data);
     return {

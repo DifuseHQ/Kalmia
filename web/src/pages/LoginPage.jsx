@@ -15,7 +15,6 @@ export default function LoginPage () {
   const [availableProviders, setAvailableProviders] = useState([]);
   const { login, loginOAuth } = useContext(AuthContext);
 
-
   useEffect(() => {
     const fetchOAuthProviders = async () => {
       try {
@@ -29,7 +28,6 @@ export default function LoginPage () {
 
     fetchOAuthProviders();
   }, []);
-
 
   useEffect(() => {
     if (window.location.pathname.startsWith('/admin/login/gh') ||
@@ -143,7 +141,7 @@ export default function LoginPage () {
                 </div>
 
                 {availableProviders.length > 0 && (
-                  
+
                   <div className={`grid gap-4 ${oAuthGridCols()}`}>
                     {availableProviders.map((provider) => (
                       <button
