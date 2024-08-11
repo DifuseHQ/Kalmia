@@ -136,7 +136,7 @@ export default function Sidebar () {
           key="sidebar-wrapper"
         >
           <ul className="space-y-2" key="documentation-sidebar-list">
-            <li className="md:hidden">
+            <li className="md:hidden" key="sidebar-logo">
               <NavLink to="/dashboard" className="">
                 {/* <h1 className='text-blue-500 font-bold hidden sm:block'>CMS</h1> */}
                 <img
@@ -162,7 +162,7 @@ export default function Sidebar () {
               </motion.button>
             </li>
             {!documentation || documentation.length <= 0 ? (
-              <li whilehover={{ scale: 1.08, originx: 0 }}>
+              <li whilehover={{ scale: 1.08, originx: 0 }} key="no-documentation">
                 <p className="flex cursor-default items-center p-5 w-full text-base font-normal text-gray-600 rounded-lg transition duration-75 group ">
                   <span className="flex-1 ml-3 text-left whitespace-nowrap">
                     {t('no_documentations')}

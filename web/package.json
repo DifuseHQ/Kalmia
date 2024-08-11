@@ -62,6 +62,7 @@
     "@rsbuild/core": "^1.0.1-beta.10",
     "@rsbuild/plugin-image-compress": "^1.0.2",
     "@rsbuild/plugin-react": "^1.0.1-beta.10",
+    "@types/node": "^22.2.0",
     "autoprefixer": "^10.4.19",
     "eslint-config-react-app": "^7.0.1",
     "eslint-config-semistandard": "^17.0.0",

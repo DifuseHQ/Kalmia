@@ -341,7 +341,7 @@ export default function PageGroupTable() {
                 {(provided) => (
                   <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                     <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                      <tr>
+                      <tr key="table-header">
                         <th scope="col" className="px-4 py-3" />
                         <th scope="col" className="px-4 py-3">
                           {t('title')}
@@ -357,7 +357,7 @@ export default function PageGroupTable() {
                     </thead>
                     <tbody {...provided.droppableProps} ref={provided.innerRef}>
                       {filteredItems.length <= 0 && (
-                        <tr className="border-b dark:border-gray-700">
+                        <tr className="border-b dark:border-gray-700" key="no-data">
                           <td colSpan="4" className="text-center p-8">
                             <h1 className="text-center text-gray-600 sm:text-lg font-semibold">
                               {t('no_pages_found')}

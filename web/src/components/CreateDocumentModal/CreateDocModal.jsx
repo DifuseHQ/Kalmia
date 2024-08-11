@@ -686,8 +686,8 @@ export default function CreateDocModal() {
                             </div>
                           ) : (
                             <ul className="w-full flex justify-between items-center">
-                              <li className="ml-2">{t("choose_an_icon")}</li>
-                              <li>
+                              <li key="choose_an_icon" className="ml-2">{t("choose_an_icon")}</li>
+                              <li key="down-arrow">
                                 <Icon
                                   icon="mingcute:down-fill"
                                   className="w-6 h-6"

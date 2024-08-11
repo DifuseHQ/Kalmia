@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
+import { StrictMode } from 'react';
 
 import CreateDocModal from '../src/components/CreateDocumentModal/CreateDocModal';
 import CreatePageModal from '../src/components/CreatePageModal/CreatePageModal';
@@ -24,6 +25,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 function App () {
   return (
+    <StrictMode>
     <Router>
       <ThemeProvider>
         <ModalProvider>
@@ -81,6 +83,7 @@ function App () {
         </ModalProvider>
       </ThemeProvider>
     </Router>
+    </StrictMode>
   );
 }
 

@@ -96,7 +96,7 @@ export default function UserList () {
   const renderTableContent = () => {
     if (loading) {
       return (
-        <tr className="border-b dark:border-gray-700">
+        <tr className="border-b dark:border-gray-700" key="loading">
           <td colSpan="4" className="p-8">
             <div className="flex flex-col items-center justify-center">
               {loading && (
@@ -240,7 +240,7 @@ export default function UserList () {
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
               <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                <tr>
+                <tr key="header">
                   <th scope="col" className="px-4 py-3">
                     {t('username')}
                   </th>
@@ -285,7 +285,7 @@ export default function UserList () {
                   </button>
                 </li>
                 {Array.from({ length: totalPages }, (_, i) => (
-                  <li key={i}>
+                  <li key={"page-" + i}>
                     <button
                       onClick={() => handlePageChange(i + 1)}
                       className={`flex items-center justify-center text-sm py-2 px-3 leading-tight ${currentPage === i + 1

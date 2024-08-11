@@ -712,7 +712,7 @@ export default function Documentation() {
                               key="table-documentation-head"
                               className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"
                             >
-                              <tr>
+                              <tr key="table-documentation-head-row">
                                 <th className="w-1/12 whitespace-nowrap" />
                                 <th className="w-3/12 px-4 py-3 whitespace-nowrap">
                                   {t('title')}
@@ -873,7 +873,7 @@ export default function Documentation() {
                         </button>
                       </li>
                       {Array.from({ length: totalPages }, (_, i) => (
-                        <li key={i}>
+                        <li key={"pagination-" + i}>
                           <button
                             onClick={() => handlePageChange(i + 1)}
                             className={`flex items-center justify-center text-sm py-2 px-3 leading-tight ${currentPage === i + 1

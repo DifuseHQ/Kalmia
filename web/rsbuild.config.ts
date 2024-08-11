@@ -14,7 +14,7 @@ export default defineConfig({
       root: 'build',
     },
     sourceMap: {
-      js: false,
+      js: process.env.NODE_ENV === 'development'? 'source-map' : false,
       css: false
     },
   },
