@@ -26,7 +26,7 @@ export default function UserForm () {
   const [showModal, setShowModal] = useState(false);
 
   const [profileImage, setProfileImage] = useState(
-    '/admin/assets/images/no-profile.png'
+    '/assets/images/no-profile.png'
   );
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -46,7 +46,7 @@ export default function UserForm () {
           setUsername(response.data.username);
           setEmail(response.data.email);
           setProfileImage(
-            response.data.photo || '/admin/assets/images/no-profile.png'
+            response.data.photo || '/assets/images/no-profile.png'
           );
         } else {
           setUserData(currentUser);
@@ -55,7 +55,7 @@ export default function UserForm () {
           setPassword('');
           setConfirmPassword('');
           setProfileImage(
-            currentUser.photo || '/admin/assets/images/no-profile.png'
+            currentUser.photo || '/assets/images/no-profile.png'
           );
         }
       } catch (error) {
@@ -217,7 +217,7 @@ export default function UserForm () {
             ) : (
               <img
                 className="h-48 w-48 rounded-full border-4 border-gray-200 dark:border-gray-700 object-cover"
-                src={profileImage || '/admin/assets/images/no-profile.png'}
+                src={profileImage || '/assets/images/no-profile.png'}
                 alt="Profile"
               />
             )}

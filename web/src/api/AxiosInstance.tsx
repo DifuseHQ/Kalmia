@@ -1,42 +1,38 @@
-import axios from 'axios';
+import axios, { AxiosInstance, AxiosResponse, AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-export const baseURL = '';
+export const baseURL: string = process.env.NODE_ENV === 'development' ? 'http://127.0.0.1:2727' : '';
 
-const instance = axios.create({
+const instance: AxiosInstance = axios.create({
   baseURL
 });
 
 instance.interceptors.response.use(
-  (response) => {
+  (response: AxiosResponse) => {
     return response;
   },
-  (error) => {
+  (error: AxiosError) => {
     if (error) {
       throw error;
     }
-
     return Promise.reject(error);
   }
 );
 
 instance.interceptors.request.use(
-  (config) => {
-    // const accessToken = Cookies.get('accessToken');
+  (config: InternalAxiosRequestConfig) => {
     const accessToken = localStorage.getItem('accessToken');
-
     if (accessToken) {
       const parsedToken = JSON.parse(accessToken);
       config.headers.Authorization = `Bearer ${parsedToken?.token}`;
     }
-
     return config;
   },
-  (error) => {
+  (error: AxiosError) => {
     return Promise.reject(error);
   }
 );
 
-export const makeRequestWithCustomAuth = (url, method = 'get', token) => {
+export const makeRequestWithCustomAuth = (url: string, method: string = 'get', token: string) => {
   return instance({
     method,
     url,

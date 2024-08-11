@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"sync"
 	"time"
 
@@ -110,12 +109,9 @@ func main() {
 	docsRouter.HandleFunc("/page-group/edit", func(w http.ResponseWriter, r *http.Request) { handlers.EditPageGroup(serviceRegistry, w, r) }).Methods("POST")
 	docsRouter.HandleFunc("/page-group/delete", func(w http.ResponseWriter, r *http.Request) { handlers.DeletePageGroup(dS, w, r) }).Methods("POST")
 
-	adminHandler := spaHandler()
-	r.PathPrefix("/admin").Handler(adminHandler)
-
-	r.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		handlers.GetDocusaurus(dS, w, r)
-	}).Methods("GET")
+	spaHandler := createSPAHandler()
+	docusaurusMiddleware := middleware.RsPressMiddleware(dS)
+	r.PathPrefix("/").Handler(docusaurusMiddleware(spaHandler))
 
 	logger.Info("Starting server", zap.Int("port", cfg.Port))
 
@@ -130,17 +126,11 @@ func main() {
 	os.Exit(0)
 }
 
-func spaHandler() http.HandlerFunc {
+func createSPAHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/admin" {
-			http.Redirect(w, r, "/admin/", http.StatusPermanentRedirect)
-			return
-		}
+		path := r.URL.Path
 
-		path := strings.TrimPrefix(r.URL.Path, "/admin")
-		path = strings.TrimPrefix(path, "/")
-
-		if path == "" {
+		if path == "/" {
 			path = "index.html"
 		}
 

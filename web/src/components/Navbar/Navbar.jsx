@@ -76,7 +76,7 @@ export default function Navbar () {
             <NavLink to="/dashboard" className="hidden md:block">
               {/* <h1 className='text-blue-500 font-bold hidden sm:block'>CMS</h1> */}
               <img
-                src="/admin/assets/images/cropped.png"
+                src="/assets/images/cropped.png"
                 alt="logo"
                 className="w-42 h-8 dark:invert"
               />
@@ -175,7 +175,7 @@ export default function Navbar () {
                     className="w-8 h-8 rounded-full object-cover"
                     src={
                       userDetails?.photo ||
-                      '/admin/assets/images/no-profile.png'
+                      '/assets/images/no-profile.png'
                     }
                     alt="user"
                   />

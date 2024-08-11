@@ -24,7 +24,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 function App () {
   return (
-    <Router basename="/admin">
+    <Router>
       <ThemeProvider>
         <ModalProvider>
           <AuthProvider>

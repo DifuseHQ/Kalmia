@@ -8,23 +8,23 @@ export const ThemeProvider = ({ children }) => {
       {
         rel: 'apple-touch-icon',
         sizes: '180x180',
-        href: `/admin/assets/favicon/apple-touch-icon.png`
+        href: `/assets/favicon/apple-touch-icon.png`
       },
       {
         rel: 'icon',
         type: 'image/png',
         sizes: '32x32',
-        href: `/admin/assets/favicon/favicon-32x32.png`
+        href: `/assets/favicon/favicon-32x32.png`
       },
       {
         rel: 'icon',
         type: 'image/png',
         sizes: '16x16',
-        href: `/admin/assets/favicon/favicon-16x16.png`
+        href: `/assets/favicon/favicon-16x16.png`
       },
       {
         rel: 'manifest',
-        href: `/admin/assets/favicon/site.webmanifest`
+        href: `/assets/favicon/site.webmanifest`
       }
     ];
 

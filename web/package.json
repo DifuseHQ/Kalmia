@@ -2,7 +2,6 @@
   "name": "kalmia-frontend",
   "version": "0.0.1",
   "private": true,
-  "homepage": "/admin",
   "dependencies": {
     "@blocknote/core": "^0.15.4",
     "@blocknote/mantine": "^0.15.4",

@@ -140,7 +140,7 @@ export default function Sidebar () {
               <NavLink to="/dashboard" className="">
                 {/* <h1 className='text-blue-500 font-bold hidden sm:block'>CMS</h1> */}
                 <img
-                  src="/admin/assets/images/cropped.png"
+                  src="/assets/images/cropped.png"
                   alt="logo"
                   className="w-48 h-10 dark:invert"
                 />

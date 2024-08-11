@@ -19,12 +19,6 @@ export default function Error () {
   const location = useLocation();
   const { t } = useTranslation();
   const params = useParams();
-
-  // Check for error code in the following order:
-  // 1. Path parameter (/admin/error/:code)
-  // 2. Query parameter (?e=code)
-  // 3. Location state
-  // 4. Default to 404
   const getErrorCode = () => {
     if (params.code) return parseInt(params.code, 10);
     const searchParams = new URLSearchParams(location.search);

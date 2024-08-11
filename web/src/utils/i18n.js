@@ -11,7 +11,7 @@ i18n
     fallbackLng: 'en',
     returnObjects: true,
     backend: {
-      loadPath: '/admin/locales/{{lng}}/translation.json'
+      loadPath: '/locales/{{lng}}/translation.json'
     }
   });
 

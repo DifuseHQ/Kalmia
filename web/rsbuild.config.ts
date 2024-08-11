@@ -10,7 +10,6 @@ export default defineConfig({
   output: {
     legalComments: 'none',
     polyfill: 'usage',
-    assetPrefix: '/admin/',
     distPath: {
       root: 'build',
     },
