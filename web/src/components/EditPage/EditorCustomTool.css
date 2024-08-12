@@ -139,3 +139,7 @@
 [data-color-scheme="dark"] .bn-container .alert-icon[data-alert-icon-type="success"] {
     color: #18e918ad;
 }
+
+.bn-suggestion-menu {
+    min-height: 400px;
+}
