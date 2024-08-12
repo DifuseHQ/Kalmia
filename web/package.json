@@ -6,6 +6,7 @@
     "@blocknote/core": "^0.15.4",
     "@blocknote/mantine": "^0.15.4",
     "@blocknote/react": "^0.15.4",
+    "@defensestation/blocknote-code": "^1.0.4",
     "@emoji-mart/data": "^1.2.1",
     "@emoji-mart/react": "^1.1.1",
     "@hello-pangea/dnd": "^16.6.0",

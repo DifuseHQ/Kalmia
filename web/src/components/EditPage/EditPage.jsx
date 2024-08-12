@@ -6,6 +6,7 @@ import {
   defaultBlockSpecs,
   filterSuggestionItems
 } from '@blocknote/core';
+import { CodeBlock, insertCode } from "@defensestation/blocknote-code";
 import {
   BlockNoteView,
   darkDefaultTheme,
@@ -38,7 +39,8 @@ import './EditorCustomTool.css';
 const schema = BlockNoteSchema.create({
   blockSpecs: {
     ...defaultBlockSpecs,
-    alert: Alert
+    alert: Alert,
+    procode:CodeBlock,
   }
 });
 
@@ -90,7 +92,7 @@ const EditorWrapper = React.memo(({ editor, theme }) => {
         triggerCharacter="/"
         getItems={async (query) =>
           filterSuggestionItems(
-            [...getDefaultReactSlashMenuItems(editor), insertAlert(editor)],
+            [...getDefaultReactSlashMenuItems(editor), insertAlert(editor), insertCode()],
             query
           )
         }
