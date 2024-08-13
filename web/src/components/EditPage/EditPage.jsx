@@ -4,26 +4,23 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   BlockNoteSchema,
   defaultBlockSpecs,
-  filterSuggestionItems,
-  insertOrUpdateBlock
+  filterSuggestionItems
 } from '@blocknote/core';
-import ReactCodeMirror from "@uiw/react-codemirror";
-import { langs } from "@uiw/codemirror-extensions-langs";
+
 import {
   BlockNoteView,
   darkDefaultTheme,
   lightDefaultTheme
 } from '@blocknote/mantine';
+
 import {
-  createReactBlockSpec,
   getDefaultReactSlashMenuItems,
   SuggestionMenuController,
   useCreateBlockNote
 } from '@blocknote/react';
-import warnIcon from '@iconify/icons-mdi/alert';
+
 import { Icon } from '@iconify/react/dist/iconify';
 import { AnimatePresence, motion } from 'framer-motion';
-
 import { deletePage, getPage, updatePage, uploadPhoto } from '../../api/Requests';
 import { AuthContext } from '../../context/AuthContext';
 import { ModalContext } from '../../context/ModalContext';
@@ -32,157 +29,19 @@ import { handleError } from '../../utils/Common';
 import { toastMessage } from '../../utils/Toast';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
 import DeleteModal from '../DeleteModal/DeleteModal';
-
-import { Alert } from './EditorCustomTools';
+import { Alert, CodeBlock, handleBacktickInput, insertAlert, insertCode } from './EditorCustomTools';
 
 import '@blocknote/core/fonts/inter.css';
 import '@blocknote/mantine/style.css';
 import './EditorCustomTool.css';
 
-const TYPE ='procode';
-
-
-const CodeBlock = createReactBlockSpec(
-  {
-    type: TYPE,
-    propSchema: {
-      code: { default: "" },
-    },
-    content: "none",
-  },
-  {
-    render: ({ block, editor }) => {
-      const [code, setCode] = useState(block.props.code || "");
-      const lines = code.split('\n');
-      const language = lines[0].trim() || "plain";
-      const codeContent = lines.slice(1).join('\n');
-
-      useEffect(() => {
-        editor.updateBlock(block, {
-          props: { code },
-        });
-      }, [code, block, editor]);
-
-      const handleChange = (value) => {
-        setCode(value);
-      };
-
-      console.log(language, "Here")
-
-      return (
-        <ReactCodeMirror
-          value={code}
-          onChange={handleChange}
-          style={{ width: "100%", resize: "vertical" }}
-          extensions={[langs["javascript"]()]}
-          theme="dark"
-          basicSetup={{
-            lineNumbers: true,
-            highlightActiveLine: true,
-          }}
-          width='100%'
-          height='200px'
-        />
-      );
-    },
-    toExternalHTML: ({ block }) => {
-      return (
-        <pre>
-          <code>{block?.props?.data}</code>
-        </pre>
-      );
-    },
-  }
-);
-
-const insertCode = (language) => ({
-  title: "Code",
-  group: "Other",
-  onItemClick: (editor) => {
-    console.log(language, "HEEEEEEEEEEEEEEEEEEEEEEEEEE")
-    insertOrUpdateBlock(editor, {
-      //@ts-ignore
-      type: TYPE,
-      propSchema: {
-        data: {
-          //@ts-ignore
-          language: language,
-          code: "",
-        },
-        content: "none",
-      },
-    });
-  },
-  aliases: ["code"],
-  icon: 'fh',
-  subtext: "Insert a code block.",
-});
-
-
 const schema = BlockNoteSchema.create({
   blockSpecs: {
     ...defaultBlockSpecs,
     alert: Alert,
-    procode:CodeBlock,
+    procode: CodeBlock
   }
 });
-
-const insertAlert = (editor) => ({
-  title: 'alert',
-  subtext: 'This is a notification alert.',
-  onItemClick: () => {
-    editor.insertBlocks(
-      [{ type: 'alert' }],
-      editor.getTextCursorPosition().block,
-      'after'
-    );
-  },
-  aliases: [
-    'alert',
-    'notification',
-    'emphasize',
-    'warning',
-    'error',
-    'info',
-    'success'
-  ],
-  group: 'Alert',
-  icon: <Icon icon={warnIcon} />
-});
-
-function getTextContent(blocks) {
-  for (let i = blocks.length - 1; i >= 0; i--) {
-      const block = blocks[i];
-      if (block.content && Array.isArray(block.content) && block.content.length > 0) {
-          return block.content.reduce((text, contentItem) => {
-              if (contentItem.type === 'text') {
-                  return text + (contentItem.text || '');
-              }
-              return text;
-          }, '');
-      }
-  }
-  return '';
-}
-const backtickInputRegex = /^```([a-z]*)[\s\n]?/;
-
-
-const handleBacktickInput = (editor) => {
-  console.log(editor, "editor in handleBacktick")
-  const { previousBlock, currentBlock } = editor.getTextCursorPosition();
-  
-  if (currentBlock.content[0]?.text === '```') {
-    const newBlock = editor.createBlock({
-      type: TYPE,
-      props: { code: 'plain\n' },
-    });
-    editor.insertBlocks([newBlock], currentBlock, 'after');
-    editor.removeBlocks([currentBlock]);
-    return true;
-  }
-  
-  return false;
-};
 
 const EditorWrapper = React.memo(({ editor, theme }) => {
   const [isReady, setIsReady] = useState(false);
@@ -193,45 +52,28 @@ const EditorWrapper = React.memo(({ editor, theme }) => {
     }
   }, [editor]);
 
-  const [insertCodeLang, setInsertCodeLang] = useState(null);
-
-  const handleChange = (value) => {
-    let testString = getTextContent(value.document);
-    const match = testString.match(backtickInputRegex);
-    
-    if (match) {
-      const language = match[1];
-      console.log('language', language);
-      setInsertCodeLang(language);
-    } else {
-      console.log('No match found');
-      setInsertCodeLang(null);
-    }
-  };
   useEffect(() => {
-      console.log(editor)
+    if (!editor) return;
 
-      const handleKeyPress = (event, editor) => {
-        console.log(editor, "in handle key")
-        if (event.key === 'Enter') {
-          const handled = handleBacktickInput(editor);
-          if (handled) {
-            event.preventDefault();
-          }
+    const handleKeyPress = (event) => {
+      if (event.key === 'Enter') {
+        const handled = handleBacktickInput(editor);
+        if (handled) {
+          event.preventDefault();
         }
-      };
+      }
+    };
 
-      window.addEventListener('keydown', handleKeyPress, function(e) {
-        console.log(editor, "editor in evet listener")
-        handleKeyPress(e, editor)
-      })
+    const keydownListener = (e) => {
+      handleKeyPress(e);
+    };
 
-      return () => {
-        window.removeEventListener('keydown', handleKeyPress, function(e) {
-          handleKeyPress(e, editor)
-        })
-      };
-  }, [insertCodeLang, editor]);
+    window.addEventListener('keydown', keydownListener);
+
+    return () => {
+      window.removeEventListener('keydown', keydownListener);
+    };
+  }, [editor]);
 
   if (!isReady) {
     return <div>Loading editor...</div>;
@@ -244,7 +86,6 @@ const EditorWrapper = React.memo(({ editor, theme }) => {
       placeholder="Start typing..."
       className="pt-1.5"
       slashMenu={false}
-      onChange={handleChange}
     >
       <SuggestionMenuController
         triggerCharacter="/"
@@ -360,7 +201,6 @@ export default function EditPage () {
   }, [editor, editorContent]);
 
   const handleEdit = useCallback(async () => {
-    
     const result = await updatePage({
       title: pageData?.title,
       slug: pageData?.slug,

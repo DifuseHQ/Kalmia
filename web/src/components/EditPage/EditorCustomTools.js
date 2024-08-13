@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { defaultProps } from '@blocknote/core';
 import { createReactBlockSpec } from '@blocknote/react';
 import warnIcon from '@iconify/icons-mdi/alert';
@@ -6,8 +7,9 @@ import successIcon from '@iconify/icons-mdi/check-circle';
 import infoIcon from '@iconify/icons-mdi/information';
 import { Icon } from '@iconify/react/dist/iconify.js';
 import { Menu } from '@mantine/core';
+import { langs } from '@uiw/codemirror-extensions-langs';
+import ReactCodeMirror from '@uiw/react-codemirror';
 
-// The types of alerts that users can choose from.
 export const alertTypes = [
   {
     title: 'Warning',
@@ -51,7 +53,6 @@ export const alertTypes = [
   }
 ];
 
-// The Alert block.
 export const Alert = createReactBlockSpec(
   {
     type: 'alert',
@@ -121,3 +122,132 @@ export const Alert = createReactBlockSpec(
     }
   }
 );
+
+export const insertAlert = (editor) => ({
+  title: 'alert',
+  subtext: 'This is a notification alert.',
+  onItemClick: () => {
+    editor.insertBlocks(
+      [{ type: 'alert' }],
+      editor.getTextCursorPosition().block,
+      'after'
+    );
+  },
+  aliases: [
+    'alert',
+    'notification',
+    'emphasize',
+    'warning',
+    'error',
+    'info',
+    'success'
+  ],
+  group: 'Alert',
+  icon: <Icon icon={warnIcon} />
+});
+
+export const CODEBLOCK_TYPE = 'procode';
+
+export const CodeBlockComponent = ({ block, editor }) => {
+  const code = block.props.code || '';
+  const language = block.props.language || 'plain';
+
+  const handleChange = useCallback((value) => {
+    editor.updateBlock(block, {
+      props: { code: value, language }
+    });
+  }, [block, editor, language]);
+
+  const languageExtension = langs[language] || langs.javascript;
+
+  return (
+    <div className="w-full rounded-lg shadow-md">
+      <ReactCodeMirror
+        key={language}
+        value={code}
+        onChange={handleChange}
+        extensions={[languageExtension()]}
+        theme="dark"
+        basicSetup={{
+          lineNumbers: true,
+          highlightActiveLine: true
+        }}
+      />
+    </div>
+  );
+};
+
+export const CodeBlock = createReactBlockSpec(
+  {
+    type: CODEBLOCK_TYPE,
+    propSchema: {
+      code: { default: '' },
+      language: { default: 'plain' }
+    },
+    content: 'none'
+  },
+  {
+    render: ({ block, editor }) => <CodeBlockComponent block={block} editor={editor} />,
+    toExternalHTML: ({ block }) => {
+      return (
+        <pre>
+          <code className={`language-${block?.props?.language}`}>{block?.props?.code}</code>
+        </pre>
+      );
+    }
+  }
+);
+
+export const insertCode = (editor) => ({
+  title: 'Code',
+  group: 'Other',
+  onItemClick: () => {
+    editor.insertBlocks(
+      [{
+        type: CODEBLOCK_TYPE,
+        props: {
+          code: '',
+          language: 'plain'
+        }
+      }],
+      editor.getTextCursorPosition().block,
+      'after'
+    );
+  },
+  aliases: ['code'],
+  icon: 'code',
+  subtext: 'Insert a code block.'
+});
+
+export const handleBacktickInput = (editor) => {
+  const backtickInputRegex = /^```([a-z]*)[\s\n]?/;
+  const cursorPosition = editor.getTextCursorPosition();
+
+  if (!cursorPosition || !cursorPosition.block) {
+    return false;
+  }
+
+  const currentBlock = cursorPosition.prevBlock;
+
+  if (!currentBlock) {
+    return false;
+  }
+
+  const blockContent = editor.getBlock(currentBlock.id);
+  const text = blockContent.content?.[0]?.text || '';
+  const match = text.match(backtickInputRegex);
+
+  if (match) {
+    const language = match[1] || 'plain';
+    editor.updateBlock(currentBlock, {
+      type: CODEBLOCK_TYPE,
+      props: {
+        language,
+        code: ''
+      }
+    });
+    return true;
+  }
+
+  return false;
+};

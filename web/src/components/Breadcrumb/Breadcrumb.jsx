@@ -287,7 +287,7 @@ export default function Breadcrumb () {
 
     document.title = titleRef.current;
   }, [breadcrumb]);
-  
+
   return (
     <motion.nav
       initial={{ opacity: 0 }}
