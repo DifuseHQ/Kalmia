@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Icon } from '@iconify/react';
@@ -19,6 +19,8 @@ export default function Error () {
   const location = useLocation();
   const { t } = useTranslation();
   const params = useParams();
+  const titleRef = useRef('');
+
   const getErrorCode = () => {
     if (params.code) return parseInt(params.code, 10);
     const searchParams = new URLSearchParams(location.search);
@@ -31,11 +33,13 @@ export default function Error () {
   const { title, icon } = errorConfig[errorCode] || errorConfig[404];
 
   useEffect(() => {
-    document.title = `Kalmia - ${errorCode} ${title}`;
+    const newTitle = `Kalmia - ${errorCode} ${title}`;
+    titleRef.current = newTitle;
+    document.title = titleRef.current;
   }, [errorCode, title]);
 
   const goBack = () => navigate(-1);
-  const reloadPage = () => window.location.reload();
+  const reloadPage = () => navigate(0);
   const isServerError = errorCode >= 500;
 
   return (
