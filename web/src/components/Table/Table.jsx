@@ -29,7 +29,6 @@ export default function Table ({
         ? 'opacity-80 bg-gray-200 dark:bg-gray-500 border shadow-md shadow-black text-black'
         : ''
       } border dark:border-gray-700 h-16 `}
-      key={`${obj.id}-${index}`}
     >
       <td
         className={`w-1/12 items-center ${obj.isIntroPage ? 'cursor-not-allowed' : 'cursor-pointer'} px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white`}

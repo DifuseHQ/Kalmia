@@ -758,8 +758,8 @@ export default function Documentation () {
                                       <Draggable
                                         key={
                                           obj.name
-                                            ? `pageGroup-${obj.id}`
-                                            : `page-${obj.id}`
+                                            ? `pageGroup-${obj.id}-order-${index}`
+                                            : `page-${obj.id}-order-${index}`
                                         }
                                         draggableId={
                                           obj.name

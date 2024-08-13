@@ -128,7 +128,7 @@ const schema = BlockNoteSchema.create({
 });
 
 const insertAlert = (editor) => ({
-  title: 'Alert',
+  title: 'alert',
   subtext: 'This is a notification alert.',
   onItemClick: () => {
     editor.insertBlocks(
@@ -208,26 +208,30 @@ const EditorWrapper = React.memo(({ editor, theme }) => {
       setInsertCodeLang(null);
     }
   };
-
-  const handleKeyDown = useCallback((event) => {
-    if (event.key === 'Enter') {
-      const handled = handleBacktickInput(editor);
-      if (handled) {
-        event.preventDefault();
-      }
-    }
-  }, [editor]);
-
-
-
   useEffect(() => {
-    if (editor) {
-      editor.domElement.addEventListener('keydown', handleKeyDown);
-      return () => {
-        editor.domElement.removeEventListener('keydown', handleKeyDown);
+      console.log(editor)
+
+      const handleKeyPress = (event, editor) => {
+        console.log(editor, "in handle key")
+        if (event.key === 'Enter') {
+          const handled = handleBacktickInput(editor);
+          if (handled) {
+            event.preventDefault();
+          }
+        }
       };
-    }
-  }, [editor, handleKeyDown]);
+
+      window.addEventListener('keydown', handleKeyPress, function(e) {
+        console.log(editor, "editor in evet listener")
+        handleKeyPress(e, editor)
+      })
+
+      return () => {
+        window.removeEventListener('keydown', handleKeyPress, function(e) {
+          handleKeyPress(e, editor)
+        })
+      };
+  }, [insertCodeLang, editor]);
 
   if (!isReady) {
     return <div>Loading editor...</div>;
