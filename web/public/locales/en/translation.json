@@ -62,6 +62,7 @@
         "version_palceholder": "Enter document clone version",
         "new_version":"New Version",
         "update":"Update",
+        "pick_your_emoji":"pick your emoji",
         
         "clone_documentation": "Clone Documentation",
         "delete_documentation": "Delete Documentation",
