@@ -143,3 +143,17 @@
 .bn-suggestion-menu {
     min-height: 400px;
 }
+
+.cm-editor {
+    border-radius: 8px;
+}
+
+.cm-scroller {
+    padding: 15px !important;
+}
+
+.code-block-conatiner {
+    outline: none !important;
+}
+  
+  

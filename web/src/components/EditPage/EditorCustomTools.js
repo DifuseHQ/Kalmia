@@ -161,7 +161,7 @@ export const CodeBlockComponent = ({ block, editor }) => {
   const languageExtension = langs[language] || langs.javascript;
 
   return (
-    <div className="w-full rounded-lg shadow-md">
+    <div className="code-block-conatiner w-full rounded-lg shadow-md outline-none">
       <ReactCodeMirror
         key={language}
         value={code}
