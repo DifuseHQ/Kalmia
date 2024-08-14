@@ -1,4 +1,4 @@
-import { AxiosError, AxiosResponse } from 'axios';
+import { AxiosError, AxiosResponse, Method } from 'axios';
 
 import instance, { makeRequestWithCustomAuth } from './AxiosInstance';
 
@@ -6,12 +6,56 @@ interface ErrorMessages {
   [key: number]: [string, string];
 }
 
-interface ApiResponse {
+interface ApiResponse<T = any> {
   status: 'success' | 'error';
   code: number;
-  data: any;
+  data: T | null;
   message: string;
   path: string;
+}
+
+interface AuthCredentials {
+  username: string;
+  password: string;
+}
+
+interface DocumentationPayload {
+  id: number;
+  name: string;
+  description: string;
+  version: string;
+  baseURL: string;
+  url: string;
+  organizationName: string;
+  projectName: string;
+  customCSS: string;
+  favicon: string;
+  navImageDark: string;
+  navImage: string;
+  copyrightText: string;
+  metaImage: string;
+  landerDetails: string;
+  footerLabelLinks: string;
+}
+
+interface CreateVersionPayload {
+  originalDocId: number;
+  version: string;
+}
+
+interface PageGroupPayload {
+  name: string;
+  documentationId: number;
+  parentId: number;
+  id?: number;
+  order?: number;
+}
+
+interface PagePayload {
+  title: string;
+  slug: string;
+  content: string;
+  id: number;
 }
 
 const ERROR_MESSAGES: ErrorMessages = {
@@ -24,9 +68,34 @@ function getMessageAndPath (statusCode: number): [string, string] {
   return ERROR_MESSAGES[statusCode] || ['Unknown Error', '/error'];
 }
 
-async function makeRequest (url: string, method: string = 'get', data: any = null): Promise<ApiResponse> {
+async function makeRequest<T = any> (
+  url: string,
+  method: Method = 'get',
+  data: any = null
+): Promise<ApiResponse<T>> {
   try {
-    const response: AxiosResponse = await instance[method](url, data);
+    let response: AxiosResponse<T>;
+
+    switch (method.toLowerCase()) {
+    case 'get':
+      response = await instance.get<T>(url, { params: data });
+      break;
+    case 'post':
+      response = await instance.post<T>(url, data);
+      break;
+    case 'put':
+      response = await instance.put<T>(url, data);
+      break;
+    case 'delete':
+      response = await instance.delete<T>(url, { data });
+      break;
+    case 'patch':
+      response = await instance.patch<T>(url, data);
+      break;
+    default:
+      throw new Error(`Unsupported HTTP method: ${method}`);
+    }
+
     return {
       status: 'success',
       code: response.status,
@@ -39,20 +108,20 @@ async function makeRequest (url: string, method: string = 'get', data: any = nul
     const statusCode = axiosError?.response?.status || 500;
     const errorData = axiosError?.response?.data || null;
     const [message, path] = getMessageAndPath(statusCode);
+
     return {
       status: 'error',
       code: statusCode,
-      data: errorData,
+      data: errorData as T | null,
       message,
       path
     };
   }
 }
 
-export const createJWT = (data: any) =>
-  makeRequest('/auth/jwt/create', 'post', data);
+export const createJWT = (data: AuthCredentials): Promise<ApiResponse> => makeRequest('/auth/jwt/create', 'post', data);
 
-export const refreshJWT = (token: string) =>
+export const refreshJWT = (token: string): Promise<ApiResponse> =>
   makeRequest('/auth/jwt/refresh', 'post', { token });
 
 export const validateJWT = async (token: string): Promise<ApiResponse> => {
@@ -80,53 +149,52 @@ export const validateJWT = async (token: string): Promise<ApiResponse> => {
   }
 };
 
-export const signOut = (token: string) =>
+export const signOut = (token: string): Promise<ApiResponse> =>
   makeRequest('/auth/jwt/revoke', 'post', { token });
 
 export const getDocumentations = () => makeRequest('/docs/documentations');
 
-export const getDocumentation = (id: number | string) =>
+export const getDocumentation = (id: number) =>
   makeRequest('/docs/documentation', 'post', { id });
 
-export const createDocumentation = (data: any) =>
+export const createDocumentation = (data: DocumentationPayload) =>
   makeRequest('/docs/documentation/create', 'post', data);
 
-export const updateDocumentation = (data: any) =>
+export const updateDocumentation = (data: DocumentationPayload) =>
   makeRequest('/docs/documentation/edit', 'post', data);
 
-export const deleteDocumentation = (id: number | string) =>
+export const deleteDocumentation = (id: number) =>
   makeRequest('/docs/documentation/delete', 'post', { id });
 
-export const createDocumentationVersion = (data: any) =>
+export const createDocumentationVersion = (data: CreateVersionPayload) =>
   makeRequest('/docs/documentation/version', 'post', data);
 
 export const buildTrigger = () => makeRequest('/health/last-trigger');
-
 export const getPageGroups = () => makeRequest('/docs/page-groups');
 
-export const getPageGroup = (id: number | string) =>
+export const getPageGroup = (id: number) =>
   makeRequest('/docs/page-group', 'post', { id });
 
-export const createPageGroup = (data: any) =>
+export const createPageGroup = (data: PageGroupPayload) =>
   makeRequest('/docs/page-group/create', 'post', data);
 
-export const updatePageGroup = (data: any) =>
+export const updatePageGroup = (data: PageGroupPayload) =>
   makeRequest('/docs/page-group/edit', 'post', data);
 
-export const deletePageGroup = (id: number | string) =>
+export const deletePageGroup = (id: number) =>
   makeRequest('/docs/page-group/delete', 'post', { id });
 
 export const getPages = () => makeRequest('/docs/pages');
 
-export const getPage = (id: number | string) => makeRequest('/docs/page', 'post', { id });
+export const getPage = (id: number) => makeRequest('/docs/page', 'post', { id });
 
-export const updatePage = (data: any) =>
-  makeRequest('/docs/page/edit', 'post', data);
-
-export const createPage = (data: any) =>
+export const createPage = (data: PagePayload) =>
   makeRequest('/docs/page/create', 'post', data);
 
-export const deletePage = (id: number | string) =>
+export const updatePage = (data: PagePayload) =>
+  makeRequest('/docs/page/edit', 'post', data);
+
+export const deletePage = (id: number) =>
   makeRequest('/docs/page/delete', 'post', { id });
 
 export const commonReorderBulk = (data: any) =>

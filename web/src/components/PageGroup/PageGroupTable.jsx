@@ -58,7 +58,7 @@ export default function PageGroupTable () {
 
   useEffect(() => {
     const fetchData = async () => {
-      const result = await getPageGroup(Number(pageGroupId));
+      const result = await getPageGroup(parseInt(pageGroupId));
 
       if (handleError(result, navigate, t)) {
         return;
@@ -120,9 +120,9 @@ export default function PageGroupTable () {
     const type = 'slug' in path ? 'page' : 'pageGroup';
     let result;
     if (type === 'pageGroup') {
-      result = await deletePageGroup(Number(id));
+      result = await deletePageGroup(parseInt(id));
     } else if (type === 'page') {
-      result = await deletePage(Number(id));
+      result = await deletePage(parseInt(id));
     }
 
     if (handleError(result, navigate, t)) {

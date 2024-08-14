@@ -207,7 +207,7 @@ export default function Documentation () {
   );
 
   const handleDelete = async () => {
-    const result = await deleteDocumentation(Number(selectedVersion.id));
+    const result = await deleteDocumentation(parseInt(selectedVersion.id));
 
     if (handleError(result, navigate, t)) {
       return;
@@ -247,9 +247,9 @@ export default function Documentation () {
     let result;
 
     if (type === 'pageGroup') {
-      result = await deletePageGroup(Number(id));
+      result = await deletePageGroup(parseInt(id));
     } else if (type === 'page') {
-      result = await deletePage(Number(id));
+      result = await deletePage(parseInt(id));
     }
 
     if (handleError(result, navigate, t)) {

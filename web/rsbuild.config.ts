@@ -1,9 +1,10 @@
 import { defineConfig } from '@rsbuild/core';
 import { pluginImageCompress } from '@rsbuild/plugin-image-compress';
 import { pluginReact } from '@rsbuild/plugin-react';
+import { pluginTypeCheck } from '@rsbuild/plugin-type-check';
 
 export default defineConfig({
-  plugins: [pluginReact(), pluginImageCompress()],
+  plugins: [pluginReact(), pluginImageCompress(), pluginTypeCheck()],
   html: {
     template: './public/index.html',
   },
