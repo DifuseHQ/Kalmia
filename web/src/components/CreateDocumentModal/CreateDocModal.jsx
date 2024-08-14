@@ -215,7 +215,7 @@ export default function CreateDocModal () {
   useEffect(() => {
     if (mode === 'edit') {
       const fetchDoc = async () => {
-        const result = await getDocumentation(Number(docId));
+        const result = await getDocumentation(parseInt(docId));
         if (result.status === 'success') {
           setFormData(result?.data);
           const footerLabelLinks = result?.data?.footerLabelLinks;
@@ -369,7 +369,7 @@ export default function CreateDocModal () {
     const landingData = isToggleOn ? landingPage : {};
 
     const payload = {
-      id: Number(docId),
+      id: parseInt(docId),
       name: formData.name || '',
       description: formData.description || '',
       version: formData.version || '',

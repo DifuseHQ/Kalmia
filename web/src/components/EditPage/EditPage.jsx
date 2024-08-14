@@ -6,21 +6,19 @@ import {
   defaultBlockSpecs,
   filterSuggestionItems
 } from '@blocknote/core';
-
 import {
   BlockNoteView,
   darkDefaultTheme,
   lightDefaultTheme
 } from '@blocknote/mantine';
-
 import {
   getDefaultReactSlashMenuItems,
   SuggestionMenuController,
   useCreateBlockNote
 } from '@blocknote/react';
-
 import { Icon } from '@iconify/react/dist/iconify';
 import { AnimatePresence, motion } from 'framer-motion';
+
 import { deletePage, getPage, updatePage, uploadPhoto } from '../../api/Requests';
 import { AuthContext } from '../../context/AuthContext';
 import { ModalContext } from '../../context/ModalContext';
@@ -29,6 +27,7 @@ import { handleError } from '../../utils/Common';
 import { toastMessage } from '../../utils/Toast';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
 import DeleteModal from '../DeleteModal/DeleteModal';
+
 import { Alert, CodeBlock, handleBacktickInput, insertAlert, insertCode } from './EditorCustomTools';
 
 import '@blocknote/core/fonts/inter.css';
@@ -176,7 +175,7 @@ export default function EditPage () {
 
   useEffect(() => {
     const fetchData = async () => {
-      const result = await getPage(Number(pageId));
+      const result = await getPage(parseInt(pageId));
       if (handleError(result, navigate, t)) return;
 
       if (result.status === 'success') {
@@ -219,7 +218,7 @@ export default function EditPage () {
   }, [pageData, editor, pageId, navigate, t, refreshData]);
 
   const handleDelete = async () => {
-    const result = await deletePage(Number(pageId));
+    const result = await deletePage(parseInt(pageId));
 
     if (handleError(result, navigate, t)) {
       return;
