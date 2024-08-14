@@ -70,11 +70,11 @@ export default function Documentation () {
   const [searchParam] = useSearchParams();
   const docId = searchParam.get('id');
   const versionId = searchParam.get('versionId');
-  const [loading, setLoading] = useState<boolean>(true);
-  const [pageGroupLoading, setPageGroupLoading] = useState<boolean>(true);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [selectPageSize, setSelectPageSize] = useState<number>(50);
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+  const [pageGroupLoading, setPageGroupLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectPageSize, setSelectPageSize] = useState(50);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Documentation CRUD
   const [documentData, setDocumentData] = useState([]);
@@ -83,7 +83,7 @@ export default function Documentation () {
   const [groupsAndPageData, setGroupsAndPageData] = useState([]);
 
   // version
-  const [showVersionDropdown, setShowVersionDropdown] = useState<boolean>(false);
+  const [showVersionDropdown, setShowVersionDropdown] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedVersion, setSelectedVersion] = useState('');
 
@@ -271,7 +271,7 @@ export default function Documentation () {
       refreshData();
     }
   };
-  
+
   const handlePageGroupUpdate = async (editTitle, version, id) => {
     const result = await updatePageGroup({
       id: Number(id),

@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react';
+import { KeyboardEventHandler, useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@iconify/react/dist/iconify.js';
 
@@ -53,7 +53,7 @@ export default function LoginPage () {
     }
   };
 
-  const handleKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (event) => {
+  const handleKeyDown: KeyboardEventHandler<HTMLInputElement> = (event) => {
     if (event.key === 'Enter' && !isLoading) {
       event.preventDefault();
       handleSubmit();

@@ -1,4 +1,4 @@
-import React, { createContext, useState, ReactNode } from 'react';
+import React, { createContext, ReactNode, useState } from 'react';
 
 interface ModalItem {
   id: number;
@@ -41,7 +41,7 @@ const defaultContext: ModalContextType = {
   setLoadingModal: () => {},
   setLoadingMessage: () => {},
   openModal: () => {},
-  closeModal: () => {},
+  closeModal: () => {}
 };
 
 export const ModalContext = createContext<ModalContextType>(defaultContext);

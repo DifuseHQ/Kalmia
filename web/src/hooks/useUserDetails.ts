@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { getUsers, ApiResponse } from '../api/Requests';
+
+import { ApiResponse, getUsers } from '../api/Requests';
 import { handleError } from '../utils/Common';
 
 interface User {
@@ -19,7 +20,7 @@ export interface UserDetails {
   photo?: string;
 }
 
-export const useUserDetails = (user: User | null, refresh: boolean): [UserDetails | null, React.Dispatch<React.SetStateAction<UserDetails | null>>] => {
+export const useUserDetails = (user: User | null, refresh: boolean): [UserDetails | null, Dispatch<SetStateAction<UserDetails | null>>] => {
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const navigate = useNavigate();
   const { t } = useTranslation();

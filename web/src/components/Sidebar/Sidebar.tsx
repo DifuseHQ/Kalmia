@@ -18,9 +18,9 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { getDocumentations } from '../../api/Requests';
 import { AuthContext, AuthContextType } from '../../context/AuthContext';
 import { ModalContext } from '../../context/ModalContext';
-import { handleError } from '../../utils/Common';
-import { DOMEvent } from '../../types/dom';
 import { Documentation } from '../../types/doc';
+import { DOMEvent } from '../../types/dom';
+import { handleError } from '../../utils/Common';
 
 const PoweredByDifuse = () => {
   return (

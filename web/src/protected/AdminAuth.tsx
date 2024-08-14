@@ -5,9 +5,9 @@ import { jwtDecode } from 'jwt-decode';
 
 import { ApiResponse, getUsers } from '../api/Requests';
 import Loading from '../components/Loading/Loading';
-import { handleError } from '../utils/Common';
 import { UserPayload } from '../hooks/useUser';
 import { User } from '../types/auth';
+import { handleError } from '../utils/Common';
 
 export default function AdminAuth () {
   const { t } = useTranslation();
@@ -45,7 +45,7 @@ export default function AdminAuth () {
         if (foundUser && foundUser?.admin === true) {
           setIsAdmin(true);
         }
-        
+
         setIsLoading(false);
       }
     };

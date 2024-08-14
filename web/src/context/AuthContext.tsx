@@ -1,10 +1,11 @@
-import React, { createContext, useCallback, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, ReactNode, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+
 import { createJWT, refreshJWT, signOut, validateJWT } from '../api/Requests';
 import { useToken } from '../hooks/useToken';
-import { useUser, UserType, UpdateUserFunction } from '../hooks/useUser';
-import { useUserDetails, UserDetails } from '../hooks/useUserDetails';
+import { UpdateUserFunction, UserType, useUser } from '../hooks/useUser';
+import { UserDetails, useUserDetails } from '../hooks/useUserDetails';
 import { handleError, isTokenExpiringSoon } from '../utils/Common';
 import { toastMessage } from '../utils/Toast';
 

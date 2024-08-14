@@ -1,9 +1,11 @@
 import { RefObject, useEffect } from 'react';
-import { toastMessage } from './Toast';
 import { TFunction } from 'i18next';
+
+import { ApiResponse } from '../api/Requests';
 import { ValidatedJWT } from '../types/auth';
-import { ApiResponse } from '../api/Requests'
-import { PageGroup, Page, Documentation } from '../types/doc';
+import { Documentation, Page, PageGroup } from '../types/doc';
+
+import { toastMessage } from './Toast';
 
 let isRedirecting: boolean = false;
 let lastToastMessage: string = '';
@@ -29,17 +31,17 @@ interface LandingPage {
     title: string;
     text: string;
   }>;
-};
+}
 
 interface SocialPlatformField {
   icon: string;
   link: string;
-};
+}
 
 interface MoreField {
   label: string;
   link: string;
-};
+}
 
 interface CreateDocumentFormData {
   name: string;
@@ -55,7 +57,7 @@ interface CreateDocumentFormData {
   navImage: string;
   copyrightText: string;
   metaImage: string;
-};
+}
 
 interface ClosestVersion {
   id: number;
@@ -66,8 +68,8 @@ interface ClosestVersion {
 type NavigateFunction = (path: string, options?: { state: any }) => void;
 
 export const handleError = (
-  result: ApiResponse, 
-  navigate: NavigateFunction | null = null, 
+  result: ApiResponse,
+  navigate: NavigateFunction | null = null,
   t: TFunction
 ): boolean => {
   if (result.status === 'error') {
@@ -109,14 +111,14 @@ export const getFormattedDate = (date: string | number | Date): string => {
   try {
     const dt = new Date(date);
     if (isNaN(dt.getTime())) throw new Error('Invalid date');
-    
+
     const day = dt.getDate().toString().padStart(2, '0');
     const month = (dt.getMonth() + 1).toString().padStart(2, '0');
     const year = dt.getFullYear().toString().slice(-2);
     const hours = dt.getHours() % 12 || 12;
     const minutes = dt.getMinutes().toString().padStart(2, '0');
     const ampm = dt.getHours() >= 12 ? 'PM' : 'AM';
-    
+
     return `${day}-${month}-${year} ${hours}:${minutes} ${ampm}`;
   } catch (error) {
     return String(date);
@@ -187,12 +189,12 @@ export const sortGroupAndPage = (filteredGroups: PageGroup[], filteredPages: Pag
   return combinedPages;
 };
 
-export function getClosestVersion(cloneData: Documentation[]): ClosestVersion | null {
+export function getClosestVersion (cloneData: Documentation[]): ClosestVersion | null {
   const now = new Date();
 
   return cloneData.reduce((closest: ClosestVersion | null, obj: Documentation) => {
     const createdAt = new Date(obj.createdAt);
-    
+
     if (isNaN(createdAt.getTime())) {
       console.warn(`Invalid date for object with id ${obj.id}`);
       return closest;
@@ -360,8 +362,8 @@ export const landingPageValidate = (data: LandingPage): { status: boolean; messa
       message: 'Valid CTA Button Link required'
     },
     {
-      condition: data.secondCtaButtonText.ctaButtonLink && 
-                 !isValidURL(data.secondCtaButtonText.ctaButtonLink) && 
+      condition: data.secondCtaButtonText.ctaButtonLink &&
+                 !isValidURL(data.secondCtaButtonText.ctaButtonLink) &&
                  !isValidBaseURL(data.ctaButtonText.ctaButtonLink),
       message: 'Valid second CTA Button Link required'
     },
@@ -380,15 +382,15 @@ export const landingPageValidate = (data: LandingPage): { status: boolean; messa
   return { status: false, message: '' };
 };
 
-export function useOutsideAlerter(ref: RefObject<HTMLElement>, onOutsideClick: () => void): void {
+export function useOutsideAlerter (ref: RefObject<HTMLElement>, onOutsideClick: () => void): void {
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent): void {
+    function handleClickOutside (event: MouseEvent): void {
       if (ref.current && !ref.current.contains(event.target as Node)) {
         onOutsideClick();
       }
     }
 
-    function handleEscapeKey(event: KeyboardEvent): void {
+    function handleEscapeKey (event: KeyboardEvent): void {
       if (event.key === 'Escape') {
         onOutsideClick();
       }

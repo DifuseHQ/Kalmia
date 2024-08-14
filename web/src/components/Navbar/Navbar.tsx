@@ -12,8 +12,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 
 import { AuthContext, AuthContextType } from '../../context/AuthContext';
 import { ThemeContext, ThemeContextType } from '../../context/ThemeContext';
-import { getLanguageName, languages } from '../../utils/Utils';
 import { DOMEvent } from '../../types/dom';
+import { getLanguageName, languages } from '../../utils/Utils';
 
 export default function Navbar () {
   const { i18n } = useTranslation();
@@ -22,8 +22,8 @@ export default function Navbar () {
   const languageName = getLanguageName();
 
   const { t } = useTranslation();
-  const { userDetails, logout, isSidebarOpen, setIsSidebarOpen } = authContext as AuthContextType
-  const { darkMode, toggleDarkMode } = themeContext as ThemeContextType
+  const { userDetails, logout, isSidebarOpen, setIsSidebarOpen } = authContext as AuthContextType;
+  const { darkMode, toggleDarkMode } = themeContext as ThemeContextType;
 
   const [isOpen, setIsOpen] = useState(false);
   const [translateDropdown, setTranslateDropdown] = useState(false);

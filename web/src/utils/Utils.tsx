@@ -1,11 +1,13 @@
+import { JSX } from 'react';
 import { Icon } from '@iconify/react/dist/iconify.js';
+
 import i18n from './i18n';
 
-export function nullOrUndefined(a: any): boolean {
+export function nullOrUndefined (a: any): boolean {
   return a === null || a === undefined;
 }
 
-export function pageSizes(): number[] {
+export function pageSizes (): number[] {
   const pages = [10, 50, 100, 1000];
   return pages;
 }
