@@ -397,9 +397,6 @@ func (service *DocService) writePagesToDirectory(pages []models.Page, dirPath st
 
 		if markdownExt == ".md" {
 			oppositeExt = ".mdx"
-			if utils.PathExists(filepath.Join(dirPath, "index"+oppositeExt)) {
-				os.Remove(filepath.Join(dirPath, "index"+oppositeExt))
-			}
 		} else {
 			oppositeExt = ".md"
 		}
@@ -410,10 +407,22 @@ func (service *DocService) writePagesToDirectory(pages []models.Page, dirPath st
 			fileName = utils.StringToFileString(fullPage.Title) + markdownExt
 		}
 
-		if utils.PathExists(filepath.Join(dirPath, utils.StringToFileString(fullPage.Title)+oppositeExt)) {
-			err := os.Remove(filepath.Join(dirPath, utils.StringToFileString(fullPage.Title)+oppositeExt))
-			if err != nil {
-				return err
+		if utils.PathExists(filepath.Join(dirPath, utils.StringToFileString(fullPage.Title)+oppositeExt)) ||
+			utils.PathExists(filepath.Join(dirPath, "index"+oppositeExt)) {
+			if fullPage.IsIntroPage {
+				if utils.PathExists(filepath.Join(dirPath, "index"+oppositeExt)) {
+					err := os.Remove(filepath.Join(dirPath, "index"+oppositeExt))
+					if err != nil {
+						return err
+					}
+				}
+			} else {
+				if utils.PathExists(filepath.Join(dirPath, utils.StringToFileString(fullPage.Title)+oppositeExt)) {
+					err := os.Remove(filepath.Join(dirPath, utils.StringToFileString(fullPage.Title)+oppositeExt))
+					if err != nil {
+						return err
+					}
+				}
 			}
 		}
 

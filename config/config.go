@@ -12,9 +12,14 @@ type User struct {
 	Admin    bool   `json:"admin"`
 }
 
-type Cloudflare struct {
-	AccountID string `json:"account_id"`
-	APIKey    string `json:"api_key"`
+type S3 struct {
+	Endpoint        string `json:"endpoint"`
+	Region          string `json:"region"`
+	AccessKeyId     string `json:"accessKeyId"`
+	SecretAccessKey string `json:"secretAccessKey"`
+	Bucket          string `json:"bucket"`
+	UsePathStyle    bool   `json:"usePathStyle"`
+	PublicUrlFormat string `json:"publicUrlFormat"`
 }
 
 type GithubOAuth struct {
@@ -44,7 +49,7 @@ type Config struct {
 	SessionSecret  string         `json:"sessionSecret"`
 	Admins         []User         `json:"users"`
 	DataPath       string         `json:"dataPath"`
-	Cloudflare     Cloudflare     `json:"cloudflare"`
+	S3             S3             `json:"s3"`
 	GithubOAuth    GithubOAuth    `json:"githubOAuth"`
 	MicrosoftOAuth MicrosoftOAuth `json:"microsoftOAuth"`
 	GoogleOAuth    GoogleOAuth    `json:"googleOAuth"`

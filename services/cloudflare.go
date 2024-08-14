@@ -2,84 +2,63 @@ package services
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
+	"mime"
 	"mime/multipart"
-	"net/http"
-	"strings"
 	"time"
 
 	"git.difuse.io/Difuse/kalmia/config"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-func UploadImage(file io.Reader) (string, error) {
-	apiURL := fmt.Sprintf("https://api.cloudflare.com/client/v4/accounts/%s/images/v1", config.ParsedConfig.Cloudflare.AccountID)
-	apiKey := config.ParsedConfig.Cloudflare.APIKey
-
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
-
-	filename := fmt.Sprintf("upload-%d", time.Now().Unix())
-	part, err := writer.CreateFormFile("file", filename)
+func UploadImage(file multipart.File, contentType string) (string, error) {
+	// Initialize a session using AWS SDK
+	sess, err := session.NewSession(&aws.Config{
+		Endpoint:         aws.String(config.ParsedConfig.S3.Endpoint),
+		Region:           aws.String(config.ParsedConfig.S3.Region),
+		Credentials:      credentials.NewStaticCredentials(config.ParsedConfig.S3.AccessKeyId, config.ParsedConfig.S3.SecretAccessKey, ""),
+		S3ForcePathStyle: aws.Bool(config.ParsedConfig.S3.UsePathStyle),
+	})
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("error creating AWS session: %v", err)
 	}
-	_, err = io.Copy(part, file)
+
+	// Create an S3 service client
+	svc := s3.New(sess)
+
+	// Infer file extension from content type
+	ext := ".bin" // Default extension if we can't infer it
+	if exts, _ := mime.ExtensionsByType(contentType); len(exts) > 0 {
+		ext = exts[0]
+	}
+
+	// Generate a unique filename
+	filename := fmt.Sprintf("upload-%d%s", time.Now().UnixNano(), ext)
+
+	// Read the entire file into a byte slice
+	fileBytes, err := io.ReadAll(file)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("error reading file: %v", err)
 	}
 
-	writer.Close()
-
-	req, err := http.NewRequest("POST", apiURL, body)
+	// Upload the file to S3-compatible storage
+	_, err = svc.PutObject(&s3.PutObjectInput{
+		Bucket:        aws.String(config.ParsedConfig.S3.Bucket),
+		Key:           aws.String(filename),
+		Body:          bytes.NewReader(fileBytes),
+		ContentLength: aws.Int64(int64(len(fileBytes))),
+		ContentType:   aws.String(contentType),
+	})
 	if err != nil {
-		return "", err
-	}
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-	req.Header.Set("Authorization", "Bearer "+apiKey)
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("cloudflare API returned %d status", resp.StatusCode)
+		return "", fmt.Errorf("error uploading to S3-compatible storage: %v", err)
 	}
 
-	var result struct {
-		Success bool                       `json:"success"`
-		Errors  []struct{ Message string } `json:"errors"`
-		Result  struct {
-			ID       string   `json:"id"`
-			Variants []string `json:"variants"`
-		} `json:"result"`
-	}
+	// Generate the public URL for the uploaded file
+	publicURL := fmt.Sprintf(config.ParsedConfig.S3.PublicUrlFormat, filename)
 
-	err = json.NewDecoder(resp.Body).Decode(&result)
-
-	if err != nil {
-		return "", err
-	}
-
-	if !result.Success {
-		return "", fmt.Errorf("error from Cloudflare: %s", result.Errors[0].Message)
-	}
-
-	publicVariant := ""
-	for _, variant := range result.Result.Variants {
-		if strings.HasSuffix(variant, "public") {
-			publicVariant = variant
-			break
-		}
-	}
-
-	if publicVariant == "" {
-		return "", fmt.Errorf("no public variant found")
-	}
-
-	return publicVariant, nil
+	return publicURL, nil
 }

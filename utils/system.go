@@ -24,7 +24,6 @@ func RunNpxCommand(dir string, command string, args ...string) error {
 	fullCommand := append([]string{command}, args...)
 	cmd := exec.Command("npx", fullCommand...)
 	cmd.Dir = dir
-	// cmd.Env = append(cmd.Env, "USE_SIMPLE_CSS_MINIFIER=true")
 
 	output, err := cmd.CombinedOutput()
 
