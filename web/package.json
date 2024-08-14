@@ -15,7 +15,7 @@
     "@uiw/codemirror-extensions-langs": "^4.23.0",
     "@uiw/react-codemirror": "^4.23.0",
     "ace-builds": "^1.35.4",
-    "axios": "^1.7.2",
+    "axios": "^1.7.4",
     "class-variance-authority": "^0.7.0",
     "date-fns": "^3.6.0",
     "emoji-mart": "^5.6.0",
