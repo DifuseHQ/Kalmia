@@ -40,7 +40,7 @@ export default function UserForm () {
     const fetchUserData = async () => {
       try {
         if (userId && currentUser.admin) {
-          const response = await getUser(userId);
+          const response = await getUser(parseInt(userId));
           if (handleError(response, navigate, t)) return;
           setUserData(response.data);
           setUsername(response.data.username);
