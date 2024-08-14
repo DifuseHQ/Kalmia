@@ -58,6 +58,33 @@ interface PagePayload {
   id: number;
 }
 
+interface OrderItem {
+  id: number;
+  order: number;
+  documentationId?: number;
+  parentId?: number;
+  pageGroupId?: number;
+  isPageGroup?: boolean;
+}
+
+interface ReorderBulkDataPayload {
+  order: OrderItem[];
+}
+
+interface UserPayload {
+  username: string;
+  email: string;
+  password: string;
+}
+
+interface UpdateUserPayload {
+  id: number;
+  photo?: string;
+  username?: string;
+  email?: string;
+  password?: string;
+}
+
 const ERROR_MESSAGES: ErrorMessages = {
   500: ['Internal Server Error', '/505'],
   404: ['Not Found', '/404'],
@@ -197,21 +224,21 @@ export const updatePage = (data: PagePayload) =>
 export const deletePage = (id: number) =>
   makeRequest('/docs/page/delete', 'post', { id });
 
-export const commonReorderBulk = (data: any) =>
+export const commonReorderBulk = (data: ReorderBulkDataPayload) =>
   makeRequest('/docs/documentation/reorder-bulk', 'post', data);
 
 export const getUsers = () => makeRequest('/auth/users');
 
-export const getUser = (id: number | string) =>
+export const getUser = (id: number) =>
   makeRequest('/auth/user', 'post', { id: Number.parseInt(id.toString()) });
 
-export const createUser = (data: any) =>
+export const createUser = (data: UserPayload) =>
   makeRequest('/auth/user/create', 'post', data);
 
-export const updateUser = (data: any) =>
+export const updateUser = (data: UpdateUserPayload) =>
   makeRequest('/auth/user/edit', 'post', data);
 
-export const uploadPhoto = (data: any) =>
+export const uploadPhoto = (data: FormData) =>
   makeRequest('/auth/user/upload-photo', 'post', data);
 
 export const deleteUser = (username: string) =>

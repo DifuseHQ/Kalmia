@@ -67,7 +67,7 @@ export default function Breadcrumb () {
           });
         } else if (location.pathname.includes('/edit-user')) {
           if (user.admin) {
-            const user = await getUser(Number.parseInt(userIdFromParam));
+            const user = await getUser(parseInt(userIdFromParam));
             newBreadcrumb.push({
               title: `${user.data.username}`,
               path: location.pathname + location.search,

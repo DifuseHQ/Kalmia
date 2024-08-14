@@ -27,7 +27,8 @@ export const toastMessage = (message: string, type: TypeOptions) => {
       break;
     case 'error':
       toast.error(message, options)
+      break;
     case 'default':
-      toast(message)
+      toast(message, options);
   }
 };
