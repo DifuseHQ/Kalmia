@@ -43,6 +43,13 @@ import CreatePage from '../CreatePageModal/CreatePageModal';
 import DeleteModal from '../DeleteModal/DeleteModal';
 import Table from '../Table/Table';
 
+// interface DocumentData {
+//   id:number,
+//   name:string,
+//   description:number,
+//   version:string
+// }
+
 export default function Documentation () {
   const navigate = useNavigate();
   const { refresh, refreshData, user } = useContext(AuthContext);
@@ -63,20 +70,20 @@ export default function Documentation () {
   const [searchParam] = useSearchParams();
   const docId = searchParam.get('id');
   const versionId = searchParam.get('versionId');
-  const [loading, setLoading] = useState(true);
-  const [pageGroupLoading, setPageGroupLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectPageSize, setSelectPageSize] = useState(50);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState<boolean>(true);
+  const [pageGroupLoading, setPageGroupLoading] = useState<boolean>(true);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [selectPageSize, setSelectPageSize] = useState<number>(50);
+  const [searchTerm, setSearchTerm] = useState<string>('');
 
   // Documentation CRUD
-  const [documentData, setDocumentData] = useState([]);
+  const [documentData, setDocumentData] = useState<DocumentData[]>([]);
 
   // pageGroup CRUD
   const [groupsAndPageData, setGroupsAndPageData] = useState([]);
 
   // version
-  const [showVersionDropdown, setShowVersionDropdown] = useState(false);
+  const [showVersionDropdown, setShowVersionDropdown] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedVersion, setSelectedVersion] = useState('');
 

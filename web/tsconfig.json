@@ -8,7 +8,7 @@
     "isolatedModules": true,
     "resolveJsonModule": true,
     "moduleResolution": "bundler",
-    "jsx": "react"
+    "jsx": "react-jsx"
   },
   "include": ["src"]
 }
