@@ -18,8 +18,8 @@ export default defineConfig({
       js: process.env.NODE_ENV === 'development'? 'source-map' : false,
       css: false
     },
+    cleanDistPath: process.env.NODE_ENV === 'production',
   },
-
   performance: {
     chunkSplit: {
       strategy: 'split-by-size',
