@@ -1,5 +1,6 @@
 import * as path from 'path';
 import { defineConfig } from 'rspress/config';
+import { pluginOpenGraph } from 'rsbuild-plugin-open-graph';
 
 export default defineConfig({
   root: path.join(__dirname, 'docs'),
@@ -20,5 +21,13 @@ export default defineConfig({
   mediumZoom: {
     selector: '.rspress-doc img',
   },
-  outDir: 'build_tmp'
+  outDir: 'build_tmp',
+  plugins: [
+    pluginOpenGraph({
+      title: '__TITLE__',
+      type: 'website',
+      description: '__TAG_LINE__',
+      image: '__META_IMAGE__',
+    }),
+  ]
 });
