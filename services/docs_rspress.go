@@ -423,9 +423,17 @@ func blockToMarkdown(block Block, depth int, numbering *[]int) string {
 		return applyBlockStyles(fileToMarkdown(block.Props), block.Props, block.Type)
 	case "alert":
 		return applyBlockStyles(alertToMarkdown(block.Props, styledContent), block.Props, block.Type)
+	case "procode":
+		return procodeToMarkdown(block.Props)
 	default:
 		return ""
 	}
+}
+
+func procodeToMarkdown(props map[string]interface{}) string {
+	code := props["code"].(string)
+	language := props["language"].(string)
+	return fmt.Sprintf("```%s\n%s\n```\n", code, language)
 }
 
 func imageWithAlignment(url, alt, alignment, caption string) string {
