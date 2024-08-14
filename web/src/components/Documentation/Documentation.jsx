@@ -77,7 +77,7 @@ export default function Documentation () {
   const [searchTerm, setSearchTerm] = useState<string>('');
 
   // Documentation CRUD
-  const [documentData, setDocumentData] = useState<DocumentData[]>([]);
+  const [documentData, setDocumentData] = useState([]);
 
   // pageGroup CRUD
   const [groupsAndPageData, setGroupsAndPageData] = useState([]);
