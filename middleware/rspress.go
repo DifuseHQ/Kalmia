@@ -13,7 +13,7 @@ func RsPressMiddleware(dS *services.DocService) func(http.Handler) http.Handler 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			urlPath := r.URL.Path
-			docPath, baseURL, err := dS.GetDocusaurus(urlPath)
+			docPath, baseURL, err := dS.GetRsPress(urlPath)
 			if err != nil {
 				next.ServeHTTP(w, r)
 				return

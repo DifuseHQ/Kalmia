@@ -510,10 +510,10 @@ func DeletePageGroup(service *services.DocService, w http.ResponseWriter, r *htt
 	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "page_group_deleted"})
 }
 
-func GetDocusaurus(service *services.DocService, w http.ResponseWriter, r *http.Request) {
+func GetRsPress(service *services.DocService, w http.ResponseWriter, r *http.Request) {
 	urlPath := r.URL.Path
 
-	docPath, baseURL, err := service.GetDocusaurus(urlPath)
+	docPath, baseURL, err := service.GetRsPress(urlPath)
 	if err != nil {
 		http.Redirect(w, r, "/admin/", http.StatusTemporaryRedirect)
 		return

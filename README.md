@@ -4,7 +4,7 @@
 > This project is still in development and is not ready for production use.
 
 
-Kalmia is a Go tool with a web interface for managing Docusaurus documentation. It supports multiple versions, multiple users, and includes a markdown editor for easy edits.
+Kalmia is a Go tool with a web interface for managing RsPress documentation. It supports multiple versions, multiple users, and includes a markdown editor for easy edits.
 
 ## Requirements
 

@@ -205,14 +205,14 @@ func (service *DocService) CreateDocumentation(documentation *models.Documentati
 		return fmt.Errorf("failed_to_create_documentation_intro_page")
 	}
 
-	err := service.InitDocusaurus(documentation.ID, true)
+	err := service.InitRsPress(documentation.ID, true)
 
 	if err != nil {
-		logger.Error("failed_to_init_docusaurus", zap.Error(err))
+		logger.Error("failed_to_init_rspress", zap.Error(err))
 		db.Delete(&documentation)
 		db.Delete(&introPage)
 
-		return fmt.Errorf("failed_to_init_docusaurus")
+		return fmt.Errorf("failed_to_init_rspress")
 	}
 
 	err = service.AddBuildTrigger(documentation.ID)

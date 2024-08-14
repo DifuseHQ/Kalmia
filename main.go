@@ -110,8 +110,8 @@ func main() {
 	docsRouter.HandleFunc("/page-group/delete", func(w http.ResponseWriter, r *http.Request) { handlers.DeletePageGroup(dS, w, r) }).Methods("POST")
 
 	spaHandler := createSPAHandler()
-	docusaurusMiddleware := middleware.RsPressMiddleware(dS)
-	r.PathPrefix("/").Handler(docusaurusMiddleware(spaHandler))
+	rsPressMiddleware := middleware.RsPressMiddleware(dS)
+	r.PathPrefix("/").Handler(rsPressMiddleware(spaHandler))
 
 	logger.Info("Starting server", zap.Int("port", cfg.Port))
 

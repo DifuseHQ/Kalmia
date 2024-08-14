@@ -144,9 +144,9 @@ func (service *DocService) UpdateWriteBuild(docId uint) error {
 		return err
 	}
 
-	err = service.DocusaurusBuild(docId)
+	err = service.RsPressBuild(docId)
 	if err != nil {
-		logger.Error("Failed to build docusaurus -> ", zap.Uint("doc_id", docId), zap.Error(err))
+		logger.Error("Failed to build RsPress -> ", zap.Uint("doc_id", docId), zap.Error(err))
 		return err
 	}
 
@@ -173,7 +173,7 @@ func (service *DocService) StartupCheck() error {
 			docsPath := filepath.Join(allDocsPath, "doc_"+strconv.Itoa(int(doc.ID)))
 
 			if !utils.PathExists(docsPath) {
-				if err := service.InitDocusaurus(doc.ID, true); err != nil {
+				if err := service.InitRsPress(doc.ID, true); err != nil {
 					return err
 				}
 
@@ -185,7 +185,7 @@ func (service *DocService) StartupCheck() error {
 						return fmt.Errorf("failed to remove path %s: %w", docsPath, removeErr)
 					}
 
-					if err := service.InitDocusaurus(doc.ID, true); err != nil {
+					if err := service.InitRsPress(doc.ID, true); err != nil {
 						return err
 					}
 				}
@@ -202,7 +202,7 @@ func (service *DocService) StartupCheck() error {
 	return nil
 }
 
-func (service *DocService) InitDocusaurus(docId uint, init bool) error {
+func (service *DocService) InitRsPress(docId uint, init bool) error {
 	cfg := config.ParsedConfig
 
 	if init {
@@ -1254,7 +1254,7 @@ func (service *DocService) WriteHomePage(documentation models.Documentation, con
 	return nil
 }
 
-func (service *DocService) DocusaurusBuild(docId uint) error {
+func (service *DocService) RsPressBuild(docId uint) error {
 	docPath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data", "doc_"+strconv.Itoa(int(docId)))
 	buildPath := filepath.Join(docPath, "build")
 	tmpBuildPath := filepath.Join(docPath, "build_tmp")
@@ -1283,7 +1283,7 @@ func (service *DocService) DocusaurusBuild(docId uint) error {
 	return nil
 }
 
-func (service *DocService) GetDocusaurus(urlPath string) (string, string, error) {
+func (service *DocService) GetRsPress(urlPath string) (string, string, error) {
 	var doc models.Documentation
 	var err error
 
@@ -1317,16 +1317,16 @@ func (service *DocService) GetDocusaurus(urlPath string) (string, string, error)
 	docPath := filepath.Join("data", "rspress_data", fmt.Sprintf("doc_%d", doc.ID), "build")
 
 	if _, err := os.Stat(docPath); os.IsNotExist(err) {
-		return "", "", fmt.Errorf("docusaurus_build_not_found")
+		return "", "", fmt.Errorf("rspress_build_not_found")
 	}
 
 	files, err := os.ReadDir(docPath)
 	if err != nil {
-		return "", "", fmt.Errorf("error_reading_docusaurus_directory")
+		return "", "", fmt.Errorf("error_reading_rspress_directory")
 	}
 
 	if len(files) == 0 {
-		return "", "", fmt.Errorf("docusaurus_build_empty")
+		return "", "", fmt.Errorf("rspress_build_empty")
 	}
 
 	return docPath, doc.BaseURL, nil
