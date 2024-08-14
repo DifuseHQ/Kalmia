@@ -1,21 +1,68 @@
-import React, { createContext, useState } from 'react';
+import React, { createContext, useState, ReactNode } from 'react';
 
-export const ModalContext = createContext();
+interface ModalItem {
+  id: number;
+  name?: string;
+  title?: string;
+  version?: string;
+  username?: string;
+}
 
-export const ModalProvider = ({ children }) => {
-  const [createDocumentationModal, setCreateDocumentationModal] =
-    useState(false);
+interface ModalContextType {
+  createDocumentationModal: boolean;
+  createPageGroupModal: boolean;
+  createPageModal: boolean;
+  editModal: boolean;
+  deleteModal: boolean;
+  cloneDocumentModal: boolean;
+  currentModalItem: ModalItem | null;
+  pageSizeDropdown: boolean;
+  loadingModal: boolean;
+  loadingMessage: string;
+  setCurrentModalItem: React.Dispatch<React.SetStateAction<ModalItem | null>>;
+  setLoadingModal: React.Dispatch<React.SetStateAction<boolean>>;
+  setLoadingMessage: React.Dispatch<React.SetStateAction<string>>;
+  openModal: (modalName: string, item: ModalItem | null) => void;
+  closeModal: (modalName: string) => void;
+}
+
+const defaultContext: ModalContextType = {
+  createDocumentationModal: false,
+  createPageGroupModal: false,
+  createPageModal: false,
+  editModal: false,
+  deleteModal: false,
+  cloneDocumentModal: false,
+  currentModalItem: null,
+  pageSizeDropdown: false,
+  loadingModal: false,
+  loadingMessage: 'Loading..',
+  setCurrentModalItem: () => {},
+  setLoadingModal: () => {},
+  setLoadingMessage: () => {},
+  openModal: () => {},
+  closeModal: () => {},
+};
+
+export const ModalContext = createContext<ModalContextType>(defaultContext);
+
+interface ModalProviderProps {
+  children: ReactNode;
+}
+
+export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
+  const [createDocumentationModal, setCreateDocumentationModal] = useState(false);
   const [createPageGroupModal, setCreatePageGroupModal] = useState(false);
   const [createPageModal, setCreatePageModal] = useState(false);
   const [editModal, setEditModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
   const [cloneDocumentModal, setCloneDocumentModal] = useState(false);
-  const [currentModalItem, setCurrentModalItem] = useState(null);
+  const [currentModalItem, setCurrentModalItem] = useState<ModalItem | null>(null);
   const [pageSizeDropdown, setpageSizeDropdown] = useState(false);
   const [loadingModal, setLoadingModal] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('Loading..');
 
-  const openModal = (modalName, item = null) => {
+  const openModal = (modalName: string, item: ModalItem | null) => {
     setCurrentModalItem(item);
     switch (modalName) {
     case 'createDocumentation':
@@ -47,7 +94,7 @@ export const ModalProvider = ({ children }) => {
     }
   };
 
-  const closeModal = (modalName) => {
+  const closeModal = (modalName: string) => {
     setCurrentModalItem(null);
     switch (modalName) {
     case 'createDocumentation':

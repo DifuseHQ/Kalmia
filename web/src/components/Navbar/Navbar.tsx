@@ -1,4 +1,4 @@
-import React, {
+import {
   useCallback,
   useContext,
   useEffect,
@@ -10,18 +10,20 @@ import { Link, NavLink } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { AnimatePresence, motion } from 'framer-motion';
 
-import { AuthContext } from '../../context/AuthContext';
-import { ThemeContext } from '../../context/ThemeContext';
+import { AuthContext, AuthContextType } from '../../context/AuthContext';
+import { ThemeContext, ThemeContextType } from '../../context/ThemeContext';
 import { getLanguageName, languages } from '../../utils/Utils';
+import { DOMEvent } from '../../types/dom';
 
 export default function Navbar () {
   const { i18n } = useTranslation();
+  const authContext = useContext(AuthContext);
+  const themeContext = useContext(ThemeContext);
   const languageName = getLanguageName();
 
   const { t } = useTranslation();
-  const { userDetails, logout, isSidebarOpen, setIsSidebarOpen } =
-    useContext(AuthContext);
-  const { darkMode, toggleDarkMode } = useContext(ThemeContext);
+  const { userDetails, logout, isSidebarOpen, setIsSidebarOpen } = authContext as AuthContextType
+  const { darkMode, toggleDarkMode } = themeContext as ThemeContextType
 
   const [isOpen, setIsOpen] = useState(false);
   const [translateDropdown, setTranslateDropdown] = useState(false);
@@ -33,17 +35,13 @@ export default function Navbar () {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const handleClickOutside = useCallback(
-    (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-        setTranslateDropdown(false);
-      }
-    },
-    [setIsOpen, setTranslateDropdown]
-  );
-
-  const dropdownRef = useRef(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const handleClickOutside = useCallback((event: DOMEvent) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      setIsOpen(false);
+      setTranslateDropdown(false);
+    }
+  }, [setIsOpen, setTranslateDropdown]);
 
   useEffect(() => {
     if (isOpen || translateDropdown) {
@@ -57,7 +55,7 @@ export default function Navbar () {
     };
   }, [isOpen, translateDropdown, handleClickOutside]);
 
-  const changeLanguage = (lng) => {
+  const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng);
     setTranslateDropdown(false);
   };

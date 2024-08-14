@@ -1,10 +1,10 @@
-import React, { useContext } from 'react';
+import { useContext } from 'react';
 import { motion } from 'framer-motion';
-
 import { ModalContext } from '../../context/ModalContext';
 
-export default function Loading () {
+export default function Loading(): JSX.Element | null {
   const { loadingModal, loadingMessage } = useContext(ModalContext);
+
   if (!loadingModal) return null;
 
   return (

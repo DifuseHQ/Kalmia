@@ -34,7 +34,7 @@ import {
   handleError
 } from '../../utils/Common';
 import { toastMessage } from '../../utils/Toast';
-import { pageSize } from '../../utils/Utils';
+import { pageSizes } from '../../utils/Utils';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
 import BuildTrigger from '../BuildTrigger/BuildTrigger';
 import EditDocumentModal from '../CreateDocumentModal/EditDocumentModal';
@@ -154,11 +154,12 @@ export default function Documentation () {
 
         const clonedData = getAllVersions(data, Number(docId));
         setDocumentData(clonedData);
+
         if (versionId) {
-          const currentVersion = getVersion(clonedData, versionId);
+          const currentVersion = getVersion(clonedData, parseInt(versionId));
           setSelectedVersion(currentVersion);
         } else {
-          const latestVersion = await getClosestVersion(clonedData);
+          const latestVersion = getClosestVersion(clonedData);
           setSelectedVersion(latestVersion || '');
         }
       }
@@ -190,6 +191,7 @@ export default function Documentation () {
           pageGroupsResult.data || [],
           pagesResult.data || []
         );
+
         setGroupsAndPageData(combinedData);
       }
       setPageGroupLoading(false);
@@ -269,6 +271,7 @@ export default function Documentation () {
       refreshData();
     }
   };
+  
   const handlePageGroupUpdate = async (editTitle, version, id) => {
     const result = await updatePageGroup({
       id: Number(id),
@@ -855,7 +858,7 @@ export default function Documentation () {
                                 ref={dropdownRef}
                                 className="absolute w-28 bg-white border border-gray-300 rounded-md shadow-lg z-10 dark:bg-gray-700 dark:border-gray-600 bottom-full mb-1 max-h-36 overflow-y-auto"
                               >
-                                {pageSize().map((option) => (
+                                {pageSizes().map((option) => (
                                   <div
                                     key={option}
                                     onClick={() => handlePageSizeSelect(option)}

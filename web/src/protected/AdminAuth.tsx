@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 
-import { getUsers } from '../api/Requests';
+import { ApiResponse, getUsers } from '../api/Requests';
 import Loading from '../components/Loading/Loading';
 import { handleError } from '../utils/Common';
+import { UserPayload } from '../hooks/useUser';
+import { User } from '../types/auth';
 
 export default function AdminAuth () {
   const { t } = useTranslation();
@@ -16,27 +18,34 @@ export default function AdminAuth () {
 
   useEffect(() => {
     const fetchData = async () => {
-      let user;
+      let user: UserPayload;
 
       if (localStorage.getItem('accessToken')) {
-        const tokenData = JSON.parse(localStorage.getItem('accessToken'));
-        const accessToken = jwtDecode(tokenData.token);
-        user = accessToken;
+        const accessTokenString = localStorage.getItem('accessToken');
+        if (accessTokenString) {
+          const tokenData = JSON.parse(accessTokenString);
+          const accessToken = jwtDecode<UserPayload>(tokenData.token);
+          user = accessToken;
+        }
       }
 
-      const response = await getUsers();
+      const response: ApiResponse = await getUsers();
       if (handleError(response, navigate, t)) {
         setIsLoading(false);
         return;
       }
 
+      const users = response.data as User[];
+
       if (response?.status === 'success') {
-        const foundUser = response.data?.find(
-          (obj) => obj.id.toString() === user?.userId
+        const foundUser = users.find(
+          (obj: User) => obj.id === parseInt(user.userId)
         );
+
         if (foundUser && foundUser?.admin === true) {
           setIsAdmin(true);
         }
+        
         setIsLoading(false);
       }
     };

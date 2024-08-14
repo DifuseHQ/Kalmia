@@ -21,7 +21,7 @@ import { ThemeContext } from '../../context/ThemeContext';
 import {
   convertToEmoji,
   handleError,
-  landingPagevalidate,
+  landingPageValidate,
   useOutsideAlerter,
   validateCommunityFields,
   validateFormData
@@ -359,7 +359,7 @@ export default function CreateDocModal () {
     }
 
     if (isToggleOn) {
-      const validate = landingPagevalidate(landingPage);
+      const validate = landingPageValidate(landingPage);
       if (validate.status) {
         toastMessage(t(validate.message), 'error');
         return;

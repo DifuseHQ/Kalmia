@@ -6,7 +6,7 @@ interface ErrorMessages {
   [key: number]: [string, string];
 }
 
-interface ApiResponse<T = any> {
+export interface ApiResponse<T = any> {
   status: 'success' | 'error';
   code: number;
   data: T | null;
@@ -148,7 +148,7 @@ async function makeRequest<T = any> (
 
 export const createJWT = (data: AuthCredentials): Promise<ApiResponse> => makeRequest('/auth/jwt/create', 'post', data);
 
-export const refreshJWT = (token: string): Promise<ApiResponse> =>
+export const refreshJWT = (token: string | null): Promise<ApiResponse> =>
   makeRequest('/auth/jwt/refresh', 'post', { token });
 
 export const validateJWT = async (token: string): Promise<ApiResponse> => {
@@ -176,7 +176,7 @@ export const validateJWT = async (token: string): Promise<ApiResponse> => {
   }
 };
 
-export const signOut = (token: string): Promise<ApiResponse> =>
+export const signOut = (token: string | null): Promise<ApiResponse> =>
   makeRequest('/auth/jwt/revoke', 'post', { token });
 
 export const getDocumentations = () => makeRequest('/docs/documentations');
@@ -244,4 +244,11 @@ export const uploadPhoto = (data: FormData) =>
 export const deleteUser = (username: string) =>
   makeRequest('/auth/user/delete', 'post', { username });
 
-export const oAuthProviders = () => makeRequest('/oauth/providers');
+export const oAuthProviders = async (): Promise<string[]> => {
+  const response = await makeRequest<string[]>('/oauth/providers');
+  if (response.status === 'success') {
+    return response.data as string[];
+  } else {
+    throw new Error(`Error fetching OAuth providers: ${response.message}`);
+  }
+};

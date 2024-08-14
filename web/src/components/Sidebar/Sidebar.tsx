@@ -1,4 +1,4 @@
-import React, {
+import {
   useCallback,
   useContext,
   useEffect,
@@ -16,9 +16,11 @@ import { Icon } from '@iconify/react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 import { getDocumentations } from '../../api/Requests';
-import { AuthContext } from '../../context/AuthContext';
+import { AuthContext, AuthContextType } from '../../context/AuthContext';
 import { ModalContext } from '../../context/ModalContext';
 import { handleError } from '../../utils/Common';
+import { DOMEvent } from '../../types/dom';
+import { Documentation } from '../../types/doc';
 
 const PoweredByDifuse = () => {
   return (
@@ -55,22 +57,21 @@ const PoweredByDifuse = () => {
 
 export default function Sidebar () {
   const { t } = useTranslation();
-
-  const [documentation, setDocumentation] = useState([]);
-  const [openDropdowns, setOpenDropdowns] = useState([]);
+  const authContext = useContext(AuthContext);
+  const [documentation, setDocumentation] = useState<Documentation[]>([]);
+  const [openDropdowns, setOpenDropdowns] = useState<boolean[]>([]);
   const [searchParam] = useSearchParams();
   const docId = searchParam.get('id');
-  const { refresh, userDetails, isSidebarOpen, setIsSidebarOpen } =
-    useContext(AuthContext);
-  const { openModal } = useContext(ModalContext);
   const navigate = useNavigate();
+  const { refresh, userDetails, isSidebarOpen, setIsSidebarOpen } = authContext as AuthContextType;
+  const { openModal } = useContext(ModalContext);
+  const location = useLocation();
+  const path = location.pathname + location.search;
 
   useEffect(() => {
     const fetchData = async () => {
       const documentations = await getDocumentations();
-
       if (handleError(documentations, navigate, t)) return;
-
       if (documentations.status === 'success') {
         const data = documentations.data;
         setDocumentation(data);
@@ -78,32 +79,25 @@ export default function Sidebar () {
     };
 
     fetchData();
-  }, [refresh, navigate, t]); // biome-ignore
+  }, [refresh, navigate, t]);
 
-  const toggleDropdown = (index) => {
+  const toggleDropdown = (index: number) => {
     const updatedDropdowns = [...openDropdowns];
     updatedDropdowns[index] = !updatedDropdowns[index];
     setOpenDropdowns(updatedDropdowns);
   };
-
-  const location = useLocation();
-  const path = location.pathname + location.search;
 
   const smallestId = documentation.reduce(
     (min, doc) => (doc.id < min ? doc.id : min),
     documentation[0]?.id
   );
 
-  const handleClickOutside = useCallback(
-    (event) => {
-      if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
-        setIsSidebarOpen(false);
-      }
-    },
-    [setIsSidebarOpen]
-  );
-
-  const sidebarRef = useRef(null);
+  const sidebarRef = useRef<HTMLDivElement | null>(null);
+  const handleClickOutside = useCallback((event: DOMEvent) => {
+    if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
+      setIsSidebarOpen(false);
+    }
+  }, [setIsSidebarOpen]);
 
   useEffect(() => {
     if (isSidebarOpen) {
@@ -149,10 +143,10 @@ export default function Sidebar () {
             <li>
               <motion.button
                 onClick={() => {
-                  openModal('createDocumentation');
+                  openModal('createDocumentation', null);
                   navigate('/dashboard/create-documentation');
                 }}
-                whilehover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.05 }}
                 className="flex w-full py-2 px-5 my-5 justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-md  text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
               >
                 <span className=" px-1 pt-1 text-left items-center dark:text-white text-md text-sm">
@@ -162,20 +156,20 @@ export default function Sidebar () {
               </motion.button>
             </li>
             {!documentation || documentation.length <= 0 ? (
-              <li whilehover={{ scale: 1.08, originx: 0 }} key="no-documentation">
+              <motion.li whileHover={{ scale: 1.08, originX: 0 }} key="no-documentation">
                 <p className="flex cursor-default items-center p-5 w-full text-base font-normal text-gray-600 rounded-lg transition duration-75 group ">
                   <span className="flex-1 ml-3 text-left whitespace-nowrap">
                     {t('no_documentations')}
                   </span>
                 </p>
-              </li>
+              </motion.li>
             ) : (
               documentation
                 .filter((obj) => obj.clonedFrom === null)
                 .map((val, index) => (
                   <motion.li
                     key={`sidebar-${val.id}-${index}`}
-                    whilehover={{ scale: 1.08, originx: 0 }}
+                    whileHover={{ scale: 1.08, originX: 0 }}
                   >
                     <NavLink
                       to={`/dashboard/documentation?id=${val.id}`}

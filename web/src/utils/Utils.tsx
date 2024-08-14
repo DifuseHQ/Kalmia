@@ -1,29 +1,28 @@
 import { Icon } from '@iconify/react/dist/iconify.js';
-
 import i18n from './i18n';
 
-export function nullOrUndefined (a) {
+export function nullOrUndefined(a: any): boolean {
   return a === null || a === undefined;
 }
 
-export function pageSize () {
+export function pageSizes(): number[] {
   const pages = [10, 50, 100, 1000];
   return pages;
 }
 
-export const languages = [
+export const languages: {code: string, lang: string}[] = [
   { code: 'en', lang: 'English' },
   { code: 'ml', lang: 'Malayalam' },
   { code: 'hi', lang: 'Hindi' }
 ];
 
-export const getLanguageName = () => {
+export const getLanguageName = (): string => {
   const code = i18n.language || 'en';
   const language = languages.find((lang) => lang.code === code);
   return language ? language.lang : 'Unknown Language';
 };
 
-export function customCSSInitial () {
+export function customCSSInitial (): string {
   const customCSS = `:root {
   /* Modify theme color */
   --rp-c-brand: #f00;
@@ -45,7 +44,7 @@ export function customCSSInitial () {
   return customCSS;
 }
 
-export const SocialLinkIcon = [
+export const SocialLinkIcon: {icon: JSX.Element; value: string; iconName: string}[] = [
   {
     icon: (
       <Icon

@@ -1,25 +1,27 @@
-import React, { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@iconify/react/dist/iconify.js';
 
 import { baseURL } from '../api/AxiosInstance';
 import { oAuthProviders } from '../api/Requests';
 import Navbar from '../components/Navbar/Navbar';
-import { AuthContext } from '../context/AuthContext';
+import { AuthContext, AuthContextType } from '../context/AuthContext';
 
 export default function LoginPage () {
+  const authContext = useContext(AuthContext);
   const { t } = useTranslation();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [availableProviders, setAvailableProviders] = useState([]);
-  const { login, loginOAuth } = useContext(AuthContext);
+  const [availableProviders, setAvailableProviders] = useState<string[]>([]);
+
+  const { login, loginOAuth } = authContext as AuthContextType;
 
   useEffect(() => {
     const fetchOAuthProviders = async () => {
       try {
         const response = await oAuthProviders();
-        setAvailableProviders(Array.isArray(response.data) ? response.data : []);
+        setAvailableProviders(response || []);
       } catch (error) {
         console.error('Failed to fetch OAuth providers:', error);
         setAvailableProviders([]);
@@ -51,14 +53,14 @@ export default function LoginPage () {
     }
   };
 
-  const handleKeyDown = (event) => {
+  const handleKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (event) => {
     if (event.key === 'Enter' && !isLoading) {
       event.preventDefault();
       handleSubmit();
     }
   };
 
-  const handleLogin = (provider) => {
+  const handleLogin = (provider: string) => {
     return () => {
       switch (provider) {
       case 'github':
@@ -76,7 +78,7 @@ export default function LoginPage () {
     };
   };
 
-  const getOAuthProviderIcon = (provider) => {
+  const getOAuthProviderIcon = (provider: string) => {
     switch (provider) {
     case 'github':
       return 'mdi:github';
