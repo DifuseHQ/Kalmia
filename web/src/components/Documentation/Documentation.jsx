@@ -3,7 +3,9 @@ import React, {
   useContext,
   useEffect,
   useRef,
-  useState
+  useState,
+  ChangeEvent,
+  RefObject
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
@@ -24,8 +26,8 @@ import {
   getPages,
   updatePageGroup
 } from '../../api/Requests';
-import { AuthContext } from '../../context/AuthContext';
-import { ModalContext } from '../../context/ModalContext';
+import { AuthContext, AuthContextType } from '../../context/AuthContext';
+import { ModalContext, ModalItem } from '../../context/ModalContext';
 import {
   combinePages,
   getClosestVersion,
@@ -42,17 +44,20 @@ import CreatePageGroup from '../CreatePageGroup/CreatePageGroup';
 import CreatePage from '../CreatePageModal/CreatePageModal';
 import DeleteModal from '../DeleteModal/DeleteModal';
 import Table from '../Table/Table';
+import { Documentation as DocumentationData, PageGroup, Page, DragResult } from '../../types/doc';
+import { ApiResponse, OrderItem } from '../../api/Requests';
+import { DOMEvent } from '../../types/dom';
 
-// interface DocumentData {
-//   id:number,
-//   name:string,
-//   description:number,
-//   version:string
-// }
+interface VersionOption {
+  id: number;
+  version: string;
+  createdAt: string;
+}
 
 export default function Documentation () {
   const navigate = useNavigate();
-  const { refresh, refreshData, user } = useContext(AuthContext);
+  const authContext = useContext(AuthContext);
+  const { refresh, refreshData, user } = authContext as AuthContextType;
   const { t } = useTranslation();
 
   const {
@@ -70,32 +75,40 @@ export default function Documentation () {
   const [searchParam] = useSearchParams();
   const docId = searchParam.get('id');
   const versionId = searchParam.get('versionId');
-  const [loading, setLoading] = useState(true);
-  const [pageGroupLoading, setPageGroupLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectPageSize, setSelectPageSize] = useState(50);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState<boolean>(true);
+  const [pageGroupLoading, setPageGroupLoading] = useState<boolean>(true);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [selectPageSize, setSelectPageSize] = useState<number>(50);
+  const [searchTerm, setSearchTerm] = useState<string>('');
 
   // Documentation CRUD
-  const [documentData, setDocumentData] = useState([]);
+  const [documentData, setDocumentData] = useState<DocumentationData[]>([]);
 
   // pageGroup CRUD
-  const [groupsAndPageData, setGroupsAndPageData] = useState([]);
+  const [groupsAndPageData, setGroupsAndPageData] = useState<(PageGroup | Page)[]>([]);
 
   // version
-  const [showVersionDropdown, setShowVersionDropdown] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedVersion, setSelectedVersion] = useState('');
+  const [showVersionDropdown, setShowVersionDropdown] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedVersion, setSelectedVersion] = useState<VersionOption | null>(null);
 
   const toggleDropdown = () => {
     setShowVersionDropdown(!showVersionDropdown);
   };
 
-  const handleSearchVersionChange = (e) => {
+  const handleSearchVersionChange = (e:ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   };
-  const handleVersionSelect = (version) => {
-    setSelectedVersion(version);
+
+  const handleVersionSelect = (version:VersionOption) => {
+
+    let selectVersion = {
+      id:version.id,
+      createdAt:version.createdAt,
+      version:version.version
+    }
+
+    setSelectedVersion(selectVersion);
     setShowVersionDropdown(false);
     navigate(
       `/dashboard/documentation?id=${docId}&versionId=${version.id}&version=${version.version}`
@@ -105,21 +118,22 @@ export default function Documentation () {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const versionId = searchParam.get('versionId');
+      const versionIdString = searchParam.get('versionId');
+      const versionId: number | null = versionIdString ? parseInt(versionIdString, 10) : null;
       const documentationsResult = await getDocumentations();
-
+        
       if (handleError(documentationsResult, navigate, t)) {
         setLoading(false);
         return;
       }
 
       if (documentationsResult.status === 'success') {
-        const data = documentationsResult.data;
+        const data:DocumentationData[] = documentationsResult.data;
 
-        const getAllVersions = (data, startId) => {
-          const versions = [];
+        const getAllVersions = (data:DocumentationData[], startId:number) => {
+          const versions:DocumentationData[] = [];
 
-          const addVersion = (doc) => {
+          const addVersion = (doc:DocumentationData) => {
             versions.push(doc);
             const children = data.filter((item) => item.clonedFrom === doc.id);
             children.forEach(addVersion);
@@ -152,15 +166,16 @@ export default function Documentation () {
           });
         };
 
-        const clonedData = getAllVersions(data, Number(docId));
+        const clonedData:DocumentationData[] = getAllVersions(data, Number(docId));
+        
         setDocumentData(clonedData);
 
         if (versionId) {
-          const currentVersion = getVersion(clonedData, parseInt(versionId));
+          const currentVersion = getVersion(clonedData, versionId);
           setSelectedVersion(currentVersion);
         } else {
-          const latestVersion = getClosestVersion(clonedData);
-          setSelectedVersion(latestVersion || '');
+          const latestVersion:VersionOption | null = getClosestVersion(clonedData);
+          setSelectedVersion(latestVersion);
         }
       }
       setLoading(false);
@@ -187,7 +202,7 @@ export default function Documentation () {
         pageGroupsResult.status === 'success' &&
         pagesResult.status === 'success'
       ) {
-        const combinedData = combinePages(
+        const combinedData: (PageGroup | Page)[] = combinePages(
           pageGroupsResult.data || [],
           pagesResult.data || []
         );
@@ -203,20 +218,26 @@ export default function Documentation () {
     }
   }, [docId, user, navigate, refresh, versionId]); //eslint-disable-line
 
-  const handleSearchChange = (event) => {
-    setSearchTerm(event.target.value);
+  const handleSearchChange = (e:ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
     setCurrentPage(1);
   };
+  
+  const filteredItems:(PageGroup | Page)[] = groupsAndPageData.filter((obj) => {
+      if (selectedVersion) {
+        const isPage = (obj as Page).title !== undefined;
+    const isPageGroup = (obj as PageGroup).name !== undefined;
+        return (
+      obj.documentationId === selectedVersion.id && (
+      (isPageGroup && (obj as PageGroup).name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+       (isPage && (obj as Page).title?.toLowerCase().includes(searchTerm.toLowerCase())))
+      )}
+      return false;
+});
 
-  const filteredItems = groupsAndPageData.filter(
-    (obj) =>
-      obj.documentationId === Number(selectedVersion.id) &&
-      (obj.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        obj.title?.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
-  const handleDelete = async () => {
-    const result = await deleteDocumentation(parseInt(selectedVersion.id));
+  const handleDelete = async ():Promise<void> => {
+    if(selectedVersion){
+    const result = await deleteDocumentation(selectedVersion.id);
 
     if (handleError(result, navigate, t)) {
       return;
@@ -228,78 +249,78 @@ export default function Documentation () {
       refreshData();
       navigate('/');
     }
+  }
   };
 
-  const handleUpdate = async (editTitle, version, id) => {
-    let result;
+  const handleUpdate = async (editTitle:string, version:string, id:number) => {
+    let result: ApiResponse | undefined;
     if (cloneDocumentModal) {
       result = await createDocumentationVersion({
-        originalDocId: Number(selectedVersion.id),
+        originalDocId: Number(selectedVersion?.id),
         version
       });
     }
 
-    if (handleError(result, navigate, t)) return;
+    if (result && handleError(result, navigate, t)) return;
 
-    if (result.status === 'success') {
+    if (result?.status === 'success') {
       if (cloneDocumentModal) {
         closeModal('cloneDocument');
       }
       refreshData();
-      toastMessage(t(result.data.message), 'success');
+      toastMessage(t(result.data?.message), 'success');
     }
   };
 
-  const handleDeletePageGroup = async (id, path) => {
+  const handleDeletePageGroup = async (id:number, path: ModalItem) => {
     const type = 'slug' in path ? 'page' : 'pageGroup';
-
-    let result;
-
+    let result: ApiResponse | undefined;
+    
     if (type === 'pageGroup') {
-      result = await deletePageGroup(parseInt(id));
+      result = await deletePageGroup(id);
     } else if (type === 'page') {
-      result = await deletePage(parseInt(id));
+      result = await deletePage(id);
     }
 
-    if (handleError(result, navigate, t)) {
+    if (result && handleError(result, navigate, t)) {
       return;
     }
 
-    if (result.status === 'success') {
+    if (result?.status === 'success') {
       closeModal('delete');
-      toastMessage(t(result.data.message), 'success');
+      toastMessage(t(result.data?.message), 'success');
       refreshData();
     }
   };
 
-  const handlePageGroupUpdate = async (editTitle, version, id) => {
+  const handlePageGroupUpdate = async (editTitle:string, version:string, id:number) => {
     const result = await updatePageGroup({
-      id: Number(id),
+      id: id,
       name: editTitle,
-      documentationId: Number(selectedVersion.id)
+      documentationId: Number(selectedVersion?.id)
     });
 
     if (handleError(result, navigate, t)) {
       return;
     }
 
-    if (result.status === 'success') {
+    if (result?.status === 'success') {
       closeModal('edit');
       refreshData();
-      toastMessage(t(result.data.message), 'success');
+      toastMessage(t(result.data?.message), 'success');
     }
   };
 
-  const handleCreatePageGroup = async (title) => {
+  const handleCreatePageGroup = async (title:string) => {
     if (title === '') {
       toastMessage(t('title_is_required'), 'warning');
       return;
     }
-    const lastOrder = getLastPageOrder(groupsAndPageData);
+    const lastOrder:number = getLastPageOrder(groupsAndPageData);
     const result = await createPageGroup({
       name: title,
-      documentationId: Number(selectedVersion.id),
-      order: Number.parseInt(lastOrder)
+      documentationId: Number(selectedVersion?.id),
+      order: lastOrder
     });
 
     if (handleError(result, navigate, t)) {
@@ -313,7 +334,7 @@ export default function Documentation () {
     }
   };
 
-  const handleCreatePage = async (title, slug) => {
+  const handleCreatePage = async (title:string, slug:string) => {
     if (title === '') {
       toastMessage(t('title_is_required'), 'warning');
       return;
@@ -322,15 +343,15 @@ export default function Documentation () {
       toastMessage(t('slug_is_required'), 'warning');
       return;
     }
-    const lastOrder = getLastPageOrder(groupsAndPageData);
-    const docIdOrVersionId = selectedVersion.id ? selectedVersion.id : docId;
+    const lastOrder:number = getLastPageOrder(groupsAndPageData);
+    const docIdOrVersionId = selectedVersion?.id ? selectedVersion.id : docId;
 
     const result = await createPageAPI({
       title,
       slug,
       content: JSON.stringify([]),
-      documentationId: Number.parseInt(docIdOrVersionId),
-      order: Number.parseInt(lastOrder)
+      documentationId: Number(docIdOrVersionId),
+      order: Number(lastOrder)
     });
 
     if (handleError(result, navigate, t)) {
@@ -344,60 +365,66 @@ export default function Documentation () {
     }
   };
 
-  const handleDragEnd = async (result) => {
+  const handleDragEnd = async (result:DragResult) => {
     if (!result.destination) {
       return;
     }
 
     const newItems = Array.from(
       groupsAndPageData.filter(
-        (obj) => obj.documentationId === Number(selectedVersion.id)
+        (obj) => obj.documentationId === Number(selectedVersion?.id)
       )
     );
 
-    const newIndex = result.destination.index;
-    const oldDataAtNewPosition = newItems[newIndex];
-    if (oldDataAtNewPosition.isIntroPage) {
+    const newIndex:number = result.destination.index;
+    const oldDataAtNewPosition = newItems[newIndex] as PageGroup | Page;;
+
+    if ('isIntroPage' in oldDataAtNewPosition && oldDataAtNewPosition.isIntroPage) {
       toastMessage(t('intro_page_cannot_be_reordered'), 'warning');
       return;
     }
 
     const [reorderedItem] = newItems.splice(result.source.index, 1);
-    const dragItem = reorderedItem;
+    const dragItem = reorderedItem as PageGroup | Page;;
     newItems.splice(result.destination.index, 0, reorderedItem);
 
     setGroupsAndPageData(newItems);
 
-    const pageGroups = [];
-    const pages = [];
+    const pageGroups: OrderItem[] = [];
+    const pages:OrderItem[] = [];
+
+    function isPageGroup(item: PageGroup | Page): item is PageGroup {
+      return 'name' in item;
+    }
 
     newItems.forEach((item, index) => {
-      if (item.name) {
+      if (isPageGroup(item)) {
         pageGroups.push({
           id: item.id,
           order: index,
-          parentId: item.parentId,
+          parentId: item?.parentId,
           isPageGroup: true
         });
       } else {
+        // Item is a Page
         pages.push({
           id: item.id,
           order: index,
-          pageGroupId: item.pageGroupId,
+          pageGroupId: item?.pageGroupId,
           isPageGroup: false
         });
       }
     });
 
-    const allItems = pageGroups.concat(pages);
-
+    const allItems = [...pageGroups, ...pages]
+  
     try {
       const result = await commonReorderBulk({ order: allItems });
 
       if (handleError(result, navigate, t)) return;
-
+      const type = 'slug' in dragItem ? 'page' : 'pageGroup';
       toastMessage(
-        t(`${dragItem.slug ? 'page_reordered' : 'page_group_reordered'}`),
+        t(`${type === 'page' ? 'page_reordered' : 'page_group_reordered'}`),
         'success'
       );
     } catch (err) {
@@ -410,6 +437,7 @@ export default function Documentation () {
   const filteredVersions = documentData.filter((version) =>
     version.version.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
   const itemsPerPage = selectPageSize;
   const startIdx = (currentPage - 1) * itemsPerPage;
   const endIdx = startIdx + itemsPerPage;
@@ -417,7 +445,7 @@ export default function Documentation () {
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
   const handlePageChange = useCallback(
-    (pageNumber) => {
+    (pageNumber:number) => {
       if (pageNumber >= 1 && pageNumber <= totalPages) {
         setCurrentPage(pageNumber);
       }
@@ -425,14 +453,16 @@ export default function Documentation () {
     [totalPages]
   );
 
-  const handlePageSizeSelect = (value) => {
+  const handlePageSizeSelect = (value:number) => {
     setSelectPageSize(value);
     closeModal('pageSizeDropdown');
   };
 
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
   const handleClickOutside = useCallback(
-    (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+    (event:DOMEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowVersionDropdown(false);
         closeModal('pageSizeDropdown');
       }
@@ -440,13 +470,23 @@ export default function Documentation () {
     [closeModal]
   );
 
-  const dropdownRef = useRef(null);
+  
   useEffect(() => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [handleClickOutside]);
+
+  function isPageGroup(obj: PageGroup | Page): obj is PageGroup {
+    return (obj as PageGroup).name !== undefined;
+  }
+
+  // Type guard to check if an object is a Page
+function isPage(obj: PageGroup | Page): obj is Page {
+  return (obj as Page).isIntroPage !== undefined;
+}
+
   return (
     <AnimatePresence className="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5">
       <Breadcrumb key="breadcrumb-container" />
@@ -468,7 +508,7 @@ export default function Documentation () {
                 key="documentation-actions-buttons"
               >
                 <motion.button
-                  whilehover={{ scale: 1.3 }}
+                  whileHover={{ scale: 1.3 }}
                   onClick={() => {
                     openModal('cloneDocument', null);
                   }}
@@ -482,12 +522,12 @@ export default function Documentation () {
                 </motion.button>
 
                 <motion.button
-                  whilehover={{ scale: 1.3 }}
+                  whileHover={{ scale: 1.3 }}
                   title={t('edit_documentation')}
                   key="edit-document-button"
                 >
                   <Link
-                    to={`/dashboard/edit-documentation?id=${selectedVersion.id}&mode=edit`}
+                    to={`/dashboard/edit-documentation?id=${selectedVersion?.id}&mode=edit`}
                   >
                     <Icon
                       icon="material-symbols:edit-outline"
@@ -497,9 +537,9 @@ export default function Documentation () {
                 </motion.button>
 
                 <motion.button
-                  whilehover={{ scale: 1.3 }}
+                  whileHover={{ scale: 1.3 }}
                   onClick={() => {
-                    openModal('delete');
+                    openModal('delete',null);
                   }}
                   key="delete-document-button"
                   title={t('delete_documentation')}
@@ -570,7 +610,7 @@ export default function Documentation () {
                         className="flex items-center border gap-2 border-gray-400 hover:bg-gray-200 px-3 py-1.5 rounded-lg cursor-pointer dark:bg-gray-600 dark:border-gray-700 dark:hover:bg-gray-800 dark:text-white"
                         onClick={toggleDropdown}
                       >
-                        {selectedVersion.version}
+                        {selectedVersion?.version}
                         <Icon icon="mingcute:down-fill" className="h-6 w-6" />
                       </div>
 
@@ -624,7 +664,7 @@ export default function Documentation () {
                                     className="relative w-full"
                                   >
                                     <div
-                                      className={`flex items-center ps-2 rounded hover:bg-gray-200 cursor-pointer ${selectedVersion.version === option.version ? 'bg-gray-400 hover:bg-gray-400 dark:bg-gray-900 cursor-text dark:hover:bg-gray-900' : 'dark:hover:bg-gray-800'}`}
+                                      className={`flex items-center ps-2 rounded hover:bg-gray-200 cursor-pointer ${selectedVersion?.version === option.version ? 'bg-gray-400 hover:bg-gray-400 dark:bg-gray-900 cursor-text dark:hover:bg-gray-900' : 'dark:hover:bg-gray-800'}`}
                                       onClick={() =>
                                         handleVersionSelect(option)
                                       }
@@ -665,7 +705,7 @@ export default function Documentation () {
                   <div className="flex items-center space-x-2">
                     <motion.button
                       whileHover={{ scale: 1.1 }}
-                      onClick={() => openModal('createPageGroup')}
+                      onClick={() => openModal('createPageGroup', null)}
                       type="button"
                       className="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
                       key="create-page-group-button"
@@ -681,7 +721,7 @@ export default function Documentation () {
 
                     <motion.button
                       whileHover={{ scale: 1.1 }}
-                      onClick={() => openModal('createPage')}
+                      onClick={() => openModal('createPage', null)}
                       type="button"
                       className="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
                       key="create-page-button"
@@ -755,7 +795,7 @@ export default function Documentation () {
                                     key="no-pages-found-message"
                                   >
                                     <td
-                                      colSpan="5"
+                                      colSpan={5}
                                       className="w-12/12 text-center py-12"
                                     >
                                       No Pages Found
@@ -767,28 +807,27 @@ export default function Documentation () {
                                     .map((obj, index) => (
                                       <Draggable
                                         key={
-                                          obj.name
+                                          isPageGroup(obj)
                                             ? `pageGroup-${obj.id}-order-${index}`
                                             : `page-${obj.id}-order-${index}`
                                         }
                                         draggableId={
-                                          obj.name
+                                          isPageGroup(obj)
                                             ? `pageGroup-${obj.id}`
                                             : `page-${obj.id}`
                                         }
                                         index={index}
-                                        isDragDisabled={obj.isIntroPage}
+                                        isDragDisabled={isPage(obj) && obj.isIntroPage}
                                       >
                                         {(provided, snapshot) => (
                                           <Table
                                             provided={provided}
                                             snapshot={snapshot}
                                             obj={obj}
-                                            index={index}
                                             dir="true"
-                                            docId={selectedVersion.id}
+                                            docId={selectedVersion?.id}
                                             pageGroupId={obj.id}
-                                            version={selectedVersion.version}
+                                            version={selectedVersion?.version}
                                           />
                                         )}
                                       </Draggable>
@@ -801,7 +840,7 @@ export default function Documentation () {
                                   exit={{ opacity: 0 }}
                                   key="documentation-data-loading-message"
                                 >
-                                  <td colSpan="5" className="text-center py-12">
+                                  <td colSpan={5} className="text-center py-12">
                                     Loading...
                                   </td>
                                 </motion.tr>
@@ -844,7 +883,7 @@ export default function Documentation () {
                           </span>
                           <div className="relative inline-block">
                             <button
-                              onClick={() => openModal('pageSizeDropdown')}
+                              onClick={() => openModal('pageSizeDropdown', null)}
                               className="flex items-center justify-between sm:w-16 py-1 px-1 bg-white border dark:text-white border-gray-300 rounded-md shadow-sm hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-600 dark:hover:bg-gray-700 text-left"
                             >
                               <span>{selectPageSize}</span>
@@ -910,8 +949,8 @@ export default function Documentation () {
                 {/* Edit Component */}
                 {editModal && (
                   <EditDocumentModal
-                    title={currentModalItem.name}
-                    id={currentModalItem.id}
+                    title={currentModalItem?.name}
+                    id={currentModalItem?.id}
                     updateData={handlePageGroupUpdate}
                   />
                 )}
@@ -930,7 +969,7 @@ export default function Documentation () {
                       currentModalItem
                         ? () =>
                           handleDeletePageGroup(
-                            currentModalItem.id,
+                            currentModalItem?.id,
                             currentModalItem
                           )
                         : handleDelete
@@ -940,7 +979,7 @@ export default function Documentation () {
                         ? currentModalItem.id
                         : documentData[0]?.id
                     }
-                    message={`${currentModalItem ? `"${currentModalItem.name || currentModalItem.title}"` : `"${documentData[0]?.name}" version ${selectedVersion.version}`}`}
+                    message={`${currentModalItem ? `"${currentModalItem.name || currentModalItem.title}"` : `"${documentData[0]?.name}" version ${selectedVersion?.version}`}`}
                   />
                 )}
               </motion.div>

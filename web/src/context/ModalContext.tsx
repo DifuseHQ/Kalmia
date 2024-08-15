@@ -1,11 +1,12 @@
 import React, { createContext, ReactNode, useState } from 'react';
 
-interface ModalItem {
+export interface ModalItem {
   id: number;
   name?: string;
   title?: string;
   version?: string;
   username?: string;
+  slug?:string;
 }
 
 interface ModalContextType {

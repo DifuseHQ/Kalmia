@@ -25,6 +25,7 @@ export interface Page {
   lastEditorId: number;
   isIntroPage?: boolean;
   content?: string;
+  isPageGroup? : boolean;
 }
 
 export interface PageGroup {
@@ -39,6 +40,36 @@ export interface PageGroup {
   pages: Page[];
   parentId: number | null;
   updatedAt: string;
+  isPageGroup? : boolean;
+}
+
+export interface Features {
+  emoji:string,
+  title:string,
+  text:string
+}
+
+export interface LanderDetails {
+  ctaButtonText: {
+    ctaButtonLinkLabel: string;
+    ctaButtonLink: string;
+  };
+  secondCtaButtonText: {
+    ctaButtonLinkLabel: string;
+    ctaButtonLink: string;
+  };
+  ctaImageLink: string;
+  features: Features;
+}
+
+export interface FooterLabelLinks {
+  icon:string,
+  link:string
+}
+
+export interface MoreLabelLinks {
+  label:string,
+  link:string
 }
 
 export interface Documentation {
@@ -48,7 +79,7 @@ export interface Documentation {
   url: string;
   organizationName: string;
   projectName: string;
-  landerDetails: string;
+  landerDetails: LanderDetails;
   baseURL: string;
   clonedFrom: number | null;
   description: string;
@@ -57,8 +88,8 @@ export interface Documentation {
   navImage: string;
   navImageDark: string;
   customCSS: string;
-  footerLabelLinks: string;
-  moreLabelLinks: string;
+  footerLabelLinks: FooterLabelLinks;
+  moreLabelLinks: MoreLabelLinks;
   authorId: number;
   author: Author;
   createdAt: string;
@@ -67,4 +98,20 @@ export interface Documentation {
   lastEditorId: number;
   pageGroups: PageGroup[];
   pages: Page[];
+}
+
+export interface DragResult {
+  draggableId: string;
+  type: string;
+  source: {
+    index: number;
+    droppableId: string;
+  };
+  destination: {
+    droppableId: string;
+    index: number;
+  } | null;
+  reason: string;
+  mode: string;
+  combine: null;
 }

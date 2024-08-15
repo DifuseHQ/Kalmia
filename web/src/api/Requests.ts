@@ -46,7 +46,7 @@ interface CreateVersionPayload {
 interface PageGroupPayload {
   name: string;
   documentationId: number;
-  parentId: number;
+  parentId?: number;
   id?: number;
   order?: number;
 }
@@ -55,14 +55,16 @@ interface PagePayload {
   title: string;
   slug: string;
   content: string;
-  id: number;
+  id?: number;
+  documentationId?: number;
+  order?: number;
 }
 
-interface OrderItem {
+export interface OrderItem {
   id: number;
   order: number;
   documentationId?: number;
-  parentId?: number;
+  parentId?: number | null;
   pageGroupId?: number;
   isPageGroup?: boolean;
 }

@@ -5,6 +5,19 @@ import { motion } from 'framer-motion';
 
 import { ModalContext } from '../../context/ModalContext';
 import { getFormattedDate } from '../../utils/Common';
+import { Editor, Page, PageGroup } from '../../types/doc';
+import { DraggableProvided, DraggableStateSnapshot } from 'react-beautiful-dnd';
+
+// Define props interface for Table component
+interface TableProps {
+  provided: DraggableProvided;
+  snapshot: DraggableStateSnapshot;
+  docId: string | undefined;
+  pageGroupId: number;
+  obj: PageGroup | Page;
+  version: string | undefined;
+  dir: string;
+}
 
 export default function Table ({
   provided,
@@ -12,11 +25,17 @@ export default function Table ({
   docId,
   pageGroupId,
   obj,
-  index,
   version,
   dir
-}) {
+}:TableProps) {
   const { openModal } = useContext(ModalContext);
+  function isPage(obj: PageGroup | Page): obj is Page {
+    return (obj as Page).isIntroPage === undefined;
+  }
+
+  function isPageGroup(obj: PageGroup | Page): obj is PageGroup {
+    return 'name' in obj;
+  }
   return (
     <motion.tr
       initial={{ opacity: 0 }}
@@ -31,9 +50,9 @@ export default function Table ({
       } border dark:border-gray-700 h-16 `}
     >
       <td
-        className={`w-1/12 items-center ${obj.isIntroPage ? 'cursor-not-allowed' : 'cursor-pointer'} px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white`}
+        className={`w-1/12 items-center ${!isPage(obj) ? 'cursor-not-allowed' : 'cursor-pointer'} px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white`}
       >
-        {!obj.isIntroPage && (
+        {isPage(obj) && (
           <Icon
             icon="nimbus:drag-dots"
             className="w-6 h-6 text-gray-600 dark:text-white"
@@ -45,12 +64,12 @@ export default function Table ({
         <Link
           className="flex items-center gap-1"
           to={
-            obj.name
+            isPageGroup(obj)
               ? `/dashboard/documentation/page-group?id=${docId}&pageGroupId=${obj.id}&versionId=${docId}&version=${version}`
               : `/dashboard/documentation/edit-page?id=${docId}&dir=${dir}&pageGroupId=${pageGroupId}&pageId=${obj.id}&versionId=${docId}&version=${version}`
           }
         >
-          {obj.name ? (
+          {isPageGroup(obj) ? (
             <Icon icon="clarity:folder-solid" className="w-6 h-6" />
           ) : (
             <Icon
@@ -59,7 +78,7 @@ export default function Table ({
             />
           )}
 
-          {obj.name || obj.title}
+          {isPageGroup(obj) ? obj.name : obj.title}
         </Link>
       </td>
 
@@ -83,9 +102,9 @@ export default function Table ({
               if (obj.editors && Array.isArray(obj.editors)) {
                 if (obj.lastEditorId != null) {
                   const editor = obj.editors?.find(
-                    (editor) =>
-                      Number.parseInt(editor.id) ===
-                      Number.parseInt(obj.lastEditorId)
+                    (editor:Editor) =>
+                      Number(editor.id) ===
+                      Number(obj.lastEditorId)
                   );
                   return editor ? editor.username : 'None';
                 } else {
@@ -122,7 +141,7 @@ export default function Table ({
         </div>
       </td>
 
-      {obj.name ? (
+      {isPageGroup(obj) ? (
         <td className="w-3/12 px-4 py-3 cursor-pointer relative whitespace-nowrap">
           <button
             id={`dropdown-button-${obj.id}`}
@@ -162,7 +181,7 @@ export default function Table ({
                 className="w-6 h-6 text-yellow-500 dark:text-yellow-400"
               />
             </Link>
-            {!obj.isIntroPage && (
+            {isPage(obj) && (
               <Icon
                 icon="material-symbols:delete"
                 className="w-6 h-6 text-red-600 dark:text-red-500"
