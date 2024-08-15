@@ -4,16 +4,16 @@ import { StrictMode } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 
-import CreateDocModal from "../src/components/CreateDocumentModal/CreateDocModal";
-import CreatePageModal from "../src/components/CreatePageModal/CreatePageModal";
-import CreateUser from "../src/components/CreateUser/CreateUser";
-import Documentation from "../src/components/Documentation/Documentation";
-import EditPage from "../src/components/EditPage/EditPage";
-import Error from "../src/components/Error/Error";
-import PageGroupTable from "../src/components/PageGroup/PageGroupTable";
-import UserList from "../src/components/UserList/UserList";
-import DashboardPage from "../src/pages/DashboardPage";
-import LoginPage from "../src/pages/LoginPage";
+import CreateDocModal from "./components/CreateDocumentModal/CreateDocModal";
+// import CreatePageModal from "./components/CreatePageModal/CreatePageModal";
+import CreateUser from "./components/CreateUser/CreateUser";
+import Documentation from "./components/Documentation/Documentation";
+import EditPage from "./components/EditPage/EditPage";
+import Error from "./components/Error/Error";
+import PageGroupTable from "./components/PageGroup/PageGroupTable";
+import UserList from "./components/UserList/UserList";
+import DashboardPage from "./pages/DashboardPage";
+import LoginPage from "./pages/LoginPage";
 import UserForm from "./components/UserForm/UserForm";
 import { AuthProvider } from "./context/AuthContext";
 import { ModalProvider } from "./context/ModalContext";
@@ -55,10 +55,10 @@ function App() {
                       path="documentation/page-group"
                       element={<PageGroupTable />}
                     />
-                    <Route
+                    {/* <Route
                       path="documentation/create-page"
                       element={<CreatePageModal />}
-                    />
+                    /> */}
                     <Route
                       path="documentation/edit-page"
                       element={<EditPage />}
