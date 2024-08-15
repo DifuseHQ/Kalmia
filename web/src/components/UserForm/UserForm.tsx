@@ -6,11 +6,11 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { getUser, updateUser, uploadPhoto } from "../../api/Requests";
 import { AuthContext, AuthContextType } from "../../context/AuthContext";
+import { UserDetails } from "../../hooks/useUserDetails";
+import { DOMEvent } from "../../types/dom";
 import { handleError } from "../../utils/Common";
 import { toastMessage } from "../../utils/Toast";
 import Breadcrumb from "../Breadcrumb/Breadcrumb";
-import { UserDetails } from "../../hooks/useUserDetails";
-import { DOMEvent } from "../../types/dom";
 
 export default function UserForm() {
   const { t } = useTranslation();
@@ -18,13 +18,13 @@ export default function UserForm() {
   const { user: currentUser, refreshData } = authContext as AuthContextType;
   const { id: userIdString } = useParams();
   const userId: number | null = userIdString
-        ? parseInt(userIdString, 10)
-        : null;
+    ? parseInt(userIdString, 10)
+    : null;
   const navigate = useNavigate();
   const [isEdit, setIsEdit] = useState<boolean>(false);
   const [userData, setUserData] = useState<UserDetails | null>(null);
   const [scale, setScale] = useState<number>(1);
-  const [imageFile, setImageFile] = useState<string | File | null >(null);
+  const [imageFile, setImageFile] = useState<string | File | null>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
 
   const [profileImage, setProfileImage] = useState<string>(
@@ -42,11 +42,14 @@ export default function UserForm() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const idToFetch = userId && currentUser?.admin ? Number(userId) : Number(currentUser?.userId);
-            const response = await getUser(idToFetch);
-        
+        const idToFetch =
+          userId && currentUser?.admin
+            ? Number(userId)
+            : Number(currentUser?.userId);
+        const response = await getUser(idToFetch);
+
         if (handleError(response, navigate, t)) return;
-    
+
         setUserData(response.data);
         setUsername(response.data.username);
         setEmail(response.data.email);
@@ -61,21 +64,21 @@ export default function UserForm() {
     fetchUserData();
   }, [userId, currentUser, navigate]);
   console.log(currentUser);
-  
+
   useEffect(() => {
     if (isEdit && inputRef.current) {
       inputRef.current.focus();
     }
   }, [isEdit]);
 
-  const handleUploadFile = (e:React.ChangeEvent<HTMLInputElement>) => {
+  const handleUploadFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const target = e.target as HTMLInputElement;
     const file = target.files?.[0];
     const allowedTypes = ["image/jpeg", "image/png"];
     if (file && allowedTypes.includes(file.type)) {
       const reader = new window.FileReader();
       reader.onloadend = () => {
-        if (reader.result && typeof reader.result === 'string') { 
+        if (reader.result && typeof reader.result === "string") {
           setImageFile(reader.result);
           setShowModal(true);
         }
@@ -135,7 +138,7 @@ export default function UserForm() {
     }
   };
 
-  const handleSubmit = async (e:DOMEvent) => {
+  const handleSubmit = async (e: DOMEvent) => {
     e.preventDefault();
 
     if (userData?.username === username && userData?.email === email) {
@@ -158,7 +161,7 @@ export default function UserForm() {
     }
   };
 
-  const handleChangePassword = async (e:DOMEvent) => {
+  const handleChangePassword = async (e: DOMEvent) => {
     e.preventDefault();
     if (!password) {
       toastMessage(t("enter_new_password"), "warning");
@@ -189,7 +192,7 @@ export default function UserForm() {
     }
   };
 
-  const handleWheel = (e:React.WheelEvent<HTMLDivElement>) => {
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     e.preventDefault();
     const delta = Math.sign(e.deltaY);
     setScale((prevScale) => {
@@ -221,8 +224,10 @@ export default function UserForm() {
             )}
             <span
               className="absolute bottom-1 right-1 bg-blue-500 text-white rounded-full p-2 hover:bg-blue-600 cursor-pointer shadow-lg transition duration-300"
-              onClick={() =>{
-                const element = document.getElementById("upload-profile-photo-button");
+              onClick={() => {
+                const element = document.getElementById(
+                  "upload-profile-photo-button",
+                );
                 if (element) {
                   element.click();
                 }
@@ -362,18 +367,18 @@ export default function UserForm() {
               Crop Image
             </h3>
             <div onWheel={handleWheel}>
-            {imageFile && (
-              <AvatarEditor
-                ref={editorRef}
-                image={imageFile}
-                width={250}
-                height={250}
-                border={50}
-                borderRadius={125}
-                scale={Number(scale)}
-                rotate={0}
-              />
-            )}
+              {imageFile && (
+                <AvatarEditor
+                  ref={editorRef}
+                  image={imageFile}
+                  width={250}
+                  height={250}
+                  border={50}
+                  borderRadius={125}
+                  scale={Number(scale)}
+                  rotate={0}
+                />
+              )}
             </div>
             <div className="mt-4">
               <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

@@ -16,7 +16,7 @@ export default function Navbar() {
   const languageName = getLanguageName();
 
   const { t } = useTranslation();
-  const { userDetails, logout, isSidebarOpen, setIsSidebarOpen} =
+  const { userDetails, logout, isSidebarOpen, setIsSidebarOpen } =
     authContext as AuthContextType;
   const { darkMode, toggleDarkMode } = themeContext as ThemeContextType;
 
