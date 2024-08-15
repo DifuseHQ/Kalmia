@@ -1,46 +1,49 @@
-import data from "@emoji-mart/data";
-import Picker from "@emoji-mart/react";
-import { Icon } from "@iconify/react";
-import { AnimatePresence, motion } from "framer-motion";
-import React, { useContext, useEffect, useRef, useState } from "react";
-import AceEditor from "react-ace";
-import { useTranslation } from "react-i18next";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import React, { useContext, useEffect, useRef, useState } from 'react';
+import AceEditor from 'react-ace';
+import { useTranslation } from 'react-i18next';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import data from '@emoji-mart/data';
+import Picker from '@emoji-mart/react';
+import { Icon } from '@iconify/react';
+import { AnimatePresence, motion } from 'framer-motion';
 
-import "ace-builds/src-noconflict/mode-css";
-import "ace-builds/src-noconflict/theme-monokai";
-import "ace-builds/src-noconflict/theme-github";
+import 'ace-builds/src-noconflict/mode-css';
+import 'ace-builds/src-noconflict/theme-monokai';
+import 'ace-builds/src-noconflict/theme-github';
 
 import {
   createDocumentation,
   DocumentationPayload,
   getDocumentation,
-  updateDocumentation,
-} from "../../api/Requests";
-import { ModalContext } from "../../context/ModalContext";
-import { ThemeContext } from "../../context/ThemeContext";
+  updateDocumentation
+} from '../../api/Requests';
+import { ModalContext } from '../../context/ModalContext';
+import { ThemeContext, ThemeContextType } from '../../context/ThemeContext';
 import {
   convertToEmoji,
   handleError,
   landingPageValidate,
   useOutsideAlerter,
   validateCommunityFields,
-  validateFormData,
-} from "../../utils/Common";
-import { toastMessage } from "../../utils/Toast";
-import { customCSSInitial, SocialLinkIcon } from "../../utils/Utils";
-import Breadcrumb from "../Breadcrumb/Breadcrumb";
+  validateFormData
+} from '../../utils/Common';
+import { toastMessage } from '../../utils/Toast';
+import { customCSSInitial, SocialLinkIcon } from '../../utils/Utils';
+import Breadcrumb from '../Breadcrumb/Breadcrumb';
+import { FormField as FormFieldData, Documentation, Features, FooterLabelLinks, LanderDetails, MoreLabelLinks } from '../../types/doc';
+import { DOMEvent } from '../../types/dom';
+
 
 const FormField = ({
   label,
   placeholder,
-  value = "",
+  value = '',
   onChange,
   name,
-  type = "text",
+  type = 'text',
   required = false,
-  ref,
-}) => {
+  ref
+}:FormFieldData) => {
   return (
     <div>
       <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -95,8 +98,8 @@ const LabelAndCommunityComponent = ({
   linkId,
   data,
   onChange,
-  state,
-}) => {
+  state
+}:LabelAndCommunity) => {
   const { t } = useTranslation();
   return (
     <motion.div
@@ -108,35 +111,35 @@ const LabelAndCommunityComponent = ({
     >
       <div>
         <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          {t("label")}
+          {t('label')}
           <span className="text-red-500 ml-1">*</span>
         </span>
         <input
           type="text"
           id={labelId}
-          value={data?.label || ""}
-          name={index}
+          value={data?.label || ''}
+          name={index.toString()}
           onChange={(e) =>
-            onChange(index, "label", e.target.value, state, "moreFooter")
+            onChange(index, 'label', e.target.value, state, 'moreFooter')
           }
-          placeholder={t("label_placeholder")}
+          placeholder={t('label_placeholder')}
           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
         />
       </div>
       <div>
         <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          {t("link")}
+          {t('link')}
           <span className="text-red-500 ml-1">*</span>
         </span>
         <input
           type="text"
-          value={data?.link || ""}
+          value={data?.link || ''}
           id={linkId}
           name={index.toString()}
           onChange={(e) =>
-            onChange(index, "link", e.target.value, state, "moreFooter")
+            onChange(index, 'link', e.target.value, state, 'moreFooter')
           }
-          placeholder={t("more_footer_link_placeholder")}
+          placeholder={t('more_footer_link_placeholder')}
           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
         />
       </div>
@@ -148,7 +151,7 @@ const AddButton:React.FC<OnClick> = ({ onClick }) => {
   const { t } = useTranslation();
   return (
     <button
-      title={t("add_new_field")}
+      title={t('add_new_field')}
       onClick={onClick}
       className="flex items-center gap-1 text-blue-600 rounded-lg text-sm  "
     >
@@ -162,7 +165,7 @@ const DeleteButton:React.FC<OnClick> = ({ onClick }) => {
   return (
     <button
       onClick={onClick}
-      title={t("delete_field")}
+      title={t('delete_field')}
       className="flex items-center gap-1 rounded-lg text-sm "
     >
       <Icon
@@ -173,12 +176,36 @@ const DeleteButton:React.FC<OnClick> = ({ onClick }) => {
   );
 };
 
-export default function CreateDocModal() {
+interface FormData {
+  name: string;
+  description: string;
+  version: string;
+  baseURL: string;
+  url: string;
+  organizationName: string;
+  projectName: string;
+  customCSS: string;
+  favicon: string;
+  navImageDark: string;
+  navImage: string;
+  copyrightText: string;
+  metaImage: string;
+}
+
+interface HandleChange {
+  name: string;
+  value: string;
+}
+
+type LanderDetailsKeys = keyof LanderDetails;
+
+export default function CreateDocModal () {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParam] = useSearchParams();
-  const docId = searchParam.get("id");
-  const mode = searchParam.get("mode");
+  const docIdString = searchParam.get('id');
+  const docId: number | null = docIdString ? parseInt(docIdString) : null;
+  const mode = searchParam.get('mode');
   const { openModal, closeModal, setLoadingMessage } = useContext(ModalContext);
   const themeContext = useContext(ThemeContext);
   const { darkMode } = themeContext as ThemeContextType;
@@ -192,38 +219,38 @@ export default function CreateDocModal() {
   const socialMediaRef = useRef<HTMLDivElement | null>(null);
   const [isIconSelectOpen, setIsIconSelectOpen] = useState<boolean>(false);
 
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    version: "",
-    baseURL: "",
-    url: "",
-    organizationName: "",
-    projectName: "",
+  const [formData, setFormData] = useState<FormData>({
+    name: '',
+    description: '',
+    version: '',
+    baseURL: '',
+    url: '',
+    organizationName: '',
+    projectName: '',
     customCSS: customCSSInitial(),
-    favicon: "",
-    navImageDark: "",
-    navImage: "",
-    copyrightText: "",
-    metaImage: "",
+    favicon: '',
+    navImageDark: '',
+    navImage: '',
+    copyrightText: '',
+    metaImage: ''
   });
 
-  const [moreField, setMoreField] = useState([{ label: "", link: "" }]);
-  const [socialPlatformField, setSocialPlatformField] = useState([
-    { icon: "", link: "" },
+  const [moreField, setMoreField] = useState<MoreLabelLinks[]>([{ label: '', link: '' }]);
+  const [socialPlatformField, setSocialPlatformField] = useState<FooterLabelLinks[]>([
+    { icon: '', link: '' }
   ]);
 
   const [landingPage, setLandingPage] = useState<LanderDetails>({
     ctaButtonText: {
-      ctaButtonLinkLabel: "",
-      ctaButtonLink: "",
+      ctaButtonLinkLabel: '',
+      ctaButtonLink: ''
     },
     secondCtaButtonText: {
-      ctaButtonLinkLabel: "",
-      ctaButtonLink: "",
+      ctaButtonLinkLabel: '',
+      ctaButtonLink: ''
     },
-    ctaImageLink: "",
-    features: [{ emoji: "", title: "", text: "" }],
+    ctaImageLink: '',
+    features:[{ emoji: '', title: '', text: '' }]
   });
 
   useOutsideAlerter(pickerRef, () => setShowEmojiPicker(false));
@@ -233,123 +260,129 @@ export default function CreateDocModal() {
     if (isToggleOn) {
       window.scrollTo({
         top: document.documentElement.scrollHeight,
-        behavior: "smooth",
+        behavior: 'smooth'
       });
     } else {
       window.scrollTo({
         top: 0,
-        behavior: "smooth",
+        behavior: 'smooth'
       });
     }
   }, [isToggleOn]);
 
   useEffect(() => {
-    if (mode === "edit") {
+    if (mode === 'edit') {
       const fetchDoc = async () => {
-        const result = await getDocumentation(parseInt(docId));
-        if (result.status === "success") {
-          setFormData(result?.data);
-          const footerLabelLinks = result?.data?.footerLabelLinks;
-          setSocialPlatformField(
-            footerLabelLinks
-              ? JSON.parse(footerLabelLinks)
-              : [{ icon: "", link: "" }],
-          );
-          const moreLabelLinks = result?.data?.moreLabelLinks;
-          setMoreField(
-            moreLabelLinks
-              ? JSON.parse(moreLabelLinks)
-              : [{ label: "", link: "" }],
-          );
-          const landingPageDetails = JSON.parse(result.data.landerDetails);
-          if (Object.keys(landingPageDetails).length !== 0) {
-            SetIsToggleOn(true);
-            setLandingPage({
-              ctaButtonText: {
-                ctaButtonLinkLabel:
-                  landingPageDetails.ctaButtonText.ctaButtonLinkLabel,
-                ctaButtonLink: landingPageDetails.ctaButtonText.ctaButtonLink,
-              },
-              secondCtaButtonText: {
-                ctaButtonLinkLabel:
-                  landingPageDetails.secondCtaButtonText.ctaButtonLinkLabel,
-                ctaButtonLink:
-                  landingPageDetails.secondCtaButtonText.ctaButtonLink,
-              },
-              ctaImageLink: landingPageDetails.ctaImageLink,
-              features: landingPageDetails.features.map((feature) => ({
-                emoji: feature.emoji,
-                title: feature.title,
-                text: feature.text,
-              })),
-            });
+        if (docId !== null) {
+          const result = await getDocumentation(docId);
+    
+          if (result.status === 'success') {
+            const data:Documentation = result.data;
+            setFormData(data);
+            
+            const footerLabelLinks:FooterLabelLinks[] = Array.isArray(data.footerLabelLinks)
+              ? data.footerLabelLinks
+              : JSON.parse(data.footerLabelLinks || '[]');
+
+            setSocialPlatformField(footerLabelLinks);
+
+            const moreLabelLinks: MoreLabelLinks[] = Array.isArray(data?.moreLabelLinks)
+              ? data.moreLabelLinks
+              : JSON.parse(data.moreLabelLinks || '[]');
+            setMoreField(moreLabelLinks);
+
+            const landingPageDetails:LanderDetails = JSON.parse(result.data.landerDetails);
+            if (Object.keys(landingPageDetails).length !== 0) {
+              SetIsToggleOn(true);
+              setLandingPage({
+                ctaButtonText: {
+                  ctaButtonLinkLabel:
+                    landingPageDetails.ctaButtonText.ctaButtonLinkLabel,
+                  ctaButtonLink: landingPageDetails.ctaButtonText.ctaButtonLink
+                },
+                secondCtaButtonText: {
+                  ctaButtonLinkLabel:
+                    landingPageDetails.secondCtaButtonText.ctaButtonLinkLabel,
+                  ctaButtonLink:
+                    landingPageDetails.secondCtaButtonText.ctaButtonLink
+                },
+                ctaImageLink: landingPageDetails.ctaImageLink,
+                features: landingPageDetails.features.map((feature:Features) => ({
+                  emoji: feature.emoji,
+                  title: feature.title,
+                  text: feature.text
+                }))
+              });
+            }
+          } else {
+            handleError(result, navigate, t);
           }
         } else {
-          handleError(result, navigate, t);
+          console.error('docId is null');
         }
       };
       fetchDoc();
     } else {
       SetIsToggleOn(false);
       setFormData({
-        name: "",
-        description: "",
-        version: "",
-        baseURL: "",
-        url: "",
-        organizationName: "",
-        projectName: "",
+        name: '',
+        description: '',
+        version: '',
+        baseURL: '',
+        url: '',
+        organizationName: '',
+        projectName: '',
         customCSS: customCSSInitial(),
-        favicon: "",
-        navImageDark: "",
-        navImage: "",
-        copyrightText: "",
-        metaImage: "",
+        favicon: '',
+        navImageDark: '',
+        navImage: '',
+        copyrightText: '',
+        metaImage: ''
       });
-      setSocialPlatformField([{ icon: "", link: "" }]);
-      setMoreField([{ label: "", link: "" }]);
+      setSocialPlatformField([{ icon: '', link: '' }]);
+      setMoreField([{ label: '', link: '' }]);
       setLandingPage({
         ctaButtonText: {
-          ctaButtonLinkLabel: "",
-          ctaButtonLink: "",
+          ctaButtonLinkLabel: '',
+          ctaButtonLink: ''
         },
         secondCtaButtonText: {
-          ctaButtonLinkLabel: "",
-          ctaButtonLink: "",
+          ctaButtonLinkLabel: '',
+          ctaButtonLink: ''
         },
-        ctaImageLink: "",
-        features: [{ emoji: "", title: "", text: "" }],
+        ctaImageLink: '',
+        features: [{ emoji: '', title: '', text: '' }]
       });
     }
-  }, [docId, mode, navigate]);
+  }, [docId, mode, navigate]); //eslint-disable-line
 
-  const addRow = (fieldType) => {
-    if (fieldType === "social-platform-field") {
-      setSocialPlatformField([...socialPlatformField, { icon: "", link: "" }]);
-    } else if (fieldType === "more") {
-      setMoreField([...moreField, { label: "", link: "" }]);
-    } else if (fieldType === "feature-filed") {
+  const addRow = (fieldType:string) => {
+    if (fieldType === 'social-platform-field') {
+      setSocialPlatformField([...socialPlatformField, { icon: '', link: '' }]);
+    } else if (fieldType === 'more') {
+      setMoreField([...moreField, { label: '', link: '' }]);
+    } else if (fieldType === 'feature-filed') {
       setLandingPage((prevState) => ({
         ...prevState,
-        features: [...prevState.features, { emoji: "", title: "", text: "" }],
+        features: [...prevState.features, { emoji: '', title: '', text: '' }]
       }));
     }
   };
 
-  const deleteRow = (fieldType) => {
-    if (fieldType === "social-platform-field") {
+  const deleteRow = (fieldType:string) => {
+    if (fieldType === 'social-platform-field') {
       if (socialPlatformField.length >= 0) {
         setSocialPlatformField(socialPlatformField.slice(0, -1));
       }
-    } else if (fieldType === "more") {
+    } else if (fieldType === 'more') {
       if (moreField.length >= 0) {
         setMoreField(moreField.slice(0, -1));
       }
-    } else if (fieldType === "feature-filed") {
+    } else if (fieldType === 'feature-filed') {
       if (landingPage.features.length >= 0) {
         setLandingPage((prevState) => ({
           ...prevState,
-          features: prevState.features.slice(0, -1),
+          features: prevState.features.slice(0, -1)
         }));
       }
     }
@@ -366,86 +399,86 @@ export default function CreateDocModal() {
 
     setFormData({
       ...formData,
-      [name]: value || "",
+      [name]: value || ''
     });
   };
 
   const handleCreateDocument = async () => {
     const validate = validateFormData(formData);
     if (validate.status) {
-      toastMessage(t(validate.message), "error");
+      toastMessage(t(validate.message), 'error');
       return;
     }
 
     const validateCommunity = validateCommunityFields(
       socialPlatformField,
-      moreField,
+      moreField
     );
 
     if (validateCommunity.status) {
-      toastMessage(t(validateCommunity.message), "error");
+      toastMessage(t(validateCommunity.message), 'error');
       return;
     }
 
     if (isToggleOn) {
       const validate = landingPageValidate(landingPage);
       if (validate.status) {
-        toastMessage(t(validate.message), "error");
+        toastMessage(t(validate.message), 'error');
         return;
       }
     }
 
     const landingData = isToggleOn ? landingPage : {};
 
-    const payload = {
-      id: parseInt(docId),
-      name: formData.name || "",
-      description: formData.description || "",
-      version: formData.version || "",
-      baseURL: formData.baseURL || "",
-      url: formData.url || "",
-      organizationName: formData.organizationName || "",
-      projectName: formData.projectName || "",
+    const payload:DocumentationPayload = {
+      id: docId,
+      name: formData.name || '',
+      description: formData.description || '',
+      version: formData.version || '',
+      baseURL: formData.baseURL || '',
+      url: formData.url || '',
+      organizationName: formData.organizationName || '',
+      projectName: formData.projectName || '',
       customCSS: formData.customCSS || customCSSInitial(),
-      favicon: formData.favicon || "",
-      navImageDark: formData.navImageDark || "",
-      navImage: formData.navImage || "",
-      copyrightText: formData.copyrightText || "",
-      metaImage: formData.metaImage || "",
+      favicon: formData.favicon || '',
+      navImageDark: formData.navImageDark || '',
+      navImage: formData.navImage || '',
+      copyrightText: formData.copyrightText || '',
+      metaImage: formData.metaImage || '',
       landerDetails: JSON.stringify(landingData),
       footerLabelLinks: socialPlatformField
         ? JSON.stringify(socialPlatformField)
-        : [{ icon: "", link: "" }],
+        : [{ icon: '', link: '' }],
       moreLabelLinks: moreField
         ? JSON.stringify(moreField)
-        : [{ label: "", link: "" }],
+        : [{ label: '', link: '' }]
     };
     let result;
 
-    setLoadingMessage(t("create_documentation_loading"));
-    openModal("loadingModal");
-    if (mode === "edit") {
+    setLoadingMessage(t('create_documentation_loading'));
+    openModal('loadingModal', null);
+    if (mode === 'edit') {
       result = await updateDocumentation(payload);
     } else {
       result = await createDocumentation(payload);
     }
 
     if (handleError(result, navigate, t)) {
-      closeModal("loadingModal");
+      closeModal('loadingModal');
       return;
     }
 
-    if (result.status === "success") {
-      closeModal("loadingModal");
+    if (result.status === 'success') {
+      closeModal('loadingModal');
       if (docId) {
         navigate(`/dashboard/documentation?id=${docId}`);
       } else {
-        navigate("/");
+        navigate('/');
       }
-      if (mode === "edit") {
-        toastMessage(t("documentation_updated"), "success");
+      if (mode === 'edit') {
+        toastMessage(t('documentation_updated'), 'success');
       } else {
-        toastMessage(t("documentation_created"), "success");
+        toastMessage(t('documentation_created'), 'success');
       }
     }
   };
@@ -464,18 +497,18 @@ export default function CreateDocModal() {
     const updatedSocialPlatformField = [...socialPlatformField];
     updatedSocialPlatformField[index] = {
       ...updatedSocialPlatformField[index],
-      icon: option,
+      icon: option
     };
     setSocialPlatformField(updatedSocialPlatformField);
   };
 
   const handleArrayFieldChange: HandleArrayFieldChange = (index, field, newValue, state, saveField) => {
     const updatedFields = state.map((item, i) =>
-      i === index ? { ...item, [field]: newValue } : item,
+      i === index ? { ...item, [field]: newValue } : item
     );
-    saveField === "moreFooter"
-      ? setMoreField(updatedFields)
-      : setSocialPlatformField(updatedFields);
+    saveField === 'moreFooter'
+      ? setMoreField(updatedFields as MoreLabelLinks[])
+      : setSocialPlatformField(updatedFields as FooterLabelLinks[]);
   };
 
   const updateCtaButtonText = (key:string, value:string, state:LanderDetailsKeys) => {
@@ -484,10 +517,11 @@ export default function CreateDocModal() {
       return{
       ...prevState,
       [state]: {
-        ...prevState[state],
-        [key]: value,
-      },
-    }));
+        ...stateObject,
+        [key]: value
+      }
+    }
+    });
   };
 
   const updateFeature = (index:number, key:string, value:string) => {
@@ -499,12 +533,12 @@ export default function CreateDocModal() {
     });
     setLandingPage((prevState) => ({
       ...prevState,
-      features: updatedFeatures,
+      features: updatedFeatures
     }));
   };
 
-  const handleEmojiClick = (index, emojiObject) => {
-    updateFeature(index, "emoji", emojiObject.unified);
+  const handleEmojiClick = (index:number, emojiObject:any) => {
+    updateFeature(index, 'emoji', emojiObject.unified);
     setShowEmojiPicker(false);
   };
 
@@ -521,9 +555,9 @@ export default function CreateDocModal() {
         <div className="relative w-full h-full md:h-auto">
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-400">
-              {mode === "edit"
-                ? t("edit_documentation")
-                : t("new_documentation")}
+              {mode === 'edit'
+                ? t('edit_documentation')
+                : t('new_documentation')}
             </h3>
           </div>
 
@@ -532,15 +566,15 @@ export default function CreateDocModal() {
               <div className="space-y-6">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <FormField
-                    label={t("title_label")}
-                    placeholder={t("enter_new_document_name")}
-                    value={formData?.name || ""}
+                    label={t('title_label')}
+                    placeholder={t('enter_new_document_name')}
+                    value={formData?.name || ''}
                     onChange={handleChange}
                     name="name"
                   />
                   <FormField
-                    label={t("version")}
-                    placeholder={t("version_placeholder")}
+                    label={t('version')}
+                    placeholder={t('version_placeholder')}
                     value={formData?.version}
                     onChange={handleChange}
                     name="version"
@@ -550,7 +584,7 @@ export default function CreateDocModal() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t("description")}
+                      {t('description')}
                       <span className="text-red-500 ml-1">*</span>
                     </span>
                     <div>
@@ -560,7 +594,7 @@ export default function CreateDocModal() {
                         name="description"
                         id="description"
                         className="bg-gray-50 border min-h-36 border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
-                        placeholder={t("description_placeholder")}
+                        placeholder={t('description_placeholder')}
                         rows="3"
                       />
                     </div>
@@ -568,14 +602,14 @@ export default function CreateDocModal() {
 
                   <div>
                     <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t("custom_css")}
+                      {t('custom_css')}
                     </span>
                     <AceEditor
                       mode="css"
-                      theme={darkMode ? "monokai" : "github"}
+                      theme={darkMode ? 'monokai' : 'github'}
                       onChange={(newValue) =>
                         handleChange({
-                          target: { name: "customCSS", value: newValue },
+                          target: { name: 'customCSS', value: newValue }
                         })
                       }
                       value={formData.customCSS}
@@ -584,9 +618,9 @@ export default function CreateDocModal() {
                       setOptions={{
                         useWorker: false,
                         showLineNumbers: true,
-                        tabSize: 2,
+                        tabSize: 2
                       }}
-                      style={{ width: "100%", height: "200px" }}
+                      style={{ width: '100%', height: '200px' }}
                       className="rounded-lg border border-gray-600"
                     />
                   </div>
@@ -594,24 +628,24 @@ export default function CreateDocModal() {
 
                 <div className="grid gap-4 sm:grid-cols-3">
                   <FormField
-                    label={t("favicon")}
-                    placeholder={t("favicon_placeholder")}
+                    label={t('favicon')}
+                    placeholder={t('favicon_placeholder')}
                     value={formData?.favicon}
                     onChange={handleChange}
                     name="favicon"
                     type="url"
                   />
                   <FormField
-                    label={t("navbar_icon_dark")}
-                    placeholder={t("navbar_icon_placeholder")}
+                    label={t('navbar_icon_dark')}
+                    placeholder={t('navbar_icon_placeholder')}
                     value={formData?.navImageDark}
                     onChange={handleChange}
                     name="navImageDark"
                     type="url"
                   />
                   <FormField
-                    label={t("navbar_icon")}
-                    placeholder={t("navbar_icon_placeholder")}
+                    label={t('navbar_icon')}
+                    placeholder={t('navbar_icon_placeholder')}
                     value={formData?.navImage}
                     onChange={handleChange}
                     name="navImage"
@@ -621,15 +655,15 @@ export default function CreateDocModal() {
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <FormField
-                    label={t("copyright_text")}
-                    placeholder={t("copyright_text_placeholder")}
+                    label={t('copyright_text')}
+                    placeholder={t('copyright_text_placeholder')}
                     value={formData?.copyrightText}
                     onChange={handleChange}
                     name="copyrightText"
                   />
                   <FormField
-                    label={t("social_card_image")}
-                    placeholder={t("social_card_image_palceholder")}
+                    label={t('social_card_image')}
+                    placeholder={t('social_card_image_palceholder')}
                     value={formData?.metaImage}
                     onChange={handleChange}
                     name="metaImage"
@@ -639,15 +673,15 @@ export default function CreateDocModal() {
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <FormField
-                    label={t("organization_name")}
-                    placeholder={t("organization_name_placeholder")}
+                    label={t('organization_name')}
+                    placeholder={t('organization_name_placeholder')}
                     value={formData?.organizationName}
                     onChange={handleChange}
                     name="organizationName"
                   />
                   <FormField
-                    label={t("project_name")}
-                    placeholder={t("project_name_placeholder")}
+                    label={t('project_name')}
+                    placeholder={t('project_name_placeholder')}
                     value={formData?.projectName}
                     onChange={handleChange}
                     name="projectName"
@@ -657,15 +691,15 @@ export default function CreateDocModal() {
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <FormField
-                    label={t("documentation_base_url")}
-                    placeholder={t("documentation_base_url_placeholder")}
+                    label={t('documentation_base_url')}
+                    placeholder={t('documentation_base_url_placeholder')}
                     value={formData?.baseURL}
                     onChange={handleChange}
                     name="baseURL"
                   />
                   <FormField
-                    label={t("url")}
-                    placeholder={t("url_placeholder")}
+                    label={t('url')}
+                    placeholder={t('url_placeholder')}
                     value={formData?.url}
                     onChange={handleChange}
                     name="url"
@@ -678,7 +712,7 @@ export default function CreateDocModal() {
                 <div>
                   <div className="flex justify-between items-center">
                     <p className="block text-md font-medium text-gray-700 dark:text-gray-300 ">
-                      {t("social_media_platform")}
+                      {t('social_media_platform')}
                     </p>
                   </div>
                 </div>
@@ -688,7 +722,7 @@ export default function CreateDocModal() {
                     <div className="grid gap-4 grid-cols-2" key={index}>
                       <div className="relative">
                         <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          {t("icon")}
+                          {t('icon')}
                           <span className="text-red-500 ml-1">*</span>
                         </span>
                         <button
@@ -702,7 +736,7 @@ export default function CreateDocModal() {
                             <div className="w-full flex justify-start items-center">
                               {(() => {
                                 const matchingIcon = SocialLinkIcon.find(
-                                  (val) => val.value === obj.icon,
+                                  (val) => val.value === obj.icon
                                 );
                                 return (
                                   <>
@@ -716,9 +750,7 @@ export default function CreateDocModal() {
                             </div>
                           ) : (
                             <ul className="w-full flex justify-between items-center">
-                              <li key="choose_an_icon" className="ml-2">
-                                {t("choose_an_icon")}
-                              </li>
+                              <li key="choose_an_icon" className="ml-2">{t('choose_an_icon')}</li>
                               <li key="down-arrow">
                                 <Icon
                                   icon="mingcute:down-fill"
@@ -751,16 +783,16 @@ export default function CreateDocModal() {
                         )}
                       </div>
                       <FormField
-                        label={t("link")}
-                        placeholder={t("social_link_placeholder")}
+                        label={t('link')}
+                        placeholder={t('social_link_placeholder')}
                         value={obj.link}
                         onChange={(e:DOMEvent) =>
                           handleArrayFieldChange(
                             index,
-                            "link",
+                            'link',
                             e.target.value,
                             socialPlatformField,
-                            "socialPlatform",
+                            'socialPlatform'
                           )
                         }
                         name="url"
@@ -769,15 +801,15 @@ export default function CreateDocModal() {
                     </div>
                   ))}
                 <div className="flex justify-end items-center gap-3 my-2">
-                  <AddButton onClick={() => addRow("social-platform-field")} />
+                  <AddButton onClick={() => addRow('social-platform-field')} />
                   <DeleteButton
-                    onClick={() => deleteRow("social-platform-field")}
+                    onClick={() => deleteRow('social-platform-field')}
                   />
                 </div>
                 <div>
                   <div className="flex justify-start items-center">
                     <span className="block text-md font-medium text-gray-700 dark:text-gray-300 ">
-                      {t("more_footer")}
+                      {t('more_footer')}
                     </span>
                   </div>
 
@@ -797,14 +829,14 @@ export default function CreateDocModal() {
                     ))}
                 </div>
                 <div className="flex justify-end gap-3 my-2">
-                  <AddButton onClick={() => addRow("more")} />
-                  <DeleteButton onClick={() => deleteRow("more")} />
+                  <AddButton onClick={() => addRow('more')} />
+                  <DeleteButton onClick={() => deleteRow('more')} />
                 </div>
               </div>
 
               <label className="inline-flex items-center cursor-pointer gpa-5 mb-4">
                 <span className="text-lg font-medium text-gray-900 dark:text-gray-300 mr-3">
-                  {t("enable_landing_page")}
+                  {t('enable_landing_page')}
                 </span>
                 <input
                   type="checkbox"
@@ -821,26 +853,26 @@ export default function CreateDocModal() {
                 <div className="">
                   <div className="grid gap-4 grid-cols-2 mb-5">
                     <FormField
-                      label={t("cta_button_text")}
-                      placeholder={t("cta_button_text_placeholder")}
+                      label={t('cta_button_text')}
+                      placeholder={t('cta_button_text_placeholder')}
                       value={landingPage?.ctaButtonText?.ctaButtonLinkLabel}
                       onChange={(e:DOMEvent) =>
                         updateCtaButtonText(
-                          "ctaButtonLinkLabel",
+                          'ctaButtonLinkLabel',
                           e.target.value,
-                          "ctaButtonText",
+                          'ctaButtonText'
                         )
                       }
                     />
                     <FormField
-                      label={t("cta_button_link")}
-                      placeholder={t("cta_button_link_placeholder")}
+                      label={t('cta_button_link')}
+                      placeholder={t('cta_button_link_placeholder')}
                       value={landingPage?.ctaButtonText?.ctaButtonLink}
                       onChange={(e:DOMEvent) =>
                         updateCtaButtonText(
-                          "ctaButtonLink",
+                          'ctaButtonLink',
                           e.target.value,
-                          "ctaButtonText",
+                          'ctaButtonText'
                         )
                       }
                       type="url"
@@ -849,40 +881,40 @@ export default function CreateDocModal() {
 
                   <div className="grid gap-4 sm:grid-cols-3 mb-5">
                     <FormField
-                      label={t("second_cta_button_text")}
-                      placeholder={t("second_cta_button_text_placeholder")}
+                      label={t('second_cta_button_text')}
+                      placeholder={t('second_cta_button_text_placeholder')}
                       value={
                         landingPage?.secondCtaButtonText?.ctaButtonLinkLabel
                       }
                       onChange={(e:DOMEvent) =>
                         updateCtaButtonText(
-                          "ctaButtonLinkLabel",
+                          'ctaButtonLinkLabel',
                           e.target.value,
-                          "secondCtaButtonText",
+                          'secondCtaButtonText'
                         )
                       }
                     />
                     <FormField
-                      label={t("second_cta_button_link")}
-                      placeholder={t("second_cta_link_placeholder")}
+                      label={t('second_cta_button_link')}
+                      placeholder={t('second_cta_link_placeholder')}
                       value={landingPage?.secondCtaButtonText?.ctaButtonLink}
                       onChange={(e:DOMEvent) =>
                         updateCtaButtonText(
-                          "ctaButtonLink",
+                          'ctaButtonLink',
                           e.target.value,
-                          "secondCtaButtonText",
+                          'secondCtaButtonText'
                         )
                       }
                       type="url"
                     />
                     <FormField
-                      label={t("cta_image_link")}
-                      placeholder={t("cta_image_link_palceholder")}
-                      value={landingPage.ctaImageLink || ""}
-                      onChange={(e) =>
+                      label={t('cta_image_link')}
+                      placeholder={t('cta_image_link_palceholder')}
+                      value={landingPage.ctaImageLink || ''}
+                      onChange={(e:DOMEvent) =>
                         setLandingPage((prevState) => ({
                           ...prevState,
-                          ctaImageLink: e.target.value,
+                          ctaImageLink: e.target.value
                         }))
                       }
                       name="ctaImageLink"
@@ -892,7 +924,7 @@ export default function CreateDocModal() {
 
                   <div className="flex justify-start items-center">
                     <span className="block text-md font-medium text-gray-700 dark:text-gray-300 ">
-                      {t("features")}
+                      {t('features')}
                     </span>
                   </div>
                   <hr className="mt-2 mb-4 border-t-1 dark:border-gray-500" />
@@ -901,12 +933,12 @@ export default function CreateDocModal() {
                     <div className="grid gap-4 grid-cols-3 my-2" key={index}>
                       <div className="relative">
                         <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          {t("emoji")}
+                          {t('emoji')}
                         </span>
                         <input
                           ref={(el) => (inputRefs.current[index] = el)}
                           onFocus={() => toggleEmojiPicker(index)}
-                          placeholder={`${convertToEmoji("26a1")} ${t("pick_your_emoji")}`}
+                          placeholder={`${convertToEmoji('26a1')} ${t('pick_your_emoji')}`}
                           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                           value={convertToEmoji(obj.emoji)}
                           readOnly
@@ -915,9 +947,9 @@ export default function CreateDocModal() {
                           <div
                             ref={pickerRef}
                             className={
-                              "absolute left-0 bg-white rounded-lg shadow w-52 dark:bg-gray-700 z-30"
+                              'absolute left-0 bg-white rounded-lg shadow w-52 dark:bg-gray-700 z-30'
                             }
-                            style={{ transform: "translateY(-110%)" }}
+                            style={{ transform: 'translateY(-110%)' }}
                           >
                             <Picker
                               data={data}
@@ -931,39 +963,39 @@ export default function CreateDocModal() {
 
                       <div className="relative">
                         <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          {t("title_label")}
+                          {t('title_label')}
                         </span>
                         <input
                           onChange={(e) =>
-                            updateFeature(index, "title", e.target.value)
+                            updateFeature(index, 'title', e.target.value)
                           }
                           value={obj.title}
                           type="text"
-                          placeholder={t("landing_page_title_placeholder")}
+                          placeholder={t('landing_page_title_placeholder')}
                           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                         />
                       </div>
 
                       <div className="relative">
                         <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          {t("text")}
+                          {t('text')}
                         </span>
                         <input
                           onChange={(e) =>
-                            updateFeature(index, "text", e.target.value)
+                            updateFeature(index, 'text', e.target.value)
                           }
                           value={obj.text}
                           type="text"
                           id="feature_desc"
-                          placeholder={t("text_placeholder")}
+                          placeholder={t('text_placeholder')}
                           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                         />
                       </div>
                     </div>
                   ))}
                   <div className="flex justify-end gap-3 my-2">
-                    <AddButton onClick={() => addRow("feature-filed")} />
-                    <DeleteButton onClick={() => deleteRow("feature-filed")} />
+                    <AddButton onClick={() => addRow('feature-filed')} />
+                    <DeleteButton onClick={() => deleteRow('feature-filed')} />
                   </div>
                 </div>
               )}
@@ -975,9 +1007,9 @@ export default function CreateDocModal() {
                   className="flex justify-center items-center text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
                 >
                   <span>
-                    {mode === "edit"
-                      ? t("update_documentation")
-                      : t("new_documentation")}
+                    {mode === 'edit'
+                      ? t('update_documentation')
+                      : t('new_documentation')}
                   </span>
                   {!mode && <Icon icon="ei:plus" className="w-6 h-6" />}
                 </button>
