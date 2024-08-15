@@ -13,11 +13,12 @@ import 'ace-builds/src-noconflict/theme-github';
 
 import {
   createDocumentation,
+  DocumentationPayload,
   getDocumentation,
   updateDocumentation
 } from '../../api/Requests';
 import { ModalContext } from '../../context/ModalContext';
-import { ThemeContext } from '../../context/ThemeContext';
+import { ThemeContext, ThemeContextType } from '../../context/ThemeContext';
 import {
   convertToEmoji,
   handleError,
@@ -29,6 +30,9 @@ import {
 import { toastMessage } from '../../utils/Toast';
 import { customCSSInitial, SocialLinkIcon } from '../../utils/Utils';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
+import { FormField as FormFieldData, Documentation, Features, FooterLabelLinks, LanderDetails, MoreLabelLinks } from '../../types/doc';
+import { DOMEvent } from '../../types/dom';
+
 
 const FormField = ({
   label,
@@ -39,7 +43,7 @@ const FormField = ({
   type = 'text',
   required = false,
   ref
-}) => {
+}:FormFieldData) => {
   return (
     <div>
       <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -60,6 +64,34 @@ const FormField = ({
   );
 };
 
+type HandleArrayFieldChange = (
+  index: number,
+  field: string,
+  newValue: string,
+  state: MoreLabelLinks[] | FooterLabelLinks[],
+  saveField: string
+) => void;
+
+
+interface OnClick {
+  onClick: () => Promise<void>;
+}
+
+interface LabelAndCommunity {
+  index: number;
+  labelId: string;
+  linkId: string
+  data: {
+    label:string;
+    link: string;
+  },
+  onChange: HandleArrayFieldChange;
+  state:{
+    label:string;
+    link: string;
+  }[]
+}
+
 const LabelAndCommunityComponent = ({
   index,
   labelId,
@@ -67,7 +99,7 @@ const LabelAndCommunityComponent = ({
   data,
   onChange,
   state
-}) => {
+}:LabelAndCommunity) => {
   const { t } = useTranslation();
   return (
     <motion.div
@@ -86,7 +118,7 @@ const LabelAndCommunityComponent = ({
           type="text"
           id={labelId}
           value={data?.label || ''}
-          name={index}
+          name={index.toString()}
           onChange={(e) =>
             onChange(index, 'label', e.target.value, state, 'moreFooter')
           }
@@ -103,7 +135,7 @@ const LabelAndCommunityComponent = ({
           type="text"
           value={data?.link || ''}
           id={linkId}
-          name={index}
+          name={index.toString()}
           onChange={(e) =>
             onChange(index, 'link', e.target.value, state, 'moreFooter')
           }
@@ -115,7 +147,7 @@ const LabelAndCommunityComponent = ({
   );
 };
 
-const AddButton = ({ onClick }) => {
+const AddButton:React.FC<OnClick> = ({ onClick }) => {
   const { t } = useTranslation();
   return (
     <button
@@ -128,7 +160,7 @@ const AddButton = ({ onClick }) => {
   );
 };
 
-const DeleteButton = ({ onClick }) => {
+const DeleteButton:React.FC<OnClick> = ({ onClick }) => {
   const { t } = useTranslation();
   return (
     <button
@@ -144,24 +176,50 @@ const DeleteButton = ({ onClick }) => {
   );
 };
 
+interface FormData {
+  name: string;
+  description: string;
+  version: string;
+  baseURL: string;
+  url: string;
+  organizationName: string;
+  projectName: string;
+  customCSS: string;
+  favicon: string;
+  navImageDark: string;
+  navImage: string;
+  copyrightText: string;
+  metaImage: string;
+}
+
+interface HandleChange {
+  name: string;
+  value: string;
+}
+
+type LanderDetailsKeys = keyof LanderDetails;
+
 export default function CreateDocModal () {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParam] = useSearchParams();
-  const docId = searchParam.get('id');
+  const docIdString = searchParam.get('id');
+  const docId: number | null = docIdString ? parseInt(docIdString) : null;
   const mode = searchParam.get('mode');
   const { openModal, closeModal, setLoadingMessage } = useContext(ModalContext);
-  const { darkMode } = useContext(ThemeContext);
-  const [isToggleOn, SetIsToggleOn] = useState(false);
-  const [activeFieldIndex, setActiveFieldIndex] = useState(null);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const inputRefs = useRef([]);
-  const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
-  const pickerRef = useRef(null);
-  const socialMediaRef = useRef(null);
-  const [isIconSelectOpen, setIsIconSelectOpen] = useState(false);
+  const themeContext = useContext(ThemeContext);
+  const { darkMode } = themeContext as ThemeContextType;
+  const [isToggleOn, SetIsToggleOn] = useState<boolean>(false);
+  const [activeFieldIndex, setActiveFieldIndex] = useState<number | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const titleRef = useRef<HTMLInputElement | null>(null);
+  const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(null);
+  const pickerRef = useRef<HTMLDivElement | null>(null);
+  const socialMediaRef = useRef<HTMLDivElement | null>(null);
+  const [isIconSelectOpen, setIsIconSelectOpen] = useState<boolean>(false);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     name: '',
     description: '',
     version: '',
@@ -177,12 +235,12 @@ export default function CreateDocModal () {
     metaImage: ''
   });
 
-  const [moreField, setMoreField] = useState([{ label: '', link: '' }]);
-  const [socialPlatformField, setSocialPlatformField] = useState([
+  const [moreField, setMoreField] = useState<MoreLabelLinks[]>([{ label: '', link: '' }]);
+  const [socialPlatformField, setSocialPlatformField] = useState<FooterLabelLinks[]>([
     { icon: '', link: '' }
   ]);
 
-  const [landingPage, setLandingPage] = useState({
+  const [landingPage, setLandingPage] = useState<LanderDetails>({
     ctaButtonText: {
       ctaButtonLinkLabel: '',
       ctaButtonLink: ''
@@ -192,7 +250,7 @@ export default function CreateDocModal () {
       ctaButtonLink: ''
     },
     ctaImageLink: '',
-    features: [{ emoji: '', title: '', text: '' }]
+    features:[{ emoji: '', title: '', text: '' }]
   });
 
   useOutsideAlerter(pickerRef, () => setShowEmojiPicker(false));
@@ -215,46 +273,52 @@ export default function CreateDocModal () {
   useEffect(() => {
     if (mode === 'edit') {
       const fetchDoc = async () => {
-        const result = await getDocumentation(parseInt(docId));
-        if (result.status === 'success') {
-          setFormData(result?.data);
-          const footerLabelLinks = result?.data?.footerLabelLinks;
-          setSocialPlatformField(
-            footerLabelLinks
-              ? JSON.parse(footerLabelLinks)
-              : [{ icon: '', link: '' }]
-          );
-          const moreLabelLinks = result?.data?.moreLabelLinks;
-          setMoreField(
-            moreLabelLinks
-              ? JSON.parse(moreLabelLinks)
-              : [{ label: '', link: '' }]
-          );
-          const landingPageDetails = JSON.parse(result.data.landerDetails);
-          if (Object.keys(landingPageDetails).length !== 0) {
-            SetIsToggleOn(true);
-            setLandingPage({
-              ctaButtonText: {
-                ctaButtonLinkLabel:
-                  landingPageDetails.ctaButtonText.ctaButtonLinkLabel,
-                ctaButtonLink: landingPageDetails.ctaButtonText.ctaButtonLink
-              },
-              secondCtaButtonText: {
-                ctaButtonLinkLabel:
-                  landingPageDetails.secondCtaButtonText.ctaButtonLinkLabel,
-                ctaButtonLink:
-                  landingPageDetails.secondCtaButtonText.ctaButtonLink
-              },
-              ctaImageLink: landingPageDetails.ctaImageLink,
-              features: landingPageDetails.features.map((feature) => ({
-                emoji: feature.emoji,
-                title: feature.title,
-                text: feature.text
-              }))
-            });
+        if (docId !== null) {
+          const result = await getDocumentation(docId);
+    
+          if (result.status === 'success') {
+            const data:Documentation = result.data;
+            setFormData(data);
+            
+            const footerLabelLinks:FooterLabelLinks[] = Array.isArray(data.footerLabelLinks)
+              ? data.footerLabelLinks
+              : JSON.parse(data.footerLabelLinks || '[]');
+
+            setSocialPlatformField(footerLabelLinks);
+
+            const moreLabelLinks: MoreLabelLinks[] = Array.isArray(data?.moreLabelLinks)
+              ? data.moreLabelLinks
+              : JSON.parse(data.moreLabelLinks || '[]');
+            setMoreField(moreLabelLinks);
+
+            const landingPageDetails:LanderDetails = JSON.parse(result.data.landerDetails);
+            if (Object.keys(landingPageDetails).length !== 0) {
+              SetIsToggleOn(true);
+              setLandingPage({
+                ctaButtonText: {
+                  ctaButtonLinkLabel:
+                    landingPageDetails.ctaButtonText.ctaButtonLinkLabel,
+                  ctaButtonLink: landingPageDetails.ctaButtonText.ctaButtonLink
+                },
+                secondCtaButtonText: {
+                  ctaButtonLinkLabel:
+                    landingPageDetails.secondCtaButtonText.ctaButtonLinkLabel,
+                  ctaButtonLink:
+                    landingPageDetails.secondCtaButtonText.ctaButtonLink
+                },
+                ctaImageLink: landingPageDetails.ctaImageLink,
+                features: landingPageDetails.features.map((feature:Features) => ({
+                  emoji: feature.emoji,
+                  title: feature.title,
+                  text: feature.text
+                }))
+              });
+            }
+          } else {
+            handleError(result, navigate, t);
           }
         } else {
-          handleError(result, navigate, t);
+          console.error('docId is null');
         }
       };
       fetchDoc();
@@ -292,7 +356,7 @@ export default function CreateDocModal () {
     }
   }, [docId, mode, navigate]); //eslint-disable-line
 
-  const addRow = (fieldType) => {
+  const addRow = (fieldType:string) => {
     if (fieldType === 'social-platform-field') {
       setSocialPlatformField([...socialPlatformField, { icon: '', link: '' }]);
     } else if (fieldType === 'more') {
@@ -305,7 +369,7 @@ export default function CreateDocModal () {
     }
   };
 
-  const deleteRow = (fieldType) => {
+  const deleteRow = (fieldType:string) => {
     if (fieldType === 'social-platform-field') {
       if (socialPlatformField.length >= 0) {
         setSocialPlatformField(socialPlatformField.slice(0, -1));
@@ -324,16 +388,14 @@ export default function CreateDocModal () {
     }
   };
 
-  const titleRef = useRef(null);
-
   useEffect(() => {
     if (titleRef.current) {
       titleRef.current.focus();
     }
   }, []);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const handleChange= (e:DOMEvent) => {
+    const { name, value } = e.target as HandleChange
 
     setFormData({
       ...formData,
@@ -368,8 +430,8 @@ export default function CreateDocModal () {
 
     const landingData = isToggleOn ? landingPage : {};
 
-    const payload = {
-      id: parseInt(docId),
+    const payload:DocumentationPayload = {
+      id: docId,
       name: formData.name || '',
       description: formData.description || '',
       version: formData.version || '',
@@ -394,7 +456,7 @@ export default function CreateDocModal () {
     let result;
 
     setLoadingMessage(t('create_documentation_loading'));
-    openModal('loadingModal');
+    openModal('loadingModal', null);
     if (mode === 'edit') {
       result = await updateDocumentation(payload);
     } else {
@@ -421,7 +483,7 @@ export default function CreateDocModal () {
     }
   };
 
-  const toggleEmojiPicker = (index) => {
+  const toggleEmojiPicker = (index:number) => {
     if (activeFieldIndex === index) {
       setShowEmojiPicker(!showEmojiPicker);
     } else {
@@ -430,7 +492,7 @@ export default function CreateDocModal () {
     }
   };
 
-  const handleOptionClick = (option, index) => {
+  const handleOptionClick = (option:string, index:number) => {
     setIsIconSelectOpen(false);
     const updatedSocialPlatformField = [...socialPlatformField];
     updatedSocialPlatformField[index] = {
@@ -440,26 +502,29 @@ export default function CreateDocModal () {
     setSocialPlatformField(updatedSocialPlatformField);
   };
 
-  const handleArrayFieldChange = (index, field, newValue, state, saveField) => {
+  const handleArrayFieldChange: HandleArrayFieldChange = (index, field, newValue, state, saveField) => {
     const updatedFields = state.map((item, i) =>
       i === index ? { ...item, [field]: newValue } : item
     );
     saveField === 'moreFooter'
-      ? setMoreField(updatedFields)
-      : setSocialPlatformField(updatedFields);
+      ? setMoreField(updatedFields as MoreLabelLinks[])
+      : setSocialPlatformField(updatedFields as FooterLabelLinks[]);
   };
 
-  const updateCtaButtonText = (key, value, state) => {
-    setLandingPage((prevState) => ({
+  const updateCtaButtonText = (key:string, value:string, state:LanderDetailsKeys) => {
+    setLandingPage((prevState) =>{
+      const stateObject = prevState[state] as { [key: string]: string };
+      return{
       ...prevState,
       [state]: {
-        ...prevState[state],
+        ...stateObject,
         [key]: value
       }
-    }));
+    }
+    });
   };
 
-  const updateFeature = (index, key, value) => {
+  const updateFeature = (index:number, key:string, value:string) => {
     const updatedFeatures = landingPage.features.map((feature, i) => {
       if (i === index) {
         return { ...feature, [key]: value };
@@ -472,7 +537,7 @@ export default function CreateDocModal () {
     }));
   };
 
-  const handleEmojiClick = (index, emojiObject) => {
+  const handleEmojiClick = (index:number, emojiObject:any) => {
     updateFeature(index, 'emoji', emojiObject.unified);
     setShowEmojiPicker(false);
   };
@@ -675,9 +740,9 @@ export default function CreateDocModal () {
                                 );
                                 return (
                                   <>
-                                    <span>{matchingIcon.icon}</span>
+                                    <span>{matchingIcon?.icon}</span>
                                     <span className="ml-2">
-                                      {matchingIcon.iconName}
+                                      {matchingIcon?.iconName}
                                     </span>
                                   </>
                                 );
@@ -721,7 +786,7 @@ export default function CreateDocModal () {
                         label={t('link')}
                         placeholder={t('social_link_placeholder')}
                         value={obj.link}
-                        onChange={(e) =>
+                        onChange={(e:DOMEvent) =>
                           handleArrayFieldChange(
                             index,
                             'link',
@@ -791,7 +856,7 @@ export default function CreateDocModal () {
                       label={t('cta_button_text')}
                       placeholder={t('cta_button_text_placeholder')}
                       value={landingPage?.ctaButtonText?.ctaButtonLinkLabel}
-                      onChange={(e) =>
+                      onChange={(e:DOMEvent) =>
                         updateCtaButtonText(
                           'ctaButtonLinkLabel',
                           e.target.value,
@@ -803,7 +868,7 @@ export default function CreateDocModal () {
                       label={t('cta_button_link')}
                       placeholder={t('cta_button_link_placeholder')}
                       value={landingPage?.ctaButtonText?.ctaButtonLink}
-                      onChange={(e) =>
+                      onChange={(e:DOMEvent) =>
                         updateCtaButtonText(
                           'ctaButtonLink',
                           e.target.value,
@@ -821,7 +886,7 @@ export default function CreateDocModal () {
                       value={
                         landingPage?.secondCtaButtonText?.ctaButtonLinkLabel
                       }
-                      onChange={(e) =>
+                      onChange={(e:DOMEvent) =>
                         updateCtaButtonText(
                           'ctaButtonLinkLabel',
                           e.target.value,
@@ -833,7 +898,7 @@ export default function CreateDocModal () {
                       label={t('second_cta_button_link')}
                       placeholder={t('second_cta_link_placeholder')}
                       value={landingPage?.secondCtaButtonText?.ctaButtonLink}
-                      onChange={(e) =>
+                      onChange={(e:DOMEvent) =>
                         updateCtaButtonText(
                           'ctaButtonLink',
                           e.target.value,
@@ -846,7 +911,7 @@ export default function CreateDocModal () {
                       label={t('cta_image_link')}
                       placeholder={t('cta_image_link_palceholder')}
                       value={landingPage.ctaImageLink || ''}
-                      onChange={(e) =>
+                      onChange={(e:DOMEvent) =>
                         setLandingPage((prevState) => ({
                           ...prevState,
                           ctaImageLink: e.target.value
@@ -888,7 +953,7 @@ export default function CreateDocModal () {
                           >
                             <Picker
                               data={data}
-                              onEmojiSelect={(emoji) =>
+                              onEmojiSelect={(emoji:any) =>
                                 handleEmojiClick(index, emoji)
                               }
                             />

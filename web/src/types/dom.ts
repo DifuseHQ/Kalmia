@@ -1,4 +1,4 @@
-import { KeyboardEvent as ReactKeyboardEvent, MouseEvent as ReactMouseEvent, TouchEvent as ReactTouchEvent } from 'react';
+import { KeyboardEvent as ReactKeyboardEvent, MouseEvent as ReactMouseEvent, TouchEvent as ReactTouchEvent, ChangeEvent as ReactChangeEvent } from 'react';
 
 export type DOMEvent =
   | MouseEvent
@@ -6,4 +6,5 @@ export type DOMEvent =
   | KeyboardEvent
   | ReactKeyboardEvent<HTMLElement>
   | ReactMouseEvent<HTMLElement>
-  | ReactTouchEvent<HTMLElement>;
+  | ReactTouchEvent<HTMLElement>
+  | ReactChangeEvent<HTMLInputElement>;

@@ -60,7 +60,7 @@ export interface LanderDetails {
     ctaButtonLink: string;
   };
   ctaImageLink: string;
-  features: Features;
+  features: Features[];
 }
 
 export interface FooterLabelLinks {
@@ -80,7 +80,7 @@ export interface Documentation {
   url: string;
   organizationName: string;
   projectName: string;
-  landerDetails: LanderDetails;
+  landerDetails?: LanderDetails;
   baseURL: string;
   clonedFrom: number | null;
   description: string;
@@ -89,14 +89,27 @@ export interface Documentation {
   navImage: string;
   navImageDark: string;
   customCSS: string;
-  footerLabelLinks: FooterLabelLinks;
-  moreLabelLinks: MoreLabelLinks;
+  footerLabelLinks?: FooterLabelLinks[];
+  moreLabelLinks?: MoreLabelLinks[];
   authorId: number;
   author: Author;
   createdAt: string;
   updatedAt: string;
-  editors: Editor[];
+  editors?: Editor[];
   lastEditorId: number;
-  pageGroups: PageGroup[];
-  pages: Page[];
+  pageGroups?: PageGroup[];
+  pages?: Page[];
+  copyrightText: string;
 }
+
+export interface FormField {
+  label:string;
+  placeholder: string;
+  value: string;
+  onChange: () => Promise<void>;
+  name: string;
+  type: string;
+  required: boolean;
+  ref: React.RefObject<HTMLInputElement>;
+}
+

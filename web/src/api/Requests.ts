@@ -1,6 +1,7 @@
 import { AxiosError, AxiosResponse, Method } from 'axios';
 
 import instance, { makeRequestWithCustomAuth } from './AxiosInstance';
+import { FooterLabelLinks, LanderDetails, MoreLabelLinks } from '../types/doc';
 
 interface ErrorMessages {
   [key: number]: [string, string];
@@ -19,23 +20,25 @@ interface AuthCredentials {
   password: string;
 }
 
-interface DocumentationPayload {
-  id: number;
+
+export interface DocumentationPayload {
+  id: number | null;
   name: string;
-  description: string;
   version: string;
-  baseURL: string;
   url: string;
   organizationName: string;
   projectName: string;
-  customCSS: string;
+  landerDetails: LanderDetails | string;
+  baseURL: string;
+  description: string;
   favicon: string;
-  navImageDark: string;
-  navImage: string;
-  copyrightText: string;
   metaImage: string;
-  landerDetails: string;
-  footerLabelLinks: string;
+  navImage: string;
+  navImageDark: string;
+  customCSS: string;
+  footerLabelLinks?: FooterLabelLinks[] | string;
+  moreLabelLinks?: MoreLabelLinks[] | string;
+  copyrightText: string;
 }
 
 interface CreateVersionPayload {
