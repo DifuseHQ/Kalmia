@@ -6,10 +6,14 @@ import {
   defaultProps,
   insertOrUpdateBlock,
 } from "@blocknote/core";
-import { createReactBlockSpec } from "@blocknote/react";
+import {
+  createReactBlockSpec,
+  DefaultReactSuggestionItem,
+} from "@blocknote/react";
 import warnIcon from "@iconify/icons-mdi/alert";
 import errorIcon from "@iconify/icons-mdi/alert-circle";
 import successIcon from "@iconify/icons-mdi/check-circle";
+import codeIcon from "@iconify/icons-mdi/code-tags";
 import infoIcon from "@iconify/icons-mdi/information";
 import { Icon, IconifyIcon } from "@iconify/react/dist/iconify.js";
 import { Menu } from "@mantine/core";
@@ -208,7 +212,9 @@ const schema = BlockNoteSchema.create({
   },
 });
 
-export const insertAlert = (editor: typeof schema.BlockNoteEditor) => ({
+export const insertAlert = (
+  editor: typeof schema.BlockNoteEditor,
+): DefaultReactSuggestionItem => ({
   title: "alert",
   subtext: "This is a notification alert.",
   onItemClick: () => {
@@ -229,7 +235,9 @@ export const insertAlert = (editor: typeof schema.BlockNoteEditor) => ({
   icon: <Icon icon={warnIcon} />,
 });
 
-export const insertCode = (editor: BlockNoteEditor) => ({
+export const insertCode = (
+  editor: BlockNoteEditor,
+): DefaultReactSuggestionItem => ({
   title: "Code",
   group: "Other",
   onItemClick: () => {
@@ -240,7 +248,7 @@ export const insertCode = (editor: BlockNoteEditor) => ({
     });
   },
   aliases: ["code"],
-  icon: "code",
+  icon: <Icon icon={codeIcon} />,
   subtext: "Insert a code block.",
 });
 

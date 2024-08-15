@@ -73,10 +73,12 @@ func CopyEmbeddedFolder(path string, to string) error {
 func CopyInitFiles(to string) error {
 	toCopy := []string{
 		"package.json",
+		"postcss.config.js",
 		"rspress.config.ts",
 		"tsconfig.json",
 		"tailwind.config.js",
 		"styles/",
+		"src/",
 	}
 
 	for _, file := range toCopy {

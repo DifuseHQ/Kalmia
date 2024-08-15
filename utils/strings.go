@@ -1,14 +1,12 @@
 package utils
 
 import (
-	"fmt"
 	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
-	crypt "github.com/simia-tech/crypt"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -22,15 +20,6 @@ func HashPassword(password string) (string, error) {
 func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
-}
-
-func GenerateSHA512(password, salt string) string {
-	cryptSalt := fmt.Sprintf("$6$%s$", salt)
-	hashedPassword, err := crypt.Crypt(password, cryptSalt)
-	if err != nil {
-		return ""
-	}
-	return hashedPassword
 }
 
 func ToLowerCase(input string) string {
@@ -68,11 +57,6 @@ func StringToFileString(input string) string {
 	return url.PathEscape(input)
 }
 
-func StringToURLString(input string) string {
-	input = strings.ToLower(input)
-	return strings.ReplaceAll(input, " ", "-")
-}
-
 func UintPtr(v uint) *uint {
 	return &v
 }
@@ -89,14 +73,15 @@ func ReplaceMany(input string, replacements map[string]string) string {
 }
 
 func IsBaseURLValid(input string) bool {
-	invalidBaseURLs := []string{"admin", "/admin", "/admin/", "/docs", "/auth", "/oauth", "/health"}
+	invalidBaseURLs := []string{"admin", "docs", "auth", "oauth", "health"}
+	input = ToLowerCase(strings.Trim(input, "/"))
 
-	if input == "/" {
+	if input == "" {
 		return false
 	}
 
 	for _, invalidBaseURL := range invalidBaseURLs {
-		if input == invalidBaseURL || strings.HasPrefix(input, invalidBaseURL) {
+		if input == invalidBaseURL {
 			return false
 		}
 	}

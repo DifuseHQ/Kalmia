@@ -353,11 +353,19 @@ func (service *DocService) CraftPage(pageID uint, title string, slug string, con
 	top += "pageType: doc\n"
 	top += "footer: true\n"
 	top += "title: " + title + "\n"
-	top += "---\n"
+	top += "---\n\n"
 
-	if strings.Contains(markdown, "ReactPlayer") {
-		top += "import ReactPlayer from 'react-player'"
-	}
+	// if strings.Contains(markdown, "ReactPlayer") {
+	// 	top += "import ReactPlayer from 'react-player'"
+	// }
+
+	top += `import { Paragraph } from "@components/Paragraph";` + "\n"
+	top += `import { Table } from "@components/Table";` + "\n"
+	top += `import { Image } from "@components/Image";` + "\n"
+	top += `import { Video } from "@components/Video";` + "\n"
+	top += `import { Audio } from "@components/Audio";` + "\n"
+	top += `import { File }  from "@components/File";` + "\n"
+	top += `import { Alert } from "@components/Alert";` + "\n"
 
 	if top != "" {
 		top += "\n\n"
@@ -388,42 +396,48 @@ func (service *DocService) writePagesToDirectory(pages []models.Page, dirPath st
 			return err
 		}
 
-		markdownExt := ".md"
-		if strings.Contains(content, "import ReactPlayer from 'react-player'") || strings.Contains(content, "image-in-mdx") {
-			markdownExt = ".mdx"
-		}
+		markdownExt := ".mdx"
+		// if strings.Contains(content, "import ReactPlayer from 'react-player'") || strings.Contains(content, "image-in-mdx") {
+		// 	markdownExt = ".mdx"
+		// }
 
-		oppositeExt := ""
+		// oppositeExt := ""
 
-		if markdownExt == ".md" {
-			oppositeExt = ".mdx"
-		} else {
-			oppositeExt = ".md"
-		}
+		// if markdownExt == ".md" {
+		// 	oppositeExt = ".mdx"
+		// } else {
+		// 	oppositeExt = ".md"
+		// }
+
+		// if fullPage.IsIntroPage {
+		// 	fileName = "index" + markdownExt
+		// } else {
+		// 	fileName = utils.StringToFileString(fullPage.Title) + markdownExt
+		// }
+
+		// if utils.PathExists(filepath.Join(dirPath, utils.StringToFileString(fullPage.Title)+oppositeExt)) ||
+		// 	utils.PathExists(filepath.Join(dirPath, "index"+oppositeExt)) {
+		// 	if fullPage.IsIntroPage {
+		// 		if utils.PathExists(filepath.Join(dirPath, "index"+oppositeExt)) {
+		// 			err := os.Remove(filepath.Join(dirPath, "index"+oppositeExt))
+		// 			if err != nil {
+		// 				return err
+		// 			}
+		// 		}
+		// 	} else {
+		// 		if utils.PathExists(filepath.Join(dirPath, utils.StringToFileString(fullPage.Title)+oppositeExt)) {
+		// 			err := os.Remove(filepath.Join(dirPath, utils.StringToFileString(fullPage.Title)+oppositeExt))
+		// 			if err != nil {
+		// 				return err
+		// 			}
+		// 		}
+		// 	}
+		// }
 
 		if fullPage.IsIntroPage {
 			fileName = "index" + markdownExt
 		} else {
 			fileName = utils.StringToFileString(fullPage.Title) + markdownExt
-		}
-
-		if utils.PathExists(filepath.Join(dirPath, utils.StringToFileString(fullPage.Title)+oppositeExt)) ||
-			utils.PathExists(filepath.Join(dirPath, "index"+oppositeExt)) {
-			if fullPage.IsIntroPage {
-				if utils.PathExists(filepath.Join(dirPath, "index"+oppositeExt)) {
-					err := os.Remove(filepath.Join(dirPath, "index"+oppositeExt))
-					if err != nil {
-						return err
-					}
-				}
-			} else {
-				if utils.PathExists(filepath.Join(dirPath, utils.StringToFileString(fullPage.Title)+oppositeExt)) {
-					err := os.Remove(filepath.Join(dirPath, utils.StringToFileString(fullPage.Title)+oppositeExt))
-					if err != nil {
-						return err
-					}
-				}
-			}
 		}
 
 		err = utils.WriteToFile(filepath.Join(dirPath, fileName), content)

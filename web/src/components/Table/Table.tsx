@@ -23,9 +23,9 @@ const AnimatedTableRow = motion.tr;
 export default function Table({
   provided,
   snapshot,
-  docId,
-  pageGroupId,
   obj,
+  pageGroupId,
+  docId,
   version,
   dir,
 }: TableProps) {

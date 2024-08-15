@@ -44,6 +44,8 @@ export interface PageGroup {
   pageGroups: PageGroup[];
 }
 
+export type PageOrGroup = PageGroup | Page;
+
 export interface Features {
   emoji: string;
   title: string;
@@ -111,4 +113,12 @@ export interface FormField {
   type: string;
   required: boolean;
   ref: React.RefObject<HTMLInputElement>;
+}
+
+export function isPage(item: PageOrGroup): item is Page {
+  return (item as Page).title !== undefined;
+}
+
+export function isPageGroup(item: PageOrGroup): item is PageGroup {
+  return (item as PageGroup).name !== undefined;
 }

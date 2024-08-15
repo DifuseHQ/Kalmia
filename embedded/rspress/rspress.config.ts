@@ -29,5 +29,12 @@ export default defineConfig({
       description: '__TAG_LINE__',
       image: '__META_IMAGE__',
     }),
-  ]
+  ],
+  builderConfig: {
+    source: {
+      alias: {
+        '@components': './src/components',
+      },
+    },
+  },
 });

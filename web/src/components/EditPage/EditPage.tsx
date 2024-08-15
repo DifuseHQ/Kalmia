@@ -13,7 +13,6 @@ import {
   lightDefaultTheme,
 } from "@blocknote/mantine";
 import {
-  DefaultReactSuggestionItem,
   getDefaultReactSlashMenuItems,
   SuggestionMenuController,
   useCreateBlockNote,
@@ -53,72 +52,75 @@ const schema = BlockNoteSchema.create({
   },
 });
 
-// Define the props for the EditorWrapper component
 interface EditorWrapperProps {
-  editor: any; // Replace 'any' with the appropriate type for the editor
-  theme: any; // Replace 'any' with the appropriate type for the theme
+  editor: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  theme: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
-const EditorWrapper: React.FC<EditorWrapperProps> = React.memo(({ editor, theme }) => {
-  const [isReady, setIsReady] = useState(false);
+const EditorWrapper: React.FC<EditorWrapperProps> = React.memo(
+  // eslint-disable-next-line react/prop-types
+  ({ editor, theme }) => {
+    const [isReady, setIsReady] = useState(false);
 
-  useEffect(() => {
-    if (editor) {
-      setIsReady(true);
-    }
-  }, [editor]);
-
-  useEffect(() => {
-    if (!editor) return;
-
-    const handleKeyPress = (event:KeyboardEvent) => {
-      if (event.key === "Enter") {
-        const handled = handleBacktickInput(editor);
-        if (handled) {
-          event.preventDefault();
-        }
+    useEffect(() => {
+      if (editor) {
+        setIsReady(true);
       }
-    };
+    }, [editor]);
 
-    const keydownListener = (e:KeyboardEvent) => {
-      handleKeyPress(e);
-    };
+    useEffect(() => {
+      if (!editor) return;
 
-    window.addEventListener("keydown", keydownListener);
-
-    return () => {
-      window.removeEventListener("keydown", keydownListener);
-    };
-  }, [editor]);
-
-  if (!isReady) {
-    return <div>Loading editor...</div>;
-  }
-
-  return (
-    <BlockNoteView
-      editor={editor}
-      theme={theme}
-      placeholder="Start typing..."
-      className="pt-1.5"
-      slashMenu={false}
-    >
-      <SuggestionMenuController
-        triggerCharacter="/"
-        getItems={async (query) =>
-          filterSuggestionItems(
-            [
-              ...getDefaultReactSlashMenuItems(editor),
-              insertAlert(editor),
-              insertCode(editor),
-            ],
-            query,
-          )
+      const handleKeyPress = (event: KeyboardEvent) => {
+        if (event.key === "Enter") {
+          const handled = handleBacktickInput(editor);
+          if (handled) {
+            event.preventDefault();
+          }
         }
-      />
-    </BlockNoteView>
-  );
-});
+      };
+
+      const keydownListener = (e: KeyboardEvent) => {
+        handleKeyPress(e);
+      };
+
+      window.addEventListener("keydown", keydownListener);
+
+      return () => {
+        window.removeEventListener("keydown", keydownListener);
+      };
+    }, [editor]);
+
+    if (!isReady) {
+      return <div>Loading editor...</div>;
+    }
+
+    return (
+      <BlockNoteView
+        editor={editor}
+        theme={theme}
+        className="pt-1.5"
+        slashMenu={false}
+      >
+        <SuggestionMenuController
+          triggerCharacter="/"
+          getItems={async (query) =>
+            filterSuggestionItems(
+              [
+                ...getDefaultReactSlashMenuItems(editor),
+                insertAlert(editor),
+                insertCode(editor),
+              ],
+              query,
+            )
+          }
+        />
+      </BlockNoteView>
+    );
+  },
+);
+
+EditorWrapper.displayName = "EditorWrapper";
 
 export default function EditPage() {
   const { t } = useTranslation();
@@ -142,16 +144,18 @@ export default function EditPage() {
 
   const navigate = useNavigate();
   const [pageData, setPageData] = useState({
-    id:null,
+    id: null,
     title: "",
     slug: "",
     content: {},
     isIntroPage: false,
   });
+
   const [editorContent, setEditorContent] = useState([
     { type: "paragraph", content: "" },
   ]);
-  const generateSlug = (title:string) => {
+
+  const generateSlug = (title: string) => {
     return (
       "/" +
       title
@@ -161,7 +165,7 @@ export default function EditPage() {
         .replace(/[^\w-]+/g, "")
     );
   };
-  const updateContent = (newContent:string, name:string) => {
+  const updateContent = (newContent: string, name: string) => {
     setPageData((prevPageData) => {
       const updatedPageData = { ...prevPageData, [name]: newContent };
       if (name === "title") {
@@ -174,6 +178,8 @@ export default function EditPage() {
 
   const editor = useCreateBlockNote({
     schema,
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    //@ts-ignore
     initialContent: editorContent,
     uploadFile: async (file) => {
       const formData = new FormData();
@@ -189,10 +195,11 @@ export default function EditPage() {
   });
 
   const parsedContent = useCallback(
-    (data:string) => {
+    (data: string) => {
       try {
         return JSON.parse(data);
       } catch (e) {
+        console.error(e);
         toastMessage(t("error_parsing_page_content"), "error");
         return {};
       }
@@ -204,7 +211,7 @@ export default function EditPage() {
     const fetchData = async () => {
       const result = await getPage(Number(pageId));
 
-      const data = result.data
+      const data = result.data;
       if (handleError(result, navigate, t)) return;
 
       if (result.status === "success") {
@@ -225,6 +232,8 @@ export default function EditPage() {
 
   useEffect(() => {
     if (editor && editorContent.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      //@ts-ignore
       editor.replaceBlocks(editor.document, editorContent);
     }
   }, [editor, editorContent]);
@@ -270,7 +279,7 @@ export default function EditPage() {
   };
 
   useEffect(() => {
-    const handleKeyDown = (event:KeyboardEvent) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       if (event.ctrlKey && event.key === "s") {
         event.preventDefault();
         handleEdit();

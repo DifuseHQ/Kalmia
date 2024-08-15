@@ -12,4 +12,5 @@ export type DOMEvent =
   | ReactKeyboardEvent<HTMLElement>
   | ReactMouseEvent<HTMLElement>
   | ReactTouchEvent<HTMLElement>
-  | ReactChangeEvent<HTMLInputElement>;
+  | ReactChangeEvent<HTMLInputElement>
+  | ReactChangeEvent<HTMLTextAreaElement>;

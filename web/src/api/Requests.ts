@@ -61,6 +61,7 @@ interface PagePayload {
   id?: number;
   documentationId?: number;
   order?: number;
+  pageGroupId?: number;
 }
 
 export interface OrderItem {
