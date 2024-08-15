@@ -146,7 +146,7 @@ export default function Table ({
       </td>
 
       {isPageGroup(obj) ? (
-        <td className="w-3/12 px-4 py-3 cursor-pointer relative whitespace-nowrap">
+        <td className="text-center w-3/12 px-4 py-3 cursor-pointer relative whitespace-nowrap">
           <button
             id={`dropdown-button-${obj.id}`}
             data-dropdown-toggle={`dropdown-${obj.id}`}
@@ -170,7 +170,7 @@ export default function Table ({
           </button>
         </td>
       ) : (
-        <td className="px-4 py-3 cursor-pointer relative whitespace-nowrap">
+        <td className="text-center px-4 py-3 cursor-pointer relative whitespace-nowrap">
           <button
             id={`dropdown-button-${obj.id}`}
             data-dropdown-toggle={`dropdown-${obj.id}`}
