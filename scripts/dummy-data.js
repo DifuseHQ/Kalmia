@@ -687,31 +687,33 @@ async function createPages(count, docId, groupId = null) {
 }
 
 const addDummyData = async () => {
-  console.log('-----------------------------------');
-  console.log('Creating Documentations...');
-  console.log('-----------------------------------');
+  await createDocumentation(documentations[0]);
+  
+  // console.log('-----------------------------------');
+  // console.log('Creating Documentations...');
+  // console.log('-----------------------------------');
 
-  for (const documentation of documentations) {
-    await createDocumentation(documentation);
+  // for (const documentation of documentations) {
+  //   await createDocumentation(documentation);
 
-    console.log('-----------------------------------');
-    console.log('Creating Page Groups...');
-    console.log('-----------------------------------');
-    await createPageGroups(documentation.id);
-    console.log('-----------------------------------');
+  //   console.log('-----------------------------------');
+  //   console.log('Creating Page Groups...');
+  //   console.log('-----------------------------------');
+  //   await createPageGroups(documentation.id);
+  //   console.log('-----------------------------------');
 
-    console.log('Creating Pages...');
-    console.log('-----------------------------------');
+  //   console.log('Creating Pages...');
+  //   console.log('-----------------------------------');
 
-    await createPages(16, documentation.id);
+  //   await createPages(16, documentation.id);
 
-    const allPageGroups = await getPageGroups(documentation.id);
-    const rootPageGroupIds = allPageGroups.filter((pg) => pg.parentId === null).map((pg) => pg.id);
+  //   const allPageGroups = await getPageGroups(documentation.id);
+  //   const rootPageGroupIds = allPageGroups.filter((pg) => pg.parentId === null).map((pg) => pg.id);
     
-    for (const rootPageGroupId of rootPageGroupIds) {
-      await createPages(16, documentation.id, rootPageGroupId);
-    }
-  }
+  //   for (const rootPageGroupId of rootPageGroupIds) {
+  //     await createPages(16, documentation.id, rootPageGroupId);
+  //   }
+  // }
 }
 
 addDummyData();

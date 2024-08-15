@@ -13,18 +13,14 @@ import (
 
 	"git.difuse.io/Difuse/kalmia/config"
 	"git.difuse.io/Difuse/kalmia/db/models"
+	"git.difuse.io/Difuse/kalmia/embedded"
 	"git.difuse.io/Difuse/kalmia/logger"
 	"git.difuse.io/Difuse/kalmia/utils"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
-type Block struct {
-	Type     string                 `json:"type"`
-	Props    map[string]interface{} `json:"props"`
-	Content  interface{}            `json:"content"`
-	Children []Block                `json:"children"`
-}
+type Block = utils.Block
 
 type Versions struct {
 	Default  string   `json:"default"`
@@ -61,32 +57,6 @@ type SocialLinkRsPress struct {
 	Icon    string `json:"icon"`
 	Mode    string `json:"mode"`
 	Content string `json:"content"`
-}
-
-func copyInitFiles(to string) error {
-	toCopy := []string{
-		"package.json",
-		"rspress.config.ts",
-		"tsconfig.json",
-		"tailwind.config.js",
-		"styles/",
-	}
-
-	for _, file := range toCopy {
-		if strings.HasSuffix(file, "/") {
-			err := utils.CopyEmbeddedFolder(file, filepath.Join(to, file))
-			if err != nil {
-				return fmt.Errorf("failed to copy folder %s: %w", file, err)
-			}
-		} else {
-			err := utils.CopyEmbeddedFile(file, filepath.Join(to, file))
-			if err != nil {
-				return fmt.Errorf("failed to copy file %s: %w", file, err)
-			}
-		}
-	}
-
-	return nil
 }
 
 func (service *DocService) RemoveDocFolder(docId uint) error {
@@ -155,14 +125,12 @@ func (service *DocService) UpdateWriteBuild(docId uint) error {
 
 func (service *DocService) StartupCheck() error {
 	npmPinged := utils.NpmPing()
-
 	if !npmPinged {
 		logger.Panic("Startup check failed for NPM, exiting...")
 	}
 
 	db := service.DB
 	var docs []models.Documentation
-
 	if err := db.Find(&docs).Error; err != nil {
 		return err
 	}
@@ -173,32 +141,39 @@ func (service *DocService) StartupCheck() error {
 			docsPath := filepath.Join(allDocsPath, "doc_"+strconv.Itoa(int(doc.ID)))
 
 			if !utils.PathExists(docsPath) {
+				startTime := time.Now()
 				if err := service.InitRsPress(doc.ID, true); err != nil {
 					return err
 				}
-
-				logger.Info("Document initialized -> ", zap.Uint("doc_id", doc.ID))
+				elapsedTime := time.Since(startTime)
+				logger.Info("Documentation initialized",
+					zap.Uint("doc_id", doc.ID),
+					zap.String("elapsed", elapsedTime.String()),
+				)
 			} else {
+				startTime := time.Now()
 				if err := utils.RunNpmCommand(docsPath, "install", "--prefer-offline", "--no-audit", "--progress=false", "--no-fund"); err != nil {
 					removeErr := utils.RemovePath(docsPath)
 					if removeErr != nil {
 						return fmt.Errorf("failed to remove path %s: %w", docsPath, removeErr)
 					}
-
 					if err := service.InitRsPress(doc.ID, true); err != nil {
 						return err
 					}
 				}
+				elapsedTime := time.Since(startTime)
+				logger.Info("Document re-initialized",
+					zap.Uint("doc_id", doc.ID),
+					zap.String("elapsed", elapsedTime.String()),
+				)
 			}
 
 			err := service.AddBuildTrigger(doc.ID)
-
 			if err != nil {
 				return err
 			}
 		}
 	}
-
 	return nil
 }
 
@@ -209,7 +184,7 @@ func (service *DocService) InitRsPress(docId uint, init bool) error {
 		allDocsPath := filepath.Join(cfg.DataPath, "rspress_data")
 		docsPath := filepath.Join(allDocsPath, "doc_"+strconv.Itoa(int(docId)))
 
-		err := copyInitFiles(docsPath)
+		err := embedded.CopyInitFiles(docsPath)
 
 		if err != nil {
 			return err
@@ -235,7 +210,7 @@ func (service *DocService) UpdateBasicData(docId uint) error {
 		return err
 	}
 
-	docConfigTemplate, err := utils.ReadEmbeddedFile("rspress.config.ts")
+	docConfigTemplate, err := embedded.ReadEmbeddedFile("rspress.config.ts")
 
 	if err != nil {
 		return err
@@ -249,8 +224,8 @@ func (service *DocService) UpdateBasicData(docId uint) error {
 		"__TAG_LINE__":          doc.Description,
 		"__BASE_URL__":          doc.BaseURL,
 		"__FAVICON__":           "https://downloads-bucket.difuse.io/favicon-final-kalmia.ico",
-		"__META_IMAGE__":        "img/meta.webp",
-		"__NAVBAR_TITLE__":      doc.Name,
+		"__META_IMAGE__":        "https://imagedelivery.net/SM0H54GQmiDTGcg4Xr4iPA/c5359df9-c88f-4767-397e-ee4299a42c00/public",
+		"__NAVBAR_TITLE__":      "doc.Name",
 		"__LOGO_LIGHT__":        "https://downloads-bucket.difuse.io/kalmia-sideways-black.png",
 		"__LOGO_DARK__":         "https://downloads-bucket.difuse.io/kalmia-sideways-white.png",
 		"__COPYRIGHT_TEXT__":    "Iridia Solutions Pvt. Ltd. Built With Kalmia",
@@ -371,7 +346,7 @@ func (service *DocService) CraftPage(pageID uint, title string, slug string, con
 
 	markdown := ""
 	for _, block := range blocks {
-		markdown += blockToMarkdown(block, 0, nil)
+		markdown += utils.BlockToMarkdown(block, 0, nil)
 	}
 
 	top := "---\n"
@@ -389,362 +364,6 @@ func (service *DocService) CraftPage(pageID uint, title string, slug string, con
 	}
 
 	return fmt.Sprintf("%s%s", top, markdown), nil
-}
-
-func blockToMarkdown(block Block, depth int, numbering *[]int) string {
-	content := getTextContent(block.Content)
-	styledContent := applyBlockStyles(content, block.Props, block.Type)
-
-	switch block.Type {
-	case "heading":
-		level, _ := block.Props["level"].(float64)
-		return fmt.Sprintf("%s %s\n\n", strings.Repeat("#", int(level)), styledContent)
-	case "paragraph":
-		return paragraphToMarkdown(styledContent)
-	case "numberedListItem":
-		return numberedListItemToMarkdown(block, depth, numbering, styledContent)
-	case "bulletListItem":
-		return bulletListItemToMarkdown(block, depth, styledContent)
-	case "checkListItem":
-		return checkListItemToMarkdown(block, depth, styledContent)
-	case "table":
-		tableContent, ok := block.Content.(map[string]interface{})
-		if !ok {
-			return "Invalid content for table"
-		}
-		return applyBlockStyles(tableToMarkdown(tableContent), block.Props, block.Type) + "\n"
-	case "image":
-		return imageToMarkdown(block.Props)
-	case "video":
-		return applyBlockStyles(videoToMarkdown(block.Props), block.Props, block.Type)
-	case "audio":
-		return applyBlockStyles(audioToMarkdown(block.Props), block.Props, block.Type)
-	case "file":
-		return applyBlockStyles(fileToMarkdown(block.Props), block.Props, block.Type)
-	case "alert":
-		return applyBlockStyles(alertToMarkdown(block.Props, styledContent), block.Props, block.Type)
-	case "procode":
-		return procodeToMarkdown(block.Props)
-	default:
-		return ""
-	}
-}
-
-func procodeToMarkdown(props map[string]interface{}) string {
-	code := props["code"].(string)
-	language := props["language"].(string)
-	return fmt.Sprintf("```%s\n%s\n```\n", code, language)
-}
-
-func imageWithAlignment(url, alt, alignment, caption string) string {
-	var containerClass, imageClass, captionClass string
-
-	switch alignment {
-	case "left", "flex-start":
-		containerClass = "items-start"
-		imageClass = "mr-auto"
-		captionClass = "text-left mr-auto"
-	case "right", "flex-end":
-		containerClass = "items-end"
-		imageClass = "ml-auto"
-		captionClass = "text-right ml-auto"
-	case "center", "":
-		containerClass = "items-center"
-		imageClass = "mx-auto"
-		captionClass = "text-center mx-auto"
-	default:
-		containerClass = fmt.Sprintf("items-%s", alignment)
-		imageClass = "mx-auto"
-		captionClass = fmt.Sprintf("text-%s mx-auto", alignment)
-	}
-
-	return fmt.Sprintf(`
-    <div className="flex flex-col w-full %s">
-        <img
-            src="%s"
-            alt="%s"
-            className="max-w-[640px] max-h-[360px] w-auto h-auto image-in-mdx %s"
-        />
-        <span className="%s">%s</span>
-    </div>
-    `, containerClass, url, alt, imageClass, captionClass, caption)
-}
-
-func imageToMarkdown(props map[string]interface{}) string {
-	url, urlOK := props["url"].(string)
-	caption, _ := props["caption"].(string)
-
-	if !urlOK {
-		return "\nInvalid image URL\n"
-	}
-
-	alignment := "flex-start"
-
-	if textAlignment, ok := props["textAlignment"].(string); ok {
-		if textAlignment == "left" {
-			alignment = "flex-start"
-		} else if textAlignment == "center" {
-			alignment = "center"
-		} else if textAlignment == "right" {
-			alignment = "flex-end"
-		}
-	}
-
-	return imageWithAlignment(url, caption, alignment, caption) + "\n\n"
-}
-
-func videoToMarkdown(props map[string]interface{}) string {
-	url, urlOK := props["url"].(string)
-	width, _ := props["previewWidth"].(float64)
-	caption, _ := props["caption"].(string)
-
-	if !urlOK {
-		return "\nInvalid video URL\n"
-	}
-
-	return fmt.Sprintf("<figure style={{marginLeft:'0px'}}>\n<ReactPlayer playing controls url='%s' width='%dpx' />\n<figcaption style={{textAlign:'center'}}>%s</figcaption>\n</figure>\n", url, int(width), caption)
-}
-
-func fileToMarkdown(props map[string]interface{}) string {
-	name, _ := props["name"].(string)
-	url, urlOK := props["url"].(string)
-	caption, _ := props["caption"].(string)
-
-	if !urlOK {
-		return "Invalid file URL"
-	}
-
-	return fmt.Sprintf("<figure>\n[%s](%s)\n<figcaption>%s</figcaption>\n</figure>\n", name, url, caption)
-}
-
-func audioToMarkdown(props map[string]interface{}) string {
-	url, urlOK := props["url"].(string)
-	caption, _ := props["caption"].(string)
-
-	if !urlOK {
-		return "\nInvalid audio URL\n"
-	}
-
-	return fmt.Sprintf("<figure style={{marginLeft:'0px'}}>\n<audio controls src='%s'>\nYour browser does not support the audio element.\n</audio>\n<figcaption style={{textAlign:'center'}}>%s</figcaption>\n</figure>\n", url, caption)
-}
-
-func alertToMarkdown(props map[string]interface{}, content string) string {
-	alertType, _ := props["type"].(string)
-
-	if alertType == "error" {
-		alertType = "danger"
-	}
-
-	if alertType == "success" {
-		alertType = `info SUCCESS`
-	}
-
-	return fmt.Sprintf("\n:::%s\n%s\n:::\n", alertType, content)
-}
-
-func tableToMarkdown(tableContent map[string]interface{}) string {
-	// Assume this function handles table properties as earlier defined
-	rowsInterface, ok := tableContent["rows"].([]interface{})
-	if !ok {
-		return "Invalid table data"
-	}
-
-	markdown := ""
-	headers := []string{}
-	separators := []string{}
-	dataRows := []string{}
-
-	for rowIndex, rowInterface := range rowsInterface {
-		row, ok := rowInterface.(map[string]interface{})
-		if !ok {
-			continue
-		}
-
-		cellsInterface, ok := row["cells"].([]interface{})
-		if !ok {
-			continue
-		}
-
-		rowMarkdown := "|"
-		for _, cellInterface := range cellsInterface {
-			cell, ok := cellInterface.([]interface{})
-			if !ok || len(cell) == 0 {
-				rowMarkdown += " |"
-				continue
-			}
-
-			cellMap, ok := cell[0].(map[string]interface{})
-			if !ok {
-				continue
-			}
-
-			text, ok := cellMap["text"].(string)
-			if !ok {
-				text = ""
-			}
-
-			rowMarkdown += " " + text + " |"
-			if rowIndex == 0 {
-				headers = append(headers, text)
-				separators = append(separators, "---")
-			}
-		}
-
-		if rowIndex == 0 {
-			markdown += rowMarkdown + "\n|" + strings.Join(separators, "|") + "|\n"
-		} else {
-			dataRows = append(dataRows, rowMarkdown)
-		}
-	}
-
-	for _, dataRow := range dataRows {
-		markdown += dataRow + "\n"
-	}
-
-	return "\n" + markdown + "\n"
-}
-
-func numberedListItemToMarkdown(block Block, depth int, numbering *[]int, content string) string {
-	if numbering == nil {
-		numbering = &[]int{0}
-	}
-
-	if len(*numbering) < depth+1 {
-		*numbering = append(*numbering, 1)
-	} else {
-		(*numbering)[depth]++
-	}
-
-	indent := strings.Repeat("    ", depth)
-	markdown := fmt.Sprintf("%s%d. %s\n", indent, (*numbering)[depth], content)
-
-	for _, child := range block.Children {
-		markdown += blockToMarkdown(child, depth+1, numbering)
-	}
-
-	return markdown
-}
-
-func bulletListItemToMarkdown(block Block, depth int, content string) string {
-	indent := strings.Repeat("    ", depth)
-	markdown := fmt.Sprintf("%s* %s\n", indent, content)
-	for _, child := range block.Children {
-		markdown += blockToMarkdown(child, depth+1, nil)
-	}
-
-	return markdown
-}
-
-func checkListItemToMarkdown(block Block, depth int, content string) string {
-	indent := strings.Repeat("    ", depth)
-	checked := "[ ]" // default unchecke
-	if isChecked, ok := block.Props["checked"].(bool); ok && isChecked {
-		checked = "[x]" // checked
-	}
-
-	// Format the current checklist item
-	markdown := fmt.Sprintf("%s- %s %s\n", indent, checked, content)
-
-	// Recursively format child items
-	for _, child := range block.Children {
-		markdown += blockToMarkdown(child, depth+1, nil) // Passing 'nil' because checklists do not require numbering
-	}
-
-	return markdown
-}
-
-func paragraphToMarkdown(content string) string {
-	return fmt.Sprintf("\n%s\n", content)
-}
-
-func getTextContent(content interface{}) string {
-	switch v := content.(type) {
-	case []interface{}:
-		var texts []string
-		for _, item := range v {
-			if contentItem, ok := item.(map[string]interface{}); ok {
-				text := ""
-				if t, ok := contentItem["text"].(string); ok {
-					text = t
-				}
-				if styles, ok := contentItem["styles"].(map[string]interface{}); ok {
-					text = applyTextStyles(text, styles)
-				}
-				texts = append(texts, text)
-			}
-		}
-		return strings.Join(texts, "")
-	case string:
-		return v
-	default:
-		return ""
-	}
-}
-
-func applyTextStyles(text string, styles map[string]interface{}) string {
-	if bold, ok := styles["bold"].(bool); ok && bold {
-		text = fmt.Sprintf("**%s**", text)
-	}
-	if italic, ok := styles["italic"].(bool); ok && italic {
-		text = fmt.Sprintf("*%s*", text)
-	}
-	if underline, ok := styles["underline"].(bool); ok && underline {
-		text = fmt.Sprintf("__%s__", text)
-	}
-	if strike, ok := styles["strike"].(bool); ok && strike {
-		text = fmt.Sprintf("~~%s~~", text)
-	}
-	return text
-}
-
-func applyBlockStyles(content string, props map[string]interface{}, blockType string) string {
-	style := make(map[string]string)
-	if textColor, ok := props["textColor"].(string); ok && textColor != "default" {
-		style["color"] = textColor
-	}
-
-	if bgColor, ok := props["backgroundColor"].(string); ok && bgColor != "default" {
-		style["backgroundColor"] = bgColor
-	}
-
-	if textAlignment, ok := props["textAlignment"].(string); ok && textAlignment != "left" {
-		style["textAlign"] = textAlignment
-	}
-
-	if len(style) > 0 {
-		styleString := "{"
-		for key, value := range style {
-			styleString += fmt.Sprintf("%s: '%s', ", key, value)
-		}
-		styleString = styleString[:len(styleString)-2] + "}"
-
-		if blockType != "image" && blockType != "video" {
-			return fmt.Sprintf("<div style={%s}>%s</div>", styleString, content)
-		}
-	}
-
-	if blockType == "image" {
-		styleString := ""
-
-		if len(style) > 0 {
-			if _, ok := style["textAlign"]; !ok {
-				style["textAlign"] = "center"
-			}
-
-			styleString = fmt.Sprintf("style={{ display: 'flex', justifyContent: '%s' }}", style["textAlign"])
-		}
-
-		return fmt.Sprintf("<div %s>\n%s</div>\n", styleString, content)
-	}
-
-	if blockType == "video" || blockType == "audio" {
-		textAlignment, _ := props["textAlignment"].(string)
-		customVideoStyle := fmt.Sprintf("display: 'flex', justifyContent: '%s', alignItems: '%s', textAlign: '%s', height: '100%%'", textAlignment, textAlignment, textAlignment)
-
-		return fmt.Sprintf("<div style={{%s}}>\n%s</div>\n", customVideoStyle, content)
-	}
-
-	return content
 }
 
 func (service *DocService) writePagesToDirectory(pages []models.Page, dirPath string) error {
@@ -778,9 +397,6 @@ func (service *DocService) writePagesToDirectory(pages []models.Page, dirPath st
 
 		if markdownExt == ".md" {
 			oppositeExt = ".mdx"
-			if utils.PathExists(filepath.Join(dirPath, "index"+oppositeExt)) {
-				os.Remove(filepath.Join(dirPath, "index"+oppositeExt))
-			}
 		} else {
 			oppositeExt = ".md"
 		}
@@ -791,10 +407,22 @@ func (service *DocService) writePagesToDirectory(pages []models.Page, dirPath st
 			fileName = utils.StringToFileString(fullPage.Title) + markdownExt
 		}
 
-		if utils.PathExists(filepath.Join(dirPath, utils.StringToFileString(fullPage.Title)+oppositeExt)) {
-			err := os.Remove(filepath.Join(dirPath, utils.StringToFileString(fullPage.Title)+oppositeExt))
-			if err != nil {
-				return err
+		if utils.PathExists(filepath.Join(dirPath, utils.StringToFileString(fullPage.Title)+oppositeExt)) ||
+			utils.PathExists(filepath.Join(dirPath, "index"+oppositeExt)) {
+			if fullPage.IsIntroPage {
+				if utils.PathExists(filepath.Join(dirPath, "index"+oppositeExt)) {
+					err := os.Remove(filepath.Join(dirPath, "index"+oppositeExt))
+					if err != nil {
+						return err
+					}
+				}
+			} else {
+				if utils.PathExists(filepath.Join(dirPath, utils.StringToFileString(fullPage.Title)+oppositeExt)) {
+					err := os.Remove(filepath.Join(dirPath, utils.StringToFileString(fullPage.Title)+oppositeExt))
+					if err != nil {
+						return err
+					}
+				}
 			}
 		}
 

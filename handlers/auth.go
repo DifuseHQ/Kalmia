@@ -131,42 +131,35 @@ func UploadPhoto(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "failed_to_parse_form"})
 		return
 	}
-
 	file, header, err := r.FormFile("upload")
 	if err != nil {
 		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "failed_to_get_file"})
 		return
 	}
 	defer file.Close()
-
 	if header.Size > 10<<20 {
 		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "file_too_large"})
 		return
 	}
-
 	buffer := make([]byte, 512)
 	if _, err := file.Read(buffer); err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "failed_to_read_file"})
 		return
 	}
-
 	contentType := http.DetectContentType(buffer)
 	if !strings.HasPrefix(contentType, "image/") {
 		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "invalid_file_type"})
 		return
 	}
-
 	if _, err := file.Seek(0, 0); err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "failed_to_reset_file_pointer"})
 		return
 	}
-
-	imageURL, err := services.UploadImage(file)
+	imageURL, err := services.UploadImage(file, contentType)
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "failed_to_upload_image"})
 		return
 	}
-
 	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "photo_uploaded", "photo": imageURL})
 }
 

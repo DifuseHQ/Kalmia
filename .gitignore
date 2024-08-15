@@ -7,3 +7,4 @@ test.db
 dist/
 data/
 web/build/*
+.vscode/
