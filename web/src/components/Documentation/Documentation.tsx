@@ -485,7 +485,7 @@ export default function Documentation () {
   }
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5">
+    <div className="bg-gray-50 dark:bg-gray-900 p-1 sm:p-1">
       <AnimatePresence>
         <Breadcrumb key="breadcrumb-container" />
 

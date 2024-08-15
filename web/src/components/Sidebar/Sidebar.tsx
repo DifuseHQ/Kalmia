@@ -156,7 +156,7 @@ export default function Sidebar () {
               </motion.button>
             </li>
             {!documentation || documentation.length <= 0 ? (
-              <motion.li whileHover={{ scale: 1.08, originX: 0 }} key="no-documentation">
+              <motion.li whileHover={{ scale: 1.05, originX: 0 }} key="no-documentation">
                 <p className="flex cursor-default items-center p-5 w-full text-base font-normal text-gray-600 rounded-lg transition duration-75 group ">
                   <span className="flex-1 ml-3 text-left whitespace-nowrap">
                     {t('no_documentations')}
@@ -169,7 +169,7 @@ export default function Sidebar () {
                 .map((val, index) => (
                   <motion.li
                     key={`sidebar-${val.id}-${index}`}
-                    whileHover={{ scale: 1.08, originX: 0 }}
+                    whileHover={{ scale: 1.03, originX: 0 }}
                   >
                     <NavLink
                       to={`/dashboard/documentation?id=${val.id}`}
@@ -201,7 +201,9 @@ export default function Sidebar () {
               className="pt-5 mt-5 space-y-2 border-t border-gray-200 dark:border-gray-700"
               key="user-management-lists"
             >
-              <li>
+              <motion.li
+              whileHover={{ scale: 1.03, originX: 0 }}
+              >
                 <NavLink
                   to="/dashboard/admin/user-list"
                   className={`flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-200 dark:text-white dark:hover:bg-gray-700
@@ -218,7 +220,7 @@ export default function Sidebar () {
                     {t('user_management')}
                   </span>
                 </NavLink>
-              </li>
+              </motion.li>
             </ul>
           )}
 
