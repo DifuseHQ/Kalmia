@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Icon } from '@iconify/react/dist/iconify.js';
-import { differenceInSeconds, formatDistance, parseISO } from 'date-fns';
-import { AnimatePresence, motion } from 'framer-motion';
+import { Icon } from "@iconify/react/dist/iconify.js";
+import { differenceInSeconds, formatDistance, parseISO } from "date-fns";
+import { AnimatePresence, motion } from "framer-motion";
+import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
-import { buildTrigger } from '../../api/Requests';
+import { buildTrigger } from "../../api/Requests";
 
 interface TriggerData {
   id: number;
@@ -14,13 +14,13 @@ interface TriggerData {
   completedAt: string | null;
 }
 
-export default function BuildTrigger () {
+export default function BuildTrigger() {
   const [searchParam] = useSearchParams();
-  const docIdString = searchParam.get('id');
+  const docIdString = searchParam.get("id");
   const docId: number | null = docIdString ? parseInt(docIdString, 10) : null;
   const [triggerData, setTriggerData] = useState<TriggerData | null>(null);
   const [isBuild, setIsBuild] = useState<boolean>(false);
-  const [relativeTime, setRelativeTime] = useState<string>('');
+  const [relativeTime, setRelativeTime] = useState<string>("");
   const [timestamp, setTimestamp] = useState<string | null>(null);
 
   const updateRelativeTime = useCallback(() => {
@@ -32,7 +32,7 @@ export default function BuildTrigger () {
         setRelativeTime(`${seconds} seconds ago`);
       } else {
         setRelativeTime(
-          formatDistance(parseISO(timestamp), now, { addSuffix: true })
+          formatDistance(parseISO(timestamp), now, { addSuffix: true }),
         );
       }
     }
@@ -43,7 +43,8 @@ export default function BuildTrigger () {
       try {
         const result = await buildTrigger();
         const triggerData: TriggerData[] = result.data;
-        const build = triggerData.find((doc) => doc.documentationId === docId) || null;
+        const build =
+          triggerData.find((doc) => doc.documentationId === docId) || null;
         if (build) {
           setTriggerData(build);
           setIsBuild(build.triggered);
@@ -53,7 +54,7 @@ export default function BuildTrigger () {
           updateRelativeTime();
         }
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error("Error fetching data:", error);
       }
     };
 

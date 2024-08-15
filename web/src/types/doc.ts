@@ -25,7 +25,7 @@ export interface Page {
   lastEditorId: number;
   isIntroPage?: boolean;
   content?: string;
-  isPageGroup? : boolean;
+  isPageGroup?: boolean;
 }
 
 export interface PageGroup {
@@ -40,14 +40,14 @@ export interface PageGroup {
   pages: Page[];
   parentId: number | null;
   updatedAt: string;
-  isPageGroup? : boolean;
+  isPageGroup?: boolean;
   pageGroups: PageGroup[];
 }
 
 export interface Features {
-  emoji:string,
-  title:string,
-  text:string
+  emoji: string;
+  title: string;
+  text: string;
 }
 
 export interface LanderDetails {
@@ -64,13 +64,13 @@ export interface LanderDetails {
 }
 
 export interface FooterLabelLinks {
-  icon:string,
-  link:string
+  icon: string;
+  link: string;
 }
 
 export interface MoreLabelLinks {
-  label:string,
-  link:string
+  label: string;
+  link: string;
 }
 
 export interface Documentation {

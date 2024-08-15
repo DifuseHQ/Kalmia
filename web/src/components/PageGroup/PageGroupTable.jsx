@@ -1,9 +1,9 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd';
-import { Icon } from '@iconify/react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
+import { Icon } from "@iconify/react";
+import { AnimatePresence, motion } from "framer-motion";
+import React, { useContext, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import {
   commonReorderBulk,
@@ -12,35 +12,35 @@ import {
   deletePage,
   deletePageGroup,
   getPageGroup,
-  updatePageGroup
-} from '../../api/Requests';
-import { AuthContext } from '../../context/AuthContext';
-import { ModalContext } from '../../context/ModalContext';
+  updatePageGroup,
+} from "../../api/Requests";
+import { AuthContext } from "../../context/AuthContext";
+import { ModalContext } from "../../context/ModalContext";
 import {
   getLastPageOrder,
   handleError,
-  sortGroupAndPage
-} from '../../utils/Common';
-import { toastMessage } from '../../utils/Toast';
-import Breadcrumb from '../Breadcrumb/Breadcrumb';
-import BuildTrigger from '../BuildTrigger/BuildTrigger';
-import EditDocumentModal from '../CreateDocumentModal/EditDocumentModal';
-import CreatePageGroup from '../CreatePageGroup/CreatePageGroup';
-import CreatePage from '../CreatePageModal/CreatePageModal';
-import DeleteModal from '../DeleteModal/DeleteModal';
-import Table from '../Table/Table';
+  sortGroupAndPage,
+} from "../../utils/Common";
+import { toastMessage } from "../../utils/Toast";
+import Breadcrumb from "../Breadcrumb/Breadcrumb";
+import BuildTrigger from "../BuildTrigger/BuildTrigger";
+import EditDocumentModal from "../CreateDocumentModal/EditDocumentModal";
+import CreatePageGroup from "../CreatePageGroup/CreatePageGroup";
+import CreatePage from "../CreatePageModal/CreatePageModal";
+import DeleteModal from "../DeleteModal/DeleteModal";
+import Table from "../Table/Table";
 
-export default function PageGroupTable () {
+export default function PageGroupTable() {
   const [searchParams] = useSearchParams();
-  const docId = searchParams.get('id');
-  const pageGroupId = searchParams.get('pageGroupId');
-  const version = searchParams.get('version');
-  const versionId = searchParams.get('versionId');
+  const docId = searchParams.get("id");
+  const pageGroupId = searchParams.get("pageGroupId");
+  const version = searchParams.get("version");
+  const versionId = searchParams.get("versionId");
 
   const { t } = useTranslation();
 
   const [groupDetail, setGroupDetail] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [data, setData] = useState([]);
   const { refresh, refreshData } = useContext(AuthContext);
 
@@ -51,7 +51,7 @@ export default function PageGroupTable () {
     createPageModal,
     deleteModal,
     editModal,
-    currentModalItem
+    currentModalItem,
   } = useContext(ModalContext);
 
   const navigate = useNavigate();
@@ -64,7 +64,7 @@ export default function PageGroupTable () {
         return;
       }
 
-      if (result.status === 'success') {
+      if (result.status === "success") {
         setGroupDetail(result.data);
         const groupData = result.data.pageGroups;
         const pages = result.data.pages;
@@ -77,7 +77,7 @@ export default function PageGroupTable () {
     if (docId) {
       fetchData();
     }
-  }, [docId, pageGroupId, navigate, refresh]); //eslint-disable-line
+  }, [docId, pageGroupId, navigate, refresh]);
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
@@ -88,12 +88,12 @@ export default function PageGroupTable () {
       (obj.parentId === Number(pageGroupId) ||
         obj.pageGroupId === Number(pageGroupId)) &&
       (obj.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        obj.title?.toLowerCase().includes(searchTerm.toLowerCase()))
+        obj.title?.toLowerCase().includes(searchTerm.toLowerCase())),
   );
 
   const handleCreatePageGroup = async (title) => {
-    if (title === '') {
-      toastMessage(t('title_is_required'), 'warning');
+    if (title === "") {
+      toastMessage(t("title_is_required"), "warning");
       return;
     }
 
@@ -102,26 +102,26 @@ export default function PageGroupTable () {
       name: title,
       documentationId: Number(docId),
       parentId: Number(pageGroupId),
-      order: Number.parseInt(lastOrder)
+      order: Number.parseInt(lastOrder),
     });
 
     if (handleError(result, navigate, t)) {
       return;
     }
 
-    if (result.status === 'success') {
-      closeModal('createPageGroup');
+    if (result.status === "success") {
+      closeModal("createPageGroup");
       refreshData();
-      toastMessage(t(result.data.message), 'success');
+      toastMessage(t(result.data.message), "success");
     }
   };
 
   const handleDeletePageGroup = async (id, path) => {
-    const type = 'slug' in path ? 'page' : 'pageGroup';
+    const type = "slug" in path ? "page" : "pageGroup";
     let result;
-    if (type === 'pageGroup') {
+    if (type === "pageGroup") {
       result = await deletePageGroup(parseInt(id));
-    } else if (type === 'page') {
+    } else if (type === "page") {
       result = await deletePage(parseInt(id));
     }
 
@@ -129,9 +129,9 @@ export default function PageGroupTable () {
       return;
     }
 
-    if (result.status === 'success') {
-      toastMessage(t(result.data.message), 'success');
-      closeModal('delete');
+    if (result.status === "success") {
+      toastMessage(t(result.data.message), "success");
+      closeModal("delete");
       refreshData();
     }
   };
@@ -141,28 +141,28 @@ export default function PageGroupTable () {
       id: Number(id),
       name: editTitle,
       documentationId: Number(docId),
-      parentId: Number(pageGroupId)
+      parentId: Number(pageGroupId),
     });
 
     if (handleError(result, navigate, t)) {
       return;
     }
 
-    if (result.status === 'success') {
-      closeModal('edit');
+    if (result.status === "success") {
+      closeModal("edit");
       refreshData();
-      toastMessage(t(result.data.message), 'success');
+      toastMessage(t(result.data.message), "success");
     }
   };
 
   const handleCreatePage = async (title, slug) => {
-    if (title === '') {
-      toastMessage(t('title_is_required'), 'warning');
+    if (title === "") {
+      toastMessage(t("title_is_required"), "warning");
       return;
     }
 
-    if (slug === '') {
-      toastMessage(t('slug_is_required'), 'warning');
+    if (slug === "") {
+      toastMessage(t("slug_is_required"), "warning");
       return;
     }
 
@@ -175,17 +175,17 @@ export default function PageGroupTable () {
       content: JSON.stringify([]),
       documentationId: Number.parseInt(docIdOrVersionId),
       pageGroupId: Number.parseInt(pageGroupId),
-      order: Number.parseInt(lastOrder)
+      order: Number.parseInt(lastOrder),
     });
 
     if (handleError(result, navigate, t)) {
       return;
     }
 
-    if (result.status === 'success') {
-      closeModal('createPage');
+    if (result.status === "success") {
+      closeModal("createPage");
       refreshData();
-      toastMessage(t(result.data.message), 'success');
+      toastMessage(t(result.data.message), "success");
     }
   };
 
@@ -204,7 +204,7 @@ export default function PageGroupTable () {
       const payload = {
         id: item.id,
         documentationId: Number(docId),
-        order: index
+        order: index,
       };
 
       if (item?.name) {
@@ -217,19 +217,19 @@ export default function PageGroupTable () {
       // make payload an array
       const result = await commonReorderBulk({ order: [payload] });
 
-      if (handleError(result, navigate, t)) return; //eslint-disable-line
+      if (handleError(result, navigate, t)) return;
     };
 
     try {
       await Promise.all(
-        newItems.map((item, index) => updateOrder(item, index))
+        newItems.map((item, index) => updateOrder(item, index)),
       );
       toastMessage(
-        t(`${dragItem.slug ? 'page_reordered' : 'page_group_reordered'}`),
-        'success'
+        t(`${dragItem.slug ? "page_reordered" : "page_group_reordered"}`),
+        "success",
       );
     } catch (err) {
-      console.error('Error in Promise.all:', err);
+      console.error("Error in Promise.all:", err);
     }
     refreshData();
   };
@@ -287,7 +287,7 @@ export default function PageGroupTable () {
                   value={searchTerm}
                   onChange={handleSearchChange}
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                  placeholder={t('search_placeholder')}
+                  placeholder={t("search_placeholder")}
                   required=""
                 />
               </div>
@@ -299,35 +299,35 @@ export default function PageGroupTable () {
                 {version}
               </div>
 
-              <div className='hidden xl:block'>
+              <div className="hidden xl:block">
                 <BuildTrigger />
               </div>
             </div>
-            <div className='flex justify-center xl:hidden'>
+            <div className="flex justify-center xl:hidden">
               <BuildTrigger />
             </div>
             <div className="flex items-center space-x-2">
               <motion.button
                 whileHover={{ scale: 1.1 }}
-                onClick={() => openModal('createPageGroup')}
+                onClick={() => openModal("createPageGroup")}
                 type="button"
                 className="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
               >
                 <span className="px-1 text-left items-center dark:text-white text-md whitespace-nowrap">
-                  {t('new_group')}
+                  {t("new_group")}
                 </span>
                 <Icon icon="ei:plus" className="w-6 h-6 dark:text-white" />
               </motion.button>
 
               <motion.button
                 whileHover={{ scale: 1.1 }}
-                onClick={() => openModal('createPage')}
+                onClick={() => openModal("createPage")}
                 type="button"
                 className="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
                 key="create-nest-page-button"
               >
                 <span className="px-1 text-left items-center dark:text-white text-md whitespace-nowrap">
-                  {t('new_page')}
+                  {t("new_page")}
                 </span>
                 <Icon icon="ei:plus" className="w-6 h-6 dark:text-white" />
               </motion.button>
@@ -343,23 +343,26 @@ export default function PageGroupTable () {
                       <tr key="table-header">
                         <th scope="col" className="px-4 py-3" />
                         <th scope="col" className="px-4 py-3">
-                          {t('title')}
+                          {t("title")}
                         </th>
                         <th scope="col" className="px-4 py-3">
-                          {t('author_editor')}
+                          {t("author_editor")}
                         </th>
                         <th scope="col" className="px-4 py-3">
-                          {t('create_update')}
+                          {t("create_update")}
                         </th>
                         <th scope="col" className="px-4 py-3" />
                       </tr>
                     </thead>
                     <tbody {...provided.droppableProps} ref={provided.innerRef}>
                       {filteredItems.length <= 0 && (
-                        <tr className="border-b dark:border-gray-700" key="no-data">
+                        <tr
+                          className="border-b dark:border-gray-700"
+                          key="no-data"
+                        >
                           <td colSpan="4" className="text-center p-8">
                             <h1 className="text-center text-gray-600 sm:text-lg font-semibold">
-                              {t('no_pages_found')}
+                              {t("no_pages_found")}
                             </h1>
                           </td>
                         </tr>

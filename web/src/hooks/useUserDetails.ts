@@ -1,9 +1,9 @@
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
-import { ApiResponse, getUsers } from '../api/Requests';
-import { handleError } from '../utils/Common';
+import { ApiResponse, getUsers } from "../api/Requests";
+import { handleError } from "../utils/Common";
 
 interface User {
   userId: string;
@@ -20,7 +20,10 @@ export interface UserDetails {
   photo?: string;
 }
 
-export const useUserDetails = (user: User | null, refresh: boolean): [UserDetails | null, Dispatch<SetStateAction<UserDetails | null>>] => {
+export const useUserDetails = (
+  user: User | null,
+  refresh: boolean,
+): [UserDetails | null, Dispatch<SetStateAction<UserDetails | null>>] => {
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -32,15 +35,15 @@ export const useUserDetails = (user: User | null, refresh: boolean): [UserDetail
 
         if (handleError(result, navigate, t)) return;
 
-        if (result.status === 'success') {
+        if (result.status === "success") {
           const data = (result as ApiResponse).data;
           const filterUser = data?.find(
-            (obj: UserDetails) => obj?.id.toString() === user?.userId
+            (obj: UserDetails) => obj?.id.toString() === user?.userId,
           );
           setUserDetails(filterUser || null);
         }
       } catch (error) {
-        console.error('Error fetching user details:', error);
+        console.error("Error fetching user details:", error);
         setUserDetails(null);
       }
     };

@@ -1,22 +1,19 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
-import AvatarEditor from 'react-avatar-editor';
-import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Icon } from '@iconify/react';
+import { Icon } from "@iconify/react";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import AvatarEditor from "react-avatar-editor";
+import { useTranslation } from "react-i18next";
+import { useNavigate, useParams } from "react-router-dom";
 
-import { getUser, updateUser, uploadPhoto } from '../../api/Requests';
-import { AuthContext } from '../../context/AuthContext';
-import { handleError } from '../../utils/Common';
-import { toastMessage } from '../../utils/Toast';
-import Breadcrumb from '../Breadcrumb/Breadcrumb';
+import { getUser, updateUser, uploadPhoto } from "../../api/Requests";
+import { AuthContext } from "../../context/AuthContext";
+import { handleError } from "../../utils/Common";
+import { toastMessage } from "../../utils/Toast";
+import Breadcrumb from "../Breadcrumb/Breadcrumb";
 
-export default function UserForm () {
+export default function UserForm() {
   const { t } = useTranslation();
   const { id: userId } = useParams();
-  const {
-    user: currentUser,
-    refreshData
-  } = useContext(AuthContext);
+  const { user: currentUser, refreshData } = useContext(AuthContext);
   const [isEdit, setIsEdit] = useState(false);
   const navigate = useNavigate();
   const [userData, setUserData] = useState([]);
@@ -26,12 +23,12 @@ export default function UserForm () {
   const [showModal, setShowModal] = useState(false);
 
   const [profileImage, setProfileImage] = useState(
-    '/assets/images/no-profile.png'
+    "/assets/images/no-profile.png",
   );
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPasswod, setConfirmPassword] = useState('');
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPasswod, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const inputRef = useRef(null);
@@ -46,26 +43,24 @@ export default function UserForm () {
           setUsername(response.data.username);
           setEmail(response.data.email);
           setProfileImage(
-            response.data.photo || '/assets/images/no-profile.png'
+            response.data.photo || "/assets/images/no-profile.png",
           );
         } else {
           setUserData(currentUser);
           setUsername(currentUser.username);
           setEmail(currentUser.email);
-          setPassword('');
-          setConfirmPassword('');
-          setProfileImage(
-            currentUser.photo || '/assets/images/no-profile.png'
-          );
+          setPassword("");
+          setConfirmPassword("");
+          setProfileImage(currentUser.photo || "/assets/images/no-profile.png");
         }
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        console.error("Error fetching user data:", error);
         handleError(error, navigate, t);
       }
     };
 
     fetchUserData();
-  }, [userId, currentUser, navigate]); //eslint-disable-line
+  }, [userId, currentUser, navigate]);
 
   useEffect(() => {
     if (isEdit) {
@@ -75,7 +70,7 @@ export default function UserForm () {
 
   const handleUploadFile = (e) => {
     const file = e.target.files[0];
-    const allowedTypes = ['image/jpeg', 'image/png'];
+    const allowedTypes = ["image/jpeg", "image/png"];
     if (file && allowedTypes.includes(file.type)) {
       const reader = new window.FileReader();
       reader.onloadend = () => {
@@ -84,7 +79,7 @@ export default function UserForm () {
       };
       reader.readAsDataURL(file);
     } else {
-      toastMessage(t('please_upload_a_jpeg_or_png_image'), 'error');
+      toastMessage(t("please_upload_a_jpeg_or_png_image"), "error");
     }
   };
 
@@ -97,7 +92,7 @@ export default function UserForm () {
       canvas.toBlob(async (blob) => {
         if (blob) {
           const formData = new FormData();
-          formData.append('upload', blob, 'cropped-image.jpg');
+          formData.append("upload", blob, "cropped-image.jpg");
 
           const photo = await uploadPhoto(formData);
 
@@ -106,14 +101,14 @@ export default function UserForm () {
             return;
           }
 
-          if (photo.status === 'success') {
+          if (photo.status === "success") {
             const image = photo?.data?.photo;
             setProfileImage(image);
             setIsLoading(false);
 
             const result = await updateUser({
               id: Number(userData.id),
-              photo: image
+              photo: image,
             });
 
             if (handleError(result, navigate, t)) {
@@ -121,16 +116,16 @@ export default function UserForm () {
               return;
             }
 
-            if (result.status === 'success') {
+            if (result.status === "success") {
               setIsLoading(false);
-              toastMessage(t('user_photo_updated'), 'success');
+              toastMessage(t("user_photo_updated"), "success");
               refreshData();
             }
           }
         } else {
           setIsLoading(false);
         }
-      }, 'image/jpeg');
+      }, "image/jpeg");
     } else {
       setIsLoading(false);
       refreshData();
@@ -141,20 +136,20 @@ export default function UserForm () {
     e.preventDefault();
 
     if (userData.username === username && userData.email === email) {
-      toastMessage(t('no_changes_detected'), 'warn');
+      toastMessage(t("no_changes_detected"), "warn");
       return;
     }
 
     const result = await updateUser({
       id: Number(userData.userId),
       username,
-      email
+      email,
     });
 
     if (handleError(result, navigate, t)) return;
 
-    if (result.status === 'success') {
-      toastMessage(t('user_details_updated'), 'success');
+    if (result.status === "success") {
+      toastMessage(t("user_details_updated"), "success");
       setIsEdit(!isEdit);
       refreshData();
     }
@@ -163,31 +158,31 @@ export default function UserForm () {
   const handleChangePassword = async (e) => {
     e.preventDefault();
     if (!password) {
-      toastMessage(t('enter_new_password'), 'warn');
+      toastMessage(t("enter_new_password"), "warn");
       return;
     }
 
     if (password.length < 8) {
-      toastMessage(t('password_too_weak'), 'warn');
+      toastMessage(t("password_too_weak"), "warn");
       return;
     }
 
     if (password !== confirmPasswod) {
-      toastMessage(t('password_and_confirm_password_miss_match'), 'warning');
+      toastMessage(t("password_and_confirm_password_miss_match"), "warning");
       return;
     }
 
     const result = await updateUser({
       id: Number(userData.userId),
-      password: password.toString()
+      password: password.toString(),
     });
 
     if (handleError(result, navigate, t)) return;
-    if (result.status === 'success') {
+    if (result.status === "success") {
       refreshData();
-      toastMessage(t('password_change_successfully'), 'success');
-      setPassword('');
-      setConfirmPassword('');
+      toastMessage(t("password_change_successfully"), "success");
+      setPassword("");
+      setConfirmPassword("");
     }
   };
 
@@ -217,14 +212,14 @@ export default function UserForm () {
             ) : (
               <img
                 className="h-48 w-48 rounded-full border-4 border-gray-200 dark:border-gray-700 object-cover"
-                src={profileImage || '/assets/images/no-profile.png'}
+                src={profileImage || "/assets/images/no-profile.png"}
                 alt="Profile"
               />
             )}
             <span
               className="absolute bottom-1 right-1 bg-blue-500 text-white rounded-full p-2 hover:bg-blue-600 cursor-pointer shadow-lg transition duration-300"
               onClick={() =>
-                document.getElementById('upload-profile-photo-button').click()
+                document.getElementById("upload-profile-photo-button").click()
               }
             >
               <Icon icon="mdi:camera" className="w-5 h-5" />
@@ -241,20 +236,21 @@ export default function UserForm () {
         {/* User Details Section */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-            {t('user_details')}
+            {t("user_details")}
           </h2>
           <div className="mb-6">
             <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {t('username')}
+              {t("username")}
             </span>
             <input
               type="text"
               onChange={(e) => setUsername(e.target.value)}
               value={username}
               ref={inputRef}
-              className={`w-full px-3 py-2 border rounded-md ${isEdit
-                ? 'border-blue-500 focus:ring-2 focus:ring-blue-500'
-                : 'border-gray-300 dark:border-gray-600'
+              className={`w-full px-3 py-2 border rounded-md ${
+                isEdit
+                  ? "border-blue-500 focus:ring-2 focus:ring-blue-500"
+                  : "border-gray-300 dark:border-gray-600"
               } bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
               readOnly={!isEdit}
             />
@@ -262,15 +258,16 @@ export default function UserForm () {
 
           <div className="mb-6">
             <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {t('email_address')}
+              {t("email_address")}
             </span>
             <input
               type="email"
               onChange={(e) => setEmail(e.target.value)}
               value={email}
-              className={`w-full px-3 py-2 border rounded-md ${isEdit
-                ? 'border-blue-500 focus:ring-2 focus:ring-blue-500'
-                : 'border-gray-300 dark:border-gray-600'
+              className={`w-full px-3 py-2 border rounded-md ${
+                isEdit
+                  ? "border-blue-500 focus:ring-2 focus:ring-blue-500"
+                  : "border-gray-300 dark:border-gray-600"
               } bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
               readOnly={!isEdit}
             />
@@ -282,7 +279,7 @@ export default function UserForm () {
                 className="bg-blue-500 text-white rounded-md px-4 py-2 hover:bg-blue-600 transition duration-300"
                 onClick={() => setIsEdit(!isEdit)}
               >
-                {t('edit_profile')}
+                {t("edit_profile")}
               </button>
             ) : (
               <>
@@ -290,7 +287,7 @@ export default function UserForm () {
                   className="bg-green-500 text-white rounded-md px-4 py-2 hover:bg-green-600 transition duration-300"
                   onClick={handleSubmit}
                 >
-                  {t('update')}
+                  {t("update")}
                 </button>
                 <button
                   className="bg-gray-500 text-white rounded-md px-4 py-2 hover:bg-gray-600 transition duration-300"
@@ -299,7 +296,7 @@ export default function UserForm () {
                     refreshData();
                   }}
                 >
-                  {t('cancel')}
+                  {t("cancel")}
                 </button>
               </>
             )}
@@ -309,12 +306,12 @@ export default function UserForm () {
         {/* Password Reset Section */}
         <div className="mt-12 border-t pt-8 dark:border-gray-700">
           <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-            {t('reset_password')}
+            {t("reset_password")}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('new_password')}
+                {t("new_password")}
               </span>
               <input
                 type="password"
@@ -327,7 +324,7 @@ export default function UserForm () {
             </div>
             <div>
               <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('confirm_password')}
+                {t("confirm_password")}
               </span>
               <input
                 type="password"
@@ -344,7 +341,7 @@ export default function UserForm () {
               className="bg-blue-500 text-white rounded-md px-6 py-2 hover:bg-blue-600 transition duration-300"
               onClick={handleChangePassword}
             >
-              {t('update_password')}
+              {t("update_password")}
             </button>
           </div>
         </div>
@@ -371,7 +368,7 @@ export default function UserForm () {
             </div>
             <div className="mt-4">
               <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('scale')}
+                {t("scale")}
               </span>
               <input
                 type="range"
@@ -388,13 +385,13 @@ export default function UserForm () {
                 onClick={() => setShowModal(false)}
                 className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition duration-300"
               >
-                {t('cancel')}
+                {t("cancel")}
               </button>
               <button
                 onClick={handleSave}
                 className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300"
               >
-                {t('save')}
+                {t("save")}
               </button>
             </div>
           </div>

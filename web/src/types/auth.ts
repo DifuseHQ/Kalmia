@@ -6,7 +6,7 @@ export interface ValidatedJWT {
   expiry: string;
   admin: boolean;
   userId: string;
-  status: 'success' | 'error' | 'warning';
+  status: "success" | "error" | "warning";
 }
 
 export interface User {

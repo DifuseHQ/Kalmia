@@ -1,3 +1,5 @@
+import { Icon } from "@iconify/react";
+import { AnimatePresence, motion } from "framer-motion";
 import React, {
   ChangeEvent,
   KeyboardEvent,
@@ -5,13 +7,11 @@ import React, {
   useContext,
   useEffect,
   useRef,
-  useState
-} from 'react';
-import { useTranslation } from 'react-i18next';
-import { Icon } from '@iconify/react';
-import { AnimatePresence, motion } from 'framer-motion';
+  useState,
+} from "react";
+import { useTranslation } from "react-i18next";
 
-import { ModalContext, ModalContextType } from '../../context/ModalContext';
+import { ModalContext, ModalContextType } from "../../context/ModalContext";
 
 interface EditDocumentModalProps {
   title?: string;
@@ -19,11 +19,17 @@ interface EditDocumentModalProps {
   id: number;
 }
 
-export default function EditDocumentModal ({ title, updateData, id }: EditDocumentModalProps) {
+export default function EditDocumentModal({
+  title,
+  updateData,
+  id,
+}: EditDocumentModalProps) {
   const { t } = useTranslation();
-  const [editTitle, setEditTitle] = useState<string>('');
-  const [version, setVersion] = useState<string>('');
-  const { closeModal, cloneDocumentModal } = useContext(ModalContext) as ModalContextType;
+  const [editTitle, setEditTitle] = useState<string>("");
+  const [version, setVersion] = useState<string>("");
+  const { closeModal, cloneDocumentModal } = useContext(
+    ModalContext,
+  ) as ModalContextType;
 
   const titleRef = useRef<HTMLInputElement>(null);
 
@@ -34,25 +40,28 @@ export default function EditDocumentModal ({ title, updateData, id }: EditDocume
   }, []);
 
   useEffect(() => {
-    setEditTitle(title || '');
+    setEditTitle(title || "");
   }, [title, id]);
 
   const handleCloseClick = useCallback(() => {
     if (cloneDocumentModal) {
-      closeModal('cloneDocument');
+      closeModal("cloneDocument");
     } else {
-      closeModal('edit');
+      closeModal("edit");
     }
   }, [cloneDocumentModal, closeModal]);
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
+    if (event.key === "Enter") {
       event.preventDefault();
       updateData(editTitle, version, id);
     }
   };
 
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement>, setter: React.Dispatch<React.SetStateAction<string>>) => {
+  const handleInputChange = (
+    e: ChangeEvent<HTMLInputElement>,
+    setter: React.Dispatch<React.SetStateAction<string>>,
+  ) => {
     setter(e.target.value);
   };
 
@@ -74,8 +83,8 @@ export default function EditDocumentModal ({ title, updateData, id }: EditDocume
               <div className="flex-grow text-center">
                 <h3 className="text-lg  font-semibold text-gray-900 dark:text-white">
                   {cloneDocumentModal
-                    ? t('new_document_version')
-                    : t('rename_page_group')}
+                    ? t("new_document_version")
+                    : t("rename_page_group")}
                 </h3>
               </div>
               <button
@@ -92,7 +101,7 @@ export default function EditDocumentModal ({ title, updateData, id }: EditDocume
               <div className="grid gap-4 mb-4">
                 <div>
                   <span className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                    {t('version_label')}
+                    {t("version_label")}
                   </span>
                   <input
                     ref={titleRef}
@@ -103,7 +112,7 @@ export default function EditDocumentModal ({ title, updateData, id }: EditDocume
                     name="version"
                     id="version"
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                    placeholder={t('version_palceholder')}
+                    placeholder={t("version_palceholder")}
                     required
                   />
                 </div>
@@ -112,7 +121,7 @@ export default function EditDocumentModal ({ title, updateData, id }: EditDocume
                   type="button"
                   className="flex justify-center items-center text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
                 >
-                  <span>{t('new_version')}</span>
+                  <span>{t("new_version")}</span>
                   <Icon icon="ei:plus" className="w-6 h-6" />
                 </button>
               </div>
@@ -121,7 +130,7 @@ export default function EditDocumentModal ({ title, updateData, id }: EditDocume
                 {title && (
                   <div>
                     <span className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                      {t('title_label')}
+                      {t("title_label")}
                     </span>
                     <input
                       ref={titleRef}
@@ -132,7 +141,7 @@ export default function EditDocumentModal ({ title, updateData, id }: EditDocume
                       name="title"
                       id="title"
                       className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                      placeholder={t('title_placeholder')}
+                      placeholder={t("title_placeholder")}
                       required
                     />
                   </div>
@@ -143,7 +152,7 @@ export default function EditDocumentModal ({ title, updateData, id }: EditDocume
                   type="button"
                   className="flex justify-center items-center text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
                 >
-                  <span>{t('update')}</span>
+                  <span>{t("update")}</span>
                   <Icon icon="ei:plus" className="w-6 h-6" />
                 </button>
               </div>

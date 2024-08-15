@@ -1,15 +1,15 @@
-import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode';
+import { jwtDecode } from "jwt-decode";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 
-import { ApiResponse, getUsers } from '../api/Requests';
-import Loading from '../components/Loading/Loading';
-import { UserPayload } from '../hooks/useUser';
-import { User } from '../types/auth';
-import { handleError } from '../utils/Common';
+import { ApiResponse, getUsers } from "../api/Requests";
+import Loading from "../components/Loading/Loading";
+import { UserPayload } from "../hooks/useUser";
+import { User } from "../types/auth";
+import { handleError } from "../utils/Common";
 
-export default function AdminAuth () {
+export default function AdminAuth() {
   const { t } = useTranslation();
   const location = useLocation();
   const [isAdmin, setIsAdmin] = useState(false);
@@ -20,8 +20,8 @@ export default function AdminAuth () {
     const fetchData = async () => {
       let user: UserPayload;
 
-      if (localStorage.getItem('accessToken')) {
-        const accessTokenString = localStorage.getItem('accessToken');
+      if (localStorage.getItem("accessToken")) {
+        const accessTokenString = localStorage.getItem("accessToken");
         if (accessTokenString) {
           const tokenData = JSON.parse(accessTokenString);
           const accessToken = jwtDecode<UserPayload>(tokenData.token);
@@ -37,9 +37,9 @@ export default function AdminAuth () {
 
       const users = response.data as User[];
 
-      if (response?.status === 'success') {
+      if (response?.status === "success") {
         const foundUser = users.find(
-          (obj: User) => obj.id === parseInt(user.userId)
+          (obj: User) => obj.id === parseInt(user.userId),
         );
 
         if (foundUser && foundUser?.admin === true) {
@@ -51,7 +51,7 @@ export default function AdminAuth () {
     };
 
     fetchData();
-	}, [navigate]); //eslint-disable-line
+  }, [navigate]);
 
   if (isLoading) {
     return (

@@ -1,28 +1,28 @@
-import { defineConfig } from '@rsbuild/core';
-import { pluginImageCompress } from '@rsbuild/plugin-image-compress';
-import { pluginReact } from '@rsbuild/plugin-react';
-import { pluginTypeCheck } from '@rsbuild/plugin-type-check';
+import { defineConfig } from "@rsbuild/core";
+import { pluginImageCompress } from "@rsbuild/plugin-image-compress";
+import { pluginReact } from "@rsbuild/plugin-react";
+import { pluginTypeCheck } from "@rsbuild/plugin-type-check";
 
 export default defineConfig({
   plugins: [pluginReact(), pluginImageCompress(), pluginTypeCheck()],
   html: {
-    template: './public/index.html',
+    template: "./public/index.html",
   },
   output: {
-    legalComments: 'none',
-    polyfill: 'usage',
+    legalComments: "none",
+    polyfill: "usage",
     distPath: {
-      root: 'build',
+      root: "build",
     },
     sourceMap: {
-      js: process.env.NODE_ENV === 'development'? 'source-map' : false,
-      css: false
+      js: process.env.NODE_ENV === "development" ? "source-map" : false,
+      css: false,
     },
-    cleanDistPath: process.env.NODE_ENV === 'production',
+    cleanDistPath: process.env.NODE_ENV === "production",
   },
   performance: {
     chunkSplit: {
-      strategy: 'split-by-size',
+      strategy: "split-by-size",
       minSize: 30000,
       maxSize: 50000,
     },

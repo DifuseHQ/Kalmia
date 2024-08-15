@@ -1,30 +1,30 @@
-import { JSX } from 'react';
-import { Icon } from '@iconify/react/dist/iconify.js';
+import { Icon } from "@iconify/react/dist/iconify.js";
+import { JSX } from "react";
 
-import i18n from './i18n';
+import i18n from "./i18n";
 
-export function nullOrUndefined (a: any): boolean {
+export function nullOrUndefined(a: unknown): boolean {
   return a === null || a === undefined;
 }
 
-export function pageSizes (): number[] {
+export function pageSizes(): number[] {
   const pages = [10, 50, 100, 1000];
   return pages;
 }
 
-export const languages: {code: string, lang: string}[] = [
-  { code: 'en', lang: 'English' },
-  { code: 'ml', lang: 'Malayalam' },
-  { code: 'hi', lang: 'Hindi' }
+export const languages: { code: string; lang: string }[] = [
+  { code: "en", lang: "English" },
+  { code: "ml", lang: "Malayalam" },
+  { code: "hi", lang: "Hindi" },
 ];
 
 export const getLanguageName = (): string => {
-  const code = i18n.language || 'en';
+  const code = i18n.language || "en";
   const language = languages.find((lang) => lang.code === code);
-  return language ? language.lang : 'Unknown Language';
+  return language ? language.lang : "Unknown Language";
 };
 
-export function customCSSInitial (): string {
+export function customCSSInitial(): string {
   const customCSS = `:root {
   /* Modify theme color */
   --rp-c-brand: #f00;
@@ -46,7 +46,11 @@ export function customCSSInitial (): string {
   return customCSS;
 }
 
-export const SocialLinkIcon: {icon: JSX.Element; value: string; iconName: string}[] = [
+export const SocialLinkIcon: {
+  icon: JSX.Element;
+  value: string;
+  iconName: string;
+}[] = [
   {
     icon: (
       <Icon
@@ -54,8 +58,8 @@ export const SocialLinkIcon: {icon: JSX.Element; value: string; iconName: string
         className="w-6 h-6 text-black dark:text-white"
       />
     ),
-    value: 'discord',
-    iconName: 'Discord'
+    value: "discord",
+    iconName: "Discord",
   },
   {
     icon: (
@@ -64,15 +68,15 @@ export const SocialLinkIcon: {icon: JSX.Element; value: string; iconName: string
         className="w-6 h-6 text-black dark:text-white"
       />
     ),
-    value: 'facebook',
-    iconName: 'Facebook'
+    value: "facebook",
+    iconName: "Facebook",
   },
   {
     icon: (
       <Icon icon="mdi:github" className="w-6 h-6 text-black dark:text-white" />
     ),
-    value: 'github',
-    iconName: 'Github'
+    value: "github",
+    iconName: "Github",
   },
   {
     icon: (
@@ -81,8 +85,8 @@ export const SocialLinkIcon: {icon: JSX.Element; value: string; iconName: string
         className="w-6 h-6 text-black dark:text-white"
       />
     ),
-    value: 'instagram',
-    iconName: 'Instagram'
+    value: "instagram",
+    iconName: "Instagram",
   },
   {
     icon: (
@@ -91,8 +95,8 @@ export const SocialLinkIcon: {icon: JSX.Element; value: string; iconName: string
         className="w-6 h-6 text-black dark:text-white"
       />
     ),
-    value: 'linkedin',
-    iconName: 'Linkedin'
+    value: "linkedin",
+    iconName: "Linkedin",
   },
   {
     icon: (
@@ -101,36 +105,36 @@ export const SocialLinkIcon: {icon: JSX.Element; value: string; iconName: string
         className="w-6 h-6 text-black dark:text-white"
       />
     ),
-    value: 'x',
-    iconName: 'X'
+    value: "x",
+    iconName: "X",
   },
   {
     icon: (
       <Icon icon="mdi:youtube" className="w-6 h-6 text-black dark:text-white" />
     ),
-    value: 'youtube',
-    iconName: 'Youtube'
+    value: "youtube",
+    iconName: "Youtube",
   },
   {
     icon: (
       <Icon icon="mdi:slack" className="w-6 h-6 text-black dark:text-white" />
     ),
-    value: 'slack',
-    iconName: 'Slack'
+    value: "slack",
+    iconName: "Slack",
   },
   {
     icon: (
       <Icon icon="mdi:twitter" className="w-6 h-6 text-black dark:text-white" />
     ),
-    value: 'twitter',
-    iconName: 'Twitter'
+    value: "twitter",
+    iconName: "Twitter",
   },
   {
     icon: (
       <Icon icon="mdi:gitlab" className="w-6 h-6 text-black dark:text-white" />
     ),
-    value: 'gitlab',
-    iconName: 'Gitlab'
+    value: "gitlab",
+    iconName: "Gitlab",
   },
   {
     icon: (
@@ -139,8 +143,8 @@ export const SocialLinkIcon: {icon: JSX.Element; value: string; iconName: string
         className="w-6 h-6 text-black dark:text-white"
       />
     ),
-    value: 'wechat',
-    iconName: 'Wechat'
+    value: "wechat",
+    iconName: "Wechat",
   },
   {
     icon: (
@@ -149,8 +153,8 @@ export const SocialLinkIcon: {icon: JSX.Element; value: string; iconName: string
         className="w-6 h-6 text-black dark:text-white"
       />
     ),
-    value: 'qq',
-    iconName: 'QQ'
+    value: "qq",
+    iconName: "QQ",
   },
   {
     icon: (
@@ -159,8 +163,8 @@ export const SocialLinkIcon: {icon: JSX.Element; value: string; iconName: string
         className="w-6 h-6 text-black dark:text-white"
       />
     ),
-    value: 'juejin',
-    iconName: 'Juejin'
+    value: "juejin",
+    iconName: "Juejin",
   },
   {
     icon: (
@@ -169,8 +173,8 @@ export const SocialLinkIcon: {icon: JSX.Element; value: string; iconName: string
         className="w-6 h-6 text-black dark:text-white"
       />
     ),
-    value: 'zhihu',
-    iconName: 'Zhihu'
+    value: "zhihu",
+    iconName: "Zhihu",
   },
   {
     icon: (
@@ -179,8 +183,8 @@ export const SocialLinkIcon: {icon: JSX.Element; value: string; iconName: string
         className="w-6 h-6 text-black dark:text-white"
       />
     ),
-    value: 'bilibili',
-    iconName: 'Bilibili'
+    value: "bilibili",
+    iconName: "Bilibili",
   },
   {
     icon: (
@@ -189,8 +193,8 @@ export const SocialLinkIcon: {icon: JSX.Element; value: string; iconName: string
         className="w-6 h-6 text-black dark:text-white"
       />
     ),
-    value: 'weibo',
-    iconName: 'Weibo'
+    value: "weibo",
+    iconName: "Weibo",
   },
   {
     icon: (
@@ -199,7 +203,7 @@ export const SocialLinkIcon: {icon: JSX.Element; value: string; iconName: string
         className="w-6 h-6 text-black dark:text-white"
       />
     ),
-    value: 'lark',
-    iconName: 'Lark'
-  }
+    value: "lark",
+    iconName: "Lark",
+  },
 ];

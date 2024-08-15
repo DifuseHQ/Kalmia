@@ -18,9 +18,9 @@
     "@uiw/react-codemirror": "^4.23.0",
     "ace-builds": "^1.35.4",
     "axios": "^1.7.4",
-    "class-variance-authority": "^0.7.0",
     "date-fns": "^3.6.0",
-    "emoji-mart": "^5.6.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
     "framer-motion": "^11.2.13",
     "i18next": "^23.12.2",
     "i18next-browser-languagedetector": "^8.0.0",
@@ -29,7 +29,6 @@
     "react": "^18.3.1",
     "react-ace": "^12.0.0",
     "react-avatar-editor": "^13.0.2",
-    "react-beautiful-dnd": "^13.1.1",
     "react-dom": "^18.3.1",
     "react-i18next": "^15.0.0",
     "react-router-dom": "^6.24.0",
@@ -41,42 +40,25 @@
     "build": "rsbuild build",
     "build:watch": "rsbuild build --watch",
     "preview": "rsbuild preview",
-    "lint": "eslint \"src/**/*.{js,jsx,ts,tsx}\"",
-    "lint:fix": "eslint \"src/**/*.{js,jsx,ts,tsx}\" --fix"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest",
-      "semistandard"
-    ],
-    "plugins": [
-      "simple-import-sort",
-      "import"
-    ],
-    "rules": {
-      "simple-import-sort/imports": "error",
-      "simple-import-sort/exports": "error",
-      "import/first": "error",
-      "import/newline-after-import": "error",
-      "import/no-duplicates": "error"
-    }
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix"
   },
   "devDependencies": {
-    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@eslint/js": "^9.9.0",
     "@rsbuild/core": "^1.0.1-beta.10",
     "@rsbuild/plugin-image-compress": "^1.0.2",
     "@rsbuild/plugin-react": "^1.0.1-beta.10",
     "@rsbuild/plugin-type-check": "^1.0.1-beta.11",
     "@types/node": "^22.2.0",
     "autoprefixer": "^10.4.19",
-    "eslint-config-react-app": "^7.0.1",
-    "eslint-config-semistandard": "^17.0.0",
+    "eslint": "^9.9.0",
+    "eslint-plugin-react": "^7.35.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
+    "globals": "^15.9.0",
     "postcss": "^8.4.38",
     "sass": "^1.77.8",
-    "semistandard": "^17.0.0",
-    "tailwindcss": "^3.4.4"
+    "tailwindcss": "^3.4.4",
+    "typescript-eslint": "^8.1.0"
   },
   "browserslist": {
     "production": [

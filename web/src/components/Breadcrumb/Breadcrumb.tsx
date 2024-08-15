@@ -1,24 +1,24 @@
-import { JSX, useContext, useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Icon } from "@iconify/react/dist/iconify.js";
+import { motion } from "framer-motion";
+import { type JSX, useContext, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Link,
   useLocation,
   useNavigate,
   useParams,
-  useSearchParams
-} from 'react-router-dom';
-import { Icon } from '@iconify/react/dist/iconify.js';
-import { motion } from 'framer-motion';
+  useSearchParams,
+} from "react-router-dom";
 
 import {
   getDocumentations,
   getPageGroups,
   getPages,
-  getUser
-} from '../../api/Requests';
-import { AuthContext, AuthContextType } from '../../context/AuthContext';
-import { Documentation, Page, PageGroup } from '../../types/doc';
-import { toastMessage } from '../../utils/Toast';
+  getUser,
+} from "../../api/Requests";
+import { AuthContext } from "../../context/AuthContext";
+import type { Documentation, Page, PageGroup } from "../../types/doc";
+import { toastMessage } from "../../utils/Toast";
 
 interface BreadcrumbItem {
   title: string;
@@ -26,59 +26,59 @@ interface BreadcrumbItem {
   icon: string;
 }
 
-export default function Breadcrumb (): JSX.Element {
+export default function Breadcrumb(): JSX.Element {
   const { id: userIdFromParam } = useParams<{ id: string }>();
   const [breadcrumb, setBreadcrumb] = useState<BreadcrumbItem[]>([]);
   const [searchParams] = useSearchParams();
 
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useContext(AuthContext) as AuthContextType;
-  const titleRef = useRef<string>('');
+  const { user } = useContext(AuthContext)!;
+  const titleRef = useRef<string>("");
 
   const { t } = useTranslation();
 
   useEffect(() => {
-    async function updateBreadcrumb () {
+    async function updateBreadcrumb() {
       const newBreadcrumb: BreadcrumbItem[] = [];
 
-      if (location.pathname.includes('/dashboard/user-profile')) {
+      if (location.pathname.includes("/dashboard/user-profile")) {
         newBreadcrumb.push({
-          title: 'User Profile',
-          path: '/dashboard/user-profile',
-          icon: 'mdi:account-circle'
+          title: "User Profile",
+          path: "/dashboard/user-profile",
+          icon: "mdi:account-circle",
         });
 
         setBreadcrumb(newBreadcrumb);
         return;
       }
 
-      if (location.pathname.includes('/dashboard/admin')) {
+      if (location.pathname.includes("/dashboard/admin")) {
         newBreadcrumb.push({
-          title: 'User Management',
-          path: '/dashboard/admin/user-list',
-          icon: 'mdi:users'
+          title: "User Management",
+          path: "/dashboard/admin/user-list",
+          icon: "mdi:users",
         });
 
-        if (location.pathname.includes('/create-user')) {
+        if (location.pathname.includes("/create-user")) {
           newBreadcrumb.push({
-            title: 'Create User',
-            path: '/dashboard/admin/create-user',
-            icon: 'mdi:account-plus'
+            title: "Create User",
+            path: "/dashboard/admin/create-user",
+            icon: "mdi:account-plus",
           });
-        } else if (location.pathname.includes('/user-list')) {
+        } else if (location.pathname.includes("/user-list")) {
           newBreadcrumb.push({
-            title: 'User List',
-            path: '/dashboard/admin/user-list',
-            icon: 'mdi:table-user'
+            title: "User List",
+            path: "/dashboard/admin/user-list",
+            icon: "mdi:table-user",
           });
-        } else if (location.pathname.includes('/edit-user')) {
+        } else if (location.pathname.includes("/edit-user")) {
           if (user?.admin) {
-            const userData = await getUser(parseInt(userIdFromParam as string));
+            const userData = await getUser(parseInt(userIdFromParam!));
             newBreadcrumb.push({
               title: `${userData.data.username}`,
               path: location.pathname + location.search,
-              icon: 'mdi:account-edit'
+              icon: "mdi:account-edit",
             });
           }
         }
@@ -91,96 +91,100 @@ export default function Breadcrumb (): JSX.Element {
         [getDocumentations(), getPageGroups(), getPages()].map(
           async (promise) => {
             const result = await promise;
-            if (result.status === 'error') {
+            if (result.status === "error") {
               throw new Error(result.message);
             }
             return result.data;
-          }
-        )
+          },
+        ),
       ).catch((error: Error) => {
-        toastMessage(t(error.message), 'error');
+        toastMessage(t(error.message), "error");
         return [null, null, null];
       });
 
       newBreadcrumb.push({
-        title: 'Dashboard',
-        path: '/dashboard',
-        icon: 'uiw:home'
+        title: "Dashboard",
+        path: "/dashboard",
+        icon: "uiw:home",
       });
 
-      const docId = searchParams.get('id');
-      const pageId = searchParams.get('pageId');
-      const pageGroupId = searchParams.get('pageGroupId');
-      const isCreatePage = location.pathname.includes('/create-page');
-      const versionId = searchParams.get('versionId');
-      const version = searchParams.get('version');
+      const docId = searchParams.get("id");
+      const pageId = searchParams.get("pageId");
+      const pageGroupId = searchParams.get("pageGroupId");
+      const isCreatePage = location.pathname.includes("/create-page");
+      const versionId = searchParams.get("versionId");
+      const version = searchParams.get("version");
       const clonedFrom =
         versionId && version
           ? documentations?.find(
-            (d: Documentation) => Number.parseInt(d.id.toString()) === Number.parseInt(versionId)
-          )?.clonedFrom
+              (d: Documentation) =>
+                Number.parseInt(d.id.toString()) === Number.parseInt(versionId),
+            )?.clonedFrom
           : null;
 
       if (clonedFrom !== null) {
         const parentDoc = documentations?.find(
-          (d: Documentation) => Number.parseInt(d.id.toString()) === Number.parseInt(clonedFrom.toString())
+          (d: Documentation) =>
+            Number.parseInt(d.id.toString()) ===
+            Number.parseInt(clonedFrom.toString()),
         );
         const doc = documentations?.find(
-          (d: Documentation) => Number.parseInt(d.id.toString()) === Number.parseInt(versionId as string)
+          (d: Documentation) =>
+            Number.parseInt(d.id.toString()) === Number.parseInt(versionId!),
         );
         newBreadcrumb.push({
-          title: doc?.name || '',
+          title: doc?.name || "",
           path: `/dashboard/documentation?id=${parentDoc?.id}&versionId=${doc?.id}&version=${doc?.version}`,
-          icon: 'uiw:document'
+          icon: "uiw:document",
         });
       } else if (
-        location.pathname.includes('/create-documentation') ||
-        location.pathname.includes('/edit-documentation')
+        location.pathname.includes("/create-documentation") ||
+        location.pathname.includes("/edit-documentation")
       ) {
-        if (location.pathname.includes('/create-documentation')) {
+        if (location.pathname.includes("/create-documentation")) {
           newBreadcrumb.push({
-            title: 'Create Documentation',
-            path: '/dashboard/create-documentation',
-            icon: 'pajamas:doc-new'
+            title: "Create Documentation",
+            path: "/dashboard/create-documentation",
+            icon: "pajamas:doc-new",
           });
         } else {
           const doc = documentations?.find(
-            (d: Documentation) => d.id === Number.parseInt(docId as string)
+            (d: Documentation) => d.id === Number.parseInt(docId!),
           );
           if (doc) {
             newBreadcrumb.push({
               title: doc.name,
               path: `/dashboard/documentation?id=${doc.id}&versionId=${doc.id}&version=${doc.version}`,
-              icon: 'uiw:document'
+              icon: "uiw:document",
             });
           }
           newBreadcrumb.push({
-            title: 'Edit Documentation',
-            path: '/dashboard/edit-documentation',
-            icon: 'lucide:edit'
+            title: "Edit Documentation",
+            path: "/dashboard/edit-documentation",
+            icon: "lucide:edit",
           });
         }
       } else {
         if (docId) {
           const doc = documentations?.find(
-            (d: Documentation) => d.id === Number.parseInt(docId)
+            (d: Documentation) => d.id === Number.parseInt(docId),
           );
           if (doc) {
             newBreadcrumb.push({
               title: doc.name,
               path: `/dashboard/documentation?id=${doc.id}&versionId=${doc.id}&version=${doc.version}`,
-              icon: 'uiw:document'
+              icon: "uiw:document",
             });
           }
         } else {
           const smallestId = await documentations?.reduce(
             (min: number, doc: Documentation) => (doc.id < min ? doc.id : min),
-            documentations[0]?.id
+            documentations[0]?.id,
           );
           navigate(
             smallestId
               ? `/dashboard/documentation?id=${smallestId}`
-              : '/dashboard/documentation'
+              : "/dashboard/documentation",
           );
         }
       }
@@ -192,15 +196,15 @@ export default function Breadcrumb (): JSX.Element {
             pageGroups,
             newBreadcrumb,
             versionId,
-            version
+            version,
           );
         }
         newBreadcrumb.push({
-          title: 'Create Page',
+          title: "Create Page",
           path: location.pathname + location.search,
-          icon: 'mdi:file-document-plus'
+          icon: "mdi:file-document-plus",
         });
-      } else if (location.pathname.includes('/edit-page') && pageId) {
+      } else if (location.pathname.includes("/edit-page") && pageId) {
         const page = pages?.find((p: Page) => p.id === Number.parseInt(pageId));
         if (page) {
           if (page.pageGroupId != null && page.pageGroupId !== undefined) {
@@ -209,36 +213,39 @@ export default function Breadcrumb (): JSX.Element {
               pageGroups,
               newBreadcrumb,
               versionId,
-              version
+              version,
             );
           }
           newBreadcrumb.push({
             title: page.title,
             path: `/dashboard/documentation/edit-page?id=${page.documentationId}&pageId=${page.id}&versionId=${versionId}&version=${version}`,
-            icon: 'iconoir:page'
+            icon: "iconoir:page",
           });
         }
-      } else if (location.pathname.includes('/page-group') && pageGroupId) {
+      } else if (location.pathname.includes("/page-group") && pageGroupId) {
         addPageGroupsBreadcrumb(
           Number.parseInt(pageGroupId),
           pageGroups,
           newBreadcrumb,
           versionId,
-          version
+          version,
         );
       }
 
       setBreadcrumb(newBreadcrumb);
     }
 
-    function addPageGroupsBreadcrumb (
+    function addPageGroupsBreadcrumb(
       pageGroupId: number,
       pageGroups: PageGroup[],
       newBreadcrumb: BreadcrumbItem[],
       versionId: string | null,
-      version: string | null
+      version: string | null,
     ) {
-      function findPageGroup (groups: PageGroup[], id: number): PageGroup | null {
+      function findPageGroup(
+        groups: PageGroup[],
+        id: number,
+      ): PageGroup | null {
         for (const group of groups) {
           if (group.id === id) return group;
           if (group.pageGroups) {
@@ -249,7 +256,11 @@ export default function Breadcrumb (): JSX.Element {
         return null;
       }
 
-      function buildBreadcrumb (group: PageGroup, versionId: string | null, version: string | null) {
+      function buildBreadcrumb(
+        group: PageGroup,
+        versionId: string | null,
+        version: string | null,
+      ) {
         if (group.parentId) {
           const parent = findPageGroup(pageGroups, group.parentId);
           if (parent) buildBreadcrumb(parent, versionId, version);
@@ -257,7 +268,7 @@ export default function Breadcrumb (): JSX.Element {
         newBreadcrumb.push({
           title: group.name,
           path: `/dashboard/documentation/page-group?id=${group.documentationId}&pageGroupId=${group.id}&versionId=${versionId}&version=${version}`,
-          icon: 'clarity:folder-solid'
+          icon: "clarity:folder-solid",
         });
       }
 
@@ -278,12 +289,12 @@ export default function Breadcrumb (): JSX.Element {
     user,
     userIdFromParam,
     setBreadcrumb,
-    t
+    t,
   ]);
 
   useEffect(() => {
-    const firstTitle = breadcrumb[0]?.title || 'Kalmia';
-    const lastTitle = breadcrumb[breadcrumb.length - 1]?.title || '';
+    const firstTitle = breadcrumb[0]?.title || "Kalmia";
+    const lastTitle = breadcrumb[breadcrumb.length - 1]?.title || "";
 
     const newTitle =
       breadcrumb.length === 1
