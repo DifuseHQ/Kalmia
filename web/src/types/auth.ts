@@ -17,4 +17,5 @@ export interface User {
   password: string;
   createdAt: string;
   updatedAt: string;
+  photo?: string;
 }
