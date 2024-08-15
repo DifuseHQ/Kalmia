@@ -1,4 +1,4 @@
-import React, { createContext, ReactNode, useState } from 'react';
+import React, { createContext, ReactNode, useState } from "react";
 
 export interface ModalItem {
   id: number;
@@ -6,7 +6,7 @@ export interface ModalItem {
   title?: string;
   version?: string;
   username?: string;
-  slug?:string;
+  slug?: string;
 }
 
 export interface ModalContextType {
@@ -37,12 +37,12 @@ const defaultContext: ModalContextType = {
   currentModalItem: null,
   pageSizeDropdown: false,
   loadingModal: false,
-  loadingMessage: 'Loading..',
+  loadingMessage: "Loading..",
   setCurrentModalItem: () => {},
   setLoadingModal: () => {},
   setLoadingMessage: () => {},
   openModal: () => {},
-  closeModal: () => {}
+  closeModal: () => {},
 };
 
 export const ModalContext = createContext<ModalContextType>(defaultContext);
@@ -52,78 +52,81 @@ interface ModalProviderProps {
 }
 
 export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
-  const [createDocumentationModal, setCreateDocumentationModal] = useState(false);
+  const [createDocumentationModal, setCreateDocumentationModal] =
+    useState(false);
   const [createPageGroupModal, setCreatePageGroupModal] = useState(false);
   const [createPageModal, setCreatePageModal] = useState(false);
   const [editModal, setEditModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
   const [cloneDocumentModal, setCloneDocumentModal] = useState(false);
-  const [currentModalItem, setCurrentModalItem] = useState<ModalItem | null>(null);
+  const [currentModalItem, setCurrentModalItem] = useState<ModalItem | null>(
+    null,
+  );
   const [pageSizeDropdown, setpageSizeDropdown] = useState(false);
   const [loadingModal, setLoadingModal] = useState(false);
-  const [loadingMessage, setLoadingMessage] = useState('Loading..');
+  const [loadingMessage, setLoadingMessage] = useState("Loading..");
 
   const openModal = (modalName: string, item: ModalItem | null) => {
     setCurrentModalItem(item);
     switch (modalName) {
-    case 'createDocumentation':
-      setCreateDocumentationModal(true);
-      break;
-    case 'createPageGroup':
-      setCreatePageGroupModal(true);
-      break;
-    case 'createPage':
-      setCreatePageModal(true);
-      break;
-    case 'edit':
-      setEditModal(true);
-      break;
-    case 'delete':
-      setDeleteModal(true);
-      break;
-    case 'cloneDocument':
-      setCloneDocumentModal(true);
-      break;
-    case 'pageSizeDropdown':
-      setpageSizeDropdown(true);
-      break;
-    case 'loadingModal':
-      setLoadingModal(true);
-      break;
-    default:
-      console.warn(`Unknown modal: ${modalName}`);
+      case "createDocumentation":
+        setCreateDocumentationModal(true);
+        break;
+      case "createPageGroup":
+        setCreatePageGroupModal(true);
+        break;
+      case "createPage":
+        setCreatePageModal(true);
+        break;
+      case "edit":
+        setEditModal(true);
+        break;
+      case "delete":
+        setDeleteModal(true);
+        break;
+      case "cloneDocument":
+        setCloneDocumentModal(true);
+        break;
+      case "pageSizeDropdown":
+        setpageSizeDropdown(true);
+        break;
+      case "loadingModal":
+        setLoadingModal(true);
+        break;
+      default:
+        console.warn(`Unknown modal: ${modalName}`);
     }
   };
 
   const closeModal = (modalName: string) => {
     setCurrentModalItem(null);
     switch (modalName) {
-    case 'createDocumentation':
-      setCreateDocumentationModal(false);
-      break;
-    case 'createPageGroup':
-      setCreatePageGroupModal(false);
-      break;
-    case 'createPage':
-      setCreatePageModal(false);
-      break;
-    case 'edit':
-      setEditModal(false);
-      break;
-    case 'delete':
-      setDeleteModal(false);
-      break;
-    case 'cloneDocument':
-      setCloneDocumentModal(false);
-      break;
-    case 'pageSizeDropdown':
-      setpageSizeDropdown(false);
-      break;
-    case 'loadingModal':
-      setLoadingModal(false);
-      break;
-    default:
-      console.warn(`Unknown modal: ${modalName}`);
+      case "createDocumentation":
+        setCreateDocumentationModal(false);
+        break;
+      case "createPageGroup":
+        setCreatePageGroupModal(false);
+        break;
+      case "createPage":
+        setCreatePageModal(false);
+        break;
+      case "edit":
+        setEditModal(false);
+        break;
+      case "delete":
+        setDeleteModal(false);
+        break;
+      case "cloneDocument":
+        setCloneDocumentModal(false);
+        break;
+      case "pageSizeDropdown":
+        setpageSizeDropdown(false);
+        break;
+      case "loadingModal":
+        setLoadingModal(false);
+        break;
+      default:
+        console.warn(`Unknown modal: ${modalName}`);
     }
   };
 
@@ -144,7 +147,7 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
         loadingMessage,
         setLoadingMessage,
         openModal,
-        closeModal
+        closeModal,
       }}
     >
       {children}

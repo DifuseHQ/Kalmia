@@ -1,9 +1,9 @@
-import { useContext } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Icon } from '@iconify/react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { Icon } from "@iconify/react";
+import { AnimatePresence, motion } from "framer-motion";
+import { useContext } from "react";
+import { useTranslation } from "react-i18next";
 
-import { ModalContext, ModalContextType } from '../../context/ModalContext';
+import { ModalContext, ModalContextType } from "../../context/ModalContext";
 
 interface DeleteModalProps {
   deleteDoc: () => void;
@@ -11,7 +11,7 @@ interface DeleteModalProps {
   id?: number;
 }
 
-export default function DeleteModal ({ deleteDoc, message }: DeleteModalProps) {
+export default function DeleteModal({ deleteDoc, message }: DeleteModalProps) {
   const { t } = useTranslation();
   const { closeModal } = useContext(ModalContext) as ModalContextType;
 
@@ -37,11 +37,11 @@ export default function DeleteModal ({ deleteDoc, message }: DeleteModalProps) {
               />
             </div>
             <h3 className="mb-4 text-2xl font-bold text-gray-900 dark:text-white">
-              {t('are_you_sure')}?
+              {t("are_you_sure")}?
             </h3>
             {message && (
               <p className="mb-6 text-lg text-gray-500 dark:text-gray-300">
-                {t('you_are_permanently_deleting')} {message}
+                {t("you_are_permanently_deleting")} {message}
               </p>
             )}
             <div className="flex justify-center items-center space-x-4">
@@ -50,16 +50,16 @@ export default function DeleteModal ({ deleteDoc, message }: DeleteModalProps) {
                 type="button"
                 className="px-5 py-2.5 text-white bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm dark:bg-red-500 dark:hover:bg-red-600 dark:focus:ring-red-900 transition duration-300 ease-in-out"
               >
-                {t('yes_delete_it')}!
+                {t("yes_delete_it")}!
               </button>
               <button
                 onClick={() => {
-                  closeModal('delete');
+                  closeModal("delete");
                 }}
                 type="button"
                 className="px-5 py-2.5 text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:ring-gray-300 rounded-lg border border-gray-200 text-sm font-medium dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:bg-gray-600 dark:focus:ring-gray-600 transition duration-300 ease-in-out"
               >
-                {t('cancel')}
+                {t("cancel")}
               </button>
             </div>
           </div>

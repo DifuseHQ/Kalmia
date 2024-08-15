@@ -1,12 +1,12 @@
-import { useContext } from 'react';
-import { Link } from 'react-router-dom';
-import { DraggableProvided, DraggableStateSnapshot } from '@hello-pangea/dnd';
-import { Icon } from '@iconify/react/dist/iconify.js';
-import { motion } from 'framer-motion';
+import { DraggableProvided, DraggableStateSnapshot } from "@hello-pangea/dnd";
+import { Icon } from "@iconify/react/dist/iconify.js";
+import { motion } from "framer-motion";
+import { useContext } from "react";
+import { Link } from "react-router-dom";
 
-import { ModalContext } from '../../context/ModalContext';
-import { Editor, Page, PageGroup } from '../../types/doc';
-import { getFormattedDate } from '../../utils/Common';
+import { ModalContext } from "../../context/ModalContext";
+import { Editor, Page, PageGroup } from "../../types/doc";
+import { getFormattedDate } from "../../utils/Common";
 
 interface TableProps {
   provided: DraggableProvided;
@@ -20,23 +20,23 @@ interface TableProps {
 
 const AnimatedTableRow = motion.tr;
 
-export default function Table ({
+export default function Table({
   provided,
   snapshot,
   docId,
   pageGroupId,
   obj,
   version,
-  dir
+  dir,
 }: TableProps) {
   const { openModal } = useContext(ModalContext);
 
-  function isPage (obj: PageGroup | Page): obj is Page {
+  function isPage(obj: PageGroup | Page): obj is Page {
     return (obj as Page).isIntroPage === undefined;
   }
 
-  function isPageGroup (obj: PageGroup | Page): obj is PageGroup {
-    return 'name' in obj;
+  function isPageGroup(obj: PageGroup | Page): obj is PageGroup {
+    return "name" in obj;
   }
 
   return (
@@ -48,12 +48,12 @@ export default function Table ({
       {...provided.draggableProps}
       className={`${
         snapshot.isDragging
-          ? 'opacity-80 bg-gray-200 dark:bg-gray-500 border shadow-md shadow-black text-black'
-          : ''
+          ? "opacity-80 bg-gray-200 dark:bg-gray-500 border shadow-md shadow-black text-black"
+          : ""
       } border dark:border-gray-700 h-16 `}
     >
       <td
-        className={`w-1/12 items-center ${!isPage(obj) ? 'cursor-not-allowed' : 'cursor-pointer'} px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white`}
+        className={`w-1/12 items-center ${!isPage(obj) ? "cursor-not-allowed" : "cursor-pointer"} px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white`}
         {...provided.dragHandleProps}
       >
         {isPage(obj) && (
@@ -107,15 +107,14 @@ export default function Table ({
                 if (obj.lastEditorId != null) {
                   const editor = obj.editors?.find(
                     (editor: Editor) =>
-                      Number(editor.id) ===
-                      Number(obj.lastEditorId)
+                      Number(editor.id) === Number(obj.lastEditorId),
                   );
-                  return editor ? editor.username : 'None';
+                  return editor ? editor.username : "None";
                 } else {
-                  return obj.editors[0]?.username || 'None';
+                  return obj.editors[0]?.username || "None";
                 }
               }
-              return 'None';
+              return "None";
             })()}
           </span>
         </div>
@@ -157,14 +156,14 @@ export default function Table ({
               icon="material-symbols:edit-outline"
               className="w-6 h-6 text-yellow-500 dark:text-yellow-400"
               onClick={() => {
-                openModal('edit', obj);
+                openModal("edit", obj);
               }}
             />
             <Icon
               icon="material-symbols:delete"
               className="w-6 h-6 text-red-600 dark:text-red-500"
               onClick={() => {
-                openModal('delete', obj);
+                openModal("delete", obj);
               }}
             />
           </button>
@@ -190,7 +189,7 @@ export default function Table ({
                 icon="material-symbols:delete"
                 className="w-6 h-6 text-red-600 dark:text-red-500"
                 onClick={() => {
-                  openModal('delete', obj);
+                  openModal("delete", obj);
                 }}
               />
             )}

@@ -1,11 +1,13 @@
-import React, { createContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useEffect, useRef, useState } from "react";
 
 export interface ThemeContextType {
   darkMode: boolean;
   toggleDarkMode: () => void;
 }
 
-export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+export const ThemeContext = createContext<ThemeContextType | undefined>(
+  undefined,
+);
 
 interface LinkAttributes {
   rel: string;
@@ -25,35 +27,36 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const setFavicon = () => {
     const links: LinkAttributes[] = [
       {
-        rel: 'apple-touch-icon',
-        sizes: '180x180',
-        href: '/assets/favicon/apple-touch-icon.png'
+        rel: "apple-touch-icon",
+        sizes: "180x180",
+        href: "/assets/favicon/apple-touch-icon.png",
       },
       {
-        rel: 'icon',
-        type: 'image/png',
-        sizes: '32x32',
-        href: '/assets/favicon/favicon-32x32.png'
+        rel: "icon",
+        type: "image/png",
+        sizes: "32x32",
+        href: "/assets/favicon/favicon-32x32.png",
       },
       {
-        rel: 'icon',
-        type: 'image/png',
-        sizes: '16x16',
-        href: '/assets/favicon/favicon-16x16.png'
+        rel: "icon",
+        type: "image/png",
+        sizes: "16x16",
+        href: "/assets/favicon/favicon-16x16.png",
       },
       {
-        rel: 'manifest',
-        href: '/assets/favicon/site.webmanifest'
-      }
+        rel: "manifest",
+        href: "/assets/favicon/site.webmanifest",
+      },
     ];
 
     links.forEach((link) => {
-      const selector = `link[rel='${link.rel}']${link.sizes ? `[sizes='${link.sizes}']` : ''}`;
-      const existingLink = document.head.querySelector<HTMLLinkElement>(selector);
+      const selector = `link[rel='${link.rel}']${link.sizes ? `[sizes='${link.sizes}']` : ""}`;
+      const existingLink =
+        document.head.querySelector<HTMLLinkElement>(selector);
       if (existingLink) {
         existingLink.href = link.href;
       } else {
-        const newLink = document.createElement('link');
+        const newLink = document.createElement("link");
         Object.entries(link).forEach(([attr, value]) => {
           newLink.setAttribute(attr, value);
         });
@@ -63,9 +66,9 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   };
 
   const [darkMode, setDarkMode] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      const theme = window.localStorage.getItem('theme');
-      const isDark = theme === 'dark';
+    if (typeof window !== "undefined") {
+      const theme = window.localStorage.getItem("theme");
+      const isDark = theme === "dark";
       return isDark;
     }
     return false;
@@ -75,8 +78,10 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     htmlRef.current = document.documentElement;
     bodyRef.current = document.body;
 
-    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    if (!window.localStorage.getItem('theme') && prefersDarkMode) {
+    const prefersDarkMode = window.matchMedia(
+      "(prefers-color-scheme: dark)",
+    ).matches;
+    if (!window.localStorage.getItem("theme") && prefersDarkMode) {
       setDarkMode(false);
     }
 
@@ -86,18 +91,18 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   useEffect(() => {
     if (htmlRef.current && bodyRef.current) {
       if (darkMode) {
-        htmlRef.current.classList.add('dark');
-        bodyRef.current.setAttribute('data-color-scheme', 'dark');
+        htmlRef.current.classList.add("dark");
+        bodyRef.current.setAttribute("data-color-scheme", "dark");
       } else {
-        htmlRef.current.classList.remove('dark');
-        bodyRef.current.setAttribute('data-color-scheme', 'light');
+        htmlRef.current.classList.remove("dark");
+        bodyRef.current.setAttribute("data-color-scheme", "light");
       }
     }
   }, [darkMode]);
 
   const toggleDarkMode = () => {
-    const newTheme = darkMode ? 'light' : 'dark';
-    window.localStorage.setItem('theme', newTheme);
+    const newTheme = darkMode ? "light" : "dark";
+    window.localStorage.setItem("theme", newTheme);
     setDarkMode(!darkMode);
   };
 

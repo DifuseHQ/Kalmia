@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { jwtDecode, JwtPayload } from 'jwt-decode';
+import { jwtDecode, JwtPayload } from "jwt-decode";
+import { useState } from "react";
 
 export interface UserPayload extends JwtPayload {
   admin: boolean;
@@ -16,13 +16,13 @@ export type UpdateUserFunction = (token: string | null) => void;
 
 export const useUser = (): [UserType, UpdateUserFunction] => {
   const [user, setUser] = useState<UserType>(() => {
-    const storedToken = localStorage.getItem('accessToken');
+    const storedToken = localStorage.getItem("accessToken");
     if (storedToken) {
       try {
         const tokenData = JSON.parse(storedToken);
         return jwtDecode<UserPayload>(tokenData.token);
       } catch (error) {
-        console.error('Error parsing or decoding stored token:', error);
+        console.error("Error parsing or decoding stored token:", error);
         return null;
       }
     }
@@ -35,7 +35,7 @@ export const useUser = (): [UserType, UpdateUserFunction] => {
         const decodedUser = jwtDecode<UserPayload>(token);
         setUser(decodedUser);
       } catch (error) {
-        console.error('Error decoding token:', error);
+        console.error("Error decoding token:", error);
         setUser(null);
       }
     } else {

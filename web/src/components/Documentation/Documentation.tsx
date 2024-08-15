@@ -1,19 +1,25 @@
 import {
+  DragDropContext,
+  Draggable,
+  Droppable,
+  DropResult,
+} from "@hello-pangea/dnd";
+import { Icon } from "@iconify/react";
+import { AnimatePresence, motion } from "framer-motion";
+import {
   ChangeEvent,
   useCallback,
   useContext,
   useEffect,
   useRef,
-  useState
-} from 'react';
-import { useTranslation } from 'react-i18next';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { DragDropContext, Draggable, Droppable, DropResult } from '@hello-pangea/dnd';
-import { Icon } from '@iconify/react';
-import { AnimatePresence, motion } from 'framer-motion';
+  useState,
+} from "react";
+import { useTranslation } from "react-i18next";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 import {
-  ApiResponse, commonReorderBulk,
+  ApiResponse,
+  commonReorderBulk,
   createDocumentationVersion,
   createPage as createPageAPI,
   createPageGroup,
@@ -23,28 +29,33 @@ import {
   getDocumentations,
   getPageGroups,
   getPages,
-  OrderItem, updatePageGroup
-} from '../../api/Requests';
-import { AuthContext, AuthContextType } from '../../context/AuthContext';
-import { ModalContext, ModalItem } from '../../context/ModalContext';
-import { Documentation as DocumentationData, Page, PageGroup } from '../../types/doc';
-import { DOMEvent } from '../../types/dom';
+  OrderItem,
+  updatePageGroup,
+} from "../../api/Requests";
+import { AuthContext, AuthContextType } from "../../context/AuthContext";
+import { ModalContext, ModalItem } from "../../context/ModalContext";
+import {
+  Documentation as DocumentationData,
+  Page,
+  PageGroup,
+} from "../../types/doc";
+import { DOMEvent } from "../../types/dom";
 import {
   combinePages,
   getClosestVersion,
   getLastPageOrder,
   getVersion,
-  handleError
-} from '../../utils/Common';
-import { toastMessage } from '../../utils/Toast';
-import { pageSizes } from '../../utils/Utils';
-import Breadcrumb from '../Breadcrumb/Breadcrumb';
-import BuildTrigger from '../BuildTrigger/BuildTrigger';
-import EditDocumentModal from '../CreateDocumentModal/EditDocumentModal';
-import CreatePageGroup from '../CreatePageGroup/CreatePageGroup';
-import CreatePage from '../CreatePageModal/CreatePageModal';
-import DeleteModal from '../DeleteModal/DeleteModal';
-import Table from '../Table/Table';
+  handleError,
+} from "../../utils/Common";
+import { toastMessage } from "../../utils/Toast";
+import { pageSizes } from "../../utils/Utils";
+import Breadcrumb from "../Breadcrumb/Breadcrumb";
+import BuildTrigger from "../BuildTrigger/BuildTrigger";
+import EditDocumentModal from "../CreateDocumentModal/EditDocumentModal";
+import CreatePageGroup from "../CreatePageGroup/CreatePageGroup";
+import CreatePage from "../CreatePageModal/CreatePageModal";
+import DeleteModal from "../DeleteModal/DeleteModal";
+import Table from "../Table/Table";
 
 interface VersionOption {
   id: number;
@@ -52,7 +63,7 @@ interface VersionOption {
   createdAt: string;
 }
 
-export default function Documentation () {
+export default function Documentation() {
   const navigate = useNavigate();
   const authContext = useContext(AuthContext);
   const { refresh, refreshData, user } = authContext as AuthContextType;
@@ -67,56 +78,63 @@ export default function Documentation () {
     editModal,
     cloneDocumentModal,
     currentModalItem,
-    pageSizeDropdown
+    pageSizeDropdown,
   } = useContext(ModalContext);
 
   const [searchParam] = useSearchParams();
-  const docId = searchParam.get('id');
-  const versionId = searchParam.get('versionId');
+  const docId = searchParam.get("id");
+  const versionId = searchParam.get("versionId");
   const [loading, setLoading] = useState<boolean>(true);
   const [pageGroupLoading, setPageGroupLoading] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [selectPageSize, setSelectPageSize] = useState<number>(50);
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
   // Documentation CRUD
   const [documentData, setDocumentData] = useState<DocumentationData[]>([]);
 
   // pageGroup CRUD
-  const [groupsAndPageData, setGroupsAndPageData] = useState<(PageGroup | Page)[]>([]);
+  const [groupsAndPageData, setGroupsAndPageData] = useState<
+    (PageGroup | Page)[]
+  >([]);
 
   // version
-  const [showVersionDropdown, setShowVersionDropdown] = useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [selectedVersion, setSelectedVersion] = useState<VersionOption | null>(null);
+  const [showVersionDropdown, setShowVersionDropdown] =
+    useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [selectedVersion, setSelectedVersion] = useState<VersionOption | null>(
+    null,
+  );
 
   const toggleDropdown = () => {
     setShowVersionDropdown(!showVersionDropdown);
   };
 
-  const handleSearchVersionChange = (e:ChangeEvent<HTMLInputElement>) => {
+  const handleSearchVersionChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   };
 
-  const handleVersionSelect = (version:VersionOption) => {
+  const handleVersionSelect = (version: VersionOption) => {
     const selectVersion = {
       id: version.id,
       createdAt: version.createdAt,
-      version: version.version
+      version: version.version,
     };
 
     setSelectedVersion(selectVersion);
     setShowVersionDropdown(false);
     navigate(
-      `/dashboard/documentation?id=${docId}&versionId=${version.id}&version=${version.version}`
+      `/dashboard/documentation?id=${docId}&versionId=${version.id}&version=${version.version}`,
     );
   };
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const versionIdString = searchParam.get('versionId');
-      const versionId: number | null = versionIdString ? parseInt(versionIdString, 10) : null;
+      const versionIdString = searchParam.get("versionId");
+      const versionId: number | null = versionIdString
+        ? parseInt(versionIdString, 10)
+        : null;
       const documentationsResult = await getDocumentations();
 
       if (handleError(documentationsResult, navigate, t)) {
@@ -124,13 +142,13 @@ export default function Documentation () {
         return;
       }
 
-      if (documentationsResult.status === 'success') {
-        const data:DocumentationData[] = documentationsResult.data;
+      if (documentationsResult.status === "success") {
+        const data: DocumentationData[] = documentationsResult.data;
 
-        const getAllVersions = (data:DocumentationData[], startId:number) => {
-          const versions:DocumentationData[] = [];
+        const getAllVersions = (data: DocumentationData[], startId: number) => {
+          const versions: DocumentationData[] = [];
 
-          const addVersion = (doc:DocumentationData) => {
+          const addVersion = (doc: DocumentationData) => {
             versions.push(doc);
             const children = data.filter((item) => item.clonedFrom === doc.id);
             children.forEach(addVersion);
@@ -143,7 +161,7 @@ export default function Documentation () {
               startDoc.clonedFrom !== undefined
             ) {
               const parent = data?.find(
-                (doc) => doc.id === startDoc.clonedFrom
+                (doc) => doc.id === startDoc.clonedFrom,
               );
               if (parent) {
                 addVersion(parent);
@@ -158,12 +176,15 @@ export default function Documentation () {
           return versions.sort((a, b) => {
             return a.version.localeCompare(b.version, undefined, {
               numeric: true,
-              sensitivity: 'base'
+              sensitivity: "base",
             });
           });
         };
 
-        const clonedData:DocumentationData[] = getAllVersions(data, Number(docId));
+        const clonedData: DocumentationData[] = getAllVersions(
+          data,
+          Number(docId),
+        );
 
         setDocumentData(clonedData);
 
@@ -171,7 +192,8 @@ export default function Documentation () {
           const currentVersion = getVersion(clonedData, versionId);
           setSelectedVersion(currentVersion);
         } else {
-          const latestVersion:VersionOption | null = getClosestVersion(clonedData);
+          const latestVersion: VersionOption | null =
+            getClosestVersion(clonedData);
           setSelectedVersion(latestVersion);
         }
       }
@@ -182,26 +204,26 @@ export default function Documentation () {
     } else {
       setLoading(false);
     }
-  }, [docId, refresh, user, navigate]); //eslint-disable-line
+  }, [docId, refresh, user, navigate]);
 
   useEffect(() => {
     const fetchData = async () => {
       setPageGroupLoading(true);
       const [pageGroupsResult, pagesResult] = await Promise.all([
         getPageGroups(),
-        getPages()
+        getPages(),
       ]);
 
       handleError(pageGroupsResult, navigate, t);
       handleError(pagesResult, navigate, t);
 
       if (
-        pageGroupsResult.status === 'success' &&
-        pagesResult.status === 'success'
+        pageGroupsResult.status === "success" &&
+        pagesResult.status === "success"
       ) {
         const combinedData: (PageGroup | Page)[] = combinePages(
           pageGroupsResult.data || [],
-          pagesResult.data || []
+          pagesResult.data || [],
         );
 
         setGroupsAndPageData(combinedData);
@@ -213,27 +235,35 @@ export default function Documentation () {
     } else {
       setPageGroupLoading(false);
     }
-  }, [docId, user, navigate, refresh, versionId]); //eslint-disable-line
+  }, [docId, user, navigate, refresh, versionId]);
 
-  const handleSearchChange = (e:ChangeEvent<HTMLInputElement>) => {
+  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
   };
 
-  const filteredItems:(PageGroup | Page)[] = groupsAndPageData.filter((obj) => {
-    if (selectedVersion) {
-      const isPage = (obj as Page).title !== undefined;
-      const isPageGroup = (obj as PageGroup).name !== undefined;
-      return (
-        obj.documentationId === selectedVersion.id && (
-          (isPageGroup && (obj as PageGroup).name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-       (isPage && (obj as Page).title?.toLowerCase().includes(searchTerm.toLowerCase())))
-      );
-    }
-    return false;
-  });
+  const filteredItems: (PageGroup | Page)[] = groupsAndPageData.filter(
+    (obj) => {
+      if (selectedVersion) {
+        const isPage = (obj as Page).title !== undefined;
+        const isPageGroup = (obj as PageGroup).name !== undefined;
+        return (
+          obj.documentationId === selectedVersion.id &&
+          ((isPageGroup &&
+            (obj as PageGroup).name
+              ?.toLowerCase()
+              .includes(searchTerm.toLowerCase())) ||
+            (isPage &&
+              (obj as Page).title
+                ?.toLowerCase()
+                .includes(searchTerm.toLowerCase())))
+        );
+      }
+      return false;
+    },
+  );
 
-  const handleDelete = async ():Promise<void> => {
+  const handleDelete = async (): Promise<void> => {
     if (selectedVersion) {
       const result = await deleteDocumentation(selectedVersion.id);
 
@@ -241,42 +271,46 @@ export default function Documentation () {
         return;
       }
 
-      if (result.status === 'success') {
-        closeModal('delete');
-        toastMessage(t(result.data.message), 'success');
+      if (result.status === "success") {
+        closeModal("delete");
+        toastMessage(t(result.data.message), "success");
         refreshData();
-        navigate('/');
+        navigate("/");
       }
     }
   };
 
-  const handleUpdate = async (_editTitle:string, version:string, _id:number) => {
+  const handleUpdate = async (
+    _editTitle: string,
+    version: string,
+    _id: number, // eslint-disable-line @typescript-eslint/no-unused-vars
+  ) => {
     let result: ApiResponse | undefined;
     if (cloneDocumentModal) {
       result = await createDocumentationVersion({
         originalDocId: Number(selectedVersion?.id),
-        version
+        version,
       });
     }
 
     if (result && handleError(result, navigate, t)) return;
 
-    if (result?.status === 'success') {
+    if (result?.status === "success") {
       if (cloneDocumentModal) {
-        closeModal('cloneDocument');
+        closeModal("cloneDocument");
       }
       refreshData();
-      toastMessage(t(result.data?.message), 'success');
+      toastMessage(t(result.data?.message), "success");
     }
   };
 
-  const handleDeletePageGroup = async (id:number, path: ModalItem) => {
-    const type = 'slug' in path ? 'page' : 'pageGroup';
+  const handleDeletePageGroup = async (id: number, path: ModalItem) => {
+    const type = "slug" in path ? "page" : "pageGroup";
     let result: ApiResponse | undefined;
 
-    if (type === 'pageGroup') {
+    if (type === "pageGroup") {
       result = await deletePageGroup(id);
-    } else if (type === 'page') {
+    } else if (type === "page") {
       result = await deletePage(id);
     }
 
@@ -284,64 +318,68 @@ export default function Documentation () {
       return;
     }
 
-    if (result?.status === 'success') {
-      closeModal('delete');
-      toastMessage(t(result.data?.message), 'success');
+    if (result?.status === "success") {
+      closeModal("delete");
+      toastMessage(t(result.data?.message), "success");
       refreshData();
     }
   };
 
-  const handlePageGroupUpdate = async (editTitle:string, _version:string, id:number) => {
+  const handlePageGroupUpdate = async (
+    editTitle: string,
+    _version: string,
+    id: number,
+  ) => {
     const result = await updatePageGroup({
       id,
       name: editTitle,
-      documentationId: Number(selectedVersion?.id)
+      documentationId: Number(selectedVersion?.id),
     });
 
     if (handleError(result, navigate, t)) {
       return;
     }
 
-    if (result?.status === 'success') {
-      closeModal('edit');
+    if (result?.status === "success") {
+      closeModal("edit");
       refreshData();
-      toastMessage(t(result.data?.message), 'success');
+      toastMessage(t(result.data?.message), "success");
     }
   };
 
-  const handleCreatePageGroup = async (title:string) => {
-    if (title === '') {
-      toastMessage(t('title_is_required'), 'warning');
+  const handleCreatePageGroup = async (title: string) => {
+    if (title === "") {
+      toastMessage(t("title_is_required"), "warning");
       return;
     }
-    const lastOrder:number = getLastPageOrder(groupsAndPageData);
+    const lastOrder: number = getLastPageOrder(groupsAndPageData);
     const result = await createPageGroup({
       name: title,
       documentationId: Number(selectedVersion?.id),
-      order: lastOrder
+      order: lastOrder,
     });
 
     if (handleError(result, navigate, t)) {
       return;
     }
 
-    if (result.status === 'success') {
-      closeModal('createPageGroup');
+    if (result.status === "success") {
+      closeModal("createPageGroup");
       refreshData();
-      toastMessage(t(result.data.message), 'success');
+      toastMessage(t(result.data.message), "success");
     }
   };
 
-  const handleCreatePage = async (title:string, slug:string) => {
-    if (title === '') {
-      toastMessage(t('title_is_required'), 'warning');
+  const handleCreatePage = async (title: string, slug: string) => {
+    if (title === "") {
+      toastMessage(t("title_is_required"), "warning");
       return;
     }
-    if (slug === '') {
-      toastMessage(t('slug_is_required'), 'warning');
+    if (slug === "") {
+      toastMessage(t("slug_is_required"), "warning");
       return;
     }
-    const lastOrder:number = getLastPageOrder(groupsAndPageData);
+    const lastOrder: number = getLastPageOrder(groupsAndPageData);
     const docIdOrVersionId = selectedVersion?.id ? selectedVersion.id : docId;
 
     const result = await createPageAPI({
@@ -349,36 +387,39 @@ export default function Documentation () {
       slug,
       content: JSON.stringify([]),
       documentationId: Number(docIdOrVersionId),
-      order: Number(lastOrder)
+      order: Number(lastOrder),
     });
 
     if (handleError(result, navigate, t)) {
       return;
     }
 
-    if (result.status === 'success') {
-      closeModal('createPage');
+    if (result.status === "success") {
+      closeModal("createPage");
       refreshData();
-      toastMessage(t(result.data.message), 'success');
+      toastMessage(t(result.data.message), "success");
     }
   };
 
-  const handleDragEnd = async (result:DropResult) => {
+  const handleDragEnd = async (result: DropResult) => {
     if (!result.destination) {
       return;
     }
 
     const newItems = Array.from(
       groupsAndPageData.filter(
-        (obj) => obj.documentationId === Number(selectedVersion?.id)
-      )
+        (obj) => obj.documentationId === Number(selectedVersion?.id),
+      ),
     );
 
-    const newIndex:number = result.destination.index;
+    const newIndex: number = result.destination.index;
     const oldDataAtNewPosition = newItems[newIndex] as PageGroup | Page;
 
-    if ('isIntroPage' in oldDataAtNewPosition && oldDataAtNewPosition.isIntroPage) {
-      toastMessage(t('intro_page_cannot_be_reordered'), 'warning');
+    if (
+      "isIntroPage" in oldDataAtNewPosition &&
+      oldDataAtNewPosition.isIntroPage
+    ) {
+      toastMessage(t("intro_page_cannot_be_reordered"), "warning");
       return;
     }
 
@@ -389,10 +430,10 @@ export default function Documentation () {
     setGroupsAndPageData(newItems);
 
     const pageGroups: OrderItem[] = [];
-    const pages:OrderItem[] = [];
+    const pages: OrderItem[] = [];
 
-    function isPageGroup (item: PageGroup | Page): item is PageGroup {
-      return 'name' in item;
+    function isPageGroup(item: PageGroup | Page): item is PageGroup {
+      return "name" in item;
     }
 
     newItems.forEach((item, index) => {
@@ -401,7 +442,7 @@ export default function Documentation () {
           id: item.id,
           order: index,
           parentId: item?.parentId,
-          isPageGroup: true
+          isPageGroup: true,
         });
       } else {
         // Item is a Page
@@ -409,7 +450,7 @@ export default function Documentation () {
           id: item.id,
           order: index,
           pageGroupId: item?.pageGroupId,
-          isPageGroup: false
+          isPageGroup: false,
         });
       }
     });
@@ -420,20 +461,20 @@ export default function Documentation () {
       const result = await commonReorderBulk({ order: allItems });
 
       if (handleError(result, navigate, t)) return;
-      const type = 'slug' in dragItem ? 'page' : 'pageGroup';
+      const type = "slug" in dragItem ? "page" : "pageGroup";
       toastMessage(
-        t(`${type === 'page' ? 'page_reordered' : 'page_group_reordered'}`),
-        'success'
+        t(`${type === "page" ? "page_reordered" : "page_group_reordered"}`),
+        "success",
       );
     } catch (err) {
-      console.error('Error in bulk reordering:', err);
+      console.error("Error in bulk reordering:", err);
     }
 
     refreshData();
   };
 
   const filteredVersions = documentData.filter((version) =>
-    version.version.toLowerCase().includes(searchQuery.toLowerCase())
+    version.version.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const itemsPerPage = selectPageSize;
@@ -443,44 +484,47 @@ export default function Documentation () {
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
   const handlePageChange = useCallback(
-    (pageNumber:number) => {
+    (pageNumber: number) => {
       if (pageNumber >= 1 && pageNumber <= totalPages) {
         setCurrentPage(pageNumber);
       }
     },
-    [totalPages]
+    [totalPages],
   );
 
-  const handlePageSizeSelect = (value:number) => {
+  const handlePageSizeSelect = (value: number) => {
     setSelectPageSize(value);
-    closeModal('pageSizeDropdown');
+    closeModal("pageSizeDropdown");
   };
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const handleClickOutside = useCallback(
-    (event:DOMEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+    (event: DOMEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setShowVersionDropdown(false);
-        closeModal('pageSizeDropdown');
+        closeModal("pageSizeDropdown");
       }
     },
-    [closeModal]
+    [closeModal],
   );
 
   useEffect(() => {
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [handleClickOutside]);
 
-  function isPageGroup (obj: PageGroup | Page): obj is PageGroup {
+  function isPageGroup(obj: PageGroup | Page): obj is PageGroup {
     return (obj as PageGroup).name !== undefined;
   }
 
   // Type guard to check if an object is a Page
-  function isPage (obj: PageGroup | Page): obj is Page {
+  function isPage(obj: PageGroup | Page): obj is Page {
     return (obj as Page).isIntroPage !== undefined;
   }
 
@@ -508,9 +552,9 @@ export default function Documentation () {
                   <motion.button
                     whileHover={{ scale: 1.3 }}
                     onClick={() => {
-                      openModal('cloneDocument', null);
+                      openModal("cloneDocument", null);
                     }}
-                    title={t('clone_documentation')}
+                    title={t("clone_documentation")}
                     key="clone-button"
                   >
                     <Icon
@@ -521,7 +565,7 @@ export default function Documentation () {
 
                   <motion.button
                     whileHover={{ scale: 1.3 }}
-                    title={t('edit_documentation')}
+                    title={t("edit_documentation")}
                     key="edit-document-button"
                   >
                     <Link
@@ -537,10 +581,10 @@ export default function Documentation () {
                   <motion.button
                     whileHover={{ scale: 1.3 }}
                     onClick={() => {
-                      openModal('delete', null);
+                      openModal("delete", null);
                     }}
                     key="delete-document-button"
-                    title={t('delete_documentation')}
+                    title={t("delete_documentation")}
                   >
                     <Icon
                       icon="material-symbols:delete"
@@ -592,7 +636,7 @@ export default function Documentation () {
                           value={searchTerm}
                           onChange={handleSearchChange}
                           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                          placeholder={t('search_placeholder')}
+                          placeholder={t("search_placeholder")}
                         />
                       </div>
 
@@ -624,7 +668,7 @@ export default function Documentation () {
                           >
                             <div className="p-1 h-auto w-full">
                               <span className="sr-only">
-                                {t('search_placeholder')}
+                                {t("search_placeholder")}
                               </span>
                               {filteredVersions.length >= 0 ? (
                                 <div className="relative">
@@ -632,7 +676,7 @@ export default function Documentation () {
                                     type="text"
                                     id="input-group-search"
                                     className="block w-full p-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                    placeholder={t('search_version')}
+                                    placeholder={t("search_version")}
                                     value={searchQuery}
                                     onChange={handleSearchVersionChange}
                                   />
@@ -640,7 +684,7 @@ export default function Documentation () {
                               ) : (
                                 <div className="flex items-center ps-2 rounded">
                                   <span className="w-full py-2 ms-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300">
-                                    {t('no_versions_found')}
+                                    {t("no_versions_found")}
                                   </span>
                                 </div>
                               )}
@@ -662,7 +706,7 @@ export default function Documentation () {
                                       className="relative w-full"
                                     >
                                       <div
-                                        className={`flex items-center ps-2 rounded hover:bg-gray-200 cursor-pointer ${selectedVersion?.version === option.version ? 'bg-gray-400 hover:bg-gray-400 dark:bg-gray-900 cursor-text dark:hover:bg-gray-900' : 'dark:hover:bg-gray-800'}`}
+                                        className={`flex items-center ps-2 rounded hover:bg-gray-200 cursor-pointer ${selectedVersion?.version === option.version ? "bg-gray-400 hover:bg-gray-400 dark:bg-gray-900 cursor-text dark:hover:bg-gray-900" : "dark:hover:bg-gray-800"}`}
                                         onClick={() =>
                                           handleVersionSelect(option)
                                         }
@@ -682,7 +726,7 @@ export default function Documentation () {
                                   >
                                     <div className="flex items-center ps-2 rounded">
                                       <span className="w-full py-2 ms-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300">
-                                        {t('no_matched_versions')}
+                                        {t("no_matched_versions")}
                                       </span>
                                     </div>
                                   </motion.li>
@@ -692,24 +736,23 @@ export default function Documentation () {
                           </motion.div>
                         )}
                       </motion.div>
-                      <div className='hidden xl:block'>
+                      <div className="hidden xl:block">
                         <BuildTrigger />
                       </div>
-
                     </div>
-                    <div className='flex justify-center xl:hidden'>
+                    <div className="flex justify-center xl:hidden">
                       <BuildTrigger />
                     </div>
                     <div className="flex items-center space-x-2">
                       <motion.button
                         whileHover={{ scale: 1.1 }}
-                        onClick={() => openModal('createPageGroup', null)}
+                        onClick={() => openModal("createPageGroup", null)}
                         type="button"
                         className="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
                         key="create-page-group-button"
                       >
                         <span className="px-1 text-left items-center dark:text-white text-md">
-                          {t('new_group')}
+                          {t("new_group")}
                         </span>
                         <Icon
                           icon="ei:plus"
@@ -719,13 +762,13 @@ export default function Documentation () {
 
                       <motion.button
                         whileHover={{ scale: 1.1 }}
-                        onClick={() => openModal('createPage', null)}
+                        onClick={() => openModal("createPage", null)}
                         type="button"
                         className="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
                         key="create-page-button"
                       >
                         <span className="px-1 text-left items-center dark:text-white text-md">
-                          {t('new_page')}
+                          {t("new_page")}
                         </span>
                         <Icon
                           icon="ei:plus"
@@ -763,13 +806,13 @@ export default function Documentation () {
                                 <tr key="table-documentation-head-row">
                                   <th className="w-1/12 whitespace-nowrap" />
                                   <th className="w-3/12 px-4 py-3 whitespace-nowrap">
-                                    {t('title')}
+                                    {t("title")}
                                   </th>
                                   <th className="w-3/12 px-4 py-3 whitespace-nowrap">
-                                    {t('author_editor')}
+                                    {t("author_editor")}
                                   </th>
                                   <th className="w-2/12 px-4 py-3 whitespace-nowrap">
-                                    {t('create_update')}
+                                    {t("create_update")}
                                   </th>
                                   <th className="w-3/12 px-4 py-3 whitespace-nowrap" />
                                 </tr>
@@ -796,7 +839,7 @@ export default function Documentation () {
                                         colSpan={5}
                                         className="w-12/12 text-center py-12"
                                       >
-                                      No Pages Found
+                                        No Pages Found
                                       </td>
                                     </motion.tr>
                                   ) : (
@@ -815,7 +858,9 @@ export default function Documentation () {
                                               : `page-${obj.id}`
                                           }
                                           index={index}
-                                          isDragDisabled={isPage(obj) && obj.isIntroPage}
+                                          isDragDisabled={
+                                            isPage(obj) && obj.isIntroPage
+                                          }
                                         >
                                           {(provided, snapshot) => (
                                             <Table
@@ -838,8 +883,11 @@ export default function Documentation () {
                                     exit={{ opacity: 0 }}
                                     key="documentation-data-loading-message"
                                   >
-                                    <td colSpan={5} className="text-center py-12">
-                                    Loading...
+                                    <td
+                                      colSpan={5}
+                                      className="text-center py-12"
+                                    >
+                                      Loading...
                                     </td>
                                   </motion.tr>
                                 )}
@@ -862,26 +910,28 @@ export default function Documentation () {
                       aria-label="Table navigation"
                     >
                       <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
-                        {t('showing')}
+                        {t("showing")}
                         <span className="font-semibold text-gray-900 dark:text-white mx-1">
                           {startIdx + 1}-{Math.min(endIdx, totalItems)}
-                        </span>{' '}
-                        {t('of')}
+                        </span>{" "}
+                        {t("of")}
                         <span className="font-semibold text-gray-900 dark:text-white mx-1">
                           {totalItems}
-                        </span>{' '}
-                        {t('items')}
+                        </span>{" "}
+                        {t("items")}
                       </span>
 
                       <ul className="inline-flex items-stretch -space-x-px">
                         <li>
                           <div className="flex items-center sm:mx-3 gap-3">
                             <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
-                              {t('page_size')}
+                              {t("page_size")}
                             </span>
                             <div className="relative inline-block">
                               <button
-                                onClick={() => openModal('pageSizeDropdown', null)}
+                                onClick={() =>
+                                  openModal("pageSizeDropdown", null)
+                                }
                                 className="flex items-center justify-between sm:w-16 py-1 px-1 bg-white border dark:text-white border-gray-300 rounded-md shadow-sm hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-600 dark:hover:bg-gray-700 text-left"
                               >
                                 <span>{selectPageSize}</span>
@@ -898,8 +948,10 @@ export default function Documentation () {
                                   {pageSizes().map((option) => (
                                     <div
                                       key={option}
-                                      onClick={() => handlePageSizeSelect(option)}
-                                      className={`py-2 px-4 cursor-pointer dark:text-white ${selectPageSize === option ? 'bg-gray-400 hover:bg-gray-400 dark:hover:bg-gray-900 dark:bg-gray-900 cursor-text' : 'hover:bg-gray-200 dark:hover:bg-gray-800'}`}
+                                      onClick={() =>
+                                        handlePageSizeSelect(option)
+                                      }
+                                      className={`py-2 px-4 cursor-pointer dark:text-white ${selectPageSize === option ? "bg-gray-400 hover:bg-gray-400 dark:hover:bg-gray-900 dark:bg-gray-900 cursor-text" : "hover:bg-gray-200 dark:hover:bg-gray-800"}`}
                                     >
                                       {option}
                                     </div>
@@ -920,12 +972,13 @@ export default function Documentation () {
                           </button>
                         </li>
                         {Array.from({ length: totalPages }, (_, i) => (
-                          <li key={'pagination-' + i}>
+                          <li key={"pagination-" + i}>
                             <button
                               onClick={() => handlePageChange(i + 1)}
-                              className={`flex items-center justify-center text-sm py-2 px-3 leading-tight ${currentPage === i + 1
-                                ? 'text-primary-600 bg-primary-50 border border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white'
-                                : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'
+                              className={`flex items-center justify-center text-sm py-2 px-3 leading-tight ${
+                                currentPage === i + 1
+                                  ? "text-primary-600 bg-primary-50 border border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
+                                  : "text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
                               }`}
                             >
                               {i + 1}
@@ -966,10 +1019,10 @@ export default function Documentation () {
                       deleteDoc={
                         currentModalItem
                           ? () =>
-                            handleDeletePageGroup(
-                              currentModalItem?.id,
-                              currentModalItem
-                            )
+                              handleDeletePageGroup(
+                                currentModalItem?.id,
+                                currentModalItem,
+                              )
                           : handleDelete
                       }
                       id={
@@ -991,7 +1044,7 @@ export default function Documentation () {
                 key="no-documentation-found-message-conatiner"
               >
                 <h1 className="text-gray-600 text-3xl p-10">
-                  {t('no_documentations_found')}
+                  {t("no_documentations_found")}
                 </h1>
               </motion.div>
             )}

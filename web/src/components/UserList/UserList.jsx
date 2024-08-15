@@ -1,27 +1,22 @@
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useState
-} from 'react';
-import { useTranslation } from 'react-i18next';
-import { Link, useNavigate } from 'react-router-dom';
-import { Icon } from '@iconify/react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { Icon } from "@iconify/react";
+import { AnimatePresence, motion } from "framer-motion";
+import React, { useCallback, useContext, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Link, useNavigate } from "react-router-dom";
 
-import { deleteUser, getUsers } from '../../api/Requests';
-import { AuthContext } from '../../context/AuthContext';
-import { ModalContext } from '../../context/ModalContext';
-import { getFormattedDate, handleError } from '../../utils/Common';
-import { toastMessage } from '../../utils/Toast';
-import Breadcrumb from '../Breadcrumb/Breadcrumb';
-import DeleteModal from '../DeleteModal/DeleteModal';
+import { deleteUser, getUsers } from "../../api/Requests";
+import { AuthContext } from "../../context/AuthContext";
+import { ModalContext } from "../../context/ModalContext";
+import { getFormattedDate, handleError } from "../../utils/Common";
+import { toastMessage } from "../../utils/Toast";
+import Breadcrumb from "../Breadcrumb/Breadcrumb";
+import DeleteModal from "../DeleteModal/DeleteModal";
 
-export default function UserList () {
+export default function UserList() {
   const { t } = useTranslation();
   const [userList, setUserList] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 7;
@@ -41,19 +36,19 @@ export default function UserList () {
         return;
       }
 
-      if (response?.status === 'success') {
+      if (response?.status === "success") {
         setUserList(response?.data || []);
         setLoading(false);
       }
     };
     fetchData();
-  }, [refresh, navigate]); //eslint-disable-line
+  }, [refresh, navigate]);
 
   const filterUser = userList.filter(
     (user) =>
       !user.admin &&
       (user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email?.toLowerCase().includes(searchTerm.toLowerCase()))
+        user.email?.toLowerCase().includes(searchTerm.toLowerCase())),
   );
 
   const handleSearchChange = (event) => {
@@ -63,7 +58,7 @@ export default function UserList () {
 
   const handleDeleteUser = async (username) => {
     if (!username) {
-      toastMessage(t('something_went_wrong_try_again'), 'error');
+      toastMessage(t("something_went_wrong_try_again"), "error");
       return;
     }
 
@@ -71,11 +66,11 @@ export default function UserList () {
 
     if (handleError(response, navigate, t)) return;
 
-    if (response?.status === 'success') {
+    if (response?.status === "success") {
       refreshData();
-      toastMessage(t('user_deleted_successfully'), 'success');
-      closeModal('delete');
-      navigate('/dashboard/admin/user-list');
+      toastMessage(t("user_deleted_successfully"), "success");
+      closeModal("delete");
+      navigate("/dashboard/admin/user-list");
     }
   };
 
@@ -90,7 +85,7 @@ export default function UserList () {
         setCurrentPage(pageNumber);
       }
     },
-    [totalPages]
+    [totalPages],
   );
 
   const renderTableContent = () => {
@@ -119,7 +114,7 @@ export default function UserList () {
         >
           <td colSpan="4" className="text-center p-8">
             <h1 className="text-center text-gray-600 sm:text-lg font-semibold">
-              {t('no_user_found')}
+              {t("no_user_found")}
             </h1>
           </td>
         </motion.tr>
@@ -175,7 +170,7 @@ export default function UserList () {
                   <Icon
                     icon="material-symbols:delete"
                     className="w-6 h-6 text-red-600 dark:text-red-500"
-                    onClick={() => openModal('delete', user)}
+                    onClick={() => openModal("delete", user)}
                   />
                 </div>
               </td>
@@ -202,7 +197,7 @@ export default function UserList () {
             <div className="w-full md:w-1/2">
               <form className="flex items-center">
                 <label htmlFor="simple-search" className="sr-only">
-                  {t('search_placeholder')}
+                  {t("search_placeholder")}
                 </label>
                 <div className="relative w-full">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -217,7 +212,7 @@ export default function UserList () {
                     value={searchTerm}
                     onChange={handleSearchChange}
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                    placeholder={t('search_placeholder')}
+                    placeholder={t("search_placeholder")}
                     required=""
                   />
                 </div>
@@ -230,7 +225,7 @@ export default function UserList () {
                 className="flex text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
               >
                 <span className=" px-1 pt-0.5 text-left items-center dark:text-white text-md">
-                  {t('add_user')}
+                  {t("add_user")}
                 </span>
                 <Icon icon="ei:plus" className="w-6 h-6 dark:text-white" />
               </Link>
@@ -242,13 +237,13 @@ export default function UserList () {
               <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                 <tr key="header">
                   <th scope="col" className="px-4 py-3">
-                    {t('username')}
+                    {t("username")}
                   </th>
                   <th scope="col" className="px-4 py-3">
-                    {t('email')}
+                    {t("email")}
                   </th>
                   <th scope="col" className="px-4 py-3">
-                    {t('create_update')}
+                    {t("create_update")}
                   </th>
                   <th scope="col" className="px-4 py-3" />
                 </tr>
@@ -263,15 +258,15 @@ export default function UserList () {
               aria-label="Table navigation"
             >
               <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
-                {t('showing')}
+                {t("showing")}
                 <span className="font-semibold text-gray-900 dark:text-white mx-1">
                   {startIdx + 1}-{Math.min(endIdx, totalItems)}
-                </span>{' '}
-                {t('of')}
+                </span>{" "}
+                {t("of")}
                 <span className="font-semibold text-gray-900 dark:text-white mx-1">
                   {totalItems}
-                </span>{' '}
-                {t('users')}
+                </span>{" "}
+                {t("users")}
               </span>
               <ul className="inline-flex items-stretch -space-x-px">
                 <li>
@@ -285,12 +280,13 @@ export default function UserList () {
                   </button>
                 </li>
                 {Array.from({ length: totalPages }, (_, i) => (
-                  <li key={'page-' + i}>
+                  <li key={"page-" + i}>
                     <button
                       onClick={() => handlePageChange(i + 1)}
-                      className={`flex items-center justify-center text-sm py-2 px-3 leading-tight ${currentPage === i + 1
-                        ? 'text-primary-600 bg-primary-50 border border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white'
-                        : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'
+                      className={`flex items-center justify-center text-sm py-2 px-3 leading-tight ${
+                        currentPage === i + 1
+                          ? "text-primary-600 bg-primary-50 border border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white"
+                          : "text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
                       }`}
                     >
                       {i + 1}
@@ -313,7 +309,7 @@ export default function UserList () {
 
         {deleteModal && currentModalItem && (
           <DeleteModal
-            cancelModal={() => closeModal('delete')}
+            cancelModal={() => closeModal("delete")}
             deleteDoc={() => handleDeleteUser(currentModalItem.username)}
             id={currentModalItem.id}
             message={currentModalItem.username}

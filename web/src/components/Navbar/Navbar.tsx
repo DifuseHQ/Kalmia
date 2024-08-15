@@ -1,28 +1,23 @@
-import {
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState
-} from 'react';
-import { useTranslation } from 'react-i18next';
-import { Link, NavLink } from 'react-router-dom';
-import { Icon } from '@iconify/react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { Icon } from "@iconify/react";
+import { AnimatePresence, motion } from "framer-motion";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Link, NavLink } from "react-router-dom";
 
-import { AuthContext, AuthContextType } from '../../context/AuthContext';
-import { ThemeContext, ThemeContextType } from '../../context/ThemeContext';
-import { DOMEvent } from '../../types/dom';
-import { getLanguageName, languages } from '../../utils/Utils';
+import { AuthContext, AuthContextType } from "../../context/AuthContext";
+import { ThemeContext, ThemeContextType } from "../../context/ThemeContext";
+import { DOMEvent } from "../../types/dom";
+import { getLanguageName, languages } from "../../utils/Utils";
 
-export default function Navbar () {
+export default function Navbar() {
   const { i18n } = useTranslation();
   const authContext = useContext(AuthContext);
   const themeContext = useContext(ThemeContext);
   const languageName = getLanguageName();
 
   const { t } = useTranslation();
-  const { userDetails, logout, isSidebarOpen, setIsSidebarOpen } = authContext as AuthContextType;
+  const { userDetails, logout, isSidebarOpen, setIsSidebarOpen } =
+    authContext as AuthContextType;
   const { darkMode, toggleDarkMode } = themeContext as ThemeContextType;
 
   const [isOpen, setIsOpen] = useState(false);
@@ -36,22 +31,28 @@ export default function Navbar () {
   };
 
   const dropdownRef = useRef<HTMLDivElement | null>(null);
-  const handleClickOutside = useCallback((event: DOMEvent) => {
-    if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-      setIsOpen(false);
-      setTranslateDropdown(false);
-    }
-  }, [setIsOpen, setTranslateDropdown]);
+  const handleClickOutside = useCallback(
+    (event: DOMEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+        setTranslateDropdown(false);
+      }
+    },
+    [setIsOpen, setTranslateDropdown],
+  );
 
   useEffect(() => {
     if (isOpen || translateDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     } else {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isOpen, translateDropdown, handleClickOutside]);
 
@@ -120,7 +121,7 @@ export default function Navbar () {
                       <li
                         key={lng.code}
                         onClick={() => changeLanguage(lng.code)}
-                        className={`w-full py-2 px-3  cursor-pointer ${lng.code === i18n.language ? 'bg-gray-400 dark:bg-gray-800 cursor-text' : 'dark:hover:bg-gray-600 hover:bg-gray-200'}`}
+                        className={`w-full py-2 px-3  cursor-pointer ${lng.code === i18n.language ? "bg-gray-400 dark:bg-gray-800 cursor-text" : "dark:hover:bg-gray-600 hover:bg-gray-200"}`}
                       >
                         {lng.lang}
                       </li>
@@ -171,10 +172,7 @@ export default function Navbar () {
 
                   <img
                     className="w-8 h-8 rounded-full object-cover"
-                    src={
-                      userDetails?.photo ||
-                      '/assets/images/no-profile.png'
-                    }
+                    src={userDetails?.photo || "/assets/images/no-profile.png"}
                     alt="user"
                   />
                 </button>
@@ -208,7 +206,7 @@ export default function Navbar () {
                         onClick={() => logout()}
                         className="block text-md py-3 font-semibold text-gray-900 dark:text-white"
                       >
-                        {t('sign_out')}
+                        {t("sign_out")}
                       </span>
                     </div>
                   </motion.div>
