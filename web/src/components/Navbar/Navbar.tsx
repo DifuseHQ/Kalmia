@@ -16,7 +16,7 @@ export default function Navbar() {
   const languageName = getLanguageName();
 
   const { t } = useTranslation();
-  const { userDetails, logout, isSidebarOpen, setIsSidebarOpen } =
+  const { userDetails, logout, isSidebarOpen, setIsSidebarOpen} =
     authContext as AuthContextType;
   const { darkMode, toggleDarkMode } = themeContext as ThemeContextType;
 
@@ -188,7 +188,7 @@ export default function Navbar() {
                     key="user-details-dropdown"
                   >
                     <Link
-                      to="/dashboard/user-profile"
+                      to={`/dashboard/user-profile/${userDetails.id}`}
                       onClick={() => setIsOpen(!isOpen)}
                     >
                       <div className="py-3 px-4 hover:bg-gray-300 dark:hover:bg-gray-500 cursor-pointer">

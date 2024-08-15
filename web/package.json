@@ -50,6 +50,7 @@
     "@rsbuild/plugin-react": "^1.0.1-beta.10",
     "@rsbuild/plugin-type-check": "^1.0.1-beta.11",
     "@types/node": "^22.2.0",
+    "@types/react-avatar-editor": "^13.0.2",
     "autoprefixer": "^10.4.19",
     "eslint": "^9.9.0",
     "eslint-plugin-react": "^7.35.0",

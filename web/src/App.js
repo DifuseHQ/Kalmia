@@ -63,7 +63,7 @@ function App() {
                       path="documentation/edit-page"
                       element={<EditPage />}
                     />
-                    <Route path="user-profile" element={<UserForm />} />
+                    <Route path="user-profile/:id" element={<UserForm />} />
 
                     <Route element={<AdminAuth />}>
                       <Route path="admin/user-list" element={<UserList />} />

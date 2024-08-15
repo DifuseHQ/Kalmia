@@ -5,77 +5,80 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { getUser, updateUser, uploadPhoto } from "../../api/Requests";
-import { AuthContext } from "../../context/AuthContext";
+import { AuthContext, AuthContextType } from "../../context/AuthContext";
 import { handleError } from "../../utils/Common";
 import { toastMessage } from "../../utils/Toast";
 import Breadcrumb from "../Breadcrumb/Breadcrumb";
+import { UserDetails } from "../../hooks/useUserDetails";
+import { DOMEvent } from "../../types/dom";
 
 export default function UserForm() {
   const { t } = useTranslation();
-  const { id: userId } = useParams();
-  const { user: currentUser, refreshData } = useContext(AuthContext);
-  const [isEdit, setIsEdit] = useState(false);
+  const authContext = useContext(AuthContext);
+  const { user: currentUser, refreshData } = authContext as AuthContextType;
+  const { id: userIdString } = useParams();
+  const userId: number | null = userIdString
+        ? parseInt(userIdString, 10)
+        : null;
   const navigate = useNavigate();
-  const [userData, setUserData] = useState([]);
-  const [editor, setEditor] = useState(null);
-  const [scale, setScale] = useState(1);
-  const [imageFile, setImageFile] = useState(null);
-  const [showModal, setShowModal] = useState(false);
+  const [isEdit, setIsEdit] = useState<boolean>(false);
+  const [userData, setUserData] = useState<UserDetails | null>(null);
+  const [scale, setScale] = useState<number>(1);
+  const [imageFile, setImageFile] = useState<string | File | null >(null);
+  const [showModal, setShowModal] = useState<boolean>(false);
 
-  const [profileImage, setProfileImage] = useState(
+  const [profileImage, setProfileImage] = useState<string>(
     "/assets/images/no-profile.png",
   );
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPasswod, setConfirmPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [username, setUsername] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [confirmPasswod, setConfirmPassword] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const inputRef = useRef(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const editorRef = useRef<AvatarEditor | null>(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        if (userId && currentUser.admin) {
-          const response = await getUser(parseInt(userId));
-          if (handleError(response, navigate, t)) return;
-          setUserData(response.data);
-          setUsername(response.data.username);
-          setEmail(response.data.email);
-          setProfileImage(
-            response.data.photo || "/assets/images/no-profile.png",
-          );
-        } else {
-          setUserData(currentUser);
-          setUsername(currentUser.username);
-          setEmail(currentUser.email);
-          setPassword("");
-          setConfirmPassword("");
-          setProfileImage(currentUser.photo || "/assets/images/no-profile.png");
-        }
+        const idToFetch = userId && currentUser?.admin ? Number(userId) : Number(currentUser?.userId);
+            const response = await getUser(idToFetch);
+        
+        if (handleError(response, navigate, t)) return;
+    
+        setUserData(response.data);
+        setUsername(response.data.username);
+        setEmail(response.data.email);
+        setPassword("");
+        setConfirmPassword("");
+        setProfileImage(response.data.photo || "/assets/images/no-profile.png");
       } catch (error) {
         console.error("Error fetching user data:", error);
-        handleError(error, navigate, t);
       }
     };
 
     fetchUserData();
   }, [userId, currentUser, navigate]);
-
+  console.log(currentUser);
+  
   useEffect(() => {
-    if (isEdit) {
+    if (isEdit && inputRef.current) {
       inputRef.current.focus();
     }
   }, [isEdit]);
 
-  const handleUploadFile = (e) => {
-    const file = e.target.files[0];
+  const handleUploadFile = (e:React.ChangeEvent<HTMLInputElement>) => {
+    const target = e.target as HTMLInputElement;
+    const file = target.files?.[0];
     const allowedTypes = ["image/jpeg", "image/png"];
     if (file && allowedTypes.includes(file.type)) {
       const reader = new window.FileReader();
       reader.onloadend = () => {
-        setImageFile(reader.result);
-        setShowModal(true);
+        if (reader.result && typeof reader.result === 'string') { 
+          setImageFile(reader.result);
+          setShowModal(true);
+        }
       };
       reader.readAsDataURL(file);
     } else {
@@ -87,8 +90,8 @@ export default function UserForm() {
     setIsLoading(true);
     setShowModal(false);
 
-    if (editor) {
-      const canvas = editor.getImage();
+    if (editorRef.current) {
+      const canvas = editorRef.current.getImage();
       canvas.toBlob(async (blob) => {
         if (blob) {
           const formData = new FormData();
@@ -107,7 +110,7 @@ export default function UserForm() {
             setIsLoading(false);
 
             const result = await updateUser({
-              id: Number(userData.id),
+              id: Number(userData?.id),
               photo: image,
             });
 
@@ -132,16 +135,16 @@ export default function UserForm() {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e:DOMEvent) => {
     e.preventDefault();
 
-    if (userData.username === username && userData.email === email) {
-      toastMessage(t("no_changes_detected"), "warn");
+    if (userData?.username === username && userData?.email === email) {
+      toastMessage(t("no_changes_detected"), "warning");
       return;
     }
 
     const result = await updateUser({
-      id: Number(userData.userId),
+      id: Number(userData?.id),
       username,
       email,
     });
@@ -155,15 +158,15 @@ export default function UserForm() {
     }
   };
 
-  const handleChangePassword = async (e) => {
+  const handleChangePassword = async (e:DOMEvent) => {
     e.preventDefault();
     if (!password) {
-      toastMessage(t("enter_new_password"), "warn");
+      toastMessage(t("enter_new_password"), "warning");
       return;
     }
 
     if (password.length < 8) {
-      toastMessage(t("password_too_weak"), "warn");
+      toastMessage(t("password_too_weak"), "warning");
       return;
     }
 
@@ -173,7 +176,7 @@ export default function UserForm() {
     }
 
     const result = await updateUser({
-      id: Number(userData.userId),
+      id: Number(userData?.id),
       password: password.toString(),
     });
 
@@ -186,7 +189,7 @@ export default function UserForm() {
     }
   };
 
-  const handleWheel = (e) => {
+  const handleWheel = (e:React.WheelEvent<HTMLDivElement>) => {
     e.preventDefault();
     const delta = Math.sign(e.deltaY);
     setScale((prevScale) => {
@@ -194,7 +197,7 @@ export default function UserForm() {
         delta > 0
           ? Math.max(1, prevScale - 0.1)
           : Math.min(2.5, prevScale + 0.1);
-      return Number.parseInt(newScale) || 0.5;
+      return Number(newScale) || 0.5;
     });
   };
 
@@ -218,12 +221,16 @@ export default function UserForm() {
             )}
             <span
               className="absolute bottom-1 right-1 bg-blue-500 text-white rounded-full p-2 hover:bg-blue-600 cursor-pointer shadow-lg transition duration-300"
-              onClick={() =>
-                document.getElementById("upload-profile-photo-button").click()
-              }
+              onClick={() =>{
+                const element = document.getElementById("upload-profile-photo-button");
+                if (element) {
+                  element.click();
+                }
+              }}
             >
               <Icon icon="mdi:camera" className="w-5 h-5" />
               <input
+                accept="image/jpeg, image/png"
                 id="upload-profile-photo-button"
                 type="file"
                 className="hidden z-50"
@@ -355,16 +362,18 @@ export default function UserForm() {
               Crop Image
             </h3>
             <div onWheel={handleWheel}>
+            {imageFile && (
               <AvatarEditor
-                ref={setEditor}
+                ref={editorRef}
                 image={imageFile}
                 width={250}
                 height={250}
                 border={50}
                 borderRadius={125}
-                scale={Number.parseInt(scale)}
+                scale={Number(scale)}
                 rotate={0}
               />
+            )}
             </div>
             <div className="mt-4">
               <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -376,7 +385,7 @@ export default function UserForm() {
                 max="2.5"
                 step="0.01"
                 value={scale}
-                onChange={(e) => setScale(e.target.value)}
+                onChange={(e) => setScale(Number(e.target.value))}
                 className="w-full"
               />
             </div>
