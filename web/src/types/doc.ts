@@ -103,7 +103,7 @@ export interface Documentation {
 }
 
 export interface FormField {
-  label:string;
+  label: string;
   placeholder: string;
   value: string;
   onChange: () => Promise<void>;
@@ -112,4 +112,3 @@ export interface FormField {
   required: boolean;
   ref: React.RefObject<HTMLInputElement>;
 }
-

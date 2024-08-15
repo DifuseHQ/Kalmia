@@ -1,8 +1,8 @@
 import { AxiosError, AxiosResponse, Method } from "axios";
 
+import { FooterLabelLinks, LanderDetails, MoreLabelLinks } from "../types/doc";
 import instance, { makeRequestWithCustomAuth } from "./AxiosInstance";
-import instance, { makeRequestWithCustomAuth } from './AxiosInstance';
-import { FooterLabelLinks, LanderDetails, MoreLabelLinks } from '../types/doc';
+import instance, { makeRequestWithCustomAuth } from "./AxiosInstance";
 
 interface ErrorMessages {
   [key: number]: [string, string];
@@ -21,7 +21,6 @@ interface AuthCredentials {
   username: string;
   password: string;
 }
-
 
 export interface DocumentationPayload {
   id: number | null;
