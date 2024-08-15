@@ -13,11 +13,12 @@ import {
   lightDefaultTheme,
 } from "@blocknote/mantine";
 import {
+  DefaultReactSuggestionItem,
   getDefaultReactSlashMenuItems,
   SuggestionMenuController,
   useCreateBlockNote,
 } from "@blocknote/react";
-import { Icon } from "@iconify/react/dist/iconify";
+import { Icon } from "@iconify/react/dist/iconify.js";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -29,9 +30,9 @@ import {
   updatePage,
   uploadPhoto,
 } from "../../api/Requests";
-import { AuthContext } from "../../context/AuthContext";
+import { AuthContext, AuthContextType } from "../../context/AuthContext";
 import { ModalContext } from "../../context/ModalContext";
-import { ThemeContext } from "../../context/ThemeContext";
+import { ThemeContext, ThemeContextType } from "../../context/ThemeContext";
 import { handleError } from "../../utils/Common";
 import { toastMessage } from "../../utils/Toast";
 import Breadcrumb from "../Breadcrumb/Breadcrumb";
@@ -52,7 +53,13 @@ const schema = BlockNoteSchema.create({
   },
 });
 
-const EditorWrapper = React.memo(({ editor, theme }) => {
+// Define the props for the EditorWrapper component
+interface EditorWrapperProps {
+  editor: any; // Replace 'any' with the appropriate type for the editor
+  theme: any; // Replace 'any' with the appropriate type for the theme
+}
+
+const EditorWrapper: React.FC<EditorWrapperProps> = React.memo(({ editor, theme }) => {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
@@ -64,7 +71,7 @@ const EditorWrapper = React.memo(({ editor, theme }) => {
   useEffect(() => {
     if (!editor) return;
 
-    const handleKeyPress = (event) => {
+    const handleKeyPress = (event:KeyboardEvent) => {
       if (event.key === "Enter") {
         const handled = handleBacktickInput(editor);
         if (handled) {
@@ -73,7 +80,7 @@ const EditorWrapper = React.memo(({ editor, theme }) => {
       }
     };
 
-    const keydownListener = (e) => {
+    const keydownListener = (e:KeyboardEvent) => {
       handleKeyPress(e);
     };
 
@@ -115,7 +122,8 @@ const EditorWrapper = React.memo(({ editor, theme }) => {
 
 export default function EditPage() {
   const { t } = useTranslation();
-  const { darkMode } = useContext(ThemeContext);
+  const themeContext = useContext(ThemeContext);
+  const { darkMode } = themeContext as ThemeContextType;
   const [themeKey, setThemeKey] = useState(0);
   const { openModal, closeModal, deleteModal } = useContext(ModalContext);
 
@@ -129,10 +137,12 @@ export default function EditPage() {
   const pageId = searchParams.get("pageId");
   const pageGroupId = searchParams.get("pageGroupId");
   const version = searchParams.get("version");
-  const { refreshData } = useContext(AuthContext);
+  const authContext = useContext(AuthContext);
+  const { refreshData } = authContext as AuthContextType;
 
   const navigate = useNavigate();
   const [pageData, setPageData] = useState({
+    id:null,
     title: "",
     slug: "",
     content: {},
@@ -141,7 +151,7 @@ export default function EditPage() {
   const [editorContent, setEditorContent] = useState([
     { type: "paragraph", content: "" },
   ]);
-  const generateSlug = (title) => {
+  const generateSlug = (title:string) => {
     return (
       "/" +
       title
@@ -151,7 +161,7 @@ export default function EditPage() {
         .replace(/[^\w-]+/g, "")
     );
   };
-  const updateContent = (newContent, name) => {
+  const updateContent = (newContent:string, name:string) => {
     setPageData((prevPageData) => {
       const updatedPageData = { ...prevPageData, [name]: newContent };
       if (name === "title") {
@@ -179,7 +189,7 @@ export default function EditPage() {
   });
 
   const parsedContent = useCallback(
-    (data) => {
+    (data:string) => {
       try {
         return JSON.parse(data);
       } catch (e) {
@@ -192,17 +202,20 @@ export default function EditPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const result = await getPage(parseInt(pageId));
+      const result = await getPage(Number(pageId));
+
+      const data = result.data
       if (handleError(result, navigate, t)) return;
 
       if (result.status === "success") {
         setPageData((prev) => ({
           ...prev,
-          title: result.data.title || "",
-          slug: result.data.slug || "",
-          isIntroPage: result.data.isIntroPage || false,
+          id: data.id || null,
+          title: data.title || "",
+          slug: data.slug || "",
+          isIntroPage: data.isIntroPage || false,
         }));
-        const parsed = parsedContent(result.data.content);
+        const parsed = parsedContent(data.content);
         setEditorContent(parsed.length > 0 ? parsed : []);
       }
     };
@@ -235,7 +248,7 @@ export default function EditPage() {
   }, [pageData, editor, pageId, navigate, t, refreshData]);
 
   const handleDelete = async () => {
-    const result = await deletePage(parseInt(pageId));
+    const result = await deletePage(Number(pageId));
 
     if (handleError(result, navigate, t)) {
       return;
@@ -257,7 +270,7 @@ export default function EditPage() {
   };
 
   useEffect(() => {
-    const handleKeyDown = (event) => {
+    const handleKeyDown = (event:KeyboardEvent) => {
       if (event.ctrlKey && event.key === "s") {
         event.preventDefault();
         handleEdit();
@@ -353,7 +366,7 @@ export default function EditPage() {
       {deleteModal && (
         <DeleteModal
           deleteDoc={handleDelete}
-          id={pageData.id}
+          id={Number(pageData.id)}
           message={`You.re permanently deleting "${pageData.title}"`}
           key="delete-page"
         />
@@ -366,7 +379,7 @@ export default function EditPage() {
         exit={{ opacity: 0 }}
         transition={{ delay: 0.1 }}
         id="defaultModal"
-        tabIndex="-1"
+        tabIndex={-1}
         aria-hidden="true"
         className="flex  items-center w-full md:inset-0 h-modal md:h-full"
         key="edit-page-1"
@@ -450,7 +463,7 @@ export default function EditPage() {
               {!pageData.isIntroPage && (
                 <button
                   onClick={() => {
-                    openModal("delete");
+                    openModal("delete", null);
                   }}
                   className="inline-flex items-center gap-1 bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-900 text-white font-medium rounded-lg text-sm px-5 py-2.5 text-center"
                 >
