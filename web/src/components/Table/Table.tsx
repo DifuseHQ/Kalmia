@@ -1,23 +1,24 @@
-import React, { useContext } from 'react';
+import { useContext } from 'react';
 import { Link } from 'react-router-dom';
+import { DraggableProvided, DraggableStateSnapshot } from '@hello-pangea/dnd';
 import { Icon } from '@iconify/react/dist/iconify.js';
 import { motion } from 'framer-motion';
 
 import { ModalContext } from '../../context/ModalContext';
-import { getFormattedDate } from '../../utils/Common';
 import { Editor, Page, PageGroup } from '../../types/doc';
-import { DraggableProvided, DraggableStateSnapshot } from 'react-beautiful-dnd';
+import { getFormattedDate } from '../../utils/Common';
 
-// Define props interface for Table component
 interface TableProps {
   provided: DraggableProvided;
   snapshot: DraggableStateSnapshot;
-  docId: string | undefined;
+  docId: number | undefined;
   pageGroupId: number;
   obj: PageGroup | Page;
   version: string | undefined;
   dir: string;
 }
+
+const AnimatedTableRow = motion.tr;
 
 export default function Table ({
   provided,
@@ -27,30 +28,33 @@ export default function Table ({
   obj,
   version,
   dir
-}:TableProps) {
+}: TableProps) {
   const { openModal } = useContext(ModalContext);
-  function isPage(obj: PageGroup | Page): obj is Page {
+
+  function isPage (obj: PageGroup | Page): obj is Page {
     return (obj as Page).isIntroPage === undefined;
   }
 
-  function isPageGroup(obj: PageGroup | Page): obj is PageGroup {
+  function isPageGroup (obj: PageGroup | Page): obj is PageGroup {
     return 'name' in obj;
   }
+
   return (
-    <motion.tr
+    <AnimatedTableRow
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       ref={provided.innerRef}
       {...provided.draggableProps}
-      {...provided.dragHandleProps}
-      className={`${snapshot.isDragging
-        ? 'opacity-80 bg-gray-200 dark:bg-gray-500 border shadow-md shadow-black text-black'
-        : ''
+      className={`${
+        snapshot.isDragging
+          ? 'opacity-80 bg-gray-200 dark:bg-gray-500 border shadow-md shadow-black text-black'
+          : ''
       } border dark:border-gray-700 h-16 `}
     >
       <td
         className={`w-1/12 items-center ${!isPage(obj) ? 'cursor-not-allowed' : 'cursor-pointer'} px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white`}
+        {...provided.dragHandleProps}
       >
         {isPage(obj) && (
           <Icon
@@ -102,7 +106,7 @@ export default function Table ({
               if (obj.editors && Array.isArray(obj.editors)) {
                 if (obj.lastEditorId != null) {
                   const editor = obj.editors?.find(
-                    (editor:Editor) =>
+                    (editor: Editor) =>
                       Number(editor.id) ===
                       Number(obj.lastEditorId)
                   );
@@ -193,6 +197,6 @@ export default function Table ({
           </button>
         </td>
       )}
-    </motion.tr>
+    </AnimatedTableRow>
   );
 }

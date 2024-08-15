@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import { JSX, useContext, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Link,
@@ -16,24 +16,31 @@ import {
   getPages,
   getUser
 } from '../../api/Requests';
-import { AuthContext } from '../../context/AuthContext';
+import { AuthContext, AuthContextType } from '../../context/AuthContext';
+import { Documentation, Page, PageGroup } from '../../types/doc';
 import { toastMessage } from '../../utils/Toast';
 
-export default function Breadcrumb () {
-  const { id: userIdFromParam } = useParams();
-  const [breadcrumb, setBreadcrumb] = useState([]);
+interface BreadcrumbItem {
+  title: string;
+  path: string;
+  icon: string;
+}
+
+export default function Breadcrumb (): JSX.Element {
+  const { id: userIdFromParam } = useParams<{ id: string }>();
+  const [breadcrumb, setBreadcrumb] = useState<BreadcrumbItem[]>([]);
   const [searchParams] = useSearchParams();
 
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useContext(AuthContext);
-  const titleRef = useRef('');
+  const { user } = useContext(AuthContext) as AuthContextType;
+  const titleRef = useRef<string>('');
 
   const { t } = useTranslation();
 
   useEffect(() => {
     async function updateBreadcrumb () {
-      const newBreadcrumb = [];
+      const newBreadcrumb: BreadcrumbItem[] = [];
 
       if (location.pathname.includes('/dashboard/user-profile')) {
         newBreadcrumb.push({
@@ -66,10 +73,10 @@ export default function Breadcrumb () {
             icon: 'mdi:table-user'
           });
         } else if (location.pathname.includes('/edit-user')) {
-          if (user.admin) {
-            const user = await getUser(parseInt(userIdFromParam));
+          if (user?.admin) {
+            const userData = await getUser(parseInt(userIdFromParam as string));
             newBreadcrumb.push({
-              title: `${user.data.username}`,
+              title: `${userData.data.username}`,
               path: location.pathname + location.search,
               icon: 'mdi:account-edit'
             });
@@ -90,7 +97,7 @@ export default function Breadcrumb () {
             return result.data;
           }
         )
-      ).catch((error) => {
+      ).catch((error: Error) => {
         toastMessage(t(error.message), 'error');
         return [null, null, null];
       });
@@ -110,19 +117,19 @@ export default function Breadcrumb () {
       const clonedFrom =
         versionId && version
           ? documentations?.find(
-            (d) => Number.parseInt(d.id) === Number.parseInt(versionId)
+            (d: Documentation) => Number.parseInt(d.id.toString()) === Number.parseInt(versionId)
           )?.clonedFrom
           : null;
 
       if (clonedFrom !== null) {
         const parentDoc = documentations?.find(
-          (d) => Number.parseInt(d.id) === Number.parseInt(clonedFrom)
+          (d: Documentation) => Number.parseInt(d.id.toString()) === Number.parseInt(clonedFrom.toString())
         );
         const doc = documentations?.find(
-          (d) => Number.parseInt(d.id) === Number.parseInt(versionId)
+          (d: Documentation) => Number.parseInt(d.id.toString()) === Number.parseInt(versionId as string)
         );
         newBreadcrumb.push({
-          title: doc.name,
+          title: doc?.name || '',
           path: `/dashboard/documentation?id=${parentDoc?.id}&versionId=${doc?.id}&version=${doc?.version}`,
           icon: 'uiw:document'
         });
@@ -138,7 +145,7 @@ export default function Breadcrumb () {
           });
         } else {
           const doc = documentations?.find(
-            (d) => d.id === Number.parseInt(docId)
+            (d: Documentation) => d.id === Number.parseInt(docId as string)
           );
           if (doc) {
             newBreadcrumb.push({
@@ -156,7 +163,7 @@ export default function Breadcrumb () {
       } else {
         if (docId) {
           const doc = documentations?.find(
-            (d) => d.id === Number.parseInt(docId)
+            (d: Documentation) => d.id === Number.parseInt(docId)
           );
           if (doc) {
             newBreadcrumb.push({
@@ -167,7 +174,7 @@ export default function Breadcrumb () {
           }
         } else {
           const smallestId = await documentations?.reduce(
-            (min, doc) => (doc.id < min ? doc.id : min),
+            (min: number, doc: Documentation) => (doc.id < min ? doc.id : min),
             documentations[0]?.id
           );
           navigate(
@@ -194,7 +201,7 @@ export default function Breadcrumb () {
           icon: 'mdi:file-document-plus'
         });
       } else if (location.pathname.includes('/edit-page') && pageId) {
-        const page = pages?.find((p) => p.id === Number.parseInt(pageId));
+        const page = pages?.find((p: Page) => p.id === Number.parseInt(pageId));
         if (page) {
           if (page.pageGroupId != null && page.pageGroupId !== undefined) {
             addPageGroupsBreadcrumb(
@@ -225,13 +232,13 @@ export default function Breadcrumb () {
     }
 
     function addPageGroupsBreadcrumb (
-      pageGroupId,
-      pageGroups,
-      newBreadcrumb,
-      versionId,
-      version
+      pageGroupId: number,
+      pageGroups: PageGroup[],
+      newBreadcrumb: BreadcrumbItem[],
+      versionId: string | null,
+      version: string | null
     ) {
-      function findPageGroup (groups, id) {
+      function findPageGroup (groups: PageGroup[], id: number): PageGroup | null {
         for (const group of groups) {
           if (group.id === id) return group;
           if (group.pageGroups) {
@@ -242,7 +249,7 @@ export default function Breadcrumb () {
         return null;
       }
 
-      function buildBreadcrumb (group, versionId, version) {
+      function buildBreadcrumb (group: PageGroup, versionId: string | null, version: string | null) {
         if (group.parentId) {
           const parent = findPageGroup(pageGroups, group.parentId);
           if (parent) buildBreadcrumb(parent, versionId, version);

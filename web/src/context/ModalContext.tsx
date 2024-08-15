@@ -9,7 +9,7 @@ export interface ModalItem {
   slug?:string;
 }
 
-interface ModalContextType {
+export interface ModalContextType {
   createDocumentationModal: boolean;
   createPageGroupModal: boolean;
   createPageModal: boolean;

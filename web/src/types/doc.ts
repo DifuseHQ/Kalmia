@@ -41,6 +41,7 @@ export interface PageGroup {
   parentId: number | null;
   updatedAt: string;
   isPageGroup? : boolean;
+  pageGroups: PageGroup[];
 }
 
 export interface Features {
@@ -98,20 +99,4 @@ export interface Documentation {
   lastEditorId: number;
   pageGroups: PageGroup[];
   pages: Page[];
-}
-
-export interface DragResult {
-  draggableId: string;
-  type: string;
-  source: {
-    index: number;
-    droppableId: string;
-  };
-  destination: {
-    droppableId: string;
-    index: number;
-  } | null;
-  reason: string;
-  mode: string;
-  combine: null;
 }

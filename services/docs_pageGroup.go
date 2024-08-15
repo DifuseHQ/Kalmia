@@ -252,29 +252,22 @@ func (service *DocService) EditPageGroup(user models.User, id uint, name string,
 }
 
 func (service *DocService) deletePageGroupRecursive(tx *gorm.DB, id uint) error {
-	docId, err := service.GetDocumentationIDOfPageGroup(id)
-
-	if err != nil {
-		return fmt.Errorf("failed_to_get_documentation_id")
-	}
-
 	var pageGroup models.PageGroup
 	if err := tx.Preload("Pages").Preload("Editors").First(&pageGroup, id).Error; err != nil {
 		return fmt.Errorf("page_group_not_found")
 	}
 
 	if err := tx.Model(&pageGroup).Association("Editors").Clear(); err != nil {
-		fmt.Println(err)
-		return fmt.Errorf("failed_to_clear_editors")
+		return fmt.Errorf("failed_to_clear_editors: %v", err)
 	}
 
 	if err := tx.Where("page_group_id = ?", id).Delete(&models.Page{}).Error; err != nil {
-		return fmt.Errorf("failed_to_delete_associated_pages")
+		return fmt.Errorf("failed_to_delete_associated_pages: %v", err)
 	}
 
 	var childGroups []models.PageGroup
 	if err := tx.Where("parent_id = ?", id).Find(&childGroups).Error; err != nil {
-		return fmt.Errorf("failed_to_find_child_page_groups")
+		return fmt.Errorf("failed_to_find_child_page_groups: %v", err)
 	}
 
 	for _, childGroup := range childGroups {
@@ -284,20 +277,7 @@ func (service *DocService) deletePageGroupRecursive(tx *gorm.DB, id uint) error 
 	}
 
 	if err := tx.Delete(&pageGroup).Error; err != nil {
-		return fmt.Errorf("failed_to_delete_page_group")
-	}
-
-	parentDocId, _ := service.GetParentDocId(docId)
-
-	if parentDocId == 0 {
-		err = service.AddBuildTrigger(docId)
-	} else {
-		err = service.AddBuildTrigger(parentDocId)
-	}
-
-	if err != nil {
-		fmt.Println(err)
-		return fmt.Errorf("failed_to_update_write_build")
+		return fmt.Errorf("failed_to_delete_page_group: %v", err)
 	}
 
 	return nil
@@ -308,13 +288,13 @@ func (service *DocService) DeletePageGroup(id uint) error {
 	var err error
 
 	err = service.DB.Transaction(func(tx *gorm.DB) error {
-		if err := service.deletePageGroupRecursive(tx, id); err != nil {
-			return err
-		}
-
 		docId, err = service.GetDocumentationIDOfPageGroup(id)
 		if err != nil {
-			return fmt.Errorf("failed_to_get_documentation_id")
+			return fmt.Errorf("failed_to_get_documentation_id: %v", err)
+		}
+
+		if err := service.deletePageGroupRecursive(tx, id); err != nil {
+			return err
 		}
 
 		return nil
@@ -325,14 +305,13 @@ func (service *DocService) DeletePageGroup(id uint) error {
 	}
 
 	parentDocId, _ := service.GetParentDocId(docId)
-	if parentDocId == 0 {
-		err = service.AddBuildTrigger(docId)
-	} else {
-		err = service.AddBuildTrigger(parentDocId)
+	triggerDocId := docId
+	if parentDocId != 0 {
+		triggerDocId = parentDocId
 	}
 
-	if err != nil {
-		return fmt.Errorf("failed_to_update_write_build")
+	if err := service.AddBuildTrigger(triggerDocId); err != nil {
+		return fmt.Errorf("failed_to_update_write_build: %v", err)
 	}
 
 	return nil

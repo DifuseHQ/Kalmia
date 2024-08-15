@@ -1,4 +1,6 @@
 import React, {
+  ChangeEvent,
+  KeyboardEvent,
   useCallback,
   useContext,
   useEffect,
@@ -9,15 +11,21 @@ import { useTranslation } from 'react-i18next';
 import { Icon } from '@iconify/react';
 import { AnimatePresence, motion } from 'framer-motion';
 
-import { ModalContext } from '../../context/ModalContext';
+import { ModalContext, ModalContextType } from '../../context/ModalContext';
 
-export default function EditDocumentModal ({ title, updateData, id }) {
+interface EditDocumentModalProps {
+  title?: string;
+  updateData: (title: string, version: string, id: number) => void;
+  id: number;
+}
+
+export default function EditDocumentModal ({ title, updateData, id }: EditDocumentModalProps) {
   const { t } = useTranslation();
-  const [editTitle, setEditTitle] = useState('');
-  const [version, setVersion] = useState('');
-  const { closeModal, cloneDocumentModal } = useContext(ModalContext);
+  const [editTitle, setEditTitle] = useState<string>('');
+  const [version, setVersion] = useState<string>('');
+  const { closeModal, cloneDocumentModal } = useContext(ModalContext) as ModalContextType;
 
-  const titleRef = useRef(null);
+  const titleRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (titleRef.current) {
@@ -36,6 +44,17 @@ export default function EditDocumentModal ({ title, updateData, id }) {
       closeModal('edit');
     }
   }, [cloneDocumentModal, closeModal]);
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      updateData(editTitle, version, id);
+    }
+  };
+
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>, setter: React.Dispatch<React.SetStateAction<string>>) => {
+    setter(e.target.value);
+  };
 
   return (
     <AnimatePresence>
@@ -78,13 +97,8 @@ export default function EditDocumentModal ({ title, updateData, id }) {
                   <input
                     ref={titleRef}
                     value={version}
-                    onChange={(e) => setVersion(e.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter') {
-                        event.preventDefault();
-                        updateData(editTitle, version, id);
-                      }
-                    }}
+                    onChange={(e) => handleInputChange(e, setVersion)}
+                    onKeyDown={handleKeyDown}
                     type="text"
                     name="version"
                     id="version"
@@ -112,13 +126,8 @@ export default function EditDocumentModal ({ title, updateData, id }) {
                     <input
                       ref={titleRef}
                       value={editTitle}
-                      onChange={(e) => setEditTitle(e.target.value)}
-                      onKeyDown={(event) => {
-                        if (event.key === 'Enter') {
-                          event.preventDefault();
-                          updateData(editTitle, version, id);
-                        }
-                      }}
+                      onChange={(e) => handleInputChange(e, setEditTitle)}
+                      onKeyDown={handleKeyDown}
                       type="text"
                       name="title"
                       id="title"

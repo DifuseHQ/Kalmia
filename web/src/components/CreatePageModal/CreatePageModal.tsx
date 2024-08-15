@@ -1,25 +1,30 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import { ChangeEvent, useContext, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@iconify/react';
 import { AnimatePresence, motion } from 'framer-motion';
 
-import { ModalContext } from '../../context/ModalContext';
+import { ModalContext, ModalContextType } from '../../context/ModalContext';
+import { DOMEvent } from '../../types/dom';
 
-export default function CreatePage ({ handleCreate }) {
+interface CreatePageProps {
+  handleCreate: (title: string, slug: string) => void;
+}
+
+export default function CreatePage ({ handleCreate }: CreatePageProps) {
   const { t } = useTranslation();
+  const [title, setTitle] = useState<string>('');
+  const [slug, setSlug] = useState<string>('');
 
-  const [title, setTitle] = useState('');
-  const [slug, setSlug] = useState('');
-
-  const generateSlug = (title) => {
+  const generateSlug = (title: string): string => {
     return '/' + title
       .toLowerCase()
       .trim()
       .replace(/[\s]+/g, '-')
       .replace(/[^\w-]+/g, '');
   };
-  const handleKeyDown = (event) => {
-    if (event.key === 'Enter') {
+
+  const handleKeyDown = (event: DOMEvent) => {
+    if ('key' in event && event.key === 'Enter') {
       event.preventDefault();
       const generatedSlug = generateSlug(title);
       setSlug(generatedSlug);
@@ -27,8 +32,8 @@ export default function CreatePage ({ handleCreate }) {
     }
   };
 
-  const { closeModal } = useContext(ModalContext);
-  const inputRef = useRef(null);
+  const { closeModal } = useContext(ModalContext) as ModalContextType;
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (inputRef.current) {
@@ -65,11 +70,11 @@ export default function CreatePage ({ handleCreate }) {
             <div className="grid gap-4 mb-4">
               <div>
                 <span className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                  {t('title_label')}df
+                  {t('title_label')}
                 </span>
                 <input
                   ref={inputRef}
-                  onChange={(e) => {
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
                     console.log(e.target.value);
 
                     const newTitle = e.target.value;
@@ -91,7 +96,7 @@ export default function CreatePage ({ handleCreate }) {
                 </span>
                 <input
                   value={slug}
-                  onChange={(e) => setSlug(e.target.value)}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setSlug(e.target.value)}
                   onKeyDown={handleKeyDown}
                   type="text"
                   name="slug"

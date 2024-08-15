@@ -1,15 +1,20 @@
-import React, { useContext } from 'react';
+import { useContext } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@iconify/react';
 import { AnimatePresence, motion } from 'framer-motion';
 
-import { ModalContext } from '../../context/ModalContext';
+import { ModalContext, ModalContextType } from '../../context/ModalContext';
 
-export default function DeleteModal ({ deleteDoc, message }) {
-  // const { setDeleteModal, setCurrentItem, setDeleteItem } = useContext(AuthContext);
+interface DeleteModalProps {
+  deleteDoc: () => void;
+  message?: string;
+  id?: number;
+}
+
+export default function DeleteModal ({ deleteDoc, message }: DeleteModalProps) {
   const { t } = useTranslation();
+  const { closeModal } = useContext(ModalContext) as ModalContextType;
 
-  const { closeModal } = useContext(ModalContext);
   return (
     <AnimatePresence>
       <motion.div

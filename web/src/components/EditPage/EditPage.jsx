@@ -90,7 +90,7 @@ const EditorWrapper = React.memo(({ editor, theme }) => {
         triggerCharacter="/"
         getItems={async (query) =>
           filterSuggestionItems(
-            [...getDefaultReactSlashMenuItems(editor), insertAlert(editor), insertCode()],
+            [...getDefaultReactSlashMenuItems(editor), insertAlert(editor), insertCode(editor)],
             query
           )
         }

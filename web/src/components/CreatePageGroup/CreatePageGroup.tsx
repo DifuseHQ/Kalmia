@@ -1,24 +1,28 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import { ChangeEvent, useContext, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@iconify/react';
 import { AnimatePresence, motion } from 'framer-motion';
 
-import { ModalContext } from '../../context/ModalContext';
+import { ModalContext, ModalContextType } from '../../context/ModalContext';
+import { DOMEvent } from '../../types/dom';
 
-export default function CreatePageGroup ({ handleCreate }) {
+interface CreatePageGroupProps {
+  handleCreate: (title: string) => void;
+}
+
+export default function CreatePageGroup ({ handleCreate }: CreatePageGroupProps) {
   const { t } = useTranslation();
+  const [title, setTitle] = useState<string>('');
 
-  const [title, setTitle] = useState('');
-  const handleKeyDown = (event) => {
-    if (event.key === 'Enter') {
+  const handleKeyDown = (event: DOMEvent) => {
+    if ('key' in event && event.key === 'Enter') {
       event.preventDefault();
       handleCreate(title);
     }
   };
 
-  const { closeModal } = useContext(ModalContext);
-
-  const inputRef = useRef(null);
+  const { closeModal } = useContext(ModalContext) as ModalContextType;
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (inputRef.current) {
@@ -39,7 +43,7 @@ export default function CreatePageGroup ({ handleCreate }) {
           <div className="relative p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
             <div className="flex justify-between items-center mb-4 sm:mb-5 dark:border-gray-600">
               <div className="flex-grow text-center">
-                <h3 className="text-lg  font-semibold text-gray-900 dark:text-white">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                   {t('new_page_Group')}
                 </h3>
               </div>
@@ -52,7 +56,6 @@ export default function CreatePageGroup ({ handleCreate }) {
                 <span className="sr-only">Close modal</span>
               </button>
             </div>
-
             <div className="grid gap-4 mb-4">
               <div>
                 <span className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
@@ -60,7 +63,7 @@ export default function CreatePageGroup ({ handleCreate }) {
                 </span>
                 <input
                   ref={inputRef}
-                  onChange={(e) => setTitle(e.target.value)}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
                   onKeyDown={handleKeyDown}
                   type="text"
                   name="title"
@@ -70,7 +73,6 @@ export default function CreatePageGroup ({ handleCreate }) {
                   required
                 />
               </div>
-
               <button
                 onClick={() => handleCreate(title)}
                 type="button"

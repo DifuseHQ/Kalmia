@@ -1,16 +1,26 @@
-import { useCallback } from 'react';
-import { defaultProps } from '@blocknote/core';
+import { Block, BlockNoteEditor, BlockNoteSchema, defaultBlockSpecs, defaultProps, insertOrUpdateBlock } from '@blocknote/core';
 import { createReactBlockSpec } from '@blocknote/react';
 import warnIcon from '@iconify/icons-mdi/alert';
 import errorIcon from '@iconify/icons-mdi/alert-circle';
 import successIcon from '@iconify/icons-mdi/check-circle';
 import infoIcon from '@iconify/icons-mdi/information';
-import { Icon } from '@iconify/react/dist/iconify.js';
+import { Icon, IconifyIcon } from '@iconify/react/dist/iconify.js';
 import { Menu } from '@mantine/core';
-import { langs } from '@uiw/codemirror-extensions-langs';
+import { langs, LanguageName } from '@uiw/codemirror-extensions-langs';
 import ReactCodeMirror from '@uiw/react-codemirror';
 
-export const alertTypes = [
+interface alertType {
+  title: string;
+  value: 'warning' | 'danger' | 'info' | 'success' | undefined;
+  icon: IconifyIcon;
+  color: string;
+  backgroundColor: {
+    light: string;
+    dark: string;
+  };
+}
+
+export const alertTypes: alertType[] = [
   {
     title: 'Warning',
     value: 'warning',
@@ -73,19 +83,17 @@ export const Alert = createReactBlockSpec(
       );
       return (
         <div className="alert" data-alert-type={props.block.props.type}>
-          {/* Icon which opens a menu to choose the Alert type */}
           <Menu withinPortal={false} zIndex={999999}>
             <Menu.Target>
               <div className="alert-icon-wrapper" contentEditable={false}>
                 <Icon
-                  icon={alertType.icon}
+                  icon={alertType?.icon || warnIcon}
                   className="alert-icon"
                   data-alert-icon-type={props.block.props.type}
                   fontSize={32}
                 />
               </div>
             </Menu.Target>
-            {/* Dropdown to change the Alert type */}
             <Menu.Dropdown>
               <Menu.Label>Alert Type</Menu.Label>
               <Menu.Divider />
@@ -115,7 +123,6 @@ export const Alert = createReactBlockSpec(
               })}
             </Menu.Dropdown>
           </Menu>
-          {/* Rich text field for user to type in */}
           <div className="inline-content" ref={props.contentRef} />
         </div>
       );
@@ -123,15 +130,80 @@ export const Alert = createReactBlockSpec(
   }
 );
 
-export const insertAlert = (editor) => ({
+export const CODEBLOCK_TYPE = 'procode';
+
+function isValidLanguage (lang: string): lang is LanguageName {
+  return lang in langs;
+}
+
+export const CodeBlock = createReactBlockSpec(
+  {
+    //@ts-ignore
+    type: CODEBLOCK_TYPE,
+    propSchema: {
+      language: {
+        default: 'javascript'
+      },
+      code: {
+        default: ''
+      }
+    },
+    content: 'none'
+  },
+  {
+    render: ({ block, editor }) => {
+      const language = block.props.language || 'javascript';
+      const code = block.props.code || '';
+
+      const onInputChange = (val: string) => {
+        editor.updateBlock(block, {
+          props: { ...block.props, code: val }
+        });
+      };
+
+      const languageExtension = isValidLanguage(language) ? langs[language] : langs.javascript;
+
+      return (
+        <ReactCodeMirror
+          id={block.id}
+          autoFocus
+          placeholder={'Write your code here...'}
+          style={{ width: '100%', resize: 'vertical' }}
+          extensions={[languageExtension()]}
+          value={code}
+          theme={'dark'}
+          editable={editor.isEditable}
+          width="100%"
+          height="200px"
+          onChange={onInputChange}
+        />
+      );
+    },
+    toExternalHTML: ({ block }) => {
+      return (
+        <pre>
+          <code>{block.props.code}</code>
+        </pre>
+      );
+    }
+  }
+);
+
+const schema = BlockNoteSchema.create({
+  blockSpecs: {
+    ...defaultBlockSpecs,
+    alert: Alert,
+    procode: CodeBlock
+  }
+});
+
+export const insertAlert = (editor: typeof schema.BlockNoteEditor) => ({
   title: 'alert',
   subtext: 'This is a notification alert.',
   onItemClick: () => {
-    editor.insertBlocks(
-      [{ type: 'alert' }],
-      editor.getTextCursorPosition().block,
-      'after'
-    );
+    insertOrUpdateBlock(editor, {
+      type: 'alert'
+    });
   },
   aliases: [
     'alert',
@@ -146,80 +218,21 @@ export const insertAlert = (editor) => ({
   icon: <Icon icon={warnIcon} />
 });
 
-export const CODEBLOCK_TYPE = 'procode';
-
-export const CodeBlockComponent = ({ block, editor }) => {
-  const code = block.props.code || '';
-  const language = block.props.language || 'plain';
-
-  const handleChange = useCallback((value) => {
-    editor.updateBlock(block, {
-      props: { code: value, language }
-    });
-  }, [block, editor, language]);
-
-  const languageExtension = langs[language] || langs.javascript;
-
-  return (
-    <div className="code-block-conatiner w-full rounded-lg shadow-md outline-none">
-      <ReactCodeMirror
-        key={language}
-        value={code}
-        onChange={handleChange}
-        extensions={[languageExtension()]}
-        theme="dark"
-        basicSetup={{
-          lineNumbers: true,
-          highlightActiveLine: true
-        }}
-      />
-    </div>
-  );
-};
-
-export const CodeBlock = createReactBlockSpec(
-  {
-    type: CODEBLOCK_TYPE,
-    propSchema: {
-      code: { default: '' },
-      language: { default: 'plain' }
-    },
-    content: 'none'
-  },
-  {
-    render: ({ block, editor }) => <CodeBlockComponent block={block} editor={editor} />,
-    toExternalHTML: ({ block }) => {
-      return (
-        <pre>
-          <code className={`language-${block?.props?.language}`}>{block?.props?.code}</code>
-        </pre>
-      );
-    }
-  }
-);
-
-export const insertCode = (editor) => ({
+export const insertCode = (editor: BlockNoteEditor) => ({
   title: 'Code',
   group: 'Other',
   onItemClick: () => {
-    editor.insertBlocks(
-      [{
-        type: CODEBLOCK_TYPE,
-        props: {
-          code: '',
-          language: 'plain'
-        }
-      }],
-      editor.getTextCursorPosition().block,
-      'after'
-    );
+    insertOrUpdateBlock(editor, {
+      // @ts-ignore
+      type: CODEBLOCK_TYPE
+    });
   },
   aliases: ['code'],
   icon: 'code',
   subtext: 'Insert a code block.'
 });
 
-export const handleBacktickInput = (editor) => {
+export const handleBacktickInput = (editor: BlockNoteEditor) => {
   const backtickInputRegex = /^```([a-z]*)[\s\n]?/;
   const cursorPosition = editor.getTextCursorPosition();
 
@@ -233,15 +246,17 @@ export const handleBacktickInput = (editor) => {
     return false;
   }
 
-  const blockContent = editor.getBlock(currentBlock.id);
-  const text = blockContent.content?.[0]?.text || '';
+  const blockContent: Block | undefined = editor.getBlock(currentBlock.id);
+  const text = (blockContent?.content as any[])?.[0]?.text ?? '';
   const match = text.match(backtickInputRegex);
 
   if (match) {
-    const language = match[1] || 'plain';
+    const language = match[1] || 'javascript';
     editor.updateBlock(currentBlock, {
+      //@ts-ignore
       type: CODEBLOCK_TYPE,
       props: {
+        //@ts-ignore
         language,
         code: ''
       }

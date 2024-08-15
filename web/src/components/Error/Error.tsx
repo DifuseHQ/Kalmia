@@ -1,9 +1,18 @@
-import React, { useEffect, useRef } from 'react';
+import { JSX, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 
-const errorConfig = {
+interface ErrorConfig {
+  title: string;
+  icon: string;
+}
+
+interface ErrorConfigs {
+  [key: number]: ErrorConfig;
+}
+
+const errorConfig: ErrorConfigs = {
   400: { title: 'Bad Request', icon: 'carbon:warning-alt' },
   401: { title: 'Unauthorized', icon: 'carbon:user-profile' },
   403: { title: 'Forbidden', icon: 'carbon:locked' },
@@ -14,19 +23,19 @@ const errorConfig = {
   504: { title: 'Gateway Timeout', icon: 'carbon:hourglass' }
 };
 
-export default function Error () {
+export default function Error (): JSX.Element {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-  const params = useParams();
-  const titleRef = useRef('');
+  const params = useParams<{ code?: string }>();
+  const titleRef = useRef<string>('');
 
-  const getErrorCode = () => {
+  const getErrorCode = (): number => {
     if (params.code) return parseInt(params.code, 10);
     const searchParams = new URLSearchParams(location.search);
     const queryErrorCode = searchParams.get('e');
     if (queryErrorCode) return parseInt(queryErrorCode, 10);
-    return location.state?.errorDetails?.code || 404;
+    return (location.state as { errorDetails?: { code: number } })?.errorDetails?.code || 404;
   };
 
   const errorCode = getErrorCode();
@@ -38,8 +47,9 @@ export default function Error () {
     document.title = titleRef.current;
   }, [errorCode, title]);
 
-  const goBack = () => navigate(-1);
-  const reloadPage = () => navigate(0);
+  const goBack = (): void => navigate(-1);
+  const reloadPage = (): void => navigate(0);
+
   const isServerError = errorCode >= 500;
 
   return (

@@ -1,22 +1,28 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { ChangeEvent, JSX, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 
-import { createUser } from '../../api/Requests';
+import { ApiResponse, createUser } from '../../api/Requests';
 import { handleError } from '../../utils/Common';
 import { toastMessage } from '../../utils/Toast';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
 
-export default function CreateUser () {
+interface UserData {
+  username: string;
+  password: string;
+  email: string;
+}
+
+export default function CreateUser (): JSX.Element {
   const { t } = useTranslation();
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [username, setUsername] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [confirmPassword, setConfirmPassword] = useState<string>('');
 
   const navigate = useNavigate();
-  const inputRef = useRef(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (inputRef.current) {
@@ -24,7 +30,7 @@ export default function CreateUser () {
     }
   }, []);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (password.length < 8) {
@@ -37,13 +43,13 @@ export default function CreateUser () {
       return;
     }
 
-    const userData = {
+    const userData: UserData = {
       username,
       password,
       email
     };
 
-    const result = await createUser(userData);
+    const result: ApiResponse = await createUser(userData);
 
     if (result.status === 'success') {
       toastMessage(t('user_created_successfully'), 'success');
@@ -71,7 +77,7 @@ export default function CreateUser () {
               id="username"
               ref={inputRef}
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
               className="w-full px-3 py-2 border rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               required
             />
@@ -85,7 +91,7 @@ export default function CreateUser () {
               type="email"
               id="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
               className="w-full px-3 py-2 border rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               required
             />
@@ -99,7 +105,7 @@ export default function CreateUser () {
               type="password"
               id="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
               className="w-full px-3 py-2 border rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               required
             />
@@ -113,7 +119,7 @@ export default function CreateUser () {
               type="password"
               id="confirmPassword"
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)}
               className="w-full px-3 py-2 border rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               required
             />
