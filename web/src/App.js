@@ -76,8 +76,8 @@ function App () {
 
                 <Route path="error/:code" element={<Error />} />
                 <Route path="error" element={<Error />} />
-                {/* <Route path="/error" element={<Error />} />
-              <Route path="*" element={<Error />} /> */}
+                <Route path="*" element={<Error />} /> 
+                 {/* <Route path="/error" element={<Error />} /> */}
               </Routes>
             </AuthProvider>
           </ModalProvider>
