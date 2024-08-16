@@ -22,10 +22,12 @@ import AdminAuth from "./protected/AdminAuth";
 import LoginAuth from "./protected/LoginAuth";
 import RequireAuth from "./protected/RequireAuth";
 
+const baseName = process.env.NODE_ENV === "development" ? "" : "/admin";
+
 function App() {
   return (
     <StrictMode>
-      <Router>
+      <Router basename={baseName}>
         <ThemeProvider>
           <ModalProvider>
             <AuthProvider>
