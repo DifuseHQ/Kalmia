@@ -396,7 +396,13 @@ func (service *DocService) DeleteDocumentation(id uint) error {
 		return fmt.Errorf("failed_to_commit_changes")
 	}
 
-	err := service.AddBuildTrigger(id)
+	parentId, err := service.GetRootParentID(id)
+
+	if err != nil {
+		return fmt.Errorf("failed_to_get_parent_id")
+	}
+
+	err = service.AddBuildTrigger(parentId)
 	if err != nil {
 		return fmt.Errorf("failed_to_add_build_trigger")
 	}
