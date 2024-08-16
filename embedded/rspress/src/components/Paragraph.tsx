@@ -38,7 +38,8 @@ export const Paragraph: React.FC<ParagraphProps> = ({ rawJson }) => {
     getColorClass(props.backgroundColor, true),
     props.textAlignment === 'left' ? 'kal-text-left' :
     props.textAlignment === 'center' ? 'kal-text-center' :
-    props.textAlignment === 'right' ? 'kal-text-right' : ''
+    props.textAlignment === 'right' ? 'kal-text-right' : '',
+    'kal-mb-5',
   ].filter(Boolean).join(' ');
 
   const renderTextSegment = (segment: TextSegment, index: number): React.ReactNode => {
