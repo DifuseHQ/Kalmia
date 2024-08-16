@@ -33,9 +33,9 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (
-      window.location.pathname.startsWith("/admin/login/gh") ||
-      window.location.pathname.startsWith("/admin/login/ms") ||
-      window.location.pathname.startsWith("/admin/login/gg")
+      window.location.pathname.endsWith("login/gh") ||
+      window.location.pathname.endsWith("login/ms") ||
+      window.location.pathname.endsWith("login/gg")
     ) {
       const code = new URLSearchParams(window.location.search).get("token");
       if (code) {
