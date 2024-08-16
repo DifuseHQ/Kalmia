@@ -27,7 +27,7 @@ import {
   deletePage,
   getPage,
   updatePage,
-  uploadPhoto,
+  uploadFile,
 } from "../../api/Requests";
 import { AuthContext, AuthContextType } from "../../context/AuthContext";
 import { ModalContext } from "../../context/ModalContext";
@@ -184,11 +184,13 @@ export default function EditPage() {
     uploadFile: async (file) => {
       const formData = new FormData();
       formData.append("upload", file);
-      const result = await uploadPhoto(formData);
+      const result = await uploadFile(formData);
+
+      console.log(result);
 
       if (result?.status === "success") {
-        if (result.data.photo) {
-          return result.data.photo;
+        if (result.data.file) {
+          return result.data.file;
         }
       }
     },

@@ -53,7 +53,7 @@ func (service *DocService) CreatePage(page *models.Page) error {
 		return fmt.Errorf("failed_to_get_documentation_id")
 	}
 
-	parentDocId, _ := service.GetParentDocId(docId)
+	parentDocId, _ := service.GetRootParentID(docId)
 
 	if parentDocId == 0 {
 		err = service.AddBuildTrigger(docId)
@@ -111,7 +111,7 @@ func (service *DocService) EditPage(user models.User, id uint, title, slug, cont
 		return fmt.Errorf("failed_to_get_documentation_id")
 	}
 
-	parentDocId, _ := service.GetParentDocId(docId)
+	parentDocId, _ := service.GetRootParentID(docId)
 
 	if parentDocId == 0 {
 		err = service.AddBuildTrigger(docId)
@@ -162,7 +162,7 @@ func (service *DocService) DeletePage(id uint) error {
 		return fmt.Errorf("failed_to_get_documentation_id")
 	}
 
-	parentDocId, _ := service.GetParentDocId(docId)
+	parentDocId, _ := service.GetRootParentID(docId)
 
 	if parentDocId == 0 {
 		err = service.AddBuildTrigger(docId)
@@ -199,7 +199,7 @@ func (service *DocService) ReorderPage(id uint, pageGroupID *uint, order *uint) 
 		return fmt.Errorf("failed_to_get_documentation_id")
 	}
 
-	parentDocId, _ := service.GetParentDocId(docId)
+	parentDocId, _ := service.GetRootParentID(docId)
 
 	if parentDocId == 0 {
 		err = service.AddBuildTrigger(docId)

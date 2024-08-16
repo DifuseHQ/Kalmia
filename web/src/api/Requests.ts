@@ -251,8 +251,8 @@ export const createUser = (data: UserPayload) =>
 export const updateUser = (data: UpdateUserPayload) =>
   makeRequest("/auth/user/edit", "post", data);
 
-export const uploadPhoto = (data: FormData) =>
-  makeRequest("/auth/user/upload-photo", "post", data);
+export const uploadFile = (data: FormData) =>
+  makeRequest("/auth/user/upload-file", "post", data);
 
 export const deleteUser = (username: string) =>
   makeRequest("/auth/user/delete", "post", { username });

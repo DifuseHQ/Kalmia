@@ -1,7 +1,9 @@
 package services
 
 import (
+	"errors"
 	"fmt"
+	"sort"
 
 	"git.difuse.io/Difuse/kalmia/db/models"
 	"git.difuse.io/Difuse/kalmia/logger"
@@ -140,28 +142,49 @@ func (service *DocService) GetChildrenOfDocumentation(id uint) ([]uint, error) {
 }
 
 func (service *DocService) GetAllVersions(id uint) (string, []string, error) {
-	var versions []string
-
-	var parentDoc models.Documentation
-	var childDocs []models.Documentation
-
+	var docs []models.Documentation
 	db := service.DB
 
-	if err := db.Where("id = ?", id).First(&parentDoc).Error; err != nil {
-		return "", nil, fmt.Errorf("documentation_not_found")
+	var fetchDocs func(uint) error
+	fetchDocs = func(docID uint) error {
+		var doc models.Documentation
+		if err := db.Where("id = ?", docID).First(&doc).Error; err != nil {
+			return fmt.Errorf("documentation_not_found: %w", err)
+		}
+		docs = append(docs, doc)
+
+		var childDocs []models.Documentation
+		if err := db.Where("cloned_from = ?", docID).Find(&childDocs).Error; err != nil {
+			return fmt.Errorf("failed_to_get_child_versions: %w", err)
+		}
+
+		for _, childDoc := range childDocs {
+			if err := fetchDocs(childDoc.ID); err != nil {
+				return err
+			}
+		}
+
+		return nil
 	}
 
-	if err := db.Where("cloned_from = ?", id).Order("created_at ASC").Find(&childDocs).Error; err != nil {
-		return "", nil, fmt.Errorf("failed_to_get_documentation_versions")
+	if err := fetchDocs(id); err != nil {
+		return "", nil, err
 	}
 
-	for _, doc := range childDocs {
-		versions = append(versions, doc.Version)
+	sort.Slice(docs, func(i, j int) bool {
+		return docs[i].CreatedAt.Before(*docs[j].CreatedAt)
+	})
+
+	versions := make([]string, len(docs))
+	for i, doc := range docs {
+		versions[i] = doc.Version
 	}
 
-	versions = append([]string{parentDoc.Version}, versions...)
+	if len(versions) == 0 {
+		return "", nil, fmt.Errorf("no_versions_found")
+	}
+
 	latestVersion := versions[len(versions)-1]
-
 	return latestVersion, versions, nil
 }
 
@@ -226,7 +249,6 @@ func (service *DocService) CreateDocumentation(documentation *models.Documentati
 
 func (service *DocService) EditDocumentation(user models.User, id uint, name, description, version, favicon, metaImage, navImage, navImageDark, customCSS, footerLabelLinks, moreLabelLinks, copyrightText, url, organizationName, projectName, baseURL, landerDetails string) error {
 	tx := service.DB.Begin()
-
 	if !utils.IsBaseURLValid(baseURL) {
 		return fmt.Errorf("invalid_base_url")
 	}
@@ -248,7 +270,6 @@ func (service *DocService) EditDocumentation(user models.User, id uint, name, de
 		doc.FooterLabelLinks = footerLabelLinks
 		doc.MoreLabelLinks = moreLabelLinks
 		doc.CopyrightText = copyrightText
-
 		if isTarget && version != "" {
 			doc.Version = version
 		}
@@ -281,16 +302,44 @@ func (service *DocService) EditDocumentation(user models.User, id uint, name, de
 		return err
 	}
 
-	var relatedDocs []models.Documentation
-	if err := tx.Preload("Editors").Where("id = ? OR cloned_from = ?", targetDoc.ClonedFrom, targetDoc.ID).Find(&relatedDocs).Error; err != nil {
-		tx.Rollback()
-		return fmt.Errorf("failed_to_fetch_related_documentations")
+	var updateRelatedDocs func(uint) error
+	updateRelatedDocs = func(docID uint) error {
+		var relatedDocs []models.Documentation
+		if err := tx.Preload("Editors").Where("id = ? OR cloned_from = ?", docID, docID).Find(&relatedDocs).Error; err != nil {
+			return fmt.Errorf("failed_to_fetch_related_documentations")
+		}
+
+		for i := range relatedDocs {
+			if relatedDocs[i].ID != targetDoc.ID {
+				if err := updateDoc(&relatedDocs[i], false); err != nil {
+					return err
+				}
+				if err := updateRelatedDocs(relatedDocs[i].ID); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
 	}
 
-	for i := range relatedDocs {
-		if err := updateDoc(&relatedDocs[i], false); err != nil {
-			tx.Rollback()
-			return err
+	if err := updateRelatedDocs(targetDoc.ID); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if targetDoc.ClonedFrom != nil {
+		currentID := targetDoc.ClonedFrom
+		for currentID != nil {
+			var parentDoc models.Documentation
+			if err := tx.Preload("Editors").First(&parentDoc, currentID).Error; err != nil {
+				tx.Rollback()
+				return fmt.Errorf("parent_documentation_not_found")
+			}
+			if err := updateDoc(&parentDoc, false); err != nil {
+				tx.Rollback()
+				return err
+			}
+			currentID = parentDoc.ClonedFrom
 		}
 	}
 
@@ -298,17 +347,19 @@ func (service *DocService) EditDocumentation(user models.User, id uint, name, de
 		return fmt.Errorf("failed_to_commit_changes")
 	}
 
-	parentDocId, _ := service.GetParentDocId(id)
-
-	var err error
-
-	if parentDocId == 0 {
-		err = service.AddBuildTrigger(id)
-	} else {
-		err = service.AddBuildTrigger(parentDocId)
+	rootID := id
+	for {
+		var doc models.Documentation
+		if err := service.DB.First(&doc, rootID).Error; err != nil {
+			return fmt.Errorf("failed_to_find_root_document")
+		}
+		if doc.ClonedFrom == nil {
+			break
+		}
+		rootID = *doc.ClonedFrom
 	}
 
-	if err != nil {
+	if err := service.AddBuildTrigger(rootID); err != nil {
 		return fmt.Errorf("failed_to_add_build_trigger")
 	}
 
@@ -568,6 +619,24 @@ func (service *DocService) GetParentDocId(docID uint) (uint, error) {
 	return *doc.ClonedFrom, nil
 }
 
+func (service *DocService) GetRootParentID(docID uint) (uint, error) {
+	for {
+		var doc models.Documentation
+		if err := service.DB.Unscoped().Select("id", "cloned_from").First(&doc, docID).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return 0, fmt.Errorf("documentation with ID %d not found", docID)
+			}
+			return 0, fmt.Errorf("failed to fetch documentation with ID %d: %w", docID, err)
+		}
+
+		if doc.ClonedFrom == nil || *doc.ClonedFrom == 0 || *doc.ClonedFrom == doc.ID {
+			return doc.ID, nil
+		}
+
+		docID = *doc.ClonedFrom
+	}
+}
+
 func (service *DocService) BulkReorderPageOrPageGroup(pageOrder []struct {
 	ID          uint  `json:"id" validate:"required"`
 	Order       *uint `json:"order"`
@@ -637,7 +706,7 @@ func (service *DocService) BulkReorderPageOrPageGroup(pageOrder []struct {
 		return err
 	}
 
-	parentDocId, err := service.GetParentDocId(docId)
+	parentDocId, err := service.GetRootParentID(docId)
 	if err != nil {
 		return fmt.Errorf("failed to get parent doc ID: %w", err)
 	}
@@ -652,4 +721,13 @@ func (service *DocService) BulkReorderPageOrPageGroup(pageOrder []struct {
 	}
 
 	return nil
+}
+
+func (service *DocService) GetDocIdByPageId(pageId uint) (uint, error) {
+	var page models.Page
+	if err := service.DB.Select("documentation_id").First(&page, pageId).Error; err != nil {
+		return 0, fmt.Errorf("failed_to_get_page")
+	}
+
+	return page.DocumentationID, nil
 }

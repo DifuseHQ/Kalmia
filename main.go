@@ -80,7 +80,7 @@ func main() {
 
 	authRouter.HandleFunc("/users", func(w http.ResponseWriter, r *http.Request) { handlers.GetUsers(aS, w, r) }).Methods("GET")
 	authRouter.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) { handlers.GetUser(aS, w, r) }).Methods("POST")
-	authRouter.HandleFunc("/user/upload-photo", func(w http.ResponseWriter, r *http.Request) { handlers.UploadPhoto(d, w, r) }).Methods("POST")
+	authRouter.HandleFunc("/user/upload-file", func(w http.ResponseWriter, r *http.Request) { handlers.UploadFile(d, w, r) }).Methods("POST")
 
 	authRouter.HandleFunc("/jwt/create", func(w http.ResponseWriter, r *http.Request) { handlers.CreateJWT(aS, w, r) }).Methods("POST")
 	authRouter.HandleFunc("/jwt/refresh", func(w http.ResponseWriter, r *http.Request) { handlers.RefreshJWT(aS, w, r) }).Methods("POST")
@@ -135,7 +135,7 @@ func createSPAHandler() http.HandlerFunc {
 		}
 
 		if config.ParsedConfig.Environment != "dev" {
-			file, err := adminFS.Open("web/build/" + path)
+			file, err := adminFS.Open("web/build" + path)
 			if err != nil {
 				file, err = adminFS.Open("web/build/index.html")
 				if err != nil {

@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"git.difuse.io/Difuse/kalmia/utils"
 )
 
 //go:embed rspress
@@ -18,7 +20,6 @@ func ReadEmbeddedFile(path string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return content, nil
 }
 
@@ -31,6 +32,13 @@ func CopyEmbeddedFile(path string, to string) error {
 	dir := filepath.Dir(to)
 	if err = os.MkdirAll(dir, 0755); err != nil {
 		return err
+	}
+
+	embeddedHash, err := utils.FileHash(bytes.NewReader(content))
+	destHash, err := utils.FileHash(to)
+
+	if err == nil && destHash == embeddedHash {
+		return nil
 	}
 
 	destFile, err := os.Create(to)
@@ -52,7 +60,6 @@ func CopyEmbeddedFolder(path string, to string) error {
 
 	for _, entry := range entries {
 		destPath := filepath.Join(to, entry.Name())
-
 		if entry.IsDir() {
 			if err := os.MkdirAll(destPath, 0755); err != nil {
 				return err
@@ -66,7 +73,6 @@ func CopyEmbeddedFolder(path string, to string) error {
 			}
 		}
 	}
-
 	return nil
 }
 
@@ -94,6 +100,5 @@ func CopyInitFiles(to string) error {
 			}
 		}
 	}
-
 	return nil
 }

@@ -1,8 +1,10 @@
 package services
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"sort"
@@ -17,6 +19,8 @@ import (
 	"git.difuse.io/Difuse/kalmia/logger"
 	"git.difuse.io/Difuse/kalmia/utils"
 	"go.uber.org/zap"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"gorm.io/gorm"
 )
 
@@ -59,6 +63,117 @@ type SocialLinkRsPress struct {
 	Content string `json:"content"`
 }
 
+type MetaData struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Image       string `json:"image"`
+}
+
+func (service *DocService) GenerateHead(docID uint, pageId uint, pageType string) (string, error) {
+	var buffer bytes.Buffer
+	doc, err := service.GetDocumentation(docID)
+
+	if err != nil {
+		return "", err
+	}
+
+	if pageId == math.MaxUint32 {
+		buffer.WriteString("---\n")
+		buffer.WriteString(fmt.Sprintf("pageType: %s\n", pageType))
+		buffer.WriteString("footer: true\n")
+		buffer.WriteString(fmt.Sprintf("title: %s\n", doc.Name))
+		buffer.WriteString("---\n\n")
+
+		buffer.WriteString("import { Redirect } from '@components/Redirect';\n\n")
+		buffer.WriteString("import { Meta } from '@components/Meta';\n\n")
+
+		metaTitle := doc.Name
+		metaDescription := doc.Description
+
+		var metaImage string
+
+		if doc.MetaImage != "" {
+			metaImage = doc.MetaImage
+		} else {
+			metaImage = "https://imagedelivery.net/SM0H54GQmiDTGcg4Xr4iPA/c5359df9-c88f-4767-397e-ee4299a42c00/public"
+		}
+
+		meta := MetaData{
+			Title:       metaTitle,
+			Description: metaDescription,
+			Image:       metaImage,
+		}
+
+		metaJSON, err := json.Marshal(meta)
+
+		if err != nil {
+			return "", err
+		}
+
+		buffer.WriteString(fmt.Sprintf(`<Meta rawJson='%s' />%s`, string(metaJSON), "\n"))
+		buffer.WriteString(fmt.Sprintf(`<Redirect to={'%s'} />%s`, doc.BaseURL+"/guides", "\n\n"))
+
+		return buffer.String(), nil
+	} else {
+		page, err := service.GetPage(pageId)
+		if err != nil {
+			return "", err
+		}
+
+		buffer.WriteString("---\n")
+		buffer.WriteString(fmt.Sprintf("pageType: %s\n", pageType))
+		buffer.WriteString("footer: true\n")
+		buffer.WriteString(fmt.Sprintf("title: %s\n", page.Title))
+		buffer.WriteString("---\n\n")
+
+		buffer.WriteString("import { Meta } from '@components/Meta';\n")
+
+		componentTypes := []string{"paragraph", "table", "image", "video", "audio", "file", "alert"}
+		caser := cases.Title(language.English)
+		addedComponents := make(map[string]bool)
+		contentObjects := strings.Split(strings.Trim(page.Content, "[]"), "},{")
+
+		for _, obj := range contentObjects {
+			for _, componentType := range componentTypes {
+				if strings.Contains(obj, fmt.Sprintf(`"type":"%s"`, componentType)) && !addedComponents[componentType] {
+					componentName := caser.String(componentType)
+					buffer.WriteString(fmt.Sprintf(`import { %s } from "@components/%s";%s`, componentName, componentName, "\n"))
+					addedComponents[componentType] = true
+				}
+			}
+		}
+
+		buffer.WriteString("\n\n")
+
+		metaTitle := doc.Name
+		metaDescription := doc.Description
+
+		var metaImage string
+
+		if doc.MetaImage != "" {
+			metaImage = doc.MetaImage
+		} else {
+			metaImage = "https://imagedelivery.net/SM0H54GQmiDTGcg4Xr4iPA/c5359df9-c88f-4767-397e-ee4299a42c00/public"
+		}
+
+		meta := MetaData{
+			Title:       metaTitle,
+			Description: metaDescription,
+			Image:       metaImage,
+		}
+
+		metaJSON, err := json.Marshal(meta)
+
+		if err != nil {
+			return "", err
+		}
+
+		buffer.WriteString(fmt.Sprintf(`<Meta rawJson='%s' />%s`, string(metaJSON), "\n\n"))
+
+		return buffer.String(), nil
+	}
+}
+
 func (service *DocService) RemoveDocFolder(docId uint) error {
 	docPath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data", "doc_"+strconv.Itoa(int(docId)))
 
@@ -86,8 +201,14 @@ func (service *DocService) UpdateWriteBuild(docId uint) error {
 		return fmt.Errorf("timeout waiting for operation to complete for docId: %d", docId)
 	}
 
+	rootParentId, err := service.GetRootParentID(docId)
+
+	if err != nil {
+		return err
+	}
+
 	allDocsPath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data")
-	docsPath := filepath.Join(allDocsPath, "doc_"+strconv.Itoa(int(docId)))
+	docsPath := filepath.Join(allDocsPath, "doc_"+strconv.Itoa(int(rootParentId)))
 	if !utils.PathExists(docsPath) {
 		err := utils.MakeDir(docsPath)
 		if err != nil {
@@ -95,7 +216,7 @@ func (service *DocService) UpdateWriteBuild(docId uint) error {
 		}
 	}
 
-	err := service.UpdateBasicData(docId)
+	err = service.UpdateBasicData(docId, rootParentId)
 	if err != nil {
 		if err.Error() == "documentation_not_found" {
 			if err := service.RemoveDocFolder(docId); err != nil {
@@ -108,13 +229,13 @@ func (service *DocService) UpdateWriteBuild(docId uint) error {
 		return err
 	}
 
-	err = service.WriteContents(docId)
+	err = service.WriteContents(docId, rootParentId)
 	if err != nil {
 		logger.Error("Failed to write contents -> ", zap.Uint("doc_id", docId), zap.Error(err))
 		return err
 	}
 
-	err = service.RsPressBuild(docId)
+	err = service.RsPressBuild(rootParentId)
 	if err != nil {
 		logger.Error("Failed to build RsPress -> ", zap.Uint("doc_id", docId), zap.Error(err))
 		return err
@@ -125,12 +246,10 @@ func (service *DocService) UpdateWriteBuild(docId uint) error {
 
 func (service *DocService) StartupCheck() error {
 	logger.Debug("Starting DocService.StartupCheck")
-
 	npmPinged := utils.NpmPing()
 	if !npmPinged {
 		logger.Panic("Startup check failed for NPM, exiting...")
 	}
-	logger.Debug("NPM ping successful")
 
 	db := service.DB
 	var docs []models.Documentation
@@ -138,50 +257,28 @@ func (service *DocService) StartupCheck() error {
 		logger.Error("Failed to fetch documents from database", zap.Error(err))
 		return err
 	}
-	logger.Debug("Fetched documents from database", zap.Int("count", len(docs)))
 
 	for _, doc := range docs {
-		logger.Debug("Processing document", zap.Uint("doc_id", doc.ID))
 		if doc.ClonedFrom == nil {
 			allDocsPath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data")
 			docsPath := filepath.Join(allDocsPath, "doc_"+strconv.Itoa(int(doc.ID)))
 
-			if !utils.PathExists(docsPath) {
-				logger.Debug("Document path does not exist, initializing", zap.String("path", docsPath))
-				startTime := time.Now()
-				if err := service.InitRsPress(doc.ID, true); err != nil {
-					logger.Error("Failed to initialize RsPress", zap.Uint("doc_id", doc.ID), zap.Error(err))
-					return err
-				}
-				elapsedTime := time.Since(startTime)
-				logger.Info("Documentation initialized",
-					zap.Uint("doc_id", doc.ID),
-					zap.String("elapsed", elapsedTime.String()),
-				)
-			} else {
-				logger.Debug("Document path exists, re-initializing", zap.String("path", docsPath))
-				startTime := time.Now()
-				if err := utils.RunNpmCommand(docsPath, "install", "--prefer-offline", "--no-audit", "--progress=false", "--no-fund"); err != nil {
-					logger.Error("Failed to run npm install", zap.Uint("doc_id", doc.ID), zap.Error(err))
-					removeErr := utils.RemovePath(docsPath)
-					if removeErr != nil {
-						logger.Error("Failed to remove path after npm install failure", zap.String("path", docsPath), zap.Error(removeErr))
-						return fmt.Errorf("failed to remove path %s: %w", docsPath, removeErr)
-					}
-					logger.Debug("Retrying initialization after removing path", zap.Uint("doc_id", doc.ID))
-					if err := service.InitRsPress(doc.ID, true); err != nil {
-						logger.Error("Failed to re-initialize RsPress after npm install failure", zap.Uint("doc_id", doc.ID), zap.Error(err))
-						return err
-					}
-				}
-				elapsedTime := time.Since(startTime)
-				logger.Info("Document re-initialized",
-					zap.Uint("doc_id", doc.ID),
-					zap.String("elapsed", elapsedTime.String()),
-				)
+			startTime := time.Now()
+			if err := service.InitRsPress(doc.ID, true); err != nil {
+				logger.Error("Failed to initialize/update RsPress", zap.Uint("doc_id", doc.ID), zap.Error(err))
+				return err
+			}
+			elapsedTime := time.Since(startTime)
+			logger.Info("Documentation initialized/updated",
+				zap.Uint("doc_id", doc.ID),
+				zap.String("elapsed", elapsedTime.String()),
+			)
+
+			if err := utils.RunNpmCommand(docsPath, "install", "--prefer-offline", "--no-audit", "--progress=false", "--no-fund"); err != nil {
+				logger.Error("Failed to run npm install", zap.Uint("doc_id", doc.ID), zap.Error(err))
+				return err
 			}
 
-			logger.Debug("Adding build trigger", zap.Uint("doc_id", doc.ID))
 			err := service.AddBuildTrigger(doc.ID)
 			if err != nil {
 				logger.Error("Failed to add build trigger", zap.Uint("doc_id", doc.ID), zap.Error(err))
@@ -196,32 +293,29 @@ func (service *DocService) StartupCheck() error {
 
 func (service *DocService) InitRsPress(docId uint, init bool) error {
 	cfg := config.ParsedConfig
+	allDocsPath := filepath.Join(cfg.DataPath, "rspress_data")
+	docsPath := filepath.Join(allDocsPath, "doc_"+strconv.Itoa(int(docId)))
+
+	err := embedded.CopyInitFiles(docsPath)
+	if err != nil {
+		return fmt.Errorf("failed to copy/update init files: %w", err)
+	}
 
 	if init {
-		allDocsPath := filepath.Join(cfg.DataPath, "rspress_data")
-		docsPath := filepath.Join(allDocsPath, "doc_"+strconv.Itoa(int(docId)))
-
-		err := embedded.CopyInitFiles(docsPath)
-
-		if err != nil {
-			return err
-		}
-
 		npmPing := utils.NpmPing()
-
 		if !npmPing {
 			return fmt.Errorf("NPM ping failed for %d initialization", docId)
 		}
 
 		if err := utils.RunNpmCommand(docsPath, "install", "--prefer-offline", "--no-audit", "--progress=false", "--no-fund"); err != nil {
-			return err
+			return fmt.Errorf("failed to run npm install for doc %d: %w", docId, err)
 		}
 	}
 
 	return nil
 }
 
-func (service *DocService) UpdateBasicData(docId uint) error {
+func (service *DocService) UpdateBasicData(docId uint, rootParentId uint) error {
 	doc, err := service.GetDocumentation(docId)
 	if err != nil {
 		return err
@@ -233,7 +327,7 @@ func (service *DocService) UpdateBasicData(docId uint) error {
 		return err
 	}
 
-	docPath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data", "doc_"+strconv.Itoa(int(docId)))
+	docPath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data", "doc_"+strconv.Itoa(int(rootParentId)))
 	docConfig := filepath.Join(docPath, "rspress.config.ts")
 
 	replacements := map[string]string{
@@ -366,26 +460,16 @@ func (service *DocService) CraftPage(pageID uint, title string, slug string, con
 		markdown += utils.BlockToMarkdown(block, 0, nil)
 	}
 
-	top := "---\n"
-	top += "pageType: doc\n"
-	top += "footer: true\n"
-	top += "title: " + title + "\n"
-	top += "---\n\n"
+	docId, err := service.GetDocIdByPageId(pageID)
 
-	// if strings.Contains(markdown, "ReactPlayer") {
-	// 	top += "import ReactPlayer from 'react-player'"
-	// }
+	if err != nil {
+		return "", err
+	}
 
-	top += `import { Paragraph } from "@components/Paragraph";` + "\n"
-	top += `import { Table } from "@components/Table";` + "\n"
-	top += `import { Image } from "@components/Image";` + "\n"
-	top += `import { Video } from "@components/Video";` + "\n"
-	top += `import { Audio } from "@components/Audio";` + "\n"
-	top += `import { File }  from "@components/File";` + "\n"
-	top += `import { Alert } from "@components/Alert";` + "\n"
+	top, err := service.GenerateHead(docId, pageID, "doc")
 
-	if top != "" {
-		top += "\n\n"
+	if err != nil {
+		return "", err
 	}
 
 	return fmt.Sprintf("%s%s", top, markdown), nil
@@ -414,42 +498,6 @@ func (service *DocService) writePagesToDirectory(pages []models.Page, dirPath st
 		}
 
 		markdownExt := ".mdx"
-		// if strings.Contains(content, "import ReactPlayer from 'react-player'") || strings.Contains(content, "image-in-mdx") {
-		// 	markdownExt = ".mdx"
-		// }
-
-		// oppositeExt := ""
-
-		// if markdownExt == ".md" {
-		// 	oppositeExt = ".mdx"
-		// } else {
-		// 	oppositeExt = ".md"
-		// }
-
-		// if fullPage.IsIntroPage {
-		// 	fileName = "index" + markdownExt
-		// } else {
-		// 	fileName = utils.StringToFileString(fullPage.Title) + markdownExt
-		// }
-
-		// if utils.PathExists(filepath.Join(dirPath, utils.StringToFileString(fullPage.Title)+oppositeExt)) ||
-		// 	utils.PathExists(filepath.Join(dirPath, "index"+oppositeExt)) {
-		// 	if fullPage.IsIntroPage {
-		// 		if utils.PathExists(filepath.Join(dirPath, "index"+oppositeExt)) {
-		// 			err := os.Remove(filepath.Join(dirPath, "index"+oppositeExt))
-		// 			if err != nil {
-		// 				return err
-		// 			}
-		// 		}
-		// 	} else {
-		// 		if utils.PathExists(filepath.Join(dirPath, utils.StringToFileString(fullPage.Title)+oppositeExt)) {
-		// 			err := os.Remove(filepath.Join(dirPath, utils.StringToFileString(fullPage.Title)+oppositeExt))
-		// 			if err != nil {
-		// 				return err
-		// 			}
-		// 		}
-		// 	}
-		// }
 
 		if fullPage.IsIntroPage {
 			fileName = "index" + markdownExt
@@ -486,7 +534,6 @@ func (service *DocService) writePagesToDirectory(pages []models.Page, dirPath st
 		}
 	}
 
-	// Write _meta.json
 	return writeMetaJSON(metaElements, dirPath)
 }
 
@@ -604,9 +651,33 @@ func writeMetaJSON(metaElements []MetaElement, dirPath string) error {
 	return nil
 }
 
-func (service *DocService) WriteContents(docId uint) error {
-	docIdPath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data", "doc_"+strconv.Itoa(int(docId)))
+func (service *DocService) buildVersionTree(docId uint) ([]VersionInfo, error) {
 	doc, err := service.GetDocumentation(docId)
+	if err != nil {
+		return nil, err
+	}
+
+	versionTree := []VersionInfo{{Version: doc.Version, CreatedAt: *doc.CreatedAt, DocId: doc.ID}}
+
+	childrenIds, err := service.GetChildrenOfDocumentation(docId)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, childId := range childrenIds {
+		childVersions, err := service.buildVersionTree(childId)
+		if err != nil {
+			return nil, err
+		}
+		versionTree = append(versionTree, childVersions...)
+	}
+
+	return versionTree, nil
+}
+
+func (service *DocService) WriteContents(docId uint, rootParentId uint) error {
+	docIdPath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data", "doc_"+strconv.Itoa(int(rootParentId)))
+	_, err := service.GetDocumentation(docId)
 
 	if err != nil {
 		if err.Error() == "documentation_not_found" {
@@ -625,19 +696,10 @@ func (service *DocService) WriteContents(docId uint) error {
 		}
 	}
 
-	versionInfos := []VersionInfo{{Version: doc.Version, CreatedAt: *doc.CreatedAt, DocId: doc.ID}}
-	childrenIds, err := service.GetChildrenOfDocumentation(docId)
+	versionInfos, err := service.buildVersionTree(docId)
 
 	if err != nil {
 		return err
-	}
-
-	for _, childId := range childrenIds {
-		childDoc, err := service.GetDocumentation(childId)
-		if err != nil {
-			return err
-		}
-		versionInfos = append(versionInfos, VersionInfo{Version: childDoc.Version, CreatedAt: *childDoc.CreatedAt, DocId: childDoc.ID})
 	}
 
 	for _, versionInfo := range versionInfos {
@@ -655,69 +717,27 @@ func (service *DocService) WriteContents(docId uint) error {
 			}
 		}
 
-		/* example: versionedDocPath -> docs/1.0.0 */
-
-		/* For Cleanup */
 		var rootPageGroups []models.PageGroup
 
 		if err := service.DB.Where("parent_id IS NULL AND documentation_id = ?", versionDoc.ID).Preload("Pages").Find(&rootPageGroups).Error; err != nil {
 			return err
 		}
 
-		currentItems := make(map[string]bool)
-
-		var addPageGroupToCurrentItems func(group models.PageGroup) error
-		addPageGroupToCurrentItems = func(group models.PageGroup) error {
-			groupName := utils.StringToFileString(group.Name)
-			currentItems[groupName] = true
-
-			pages, err := service.GetPagesOfPageGroup(group.ID)
-			if err != nil {
-				return err
-			}
-			for _, page := range pages {
-				currentItems[utils.StringToFileString(page.Title)] = true
-			}
-
-			var nestedGroups []models.PageGroup
-			if err := service.DB.Where("parent_id = ?", group.ID).Find(&nestedGroups).Error; err != nil {
-				return err
-			}
-			for _, nestedGroup := range nestedGroups {
-				if err := addPageGroupToCurrentItems(nestedGroup); err != nil {
-					return err
-				}
-			}
-			return nil
-		}
-
-		for _, page := range versionDoc.Pages {
-			currentItems[utils.StringToFileString(page.Title)] = true
-		}
-
-		for _, group := range rootPageGroups {
-			if err := addPageGroupToCurrentItems(group); err != nil {
-				return err
-			}
-		}
-		/* End Cleanup Stuff */
-		/* Root of Version folder stuff */
-
-		cleanedBase := utils.StringToFileString(versionDoc.BaseURL)
+		cleanedBase := "guides"
 
 		var rootMeta string
 
 		if versionDoc.LanderDetails != "" && versionDoc.LanderDetails != "{}" {
-			rootMeta = fmt.Sprintf(`[{"text": "Home","link": "/%s/home","activeMatch": "/%s/home"}, {"text": "Documentation","link": "/%s/index","activeMatch": "/%s/"}]`, cleanedBase, cleanedBase, cleanedBase, cleanedBase)
+			rootMeta = fmt.Sprintf(`[{"text": "Home","link": "%s","activeMatch": "/%s/home"}, {"text": "Documentation","link": "/%s/index","activeMatch": "/%s/"}]`, versionDoc.BaseURL, cleanedBase, cleanedBase, cleanedBase)
 		} else {
-			rootMeta = fmt.Sprintf(`[{"text": "Documentation","link": "/%s/index","activeMatch": "/%s/"}`, cleanedBase, cleanedBase)
+			rootMeta = fmt.Sprintf(`[{"text": "Documentation","link": "/%s/index","activeMatch": "/%s/"}]`, cleanedBase, cleanedBase)
 		}
 
 		var customCSS strings.Builder
 
-		customCSS.WriteString("@import 'tailwindcss/base';\n")
-		customCSS.WriteString("@import 'tailwindcss/components';\n")
-		customCSS.WriteString("@import 'tailwindcss/utilities';\n\n")
+		customCSS.WriteString("@tailwind base;\n")
+		customCSS.WriteString("@tailwind components;\n")
+		customCSS.WriteString("@tailwind utilities;\n\n")
 
 		if versionDoc.CustomCSS != "" {
 			customCSS.WriteString(versionDoc.CustomCSS)
@@ -731,7 +751,7 @@ func (service *DocService) WriteContents(docId uint) error {
 			return err
 		}
 
-		userContentPath := filepath.Join(versionedDocPath, utils.StringToFileString(versionDoc.BaseURL))
+		userContentPath := filepath.Join(versionedDocPath, cleanedBase)
 
 		if !utils.PathExists(userContentPath) {
 			if err := utils.MakeDir(userContentPath); err != nil {
@@ -807,54 +827,10 @@ func (service *DocService) WriteContents(docId uint) error {
 	return nil
 }
 
-func removeOldContent(currentItems map[string]bool, dirPath string) error {
-	entries, err := os.ReadDir(dirPath)
-	if err != nil {
-		return err
-	}
-
-	for _, entry := range entries {
-		fullPath := filepath.Join(dirPath, entry.Name())
-		if entry.IsDir() {
-			if _, exists := currentItems[entry.Name()]; !exists {
-				if err := os.RemoveAll(fullPath); err != nil {
-					return err
-				}
-			} else {
-				if err := removeOldContent(currentItems, fullPath); err != nil {
-					return err
-				}
-			}
-		} else {
-			if (entry.Name() == "index.mdx" || entry.Name() == "index.md" || entry.Name() == "home.mdx") && filepath.Dir(fullPath) == dirPath {
-				continue
-			}
-
-			if entry.Name() == "_meta.json" {
-				continue
-			}
-
-			baseNameMdx := strings.TrimSuffix(entry.Name(), ".mdx")
-			baseNameMd := strings.TrimSuffix(entry.Name(), ".md")
-
-			if _, exists := currentItems[baseNameMdx]; !exists {
-				if err := os.Remove(fullPath); err != nil {
-					return err
-				}
-			}
-
-			if _, exists := currentItems[baseNameMd]; !exists {
-				if err := os.Remove(fullPath); err != nil {
-					return err
-				}
-			}
-		}
-	}
-	return nil
-}
-
 func (service *DocService) WriteHomePage(documentation models.Documentation, contentPath string) error {
 	var homePage string
+	var homePagePath string
+
 	if documentation.LanderDetails != "" && documentation.LanderDetails != "{}" {
 		var landerDetails struct {
 			CtaButtonText struct {
@@ -910,11 +886,22 @@ func (service *DocService) WriteHomePage(documentation models.Documentation, con
 
 		yamlBuilder.WriteString("---\n")
 		homePage = yamlBuilder.String()
+		homePagePath = filepath.Join(contentPath, "../", "index.mdx")
 	} else {
-		homePage = fmt.Sprintf("<meta http-equiv=\"refresh\" content=\"0;url=%s\" />", documentation.BaseURL)
+		head, err := service.GenerateHead(documentation.ID, math.MaxUint32, "doc")
+
+		if err != nil {
+			logger.Error("Failed to generate head for home page", zap.Error(err))
+		}
+
+		if head != "" {
+			homePage = head
+		}
+
+		homePage += fmt.Sprintf("\n\n <meta http-equiv=\"refresh\" content=\"0;url=%s\" />", documentation.BaseURL+"/guides")
+		homePagePath = filepath.Join(contentPath, "../", "index.mdx")
 	}
 
-	homePagePath := filepath.Join(contentPath, "../", "home.mdx")
 	if err := utils.WriteToFile(homePagePath, homePage); err != nil {
 		return err
 	}
@@ -926,7 +913,7 @@ func (service *DocService) RsPressBuild(docId uint) error {
 	buildPath := filepath.Join(docPath, "build")
 	tmpBuildPath := filepath.Join(docPath, "build_tmp")
 
-	err := utils.RunNpxCommand(docPath, "tailwindcss", "build", "styles/input.css", "-o", "styles/output.css")
+	err := utils.RunNpxCommand(docPath, "tailwindcss", "build", "-i", "styles/input.css", "-o", "styles/output.css")
 
 	if err != nil {
 		return err

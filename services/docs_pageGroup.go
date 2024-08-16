@@ -163,7 +163,7 @@ func (service *DocService) CreatePageGroup(group *models.PageGroup) error {
 		return fmt.Errorf("failed_to_get_documentation_id")
 	}
 
-	parentDocId, _ := service.GetParentDocId(docId)
+	parentDocId, _ := service.GetRootParentID(docId)
 
 	if parentDocId == 0 {
 		err = service.AddBuildTrigger(docId)
@@ -236,7 +236,7 @@ func (service *DocService) EditPageGroup(user models.User, id uint, name string,
 		return fmt.Errorf("failed_to_get_documentation_id")
 	}
 
-	parentDocId, _ := service.GetParentDocId(docId)
+	parentDocId, _ := service.GetRootParentID(docId)
 
 	if parentDocId == 0 {
 		err = service.AddBuildTrigger(docId)
@@ -304,7 +304,7 @@ func (service *DocService) DeletePageGroup(id uint) error {
 		return err
 	}
 
-	parentDocId, _ := service.GetParentDocId(docId)
+	parentDocId, _ := service.GetRootParentID(docId)
 	triggerDocId := docId
 	if parentDocId != 0 {
 		triggerDocId = parentDocId
@@ -348,7 +348,7 @@ func (service *DocService) ReorderPageGroup(id uint, order *uint, parentID *uint
 		return fmt.Errorf("failed_to_get_documentation_id")
 	}
 
-	parentDocId, _ := service.GetParentDocId(docId)
+	parentDocId, _ := service.GetRootParentID(docId)
 
 	if parentDocId == 0 {
 		err = service.AddBuildTrigger(docId)

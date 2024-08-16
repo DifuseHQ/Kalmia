@@ -88,3 +88,28 @@ func ReplaceManyInFile(filePath string, replacements map[string]string) error {
 	}
 	return nil
 }
+
+func FileHash(input interface{}) (string, error) {
+	var reader io.Reader
+
+	switch v := input.(type) {
+	case string:
+		file, err := os.Open(v)
+		if err != nil {
+			return "", err
+		}
+		defer file.Close()
+		reader = file
+	case io.Reader:
+		reader = v
+	default:
+		return "", fmt.Errorf("unsupported input type for FileHash")
+	}
+
+	hash := sha256.New()
+	if _, err := io.Copy(hash, reader); err != nil {
+		return "", err
+	}
+
+	return hex.EncodeToString(hash.Sum(nil)), nil
+}

@@ -4,7 +4,7 @@ import AvatarEditor from "react-avatar-editor";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 
-import { getUser, updateUser, uploadPhoto } from "../../api/Requests";
+import { getUser, updateUser, uploadFile } from "../../api/Requests";
 import { AuthContext, AuthContextType } from "../../context/AuthContext";
 import { UserDetails } from "../../hooks/useUserDetails";
 import { DOMEvent } from "../../types/dom";
@@ -100,7 +100,7 @@ export default function UserForm() {
           const formData = new FormData();
           formData.append("upload", blob, "cropped-image.jpg");
 
-          const photo = await uploadPhoto(formData);
+          const photo = await uploadFile(formData);
 
           if (handleError(photo, navigate, t)) {
             setIsLoading(false);
@@ -108,7 +108,7 @@ export default function UserForm() {
           }
 
           if (photo.status === "success") {
-            const image = photo?.data?.photo;
+            const image = photo?.data?.file;
             setProfileImage(image);
             setIsLoading(false);
 

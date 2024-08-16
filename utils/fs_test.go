@@ -1,7 +1,11 @@
 package utils
 
 import (
+	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -256,4 +260,112 @@ func TestReplaceManyInFile(t *testing.T) {
 	if err := os.Remove(filePath); err != nil {
 		t.Errorf("Failed to clean up test file: %v", err)
 	}
+}
+
+func TestFileHash(t *testing.T) {
+	t.Run("File path input", func(t *testing.T) {
+		tempDir := t.TempDir()
+		tempFile := filepath.Join(tempDir, "test.txt")
+		content := []byte("Hello, World!")
+		err := os.WriteFile(tempFile, content, 0644)
+		if err != nil {
+			t.Fatalf("Failed to create temp file: %v", err)
+		}
+
+		expectedHash := sha256.Sum256(content)
+		expectedHashString := hex.EncodeToString(expectedHash[:])
+
+		hash, err := FileHash(tempFile)
+		if err != nil {
+			t.Fatalf("FileHash failed: %v", err)
+		}
+
+		if hash != expectedHashString {
+			t.Errorf("Hash mismatch. Expected: %s, Got: %s", expectedHashString, hash)
+		}
+	})
+
+	t.Run("io.Reader input", func(t *testing.T) {
+		content := []byte("Hello, World!")
+		reader := bytes.NewReader(content)
+
+		expectedHash := sha256.Sum256(content)
+		expectedHashString := hex.EncodeToString(expectedHash[:])
+
+		hash, err := FileHash(reader)
+		if err != nil {
+			t.Fatalf("FileHash failed: %v", err)
+		}
+
+		if hash != expectedHashString {
+			t.Errorf("Hash mismatch. Expected: %s, Got: %s", expectedHashString, hash)
+		}
+	})
+
+	t.Run("Unsupported input type", func(t *testing.T) {
+		_, err := FileHash(123)
+		if err == nil {
+			t.Error("Expected an error for unsupported input type, but got nil")
+		}
+		if err.Error() != "unsupported input type for FileHash" {
+			t.Errorf("Unexpected error message. Expected 'unsupported input type for FileHash', got '%v'", err)
+		}
+	})
+
+	t.Run("Non-existent file", func(t *testing.T) {
+		_, err := FileHash("/path/to/non/existent/file")
+		if err == nil {
+			t.Error("Expected an error for non-existent file, but got nil")
+		}
+	})
+
+	t.Run("Empty file", func(t *testing.T) {
+		tempDir := t.TempDir()
+		tempFile := filepath.Join(tempDir, "empty.txt")
+		err := os.WriteFile(tempFile, []byte{}, 0644)
+		if err != nil {
+			t.Fatalf("Failed to create empty temp file: %v", err)
+		}
+
+		hash, err := FileHash(tempFile)
+		if err != nil {
+			t.Fatalf("FileHash failed for empty file: %v", err)
+		}
+
+		expectedHash := sha256.Sum256([]byte{})
+		expectedHashString := hex.EncodeToString(expectedHash[:])
+
+		if hash != expectedHashString {
+			t.Errorf("Hash mismatch for empty file. Expected: %s, Got: %s", expectedHashString, hash)
+		}
+	})
+
+	t.Run("Large file", func(t *testing.T) {
+		tempDir := t.TempDir()
+		tempFile := filepath.Join(tempDir, "large.txt")
+		f, err := os.Create(tempFile)
+		if err != nil {
+			t.Fatalf("Failed to create large temp file: %v", err)
+		}
+		defer f.Close()
+
+		// Write 10 MB of data
+		data := make([]byte, 1024*1024) // 1 MB chunk
+		for i := 0; i < 10; i++ {
+			_, err := f.Write(data)
+			if err != nil {
+				t.Fatalf("Failed to write to large temp file: %v", err)
+			}
+		}
+
+		hash, err := FileHash(tempFile)
+		if err != nil {
+			t.Fatalf("FileHash failed for large file: %v", err)
+		}
+
+		// We're not checking the exact hash here, just that it produced a hash without error
+		if len(hash) != 64 { // SHA-256 hash is always 64 characters in hex
+			t.Errorf("Unexpected hash length for large file. Expected 64, Got: %d", len(hash))
+		}
+	})
 }
