@@ -274,7 +274,6 @@ func GithubCallback(aS *services.AuthService, w http.ResponseWriter, r *http.Req
 	}
 
 	githubOauthCfg := getGithubOauthConfig()
-
 	code := r.FormValue("code")
 	token, err := githubOauthCfg.Exchange(context.Background(), code)
 	if err != nil {
@@ -284,32 +283,39 @@ func GithubCallback(aS *services.AuthService, w http.ResponseWriter, r *http.Req
 
 	oauthClient := githubOauthCfg.Client(context.Background(), token)
 	client := githubClient.NewClient(oauthClient)
-	user, _, err := client.Users.Get(context.Background(), "")
+
+	emails, _, err := client.Users.ListEmails(context.Background(), nil)
 	if err != nil {
-		http.Error(w, "Failed to get user info: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to get user emails: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	email := user.GetEmail()
+	var foundEmail string
 
-	if email == "" {
-		fmt.Println("No email found")
+	for _, email := range emails {
+		if email.GetEmail() != "" {
+			_, err := aS.FindUserByEmail(email.GetEmail())
+			if err == nil {
+				foundEmail = email.GetEmail()
+				break
+			}
+
+			if err.Error() == "user_not_found" {
+				continue
+			}
+
+			http.Error(w, "Database error: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	if foundEmail == "" {
 		http.Redirect(w, r, "/admin/error/401", http.StatusTemporaryRedirect)
 		return
 	}
 
-	dbUser, err := aS.FindUserByEmail(email)
-
+	tokenDetails, err := aS.CreateJWTFromEmail(foundEmail)
 	if err != nil {
-		fmt.Println("User not found")
-		http.Redirect(w, r, "/admin/error/401", http.StatusTemporaryRedirect)
-		return
-	}
-
-	tokenDetails, err := aS.CreateJWTFromEmail(dbUser.Email)
-
-	if err != nil {
-		fmt.Println("Failed to create token")
 		http.Redirect(w, r, "/admin/error/401", http.StatusTemporaryRedirect)
 		return
 	}
