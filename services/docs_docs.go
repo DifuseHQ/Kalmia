@@ -367,6 +367,12 @@ func (service *DocService) EditDocumentation(user models.User, id uint, name, de
 }
 
 func (service *DocService) DeleteDocumentation(id uint) error {
+	parentId, err := service.GetRootParentID(id)
+
+	if err != nil {
+		return fmt.Errorf("failed_to_get_parent_id")
+	}
+
 	tx := service.DB.Begin()
 	if tx.Error != nil {
 		return fmt.Errorf("failed_to_start_transaction")
@@ -394,12 +400,6 @@ func (service *DocService) DeleteDocumentation(id uint) error {
 
 	if err := tx.Commit().Error; err != nil {
 		return fmt.Errorf("failed_to_commit_changes")
-	}
-
-	parentId, err := service.GetRootParentID(id)
-
-	if err != nil {
-		return fmt.Errorf("failed_to_get_parent_id")
 	}
 
 	err = service.AddBuildTrigger(parentId)
