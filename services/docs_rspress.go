@@ -124,25 +124,33 @@ func (service *DocService) UpdateWriteBuild(docId uint) error {
 }
 
 func (service *DocService) StartupCheck() error {
+	logger.Debug("Starting DocService.StartupCheck")
+
 	npmPinged := utils.NpmPing()
 	if !npmPinged {
 		logger.Panic("Startup check failed for NPM, exiting...")
 	}
+	logger.Debug("NPM ping successful")
 
 	db := service.DB
 	var docs []models.Documentation
 	if err := db.Find(&docs).Error; err != nil {
+		logger.Error("Failed to fetch documents from database", zap.Error(err))
 		return err
 	}
+	logger.Debug("Fetched documents from database", zap.Int("count", len(docs)))
 
 	for _, doc := range docs {
+		logger.Debug("Processing document", zap.Uint("doc_id", doc.ID))
 		if doc.ClonedFrom == nil {
 			allDocsPath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data")
 			docsPath := filepath.Join(allDocsPath, "doc_"+strconv.Itoa(int(doc.ID)))
 
 			if !utils.PathExists(docsPath) {
+				logger.Debug("Document path does not exist, initializing", zap.String("path", docsPath))
 				startTime := time.Now()
 				if err := service.InitRsPress(doc.ID, true); err != nil {
+					logger.Error("Failed to initialize RsPress", zap.Uint("doc_id", doc.ID), zap.Error(err))
 					return err
 				}
 				elapsedTime := time.Since(startTime)
@@ -151,13 +159,18 @@ func (service *DocService) StartupCheck() error {
 					zap.String("elapsed", elapsedTime.String()),
 				)
 			} else {
+				logger.Debug("Document path exists, re-initializing", zap.String("path", docsPath))
 				startTime := time.Now()
 				if err := utils.RunNpmCommand(docsPath, "install", "--prefer-offline", "--no-audit", "--progress=false", "--no-fund"); err != nil {
+					logger.Error("Failed to run npm install", zap.Uint("doc_id", doc.ID), zap.Error(err))
 					removeErr := utils.RemovePath(docsPath)
 					if removeErr != nil {
+						logger.Error("Failed to remove path after npm install failure", zap.String("path", docsPath), zap.Error(removeErr))
 						return fmt.Errorf("failed to remove path %s: %w", docsPath, removeErr)
 					}
+					logger.Debug("Retrying initialization after removing path", zap.Uint("doc_id", doc.ID))
 					if err := service.InitRsPress(doc.ID, true); err != nil {
+						logger.Error("Failed to re-initialize RsPress after npm install failure", zap.Uint("doc_id", doc.ID), zap.Error(err))
 						return err
 					}
 				}
@@ -168,12 +181,16 @@ func (service *DocService) StartupCheck() error {
 				)
 			}
 
+			logger.Debug("Adding build trigger", zap.Uint("doc_id", doc.ID))
 			err := service.AddBuildTrigger(doc.ID)
 			if err != nil {
+				logger.Error("Failed to add build trigger", zap.Uint("doc_id", doc.ID), zap.Error(err))
 				return err
 			}
 		}
 	}
+
+	logger.Debug("DocService.StartupCheck completed successfully")
 	return nil
 }
 
