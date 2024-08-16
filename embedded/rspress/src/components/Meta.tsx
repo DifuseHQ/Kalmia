@@ -19,7 +19,13 @@ export const Meta: React.FC<MetaProps> = ({ rawJson }) => {
 
   try {
     const parsedJson: MetaData = JSON.parse(rawJson);
-    title = parsedJson.title + " - " + pageData.page.title;
+
+    if (parsedJson.title === pageData.page.title) {
+      title = parsedJson.title;
+    } else {
+      title = parsedJson.title + " - " + pageData.page.title
+    }
+    
     description = parsedJson.description;
     image = parsedJson.image;
   } catch (error) {
