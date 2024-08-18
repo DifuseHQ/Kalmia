@@ -32,7 +32,7 @@ func SetupDatabase(env string, database string, dataPath string) *gorm.DB {
 	}
 
 	if err != nil {
-		logger.Error("failed to connect to database", zap.Error(err))
+		logger.Panic("failed to connect to database", zap.Error(err))
 	}
 
 	if database == "sqlite" {
