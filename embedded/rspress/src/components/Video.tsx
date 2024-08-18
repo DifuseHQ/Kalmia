@@ -52,7 +52,6 @@ export const Video: React.FC<VideoProps> = ({ rawJson }) => {
   const captionClasses = [
     'kal-mt-2',
     'kal-text-sm',
-    useDark() ? 'kal-text-gray-100' : 'kal-text-gray-800',
     textAlignment === 'left' ? 'kal-text-left' : 
     textAlignment === 'right' ? 'kal-text-right' : 'kal-text-center',
     'kal-w-full',
@@ -69,7 +68,7 @@ export const Video: React.FC<VideoProps> = ({ rawJson }) => {
           config={{
             file: {
               attributes: {
-                controlsList: 'nodownload',  // Disable download button
+                controlsList: 'nodownload',
                 preload: 'metadata',
               },
             },

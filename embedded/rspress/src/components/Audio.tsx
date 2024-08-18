@@ -41,14 +41,13 @@ export const Audio: React.FC<AudioProps> = ({ rawJson }) => {
 
   const playerWrapperClasses = [
     'kal-w-full',
-    'kal-max-w-md',  // Limit maximum width for better appearance
+    'kal-max-w-md',
     showPreview ? '' : 'kal-hidden',
   ].filter(Boolean).join(' ');
 
   const captionClasses = [
     'kal-mt-2',
     'kal-text-sm',
-    useDark() ? 'kal-text-gray-100' : 'kal-text-gray-800',
     'kal-text-center',
     'kal-w-full',
   ].join(' ');
@@ -59,13 +58,13 @@ export const Audio: React.FC<AudioProps> = ({ rawJson }) => {
         <ReactPlayer
           url={url}
           width="100%"
-          height="50px"  // Fixed height for audio player
+          height="50px"
           controls={true}
           config={{
             file: {
-              forceAudio: true,  // Force audio mode
+              forceAudio: true,
               attributes: {
-                controlsList: 'nodownload',  // Disable download button
+                controlsList: 'nodownload',
                 preload: 'metadata',
               },
             },

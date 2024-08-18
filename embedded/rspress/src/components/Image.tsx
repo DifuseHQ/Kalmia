@@ -40,7 +40,7 @@ export const Image: React.FC<ImageProps> = ({ rawJson }) => {
     textAlignment === 'right' ? 'kal-items-end' : 'kal-items-center',
     getColorClass(backgroundColor, true),
     'kal-p-4',
-    'kal-w-full',  // Ensure the container takes full width
+    'kal-w-full',
   ].filter(Boolean).join(' ');
 
   const imageClasses = [
@@ -52,7 +52,6 @@ export const Image: React.FC<ImageProps> = ({ rawJson }) => {
   const captionClasses = [
     'kal-mt-2',
     'kal-text-sm',
-    useDark() ? 'kal-text-gray-100' : 'kal-text-gray-800',
     textAlignment === 'left' ? 'kal-text-left' : 
     textAlignment === 'right' ? 'kal-text-right' : 'kal-text-center',
     'kal-w-full',

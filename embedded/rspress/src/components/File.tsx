@@ -54,7 +54,6 @@ export const File: React.FC<FileProps> = ({ rawJson }) => {
   const captionClasses = [
     'kal-mt-2',
     'kal-text-sm',
-    isDark ? 'kal-text-gray-300' : 'kal-text-gray-600',
     'kal-text-center',
     'kal-w-full',
   ].join(' ');

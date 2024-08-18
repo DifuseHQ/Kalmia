@@ -61,6 +61,7 @@ export const Alert: React.FC<AlertProps> = ({ rawJson }) => {
     textAlignment === 'center' ? 'kal-justify-center' : 
     textAlignment === 'right' ? 'kal-justify-end' : 'kal-justify-start',
     'kal-mt-4',
+    'kal-mb-5',
   ].join(' ');
 
   const renderTextSegment = (segment: TextSegment, index: number) => {

@@ -17,9 +17,6 @@ export default defineConfig({
     socialLinks: __SOCIAL_LINKS__,
     footer: { message:`__FOOTER_CONTENT__` },
   },
-  route: {
-    cleanUrls: true,
-  },
   mediumZoom: {
     selector: '.rspress-doc img',
   },
