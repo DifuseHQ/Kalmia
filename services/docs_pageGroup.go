@@ -261,6 +261,12 @@ func (service *DocService) deletePageGroupRecursive(tx *gorm.DB, id uint) error 
 		return fmt.Errorf("failed_to_clear_editors: %v", err)
 	}
 
+	for _, page := range pageGroup.Pages {
+		if err := tx.Model(&page).Association("Editors").Clear(); err != nil {
+			return fmt.Errorf("failed_to_clear_page_editors: %v", err)
+		}
+	}
+
 	if err := tx.Where("page_group_id = ?", id).Delete(&models.Page{}).Error; err != nil {
 		return fmt.Errorf("failed_to_delete_associated_pages: %v", err)
 	}
