@@ -153,7 +153,7 @@ func (service *DocService) GenerateHead(docID uint, pageId uint, pageType string
 		if doc.MetaImage != "" {
 			metaImage = doc.MetaImage
 		} else {
-			metaImage = "https://imagedelivery.net/SM0H54GQmiDTGcg4Xr4iPA/c5359df9-c88f-4767-397e-ee4299a42c00/public"
+			metaImage = "https://downloads-bucket.difuse.io/kalmia-meta-resized.png"
 		}
 
 		meta := MetaData{
