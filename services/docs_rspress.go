@@ -884,7 +884,34 @@ func (service *DocService) WriteHomePage(documentation models.Documentation, con
 			}
 		}
 
-		yamlBuilder.WriteString("---\n")
+		yamlBuilder.WriteString("---\n\n")
+		yamlBuilder.WriteString("import { Meta } from '@components/Meta';\n\n")
+
+		metaTitle := documentation.Name
+		metaDescription := documentation.Description
+
+		var metaImage string
+
+		if documentation.MetaImage != "" {
+			metaImage = documentation.MetaImage
+		} else {
+			metaImage = "https://downloads-bucket.difuse.io/kalmia-meta-resized.png"
+		}
+
+		meta := MetaData{
+			Title:       metaTitle,
+			Description: metaDescription,
+			Image:       metaImage,
+		}
+
+		metaJSON, err := json.Marshal(meta)
+
+		if err != nil {
+			return err
+		}
+
+		yamlBuilder.WriteString(fmt.Sprintf(`<Meta rawJson='%s' />%s`, string(metaJSON), "\n\n"))
+
 		homePage = yamlBuilder.String()
 		homePagePath = filepath.Join(contentPath, "../", "index.mdx")
 	} else {
