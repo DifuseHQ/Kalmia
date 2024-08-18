@@ -1,11 +1,50 @@
 {
-  "environment": "dev",
-  "port": 3000,
-  "database_url": "postgres://postgres:<password>@127.0.0.1:5432/difuse-pbx?sslmode=disable",
-  "log_level": "debug",
-  "session_secret": "not-so-secret",
+  "environment": "production",
+  "port": 2727,
+  "database": "postgres://user:password@postgres:5432/kalmia?sslmode=disable",
+  "logLevel": "debug",
+  "sessionSecret": "thisisaverysecretkeyhasalotoflengthandeverything!",
   "users": [
-    { "username": "admin", "email" : "admin@example.com", "password" : "admin", "admin": true},
-    { "username": "admin", "email" : "admin@example.com", "password" : "admin", "admin": true}
-  ]
+    {
+      "username": "admin",
+      "email": "admin@example.com",
+      "password": "admin",
+      "admin": true
+    },
+    {
+      "username": "user",
+      "email": "user@example.com",
+      "password": "user",
+      "admin": false
+    }
+  ],
+  "s3": {
+    "endpoint": "<ENDPOINT>",
+    "region": "auto",
+    "accessKeyId": "<ACCESS_KEY_ID>",
+    "secretAccessKey": "<SECRET_ACCESS>",
+    "bucket": "<BUCKET_NAME>",
+    "usePathStyle": true,
+    "publicUrlFormat": "https://<domain>/%s"
+  },
+  "cloudflare": {
+    "account_id": "<ACCOUNT_ID>",
+    "api_key": "<API_KEY>"
+  },
+  "githubOAuth": {
+    "clientId": "<CLIENT_ID>",
+    "clientSecret": "<CLIENT_SECRET>",
+    "callbackUrl": "http://<domain>/oauth/github/callback"
+  },
+  "microsoftOAuth": {
+    "clientId": "<CLIENT_ID>",
+    "clientSecret": "<CLIENT_SECRET>",
+    "directoryId": "<DIRECTORY_ID>",
+    "callbackUrl": "http://<domain>/oauth/microsoft/callback"
+  },
+  "googleOAuth": {
+    "clientId": "<CLIENT_ID>",
+    "clientSecret": "<CLIENT_SECRET>",
+    "callbackUrl": "<CALLBACK_URL>"
+  }
 }
