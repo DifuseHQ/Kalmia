@@ -148,7 +148,6 @@ function isValidLanguage(lang: string): lang is LanguageName {
   return lang in langs;
 }
 
-
 export const CodeBlock = createReactBlockSpec(
   {
     type: CODEBLOCK_TYPE,
@@ -177,7 +176,9 @@ export const CodeBlock = createReactBlockSpec(
       const updateEditorHeight = useCallback(() => {
         if (editorRef.current) {
           const minHeight = 200;
-          const scrollHeight = editorRef.current.querySelector('.cm-scroller')?.scrollHeight || minHeight;
+          const scrollHeight =
+            editorRef.current.querySelector(".cm-scroller")?.scrollHeight ||
+            minHeight;
           editorRef.current.style.height = `${Math.max(scrollHeight, minHeight)}px`;
         }
       }, []);
@@ -191,12 +192,12 @@ export const CodeBlock = createReactBlockSpec(
         : langs.javascript;
 
       return (
-        <div ref={editorRef} style={{ minHeight: '200px', width: '100%' }}>
+        <div ref={editorRef} style={{ minHeight: "200px", width: "100%" }}>
           <ReactCodeMirror
             id={block.id}
             autoFocus
             placeholder={"Write your code here..."}
-            style={{ width: '100%', height: '100%' }}
+            style={{ width: "100%", height: "100%" }}
             extensions={[languageExtension()]}
             value={code}
             theme={"dark"}

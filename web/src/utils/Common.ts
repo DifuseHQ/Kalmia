@@ -75,12 +75,15 @@ export const handleError = (
     if (
       result.code === 401 &&
       !isRedirecting &&
-      (window.location.pathname !== "/login" && window.location.pathname !== "/admin/login")
+      window.location.pathname !== "/login" &&
+      window.location.pathname !== "/admin/login"
     ) {
       isRedirecting = true;
       toastMessage(t(result.message), "error");
       localStorage.removeItem("accessToken");
-      navigate && navigate("/login");
+      if (navigate) {
+        navigate("/login");
+      }
       return true;
     } else if (result.code !== 401) {
       if (result.data) {
