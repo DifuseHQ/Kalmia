@@ -19,6 +19,7 @@ import { Icon, IconifyIcon } from "@iconify/react/dist/iconify.js";
 import { Menu } from "@mantine/core";
 import { langs, LanguageName } from "@uiw/codemirror-extensions-langs";
 import ReactCodeMirror from "@uiw/react-codemirror";
+import { useCallback, useEffect, useRef } from "react";
 
 interface alertType {
   title: string;
@@ -147,10 +148,9 @@ function isValidLanguage(lang: string): lang is LanguageName {
   return lang in langs;
 }
 
+
 export const CodeBlock = createReactBlockSpec(
   {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     type: CODEBLOCK_TYPE,
     propSchema: {
       language: {
@@ -166,6 +166,7 @@ export const CodeBlock = createReactBlockSpec(
     render: ({ block, editor }) => {
       const language = block.props.language || "javascript";
       const code = block.props.code || "";
+      const editorRef = useRef<HTMLDivElement>(null);
 
       const onInputChange = (val: string) => {
         editor.updateBlock(block, {
@@ -173,24 +174,36 @@ export const CodeBlock = createReactBlockSpec(
         });
       };
 
+      const updateEditorHeight = useCallback(() => {
+        if (editorRef.current) {
+          const minHeight = 200;
+          const scrollHeight = editorRef.current.querySelector('.cm-scroller')?.scrollHeight || minHeight;
+          editorRef.current.style.height = `${Math.max(scrollHeight, minHeight)}px`;
+        }
+      }, []);
+
+      useEffect(() => {
+        updateEditorHeight();
+      }, [code, updateEditorHeight]);
+
       const languageExtension = isValidLanguage(language)
         ? langs[language]
         : langs.javascript;
 
       return (
-        <ReactCodeMirror
-          id={block.id}
-          autoFocus
-          placeholder={"Write your code here..."}
-          style={{ width: "100%", resize: "vertical" }}
-          extensions={[languageExtension()]}
-          value={code}
-          theme={"dark"}
-          editable={editor.isEditable}
-          width="100%"
-          height="200px"
-          onChange={onInputChange}
-        />
+        <div ref={editorRef} style={{ minHeight: '200px', width: '100%' }}>
+          <ReactCodeMirror
+            id={block.id}
+            autoFocus
+            placeholder={"Write your code here..."}
+            style={{ width: '100%', height: '100%' }}
+            extensions={[languageExtension()]}
+            value={code}
+            theme={"dark"}
+            editable={editor.isEditable}
+            onChange={onInputChange}
+          />
+        </div>
       );
     },
     toExternalHTML: ({ block }) => {
