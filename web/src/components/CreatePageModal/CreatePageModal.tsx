@@ -29,9 +29,7 @@ export default function CreatePage({ handleCreate }: CreatePageProps) {
   const handleKeyDown = (event: DOMEvent) => {
     if ("key" in event && event.key === "Enter") {
       event.preventDefault();
-      const generatedSlug = generateSlug(title);
-      setSlug(generatedSlug);
-      handleCreate(title, generatedSlug);
+      handleCreate(title, slug);
     }
   };
 

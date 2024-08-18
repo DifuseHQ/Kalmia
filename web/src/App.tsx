@@ -5,7 +5,6 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 
 import CreateDocModal from "./components/CreateDocumentModal/CreateDocModal";
-// import CreatePageModal from "./components/CreatePageModal/CreatePageModal";
 import CreateUser from "./components/CreateUser/CreateUser";
 import Documentation from "./components/Documentation/Documentation";
 import EditPage from "./components/EditPage/EditPage";
@@ -57,10 +56,6 @@ function App() {
                       path="documentation/page-group"
                       element={<PageGroupTable />}
                     />
-                    {/* <Route
-                      path="documentation/create-page"
-                      element={<CreatePageModal />}
-                    /> */}
                     <Route
                       path="documentation/edit-page"
                       element={<EditPage />}
