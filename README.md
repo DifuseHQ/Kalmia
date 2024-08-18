@@ -1,17 +1,16 @@
 # Kalmia
 
 > [!WARNING]
-> This project is still in development and is not ready for production use.
+> This project is still in development so expect breaking changes!
 
-
-Kalmia is a Go tool with a web interface for managing RsPress documentation. It supports multiple versions, multiple users, and includes a markdown editor for easy edits.
+Kalmia is a Go tool with a web interface for managing RsPress documentation. It supports multiple versions, multiple users, and includes a markdown editor for easy edits. Please visit our [website](https://kalmia.difuse.io) for more information on how to use Kalmia and its features.
 
 ## Requirements
 
 - Go >= 1.22
 - Node.js (version v20.15.0 or later)
 - npm (usually comes with Node.js)
-- PostgreSQL >= 9.5 (If you're not using SQLite)
+- PostgreSQL >= 15 (If you're not using SQLite)
 
 ## Installation
 
@@ -81,7 +80,20 @@ You can visit the website at http://localhost:2727/admin to start using Kalmia.
 
 ## Contributing
 
-We welcome contributions from the community. Please feel free to submit a Pull Request.
+We welcome contributions from the community. Please feel free to submit a Pull Request. We primarily use SQLite while developing, to setup a development environment, you can run:
+
+```bash
+npm install
+npm run start
+```
+
+In the web/ directory and then run:
+
+```bash
+air .
+```
+
+In the root directory in a separate terminal to start the Go server. Make sure you have Air installed.
 
 ## License
 
