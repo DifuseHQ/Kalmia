@@ -251,6 +251,12 @@ func (service *DocService) StartupCheck() error {
 		logger.Panic("Startup check failed for NPM, exiting...")
 	}
 
+	err := service.InitRsPressPackageCache()
+
+	if err != nil {
+		logger.Panic("Startup check failed for RsPress package cache, exiting...", zap.Error(err))
+	}
+
 	db := service.DB
 	var docs []models.Documentation
 	if err := db.Find(&docs).Error; err != nil {
@@ -288,6 +294,40 @@ func (service *DocService) StartupCheck() error {
 	}
 
 	logger.Debug("DocService.StartupCheck completed successfully")
+	return nil
+}
+
+func (service *DocService) InitRsPressPackageCache() error {
+	cfg := config.ParsedConfig
+	pcPath := filepath.Join(cfg.DataPath, "rspress_pc")
+	if !utils.PathExists(pcPath) {
+		if err := utils.MakeDir(pcPath); err != nil {
+			return err
+		}
+	}
+
+	err := embedded.CopyInitFiles(pcPath)
+	if err != nil {
+		return fmt.Errorf("failed to copy/update pkg cache files: %w", err)
+	}
+
+	npmPing := utils.NpmPing()
+	if !npmPing {
+		return fmt.Errorf("NPM ping failed for package cache initialization")
+	}
+
+	logger.Info("Initializing package cache")
+
+	installStart := time.Now()
+	if err := utils.RunNpmCommand(pcPath, "install", "--prefer-offline", "--no-audit", "--progress=false", "--no-fund"); err != nil {
+		logger.Error("Failed to run npm install for package cache",
+			zap.Error(err),
+			zap.Duration("elapsed", time.Since(installStart)))
+		return fmt.Errorf("failed to run npm install for package cache: %w", err)
+	}
+	logger.Info("Package cache initialized",
+		zap.Duration("elapsed", time.Since(installStart)))
+
 	return nil
 }
 
