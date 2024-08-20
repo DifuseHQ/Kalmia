@@ -29,7 +29,6 @@ import {
   getDocumentations,
   getPageGroups,
   getPages,
-  OrderItem,
   updatePageGroup,
 } from "../../api/Requests";
 import { AuthContext, AuthContextType } from "../../context/AuthContext";
@@ -42,12 +41,12 @@ import {
 import { DOMEvent } from "../../types/dom";
 import {
   combinePages,
+  createOrderItems,
   getClosestVersion,
   getLastPageOrder,
   getVersion,
   handleError,
   isPageGroup,
-  createOrderItems
 } from "../../utils/Common";
 import { toastMessage } from "../../utils/Toast";
 import { pageSizes } from "../../utils/Utils";
@@ -404,61 +403,63 @@ export default function Documentation() {
   };
 
   const handleDragEnd = async (result: DropResult) => {
-    let newItems = Array.from(
+    const newItems = Array.from(
       groupsAndPageData.filter(
         (obj) => obj.documentationId === Number(selectedVersion?.id),
       ),
     );
-    
-    if (result?.combine) {      
+
+    if (result?.combine) {
       const ParentItemId = result.combine.draggableId;
-      const extractedParentd = ParentItemId.split(':');
+      const extractedParentd = ParentItemId.split(":");
 
-    if(extractedParentd?.[0] === "pageGroup"){
+      if (extractedParentd?.[0] === "pageGroup") {
+        const reorderedItem = newItems[result?.source?.index];
+        const dragItem = reorderedItem as PageGroup | Page;
+        const type = isPageGroup(reorderedItem);
 
-      const reorderedItem = newItems[result?.source?.index];
-      const dragItem = reorderedItem as PageGroup | Page;
-      const type = isPageGroup(reorderedItem)
-      
-      if(type){
-        reorderedItem.parentId = Number(extractedParentd[1]);
-      }else {
-        reorderedItem.pageGroupId = Number(extractedParentd[1]);
-      }
-    
-      const allItems = createOrderItems(newItems);
-      
-      try {
-        const result = await commonReorderBulk({ order: allItems });
-  
-        if (handleError(result, navigate, t)) return;
-        const type = "slug" in dragItem ? "page" : "pageGroup";
+        if (type) {
+          reorderedItem.parentId = Number(extractedParentd[1]);
+        } else {
+          reorderedItem.pageGroupId = Number(extractedParentd[1]);
+        }
+
+        const allItems = createOrderItems(newItems);
+
+        try {
+          const result = await commonReorderBulk({ order: allItems });
+
+          if (handleError(result, navigate, t)) return;
+          const type = "slug" in dragItem ? "page" : "pageGroup";
+          toastMessage(
+            t(`${type === "page" ? "page_inserted" : "pageGroup_inserted"}`),
+            "success",
+          );
+        } catch (err) {
+          console.error("Error in bulk reordering:", err);
+        }
+      } else {
         toastMessage(
-          t(`${type === "page" ? "page_inserted" : "pageGroup_inserted"}`),
-          "success",
+          t("its_not_possible_to_insert_pageGroup_into_page"),
+          "warning",
         );
-      } catch (err) {
-        console.error("Error in bulk reordering:", err);
       }
-      
     } else {
-      toastMessage(t("its_not_possible_to_insert_pageGroup_into_page"),"warning");
-    }
-
-    } else {
-
       if (!result.destination) {
         return;
       }
-  
-      if(result.destination.index === result.source.index){
-        toastMessage(t("item_dropped_in_the_same_position_no_changes_made"), "warning");
+
+      if (result.destination.index === result.source.index) {
+        toastMessage(
+          t("item_dropped_in_the_same_position_no_changes_made"),
+          "warning",
+        );
         return;
       }
-      
+
       const newIndex: number = result.destination.index;
       const oldDataAtNewPosition = newItems[newIndex] as PageGroup | Page;
-  
+
       if (
         "isIntroPage" in oldDataAtNewPosition &&
         oldDataAtNewPosition.isIntroPage
@@ -466,18 +467,18 @@ export default function Documentation() {
         toastMessage(t("intro_page_cannot_be_reordered"), "warning");
         return;
       }
-  
+
       const [reorderedItem] = newItems.splice(result.source.index, 1);
       const dragItem = reorderedItem as PageGroup | Page;
       newItems.splice(result.destination.index, 0, reorderedItem);
-  
+
       setGroupsAndPageData(newItems);
-  
+
       const allItems = createOrderItems(newItems);
-      
+
       try {
         const result = await commonReorderBulk({ order: allItems });
-  
+
         if (handleError(result, navigate, t)) return;
         const type = "slug" in dragItem ? "page" : "pageGroup";
         toastMessage(
@@ -487,7 +488,6 @@ export default function Documentation() {
       } catch (err) {
         console.error("Error in bulk reordering:", err);
       }
-      
     }
 
     refreshData();
@@ -538,10 +538,6 @@ export default function Documentation() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [handleClickOutside]);
-
-  function isPageGroup(obj: PageGroup | Page): obj is PageGroup {
-    return (obj as PageGroup).name !== undefined;
-  }
 
   // Type guard to check if an object is a Page
   function isPage(obj: PageGroup | Page): obj is Page {
@@ -807,7 +803,11 @@ export default function Documentation() {
                       className="overflow-x-auto h-auto"
                     >
                       <DragDropContext onDragEnd={handleDragEnd}>
-                        <Droppable droppableId="table" type="TABLE" isCombineEnabled>
+                        <Droppable
+                          droppableId="table"
+                          type="TABLE"
+                          isCombineEnabled
+                        >
                           {(provided) => (
                             <motion.table
                               initial={{ opacity: 0 }}

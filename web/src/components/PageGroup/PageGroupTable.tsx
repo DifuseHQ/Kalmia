@@ -21,8 +21,15 @@ import {
 } from "../../api/Requests";
 import { AuthContext, AuthContextType } from "../../context/AuthContext";
 import { ModalContext, ModalItem } from "../../context/ModalContext";
-import { isPage, isPageGroup, PageGroup, PageOrGroup } from "../../types/doc";
 import {
+  isPage,
+  isPageGroup,
+  Page,
+  PageGroup,
+  PageOrGroup,
+} from "../../types/doc";
+import {
+  createOrderItems,
   getLastPageOrder,
   handleError,
   sortGroupAndPage,
@@ -213,56 +220,99 @@ export default function PageGroupTable() {
   };
 
   const handleDragEnd = async (result: DropResult) => {
-    if (!result.destination) {
-      return;
-    }
-
-    if(result.destination.index === result.source.index){
-      toastMessage(t("item_dropped_in_the_same_position_no_changes_made"), "warning");
-      return;
-    }
-
     const newItems = Array.from(data);
-    const [reorderedItem] = newItems.splice(result.source.index, 1);
-    const dragItem = reorderedItem;
-    newItems.splice(result.destination.index, 0, reorderedItem);
-    setData(newItems);
 
-    const updateOrder = async (item: PageOrGroup, index: number) => {
-      const payload: {
-        id: number;
-        documentationId: number;
-        order: number;
-        parentId?: number;
-        isPageGroup?: boolean;
-        pageGroupId?: number;
-      } = {
-        id: item.id,
-        documentationId: Number(docId),
-        order: index,
-      };
+    if (result?.combine) {
+      const ParentItemId = result.combine.draggableId;
+      const extractedParentd = ParentItemId.split(":");
 
-      if ("name" in item) {
-        payload.parentId = Number(pageGroupId);
-        payload.isPageGroup = true;
+      if (extractedParentd?.[0] === "pageGroup") {
+        const reorderedItem = newItems[result?.source?.index];
+        const dragItem = reorderedItem as PageGroup | Page;
+        const type = isPageGroup(reorderedItem);
+
+        if (type) {
+          reorderedItem.parentId = Number(extractedParentd[1]);
+        } else {
+          reorderedItem.pageGroupId = Number(extractedParentd[1]);
+        }
+
+        const allItems = createOrderItems(newItems);
+
+        try {
+          const result = await commonReorderBulk({ order: allItems });
+
+          if (handleError(result, navigate, t)) return;
+          const type = "slug" in dragItem ? "page" : "pageGroup";
+          toastMessage(
+            t(`${type === "page" ? "page_inserted" : "pageGroup_inserted"}`),
+            "success",
+          );
+        } catch (err) {
+          console.error("Error in bulk reordering:", err);
+        }
       } else {
-        payload.pageGroupId = Number(pageGroupId);
+        toastMessage(
+          t("its_not_possible_to_insert_pageGroup_into_page"),
+          "warning",
+        );
+      }
+    } else {
+      if (!result.destination) {
+        return;
       }
 
-      const result = await commonReorderBulk({ order: [payload] });
-      if (handleError(result, navigate, t)) return;
-    };
+      if (result.destination.index === result.source.index) {
+        toastMessage(
+          t("item_dropped_in_the_same_position_no_changes_made"),
+          "warning",
+        );
+        return;
+      }
 
-    try {
-      await Promise.all(
-        newItems.map((item, index) => updateOrder(item, index)),
-      );
-      toastMessage(
-        t(`${"slug" in dragItem ? "page_reordered" : "page_group_reordered"}`),
-        "success",
-      );
-    } catch (err) {
-      console.error("Error in Promise.all:", err);
+      const [reorderedItem] = newItems.splice(result.source.index, 1);
+      const dragItem = reorderedItem;
+      newItems.splice(result.destination.index, 0, reorderedItem);
+      setData(newItems);
+
+      const updateOrder = async (item: PageOrGroup, index: number) => {
+        const payload: {
+          id: number;
+          documentationId: number;
+          order: number;
+          parentId?: number;
+          isPageGroup?: boolean;
+          pageGroupId?: number;
+        } = {
+          id: item.id,
+          documentationId: Number(docId),
+          order: index,
+        };
+
+        if ("name" in item) {
+          payload.parentId = Number(pageGroupId);
+          payload.isPageGroup = true;
+        } else {
+          payload.pageGroupId = Number(pageGroupId);
+        }
+
+        const result = await commonReorderBulk({ order: [payload] });
+        if (handleError(result, navigate, t)) return;
+      };
+
+      try {
+        await Promise.all(
+          newItems.map((item, index) => updateOrder(item, index)),
+        );
+        toastMessage(
+          t(
+            `${"slug" in dragItem ? "page_reordered" : "page_group_reordered"}`,
+          ),
+          "success",
+        );
+      } catch (err) {
+        console.error("Error in Promise.all:", err);
+      }
     }
     refreshData();
   };
@@ -372,7 +422,7 @@ export default function PageGroupTable() {
 
             <div className="overflow-x-auto h-auto">
               <DragDropContext onDragEnd={handleDragEnd}>
-                <Droppable droppableId="table" type="TABLE">
+                <Droppable droppableId="table" type="TABLE" isCombineEnabled>
                   {(provided) => (
                     <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                       <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
@@ -416,8 +466,8 @@ export default function PageGroupTable() {
                             }
                             draggableId={
                               isPageGroup(obj)
-                                ? `pageGroup-${obj.id}`
-                                : `page-${obj.id}`
+                                ? `pageGroup:${obj.id}`
+                                : `page:${obj.id}`
                             }
                             index={index}
                           >

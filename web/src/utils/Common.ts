@@ -466,10 +466,11 @@ export const convertToEmoji = (codePoint: string): string => {
 
 export const isPageGroup = (item: PageGroup | Page): item is PageGroup => {
   return "name" in item;
-}
+};
 
-export const createOrderItems = (items: Array<PageGroup | Page>): OrderItem[] => {
-  
+export const createOrderItems = (
+  items: Array<PageGroup | Page>,
+): OrderItem[] => {
   const pageGroups: OrderItem[] = [];
   const pages: OrderItem[] = [];
 

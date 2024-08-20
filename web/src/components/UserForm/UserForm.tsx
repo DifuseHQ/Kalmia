@@ -63,7 +63,6 @@ export default function UserForm() {
 
     fetchUserData();
   }, [userId, currentUser, navigate]);
-  console.log(currentUser);
 
   useEffect(() => {
     if (isEdit && inputRef.current) {

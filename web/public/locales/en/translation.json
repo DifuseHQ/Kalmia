@@ -65,8 +65,8 @@
         "pick_your_emoji":"pick your emoji",
         "item_dropped_in_the_same_position_no_changes_made": "Item dropped in the same position. No changes made.",
         "its_not_possible_to_insert_pageGroup_into_page":"It's not possible to insert pageGroup in to page",
-        "page_inserted":"page inserted",
-        "pageGroup_inserted":"pageGroup inserted",
+        "page_inserted":"Page Inserted",
+        "pageGroup_inserted":"Page Group Inserted",
 
         "clone_documentation": "Clone Documentation",
         "delete_documentation": "Delete Documentation",

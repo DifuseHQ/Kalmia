@@ -54,8 +54,6 @@ export default function UserList() {
         user.email?.toLowerCase().includes(searchTerm.toLowerCase())),
   );
 
-  console.log("fil", filterUser);
-
   const handleSearchChange = (e: DOMEvent) => {
     const target = e.target as HTMLInputElement;
     setSearchTerm(target.value);

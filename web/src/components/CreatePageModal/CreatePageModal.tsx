@@ -76,8 +76,6 @@ export default function CreatePage({ handleCreate }: CreatePageProps) {
                 <input
                   ref={inputRef}
                   onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                    console.log(e.target.value);
-
                     const newTitle = e.target.value;
                     setTitle(newTitle);
                     setSlug(generateSlug(newTitle));

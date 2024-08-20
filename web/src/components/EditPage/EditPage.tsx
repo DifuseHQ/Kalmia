@@ -186,8 +186,6 @@ export default function EditPage() {
       formData.append("upload", file);
       const result = await uploadFile(formData);
 
-      console.log(result);
-
       if (result?.status === "success") {
         if (result.data.file) {
           return result.data.file;
