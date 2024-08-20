@@ -15,7 +15,7 @@ func TriggerCheck(dS *services.DocService, w http.ResponseWriter, r *http.Reques
 	lastTrigger, err := dS.GetLastTrigger()
 
 	if err != nil {
-		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "internal_error"})
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "internal_error", "error": err.Error()})
 		return
 	}
 

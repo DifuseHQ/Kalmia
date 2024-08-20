@@ -41,7 +41,7 @@ func CreateUser(authService *services.AuthService, w http.ResponseWriter, r *htt
 	err = authService.CreateUser(req.Username, req.Email, req.Password, req.Admin)
 
 	if err != nil {
-		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error(), "error": err.Error()})
 		return
 	}
 
