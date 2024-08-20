@@ -47,8 +47,8 @@ interface CreateVersionPayload {
 }
 
 interface PageGroupPayload {
-  name: string;
-  documentationId: number;
+  name?: string;
+  documentationId?: number;
   parentId?: number;
   id?: number;
   order?: number;

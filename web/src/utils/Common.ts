@@ -1,7 +1,7 @@
 import { TFunction } from "i18next";
 import { RefObject, useEffect } from "react";
 
-import { ApiResponse } from "../api/Requests";
+import { ApiResponse, OrderItem } from "../api/Requests";
 import { ValidatedJWT } from "../types/auth";
 import { Documentation, Page, PageGroup } from "../types/doc";
 import { toastMessage } from "./Toast";
@@ -462,4 +462,34 @@ export const convertToEmoji = (codePoint: string): string => {
   } else {
     return "";
   }
+};
+
+export const isPageGroup = (item: PageGroup | Page): item is PageGroup => {
+  return "name" in item;
+}
+
+export const createOrderItems = (items: Array<PageGroup | Page>): OrderItem[] => {
+  
+  const pageGroups: OrderItem[] = [];
+  const pages: OrderItem[] = [];
+
+  items.forEach((item, index) => {
+    if (isPageGroup(item)) {
+      pageGroups.push({
+        id: item.id,
+        order: index,
+        parentId: item?.parentId,
+        isPageGroup: true,
+      });
+    } else {
+      pages.push({
+        id: item.id,
+        order: index,
+        pageGroupId: item?.pageGroupId,
+        isPageGroup: false,
+      });
+    }
+  });
+
+  return [...pageGroups, ...pages];
 };

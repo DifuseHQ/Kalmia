@@ -46,6 +46,8 @@ import {
   getLastPageOrder,
   getVersion,
   handleError,
+  isPageGroup,
+  createOrderItems
 } from "../../utils/Common";
 import { toastMessage } from "../../utils/Toast";
 import { pageSizes } from "../../utils/Utils";
@@ -402,77 +404,90 @@ export default function Documentation() {
   };
 
   const handleDragEnd = async (result: DropResult) => {
-    if (!result.destination) {
-      return;
-    }
-
-    if(result.destination.index === result.source.index){
-      toastMessage(t("item_dropped_in_the_same_position_no_changes_made"), "warning");
-      return;
-    }
-    
-    const newItems = Array.from(
+    let newItems = Array.from(
       groupsAndPageData.filter(
         (obj) => obj.documentationId === Number(selectedVersion?.id),
       ),
     );
     
-    const newIndex: number = result.destination.index;
-    const oldDataAtNewPosition = newItems[newIndex] as PageGroup | Page;
+    if (result?.combine) {      
+      const ParentItemId = result.combine.draggableId;
+      const extractedParentd = ParentItemId.split(':');
 
-    if (
-      "isIntroPage" in oldDataAtNewPosition &&
-      oldDataAtNewPosition.isIntroPage
-    ) {
-      toastMessage(t("intro_page_cannot_be_reordered"), "warning");
-      return;
-    }
+    if(extractedParentd?.[0] === "pageGroup"){
 
-    const [reorderedItem] = newItems.splice(result.source.index, 1);
-    const dragItem = reorderedItem as PageGroup | Page;
-    newItems.splice(result.destination.index, 0, reorderedItem);
-
-    setGroupsAndPageData(newItems);
-
-    const pageGroups: OrderItem[] = [];
-    const pages: OrderItem[] = [];
-
-    function isPageGroup(item: PageGroup | Page): item is PageGroup {
-      return "name" in item;
-    }
-
-    newItems.forEach((item, index) => {
-      if (isPageGroup(item)) {
-        pageGroups.push({
-          id: item.id,
-          order: index,
-          parentId: item?.parentId,
-          isPageGroup: true,
-        });
-      } else {
-        // Item is a Page
-        pages.push({
-          id: item.id,
-          order: index,
-          pageGroupId: item?.pageGroupId,
-          isPageGroup: false,
-        });
+      const reorderedItem = newItems[result?.source?.index];
+      const dragItem = reorderedItem as PageGroup | Page;
+      const type = isPageGroup(reorderedItem)
+      
+      if(type){
+        reorderedItem.parentId = Number(extractedParentd[1]);
+      }else {
+        reorderedItem.pageGroupId = Number(extractedParentd[1]);
       }
-    });
+    
+      const allItems = createOrderItems(newItems);
+      
+      try {
+        const result = await commonReorderBulk({ order: allItems });
+  
+        if (handleError(result, navigate, t)) return;
+        const type = "slug" in dragItem ? "page" : "pageGroup";
+        toastMessage(
+          t(`${type === "page" ? "page_inserted" : "pageGroup_inserted"}`),
+          "success",
+        );
+      } catch (err) {
+        console.error("Error in bulk reordering:", err);
+      }
+      
+    } else {
+      toastMessage(t("its_not_possible_to_insert_pageGroup_into_page"),"warning");
+    }
 
-    const allItems = [...pageGroups, ...pages];
+    } else {
 
-    try {
-      const result = await commonReorderBulk({ order: allItems });
-
-      if (handleError(result, navigate, t)) return;
-      const type = "slug" in dragItem ? "page" : "pageGroup";
-      toastMessage(
-        t(`${type === "page" ? "page_reordered" : "page_group_reordered"}`),
-        "success",
-      );
-    } catch (err) {
-      console.error("Error in bulk reordering:", err);
+      if (!result.destination) {
+        return;
+      }
+  
+      if(result.destination.index === result.source.index){
+        toastMessage(t("item_dropped_in_the_same_position_no_changes_made"), "warning");
+        return;
+      }
+      
+      const newIndex: number = result.destination.index;
+      const oldDataAtNewPosition = newItems[newIndex] as PageGroup | Page;
+  
+      if (
+        "isIntroPage" in oldDataAtNewPosition &&
+        oldDataAtNewPosition.isIntroPage
+      ) {
+        toastMessage(t("intro_page_cannot_be_reordered"), "warning");
+        return;
+      }
+  
+      const [reorderedItem] = newItems.splice(result.source.index, 1);
+      const dragItem = reorderedItem as PageGroup | Page;
+      newItems.splice(result.destination.index, 0, reorderedItem);
+  
+      setGroupsAndPageData(newItems);
+  
+      const allItems = createOrderItems(newItems);
+      
+      try {
+        const result = await commonReorderBulk({ order: allItems });
+  
+        if (handleError(result, navigate, t)) return;
+        const type = "slug" in dragItem ? "page" : "pageGroup";
+        toastMessage(
+          t(`${type === "page" ? "page_reordered" : "page_group_reordered"}`),
+          "success",
+        );
+      } catch (err) {
+        console.error("Error in bulk reordering:", err);
+      }
+      
     }
 
     refreshData();
@@ -792,7 +807,7 @@ export default function Documentation() {
                       className="overflow-x-auto h-auto"
                     >
                       <DragDropContext onDragEnd={handleDragEnd}>
-                        <Droppable droppableId="table" type="TABLE">
+                        <Droppable droppableId="table" type="TABLE" isCombineEnabled>
                           {(provided) => (
                             <motion.table
                               initial={{ opacity: 0 }}
@@ -859,8 +874,8 @@ export default function Documentation() {
                                           }
                                           draggableId={
                                             isPageGroup(obj)
-                                              ? `pageGroup-${obj.id}`
-                                              : `page-${obj.id}`
+                                              ? `pageGroup:${obj.id}`
+                                              : `page:${obj.id}`
                                           }
                                           index={index}
                                           isDragDisabled={
