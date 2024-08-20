@@ -406,12 +406,17 @@ export default function Documentation() {
       return;
     }
 
+    if(result.destination.index === result.source.index){
+      toastMessage(t("item_dropped_in_the_same_position_no_changes_made"), "warning");
+      return;
+    }
+    
     const newItems = Array.from(
       groupsAndPageData.filter(
         (obj) => obj.documentationId === Number(selectedVersion?.id),
       ),
     );
-
+    
     const newIndex: number = result.destination.index;
     const oldDataAtNewPosition = newItems[newIndex] as PageGroup | Page;
 

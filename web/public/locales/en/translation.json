@@ -63,6 +63,7 @@
         "new_version":"New Version",
         "update":"Update",
         "pick_your_emoji":"pick your emoji",
+        "item_dropped_in_the_same_position_no_changes_made": "Item dropped in the same position. No changes made.",
         
         "clone_documentation": "Clone Documentation",
         "delete_documentation": "Delete Documentation",

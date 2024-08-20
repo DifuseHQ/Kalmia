@@ -217,6 +217,11 @@ export default function PageGroupTable() {
       return;
     }
 
+    if(result.destination.index === result.source.index){
+      toastMessage(t("item_dropped_in_the_same_position_no_changes_made"), "warning");
+      return;
+    }
+
     const newItems = Array.from(data);
     const [reorderedItem] = newItems.splice(result.source.index, 1);
     const dragItem = reorderedItem;
