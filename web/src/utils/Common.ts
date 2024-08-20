@@ -81,9 +81,9 @@ export const handleError = (
       isRedirecting = true;
       toastMessage(t(result.message), "error");
       localStorage.removeItem("accessToken");
-      if (navigate) {
-        navigate("/login");
-      }
+
+      window.location.reload();
+
       return true;
     } else if (result.code !== 401) {
       if (result.data) {
