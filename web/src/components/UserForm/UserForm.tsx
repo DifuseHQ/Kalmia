@@ -363,7 +363,7 @@ export default function UserForm() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-96">
             <h3 className="text-lg font-semibold mb-4 dark:text-white">
-              Crop Image
+              {t("crop_image")}
             </h3>
             <div onWheel={handleWheel}>
               {imageFile && (

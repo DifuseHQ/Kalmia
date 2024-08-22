@@ -67,6 +67,13 @@
         "its_not_possible_to_insert_pageGroup_into_page":"It's not possible to insert pageGroup in to page",
         "page_inserted":"Page Inserted",
         "pageGroup_inserted":"Page Group Inserted",
+        "built":"Built",
+        "building_since":"Building since",
+        "close_modal":"Close modal",
+        "previous":"Previous",
+        "toggle_sidebar":"Toggle sidebar",
+        "open_user_menu":"Open user menu",
+        "crop_image":"Crop Image",
 
         "clone_documentation": "Clone Documentation",
         "delete_documentation": "Delete Documentation",
@@ -85,6 +92,8 @@
         "page_size": "Page size",
         "no_documentations_found":"No Documentations Found",
         "no_pages_found":"No Pages Found",
+        "loading":"Loading",
+        "loading_editor":"Loading editor",
 
         "new_page_Group": "New Group",
         "title_group_placeholder": "Enter page group title",

@@ -65,7 +65,7 @@ export default function CreatePage({ handleCreate }: CreatePageProps) {
                 className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white"
               >
                 <Icon icon="material-symbols:close" className="w-6 h-6" />
-                <span className="sr-only">Close modal</span>
+                <span className="sr-only">{t("close_modal")}</span>
               </button>
             </div>
             <div className="grid gap-4 mb-4">

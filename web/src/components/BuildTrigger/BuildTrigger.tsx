@@ -2,6 +2,7 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 import { differenceInSeconds, formatDistance, parseISO } from "date-fns";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 
 import { buildTrigger } from "../../api/Requests";
@@ -22,6 +23,7 @@ export default function BuildTrigger() {
   const [isBuild, setIsBuild] = useState<boolean>(false);
   const [relativeTime, setRelativeTime] = useState<string>("");
   const [timestamp, setTimestamp] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   const updateRelativeTime = useCallback(() => {
     if (timestamp) {
@@ -82,7 +84,7 @@ export default function BuildTrigger() {
                 className="w-6 h-6 text-green-600 dark:text-green-500 "
               />
               <span className="dark:text-white text-md whitespace-nowrap">
-                Built {relativeTime}
+                {`${t("Built")} ${relativeTime}`}
               </span>
             </motion.div>
           ) : (
@@ -95,7 +97,7 @@ export default function BuildTrigger() {
                 className="w-6 h-6 text-black dark:text-white"
               />
               <span className="dark:text-white text-md whitespace-nowrap">
-                Building since {relativeTime}
+                {`${t("building_since")} ${relativeTime}`}
               </span>
             </div>
           )}

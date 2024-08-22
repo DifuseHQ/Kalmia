@@ -1,10 +1,12 @@
 import { motion } from "framer-motion";
 import { JSX, useContext } from "react";
+import { useTranslation } from "react-i18next";
 
 import { ModalContext } from "../../context/ModalContext";
 
 export default function Loading(): JSX.Element | null {
   const { loadingModal, loadingMessage } = useContext(ModalContext);
+  const { t } = useTranslation();
 
   if (!loadingModal) return null;
 
@@ -23,7 +25,7 @@ export default function Loading(): JSX.Element | null {
           </h2>
         )}
         <div className="flex space-x-2 justify-center items-center">
-          <span className="sr-only">Loading...</span>
+          <span className="sr-only">{t("loading")}...</span>
           <div className="h-6 w-6 bg-gray-400 dark:bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
           <div className="h-6 w-6 bg-gray-400 dark:bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
           <div className="h-6 w-6 bg-gray-400 dark:bg-white rounded-full animate-bounce" />
