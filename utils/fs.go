@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -41,27 +42,6 @@ func RemovePath(path string) error {
 
 func MovePath(oldPath, newPath string) error {
 	return os.Rename(oldPath, newPath)
-}
-
-func CopyFile(src, dst string) error {
-	sourceFile, err := os.Open(src)
-	if err != nil {
-		return fmt.Errorf("failed to open source file: %w", err)
-	}
-	defer sourceFile.Close()
-
-	destFile, err := os.Create(dst)
-	if err != nil {
-		return fmt.Errorf("failed to create destination file: %w", err)
-	}
-	defer destFile.Close()
-
-	_, err = io.Copy(destFile, sourceFile)
-	if err != nil {
-		return fmt.Errorf("failed to copy file contents: %w", err)
-	}
-
-	return nil
 }
 
 func ReplaceInFile(filename, oldStr, newStr string) error {
@@ -112,4 +92,37 @@ func FileHash(input interface{}) (string, error) {
 	}
 
 	return hex.EncodeToString(hash.Sum(nil)), nil
+}
+
+func Tree(dir string) (map[string][]byte, error) {
+	filesContent := make(map[string][]byte)
+	var traverse func(string, string) error
+	traverse = func(currentDir, relativePath string) error {
+		entries, err := os.ReadDir(currentDir)
+		if err != nil {
+			return err
+		}
+		for _, entry := range entries {
+			fullPath := filepath.Join(currentDir, entry.Name())
+			relativeFullPath := filepath.Join(relativePath, entry.Name())
+			if entry.IsDir() {
+				err = traverse(fullPath, relativeFullPath)
+				if err != nil {
+					return err
+				}
+			} else {
+				content, err := os.ReadFile(fullPath)
+				if err != nil {
+					return err
+				}
+				filesContent[relativeFullPath] = content
+			}
+		}
+		return nil
+	}
+	err := traverse(dir, "")
+	if err != nil {
+		return nil, err
+	}
+	return filesContent, nil
 }

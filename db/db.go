@@ -1,6 +1,7 @@
 package db
 
 import (
+	"encoding/json"
 	"errors"
 	"log"
 	"path"
@@ -70,11 +71,30 @@ func SetupBasicData(db *gorm.DB, admins []config.User) {
 			}
 
 			newUser := models.User{
-				Username: admin.Username,
-				Password: hashedPassword,
-				Email:    admin.Email,
-				Admin:    admin.Admin,
+				Username:    admin.Username,
+				Password:    hashedPassword,
+				Email:       admin.Email,
+				Admin:       admin.Admin,
+				Permissions: "",
 			}
+
+			var permissions []string
+
+			if admin.Admin {
+				permissions = append(permissions, "all")
+			} else {
+				permissions = append(permissions, "read", "write", "delete")
+			}
+
+			jsonPermissions, err := json.Marshal(permissions)
+
+			if err != nil {
+				logger.Error("Failed to marshal permissions", zap.String("username", admin.Username), zap.Error(err))
+				continue
+			}
+
+			newUser.Permissions = string(jsonPermissions)
+
 			result := db.Create(&newUser)
 			if result.Error != nil {
 				logger.Error("Failed to create admin user", zap.String("username", admin.Username), zap.Error(result.Error))

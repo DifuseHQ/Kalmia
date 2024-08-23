@@ -1,6 +1,7 @@
 package services
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"git.difuse.io/Difuse/kalmia/config"
@@ -73,18 +74,29 @@ func (service *AuthService) GetUserFromToken(token string) (models.User, error) 
 	return user, nil
 }
 
-func (service *AuthService) CreateUser(username, email, password string, admin bool) error {
+func (service *AuthService) CreateUser(username, email, password string, admin bool, permissions []string) error {
 	hashedPassword, err := utils.HashPassword(password)
 
 	if err != nil {
 		return fmt.Errorf("failed_to_hash_password")
 	}
 
+	if len(permissions) == 0 {
+		permissions = append(permissions, "read")
+	}
+
+	jsonPermissions, err := json.Marshal(permissions)
+
+	if err != nil {
+		return fmt.Errorf("failed_to_marshal_permissions")
+	}
+
 	user := models.User{
-		Username: username,
-		Email:    email,
-		Password: hashedPassword,
-		Admin:    admin,
+		Username:    username,
+		Email:       email,
+		Password:    hashedPassword,
+		Admin:       admin,
+		Permissions: string(jsonPermissions),
 	}
 
 	if err := service.DB.Create(&user).Error; err != nil {
@@ -94,7 +106,7 @@ func (service *AuthService) CreateUser(username, email, password string, admin b
 	return nil
 }
 
-func (service *AuthService) EditUser(id uint, username, email, password, photo string, admin int) error {
+func (service *AuthService) EditUser(id uint, username, email, password, photo string, admin int, permissions []string) error {
 	var user models.User
 
 	if err := service.DB.Where("id = ?", id).First(&user).Error; err != nil {
@@ -128,6 +140,16 @@ func (service *AuthService) EditUser(id uint, username, email, password, photo s
 		} else {
 			user.Admin = true
 		}
+	}
+
+	if len(permissions) > 0 {
+		jsonPermissions, err := json.Marshal(permissions)
+
+		if err != nil {
+			return fmt.Errorf("failed_to_marshal_permissions")
+		}
+
+		user.Permissions = string(jsonPermissions)
 	}
 
 	if err := service.DB.Save(&user).Error; err != nil {
@@ -271,7 +293,6 @@ func (service *AuthService) RefreshJWT(token string) (string, error) {
 	tokenRecord.Expiry = expiry
 
 	if err := service.DB.Save(&tokenRecord).Error; err != nil {
-		fmt.Println(err)
 		return "", fmt.Errorf("failed_to_update_token")
 	}
 

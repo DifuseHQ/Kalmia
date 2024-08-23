@@ -36,6 +36,8 @@ func main() {
 	d := db.SetupDatabase(cfg.Environment, cfg.Database, cfg.DataPath)
 	db.SetupBasicData(d, cfg.Admins)
 
+	db.InitCache()
+
 	serviceRegistry := services.NewServiceRegistry(d)
 	aS := serviceRegistry.AuthService
 	dS := serviceRegistry.DocService

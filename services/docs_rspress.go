@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"git.difuse.io/Difuse/kalmia/config"
+	"git.difuse.io/Difuse/kalmia/db"
 	"git.difuse.io/Difuse/kalmia/db/models"
 	"git.difuse.io/Difuse/kalmia/embedded"
 	"git.difuse.io/Difuse/kalmia/logger"
@@ -76,6 +77,15 @@ func (service *DocService) GenerateHead(docID uint, pageId uint, pageType string
 	if err != nil {
 		return "", err
 	}
+
+	latest, _, err := service.GetAllVersions(docID)
+
+	if err != nil {
+		return "", err
+	}
+
+	latestVersion := latest
+	isLatestVersion := (doc.Version == latest)
 
 	if pageId == math.MaxUint32 {
 		buffer.WriteString("---\n")
@@ -143,7 +153,15 @@ func (service *DocService) GenerateHead(docID uint, pageId uint, pageType string
 			}
 		}
 
+		if !isLatestVersion {
+			buffer.WriteString("import { OldVersion } from '@components/OldVersion';\n")
+		}
+
 		buffer.WriteString("\n\n")
+
+		if !isLatestVersion {
+			buffer.WriteString(fmt.Sprintf(`<OldVersion newVersion="%s" />%s`, latestVersion, "\n\n"))
+		}
 
 		metaTitle := doc.Name
 		metaDescription := doc.Description
@@ -209,35 +227,29 @@ func (service *DocService) UpdateWriteBuild(docId uint) error {
 
 	allDocsPath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data")
 	docsPath := filepath.Join(allDocsPath, "doc_"+strconv.Itoa(int(rootParentId)))
-	if !utils.PathExists(docsPath) {
-		err := utils.MakeDir(docsPath)
+
+	doc, err := service.GetDocumentation(docId)
+
+	if err != nil {
+		return err
+	}
+
+	if utils.PathExists(filepath.Join(docsPath, "docs", doc.Version)) {
+		err := utils.RemovePath(filepath.Join(docsPath, "docs", doc.Version))
 		if err != nil {
 			return err
 		}
 	}
 
-	err = service.UpdateBasicData(docId, rootParentId)
+	err = service.StartUpdate(docId, rootParentId)
+
 	if err != nil {
-		if err.Error() == "documentation_not_found" {
-			if err := service.RemoveDocFolder(docId); err != nil {
-				return err
-			}
-			return nil
-		} else {
-			logger.Error("Failed to update basic data -> ", zap.Uint("doc_id", docId), zap.Error(err))
-		}
 		return err
 	}
 
 	err = service.WriteContents(docId, rootParentId)
-	if err != nil {
-		logger.Error("Failed to write contents -> ", zap.Uint("doc_id", docId), zap.Error(err))
-		return err
-	}
 
-	err = service.RsPressBuild(rootParentId)
 	if err != nil {
-		logger.Error("Failed to build RsPress -> ", zap.Uint("doc_id", docId), zap.Error(err))
 		return err
 	}
 
@@ -254,108 +266,108 @@ func (service *DocService) StartupCheck() error {
 	err := service.InitRsPressPackageCache()
 
 	if err != nil {
-		logger.Panic("Startup check failed for RsPress package cache, exiting...", zap.Error(err))
+		logger.Fatal("Initializing Package Cache Failed...", zap.Error(err))
 	}
 
 	db := service.DB
+
 	var docs []models.Documentation
-	if err := db.Find(&docs).Error; err != nil {
+
+	if err := db.Where("cloned_from IS NULL").Find(&docs).Error; err != nil {
 		logger.Error("Failed to fetch documents from database", zap.Error(err))
 		return err
 	}
 
 	for _, doc := range docs {
-		if doc.ClonedFrom == nil {
-			allDocsPath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data")
-			docsPath := filepath.Join(allDocsPath, "doc_"+strconv.Itoa(int(doc.ID)))
+		if err := service.InitRsPress(doc.ID); err != nil {
+			logger.Error("Failed to initialize/update RsPress", zap.Uint("doc_id", doc.ID), zap.Error(err))
+			return err
+		}
 
-			startTime := time.Now()
-			if err := service.InitRsPress(doc.ID, true); err != nil {
-				logger.Error("Failed to initialize/update RsPress", zap.Uint("doc_id", doc.ID), zap.Error(err))
-				return err
-			}
-			elapsedTime := time.Since(startTime)
-			logger.Info("Documentation initialized/updated",
-				zap.Uint("doc_id", doc.ID),
-				zap.String("elapsed", elapsedTime.String()),
-			)
+		err = service.AddBuildTrigger(doc.ID)
 
-			if err := utils.RunNpmCommand(docsPath, "install", "--prefer-offline", "--no-audit", "--progress=false", "--no-fund"); err != nil {
-				logger.Error("Failed to run npm install", zap.Uint("doc_id", doc.ID), zap.Error(err))
-				return err
-			}
-
-			err := service.AddBuildTrigger(doc.ID)
-			if err != nil {
-				logger.Error("Failed to add build trigger", zap.Uint("doc_id", doc.ID), zap.Error(err))
-				return err
-			}
+		if err != nil {
+			logger.Error("Failed to add build trigger", zap.Uint("doc_id", doc.ID), zap.Error(err))
 		}
 	}
 
-	logger.Debug("DocService.StartupCheck completed successfully")
+	logger.Debug("Startup checks complete")
+
 	return nil
 }
 
 func (service *DocService) InitRsPressPackageCache() error {
 	cfg := config.ParsedConfig
-	pcPath := filepath.Join(cfg.DataPath, "rspress_pc")
-	if !utils.PathExists(pcPath) {
-		if err := utils.MakeDir(pcPath); err != nil {
+	packageCachePath := filepath.Join(cfg.DataPath, "rspress_pc")
+
+	if !utils.PathExists(packageCachePath) {
+		if err := utils.MakeDir(packageCachePath); err != nil {
+			return fmt.Errorf("failed to create package cache directory: %w", err)
+		}
+	}
+
+	err := utils.RunNpmCommand(packageCachePath, "cache", "verify")
+
+	if err != nil {
+		return err
+	}
+
+	err = embedded.CopyInitFiles(packageCachePath)
+	if err != nil {
+		return err
+	}
+
+	installStart := time.Now()
+
+	err = utils.RunNpmCommand(packageCachePath, "install",
+		"--no-audit",
+		"--progress=false",
+		"--no-fund")
+
+	if err != nil {
+		return err
+	}
+
+	installElapsed := time.Since(installStart)
+
+	logger.Debug("NPM cache initialized", zap.String("elapsed", installElapsed.String()))
+
+	return nil
+}
+
+func (service *DocService) InitRsPress(docId uint) error {
+	cfg := config.ParsedConfig
+	rsPressData := filepath.Join(cfg.DataPath, "rspress_data")
+	docPath := filepath.Join(rsPressData, "doc_"+strconv.Itoa(int(docId)))
+
+	if !utils.PathExists(docPath) {
+		if err := utils.MakeDir(docPath); err != nil {
 			return err
 		}
 	}
 
-	err := embedded.CopyInitFiles(pcPath)
+	err := embedded.CopyInitFiles(docPath)
+
 	if err != nil {
-		return fmt.Errorf("failed to copy/update pkg cache files: %w", err)
+		return err
 	}
 
 	npmPing := utils.NpmPing()
+
 	if !npmPing {
-		return fmt.Errorf("NPM ping failed for package cache initialization")
+		return fmt.Errorf("NPM ping failed for %d initialization", docId)
 	}
 
-	logger.Info("Initializing package cache")
+	err = utils.RunNpmCommand(docPath, "install", "--no-audit", "--progress=false", "--no-fund")
 
-	installStart := time.Now()
-	if err := utils.RunNpmCommand(pcPath, "install", "--prefer-offline", "--no-audit", "--progress=false", "--no-fund"); err != nil {
-		logger.Error("Failed to run npm install for package cache",
-			zap.Error(err),
-			zap.Duration("elapsed", time.Since(installStart)))
-		return fmt.Errorf("failed to run npm install for package cache: %w", err)
-	}
-	logger.Info("Package cache initialized",
-		zap.Duration("elapsed", time.Since(installStart)))
-
-	return nil
-}
-
-func (service *DocService) InitRsPress(docId uint, init bool) error {
-	cfg := config.ParsedConfig
-	allDocsPath := filepath.Join(cfg.DataPath, "rspress_data")
-	docsPath := filepath.Join(allDocsPath, "doc_"+strconv.Itoa(int(docId)))
-
-	err := embedded.CopyInitFiles(docsPath)
 	if err != nil {
-		return fmt.Errorf("failed to copy/update init files: %w", err)
-	}
-
-	if init {
-		npmPing := utils.NpmPing()
-		if !npmPing {
-			return fmt.Errorf("NPM ping failed for %d initialization", docId)
-		}
-
-		if err := utils.RunNpmCommand(docsPath, "install", "--prefer-offline", "--no-audit", "--progress=false", "--no-fund"); err != nil {
-			return fmt.Errorf("failed to run npm install for doc %d: %w", docId, err)
-		}
+		return err
 	}
 
 	return nil
 }
 
-func (service *DocService) UpdateBasicData(docId uint, rootParentId uint) error {
+func (service *DocService) StartUpdate(docId uint, rootParentId uint) error {
 	doc, err := service.GetDocumentation(docId)
 	if err != nil {
 		return err
@@ -460,8 +472,10 @@ func (service *DocService) UpdateBasicData(docId uint, rootParentId uint) error 
 		replacements["__FOOTER_CONTENT__"] = "Made with ❤️ by Iridia Solutions Pvt. Ltd."
 	}
 
-	if err := os.Remove(docConfig); err != nil {
-		return err
+	if utils.PathExists(docConfig) {
+		if err := os.Remove(docConfig); err != nil {
+			return err
+		}
 	}
 
 	latest, versions, err := service.GetAllVersions(docId)
@@ -736,7 +750,7 @@ func (service *DocService) WriteContents(docId uint, rootParentId uint) error {
 		}
 	}
 
-	versionInfos, err := service.buildVersionTree(docId)
+	versionInfos, err := service.buildVersionTree(rootParentId)
 
 	if err != nil {
 		return err
@@ -768,7 +782,7 @@ func (service *DocService) WriteContents(docId uint, rootParentId uint) error {
 		var rootMeta string
 
 		if versionDoc.LanderDetails != "" && versionDoc.LanderDetails != "{}" {
-			rootMeta = fmt.Sprintf(`[{"text": "Home","link": "%s","activeMatch": "/%s/home"}, {"text": "Documentation","link": "/%s/index","activeMatch": "/%s/"}]`, versionDoc.BaseURL, cleanedBase, cleanedBase, cleanedBase)
+			rootMeta = `[{"text": "Home", "link": "/", "activeMatch": "^(?!.*guides).*$"}, {"text": "Documentation", "link": "/guides", "activeMatch": ".*guides.*"}]`
 		} else {
 			rootMeta = fmt.Sprintf(`[{"text": "Documentation","link": "/%s/index","activeMatch": "/%s/"}]`, cleanedBase, cleanedBase)
 		}
@@ -864,7 +878,7 @@ func (service *DocService) WriteContents(docId uint, rootParentId uint) error {
 		}
 	}
 
-	return nil
+	return service.RsPressBuild(rootParentId)
 }
 
 func (service *DocService) WriteHomePage(documentation models.Documentation, contentPath string) error {
@@ -980,77 +994,143 @@ func (service *DocService) RsPressBuild(docId uint) error {
 	buildPath := filepath.Join(docPath, "build")
 	tmpBuildPath := filepath.Join(docPath, "build_tmp")
 
-	err := utils.RunNpxCommand(docPath, "tailwindcss", "build", "-i", "styles/input.css", "-o", "styles/output.css")
+	npmPinged := utils.NpmPing()
+
+	if !npmPinged {
+		return fmt.Errorf("npm_ping_failed")
+	}
+
+	err := utils.RunNpmCommand(docPath, "install", "--no-audit", "--progress=false", "--no-fund")
 
 	if err != nil {
 		return err
 	}
 
-	err = utils.RunNpxCommand(docPath, "rspress", "build")
+	err = utils.RunNpxCommand(docPath, "tailwindcss", "build", "-i", "styles/input.css", "-o", "styles/output.css")
+
 	if err != nil {
 		return err
 	}
 
-	if _, err := os.Stat(buildPath); err == nil {
-		if err := os.RemoveAll(buildPath); err != nil {
-			return fmt.Errorf("failed to remove old build directory: %w", err)
+	err = utils.RunNpmCommand(docPath, "run", "build")
+
+	if err != nil {
+		return err
+	}
+
+	if utils.PathExists(tmpBuildPath) {
+		backupBuildPath := filepath.Join(docPath, "build_backup")
+		if utils.PathExists(buildPath) {
+			if err := os.Rename(buildPath, backupBuildPath); err != nil {
+				return fmt.Errorf("failed to rename buildPath to backupBuildPath: %w", err)
+			}
+		}
+
+		if err := os.Rename(tmpBuildPath, buildPath); err != nil {
+			if utils.PathExists(backupBuildPath) {
+				os.Rename(backupBuildPath, buildPath)
+			}
+			return fmt.Errorf("failed to rename tmpBuildPath to buildPath: %w", err)
+		}
+
+		if utils.PathExists(backupBuildPath) {
+			os.RemoveAll(backupBuildPath)
 		}
 	}
 
-	if err := os.Rename(tmpBuildPath, buildPath); err != nil {
-		return fmt.Errorf("failed to rename build_tmp to build: %w", err)
+	filesContent, err := utils.Tree(buildPath)
+	if err != nil {
+		return err
+	}
+
+	err = db.ClearCacheByPrefix(fmt.Sprintf("rsb|doc_%d", docId))
+
+	if err != nil {
+		return err
+	}
+
+	err = db.ClearCacheByPrefix(fmt.Sprintf("burl|doc_%d", docId))
+
+	if err != nil {
+		return err
+	}
+
+	for fileName, content := range filesContent {
+		if err := db.SetKey([]byte(fmt.Sprintf("rs|doc_%d|%s", docId, fileName)), content); err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-func (service *DocService) GetRsPress(urlPath string) (string, string, error) {
+func (service *DocService) GetRsPress(urlPath string) (uint, string, string, error) {
+	cachedBaseURLs, err := db.GetCacheByPrefix("burl|doc_")
+	if err == nil && len(cachedBaseURLs) > 0 {
+		for cacheKey, baseURL := range cachedBaseURLs {
+			if strings.HasPrefix(urlPath, baseURL) {
+				docID := strings.TrimPrefix(cacheKey, "burl|doc_")
+				id, err := strconv.Atoi(docID)
+				if err != nil {
+					continue
+				}
+
+				docPath := filepath.Join("data", "rspress_data", fmt.Sprintf("doc_%d", id), "build")
+				if _, err := os.Stat(docPath); os.IsNotExist(err) {
+					continue
+				}
+
+				files, err := os.ReadDir(docPath)
+				if err != nil || len(files) == 0 {
+					continue
+				}
+
+				return uint(id), docPath, baseURL, nil
+			}
+		}
+	}
+
 	var doc models.Documentation
-	var err error
-
 	dialectName := strings.ToLower(service.DB.Dialector.Name())
-
 	var query string
 	var args []interface{}
-
 	switch dialectName {
-	case "sqlite":
-		query = "? LIKE base_url || ?"
-		args = []interface{}{urlPath, "%"}
-	case "postgres":
+	case "sqlite", "postgres":
 		query = "? LIKE base_url || ?"
 		args = []interface{}{urlPath, "%"}
 	default:
-		return "", "", fmt.Errorf("unsupported_database_type: %s", dialectName)
+		return 0, "", "", fmt.Errorf("unsupported_database_type: %s", dialectName)
 	}
 
 	err = service.DB.Where(query, args...).
 		Order("LENGTH(base_url) DESC").
 		First(&doc).Error
-
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return "", "", fmt.Errorf("doc_does_not_exist")
+			return 0, "", "", fmt.Errorf("doc_does_not_exist")
 		}
-		return "", "", fmt.Errorf("database_error: %v", err)
+		return 0, "", "", fmt.Errorf("database_error: %v", err)
 	}
 
 	docPath := filepath.Join("data", "rspress_data", fmt.Sprintf("doc_%d", doc.ID), "build")
-
 	if _, err := os.Stat(docPath); os.IsNotExist(err) {
-		return "", "", fmt.Errorf("rspress_build_not_found")
+		return 0, "", "", fmt.Errorf("rspress_build_not_found")
 	}
 
 	files, err := os.ReadDir(docPath)
+
 	if err != nil {
-		return "", "", fmt.Errorf("error_reading_rspress_directory")
+		return 0, "", "", fmt.Errorf("error_reading_rspress_directory")
 	}
 
 	if len(files) == 0 {
-		return "", "", fmt.Errorf("rspress_build_empty")
+		return 0, "", "", fmt.Errorf("rspress_build_empty")
 	}
 
-	return docPath, doc.BaseURL, nil
+	cacheKey := fmt.Sprintf("burl|doc_%d", doc.ID)
+	_ = db.SetKey([]byte(cacheKey), []byte(doc.BaseURL))
+
+	return doc.ID, docPath, doc.BaseURL, nil
 }
 
 func (service *DocService) AddBuildTrigger(docId uint) error {
@@ -1071,7 +1151,6 @@ func (service *DocService) BuildJob() {
 		logger.Error("Failed to fetch build triggers", zap.Error(err))
 		return
 	}
-
 	if len(triggers) == 0 {
 		return
 	}
@@ -1083,7 +1162,6 @@ func (service *DocService) BuildJob() {
 
 	for docID, groupTriggers := range triggerGroups {
 		start := time.Now()
-
 		err := service.UpdateWriteBuild(docID)
 		elapsed := time.Since(start)
 

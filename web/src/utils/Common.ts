@@ -78,6 +78,8 @@ export const handleError = (
       window.location.pathname !== "/login" &&
       window.location.pathname !== "/admin/login"
     ) {
+      console.log(result);
+      alert("Session expired. Please login again.");
       isRedirecting = true;
       toastMessage(t(result.message), "error");
       localStorage.removeItem("accessToken");

@@ -14,6 +14,94 @@ type Block struct {
 	Children []Block                `json:"children"`
 }
 
+func ApplyTextStyles(text string, styles map[string]interface{}) string {
+	jsxStyles := make([]string, 0)
+
+	if bold, ok := styles["bold"].(bool); ok && bold {
+		jsxStyles = append(jsxStyles, "fontWeight: 'bold'")
+	}
+
+	if italic, ok := styles["italic"].(bool); ok && italic {
+		jsxStyles = append(jsxStyles, "fontStyle: 'italic'")
+	}
+
+	if underline, ok := styles["underline"].(bool); ok && underline {
+		jsxStyles = append(jsxStyles, "textDecoration: 'underline'")
+	}
+
+	if strike, ok := styles["strike"].(bool); ok && strike {
+		jsxStyles = append(jsxStyles, "textDecoration: 'line-through'")
+	}
+
+	if textColor, ok := styles["textColor"].(string); ok {
+		jsxStyles = append(jsxStyles, fmt.Sprintf("color: '%s'", textColor))
+	}
+
+	if bgColor, ok := styles["backgroundColor"].(string); ok {
+		jsxStyles = append(jsxStyles, fmt.Sprintf("backgroundColor: '%s'", bgColor))
+	}
+
+	if len(jsxStyles) > 0 {
+		text = fmt.Sprintf("<span style={{ %s }}>%s</span>", strings.Join(jsxStyles, ", "), text)
+	}
+
+	return text
+}
+
+func GetTextContent(content interface{}) string {
+	switch v := content.(type) {
+	case []interface{}:
+		var builder strings.Builder
+		for _, item := range v {
+			if contentItem, ok := item.(map[string]interface{}); ok {
+				if text, ok := contentItem["text"].(string); ok {
+					if styles, ok := contentItem["styles"].(map[string]interface{}); ok {
+						text = ApplyTextStyles(text, styles)
+					}
+					builder.WriteString(text)
+				}
+			}
+		}
+		return builder.String()
+	case string:
+		return v
+	default:
+		return ""
+	}
+}
+
+func ProcodeToMarkdown(props map[string]interface{}) string {
+	code, ok := props["code"].(string)
+	if !ok {
+		return ""
+	}
+
+	language, ok := props["language"].(string)
+	if !ok {
+		language = ""
+	}
+
+	if language != "" {
+		return fmt.Sprintf("```%s\n%s\n```\n", language, code)
+	} else {
+		return fmt.Sprintf("```\n%s\n```\n", code)
+	}
+}
+
+func BlockToMDX(block Block) string {
+	blockJson, err := json.Marshal(block)
+	if err != nil {
+		return ""
+	}
+
+	jsonString := strings.Replace(string(blockJson), "`", "\\`", -1)
+	componentName := block.Type
+	componentName = strings.ToUpper(componentName[:1]) + componentName[1:]
+	componentString := fmt.Sprintf(`<%s rawJson={%s} />`, componentName, jsonString)
+
+	return componentString + "\n"
+}
+
 func BlockToMarkdown(block Block, depth int, numbering *[]int) string {
 	content := GetTextContent(block.Content)
 	styledContent := ApplyBlockStyles(content, block.Props, block.Type)
@@ -34,20 +122,6 @@ func BlockToMarkdown(block Block, depth int, numbering *[]int) string {
 	default:
 		return ""
 	}
-}
-
-func BlockToMDX(block Block) string {
-	blockJson, err := json.Marshal(block)
-	if err != nil {
-		return ""
-	}
-
-	jsonString := strings.Replace(string(blockJson), "`", "\\`", -1)
-	componentName := block.Type
-	componentName = strings.ToUpper(componentName[:1]) + componentName[1:]
-	componentString := fmt.Sprintf(`<%s rawJson={%s} />`, componentName, jsonString)
-
-	return componentString + "\n"
 }
 
 func HeadingToMarkdown(block Block) string {
@@ -127,76 +201,6 @@ func checkListItemToMarkdown(block Block, depth int, content string) string {
 	}
 
 	return markdown
-}
-
-func ProcodeToMarkdown(props map[string]interface{}) string {
-	code, ok := props["code"].(string)
-	if !ok {
-		return ""
-	}
-
-	language, ok := props["language"].(string)
-	if !ok {
-		return ""
-	}
-
-	return fmt.Sprintf("```%s\n%s\n```\n", language, code)
-}
-
-func applyTextStyles(text string, styles map[string]interface{}) string {
-	jsxStyles := make([]string, 0)
-
-	if bold, ok := styles["bold"].(bool); ok && bold {
-		jsxStyles = append(jsxStyles, "fontWeight: 'bold'")
-	}
-
-	if italic, ok := styles["italic"].(bool); ok && italic {
-		jsxStyles = append(jsxStyles, "fontStyle: 'italic'")
-	}
-
-	if underline, ok := styles["underline"].(bool); ok && underline {
-		jsxStyles = append(jsxStyles, "textDecoration: 'underline'")
-	}
-
-	if strike, ok := styles["strike"].(bool); ok && strike {
-		jsxStyles = append(jsxStyles, "textDecoration: 'line-through'")
-	}
-
-	if textColor, ok := styles["textColor"].(string); ok {
-		jsxStyles = append(jsxStyles, fmt.Sprintf("color: '%s'", textColor))
-	}
-
-	if bgColor, ok := styles["backgroundColor"].(string); ok {
-		jsxStyles = append(jsxStyles, fmt.Sprintf("backgroundColor: '%s'", bgColor))
-	}
-
-	if len(jsxStyles) > 0 {
-		text = fmt.Sprintf("<span style={{ %s }}>%s</span>", strings.Join(jsxStyles, ", "), text)
-	}
-
-	return text
-}
-
-func GetTextContent(content interface{}) string {
-	switch v := content.(type) {
-	case []interface{}:
-		var builder strings.Builder
-		for _, item := range v {
-			if contentItem, ok := item.(map[string]interface{}); ok {
-				if text, ok := contentItem["text"].(string); ok {
-					if styles, ok := contentItem["styles"].(map[string]interface{}); ok {
-						text = applyTextStyles(text, styles)
-					}
-					builder.WriteString(text)
-				}
-			}
-		}
-		return builder.String()
-	case string:
-		return v
-	default:
-		return ""
-	}
 }
 
 func ApplyBlockStyles(content string, props map[string]interface{}, blockType string) string {

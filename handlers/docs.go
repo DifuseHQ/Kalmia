@@ -513,7 +513,7 @@ func DeletePageGroup(service *services.DocService, w http.ResponseWriter, r *htt
 func GetRsPress(service *services.DocService, w http.ResponseWriter, r *http.Request) {
 	urlPath := r.URL.Path
 
-	docPath, baseURL, err := service.GetRsPress(urlPath)
+	_, docPath, baseURL, err := service.GetRsPress(urlPath)
 	if err != nil {
 		http.Redirect(w, r, "/admin/", http.StatusTemporaryRedirect)
 		return

@@ -26,10 +26,11 @@ var googleOAuthConfig *oauth2.Config
 
 func CreateUser(authService *services.AuthService, w http.ResponseWriter, r *http.Request) {
 	type Request struct {
-		Username string `json:"username" validate:"required,alphanum"`
-		Email    string `json:"email" validate:"required,email"`
-		Password string `json:"password" validate:"required"`
-		Admin    bool   `json:"admin"`
+		Username    string   `json:"username" validate:"required,alphanum"`
+		Email       string   `json:"email" validate:"required,email"`
+		Password    string   `json:"password" validate:"required"`
+		Admin       bool     `json:"admin"`
+		Permisisons []string `json:"permissions" validate:"required,alpha"`
 	}
 
 	req, err := ValidateRequest[Request](w, r)
@@ -38,7 +39,7 @@ func CreateUser(authService *services.AuthService, w http.ResponseWriter, r *htt
 		return
 	}
 
-	err = authService.CreateUser(req.Username, req.Email, req.Password, req.Admin)
+	err = authService.CreateUser(req.Username, req.Email, req.Password, req.Admin, req.Permisisons)
 
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error(), "error": err.Error()})
@@ -50,12 +51,13 @@ func CreateUser(authService *services.AuthService, w http.ResponseWriter, r *htt
 
 func EditUser(authService *services.AuthService, w http.ResponseWriter, r *http.Request) {
 	type Request struct {
-		ID       uint   `json:"id" validate:"required"`
-		Username string `json:"username" validate:"omitempty,alphanum"`
-		Email    string `json:"email" validate:"omitempty,email"`
-		Password string `json:"password" validate:"omitempty,min=8,max=32"`
-		Photo    string `json:"photo" validate:"omitempty,http_url"`
-		Admin    int    `json:"admin" validate:"omitempty"`
+		ID          uint     `json:"id" validate:"required"`
+		Username    string   `json:"username" validate:"omitempty,alphanum"`
+		Email       string   `json:"email" validate:"omitempty,email"`
+		Password    string   `json:"password" validate:"omitempty,min=8,max=32"`
+		Photo       string   `json:"photo" validate:"omitempty,http_url"`
+		Admin       int      `json:"admin" validate:"omitempty"`
+		Permisisons []string `json:"permissions" validate:"omitempty,alpha"`
 	}
 
 	req, err := ValidateRequest[Request](w, r)
@@ -64,7 +66,7 @@ func EditUser(authService *services.AuthService, w http.ResponseWriter, r *http.
 		return
 	}
 
-	err = authService.EditUser(req.ID, req.Username, req.Email, req.Password, req.Photo, req.Admin)
+	err = authService.EditUser(req.ID, req.Username, req.Email, req.Password, req.Photo, req.Admin, req.Permisisons)
 
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})
@@ -396,7 +398,6 @@ func MicrosoftCallback(aS *services.AuthService, w http.ResponseWriter, r *http.
 
 	tokenDetails, err := aS.CreateJWTFromEmail(dbUser.Email)
 	if err != nil {
-		fmt.Println("Failed to create token")
 		http.Redirect(w, r, "/admin/error/401", http.StatusTemporaryRedirect)
 		return
 	}
@@ -448,21 +449,18 @@ func GoogleCallback(aS *services.AuthService, w http.ResponseWriter, r *http.Req
 	}
 
 	if email == "" {
-		fmt.Println("No email found")
 		http.Redirect(w, r, "/admin/error/401", http.StatusTemporaryRedirect)
 		return
 	}
 
 	dbUser, err := aS.FindUserByEmail(email)
 	if err != nil {
-		fmt.Println("User not found")
 		http.Redirect(w, r, "/admin/error/401", http.StatusTemporaryRedirect)
 		return
 	}
 
 	tokenDetails, err := aS.CreateJWTFromEmail(dbUser.Email)
 	if err != nil {
-		fmt.Println("Failed to create token")
 		http.Redirect(w, r, "/admin/error/401", http.StatusTemporaryRedirect)
 		return
 	}

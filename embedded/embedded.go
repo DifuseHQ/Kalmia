@@ -35,6 +35,11 @@ func CopyEmbeddedFile(path string, to string) error {
 	}
 
 	embeddedHash, err := utils.FileHash(bytes.NewReader(content))
+
+	if err != nil {
+		return err
+	}
+
 	destHash, err := utils.FileHash(to)
 
 	if err == nil && destHash == embeddedHash {
@@ -79,6 +84,7 @@ func CopyEmbeddedFolder(path string, to string) error {
 func CopyInitFiles(to string) error {
 	toCopy := []string{
 		"package.json",
+		"package-lock.json",
 		"postcss.config.js",
 		"rspress.config.ts",
 		"tsconfig.json",

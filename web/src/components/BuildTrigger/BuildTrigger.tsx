@@ -43,15 +43,35 @@ export default function BuildTrigger() {
       try {
         const result = await buildTrigger();
         const triggerData: TriggerData[] = result.data;
-        const build =
-          triggerData.find((doc) => doc.documentationId === docId) || null;
+        
+        //log any that is null
+        console.log("Trigger data:", triggerData.filter((doc) => doc.completedAt === null));
+
+
+        const build = triggerData.find((doc) => doc.documentationId === docId && doc.completedAt === null) || null;
         if (build) {
+          console.log("Build data:", build);
           setTriggerData(build);
           setIsBuild(build.triggered);
 
           const newTimestamp = build.completedAt || build.createdAt;
           setTimestamp(newTimestamp);
           updateRelativeTime();
+        } else {
+          // find the one with the largest id and the same documentationId
+          const latestBuild = triggerData
+            .filter((doc) => doc.documentationId === docId)
+            .sort((a, b) => b.id - a.id)[0];
+
+          if (latestBuild) {
+            console.log("Latest build data:", latestBuild);
+            setTriggerData(latestBuild);
+            setIsBuild(latestBuild.triggered);
+
+            const newTimestamp = latestBuild.completedAt || latestBuild.createdAt;
+            setTimestamp(newTimestamp);
+            updateRelativeTime();
+          }
         }
       } catch (error) {
         console.error("Error fetching data:", error);

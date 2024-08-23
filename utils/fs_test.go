@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 )
 
@@ -64,7 +65,7 @@ func TestWriteToFile(t *testing.T) {
 		content   string
 		expectErr bool
 	}{
-		{"Hello, world!", false}, // Write new content
+		{"Hello, world!", false},
 		{"Hello, world!", false},
 		{"New content!", false},
 		{"", false},
@@ -164,43 +165,6 @@ func TestMovePath(t *testing.T) {
 	}
 	if err := os.RemoveAll(oldDir); err != nil {
 		t.Errorf("Failed to clean up oldpath directory: %v", err)
-	}
-}
-
-func TestCopyFile(t *testing.T) {
-	srcFile := "./sourcefile.txt"
-	dstFile := "./destinationfile.txt"
-	if err := os.WriteFile(srcFile, []byte("test content"), 0644); err != nil {
-		t.Fatalf("Failed to create source file: %v", err)
-	}
-	if _, err := os.Stat(srcFile); os.IsNotExist(err) {
-		t.Fatalf("Source file does not exist before CopyFile")
-	}
-	err := CopyFile(srcFile, dstFile)
-	if err != nil {
-		t.Errorf("CopyFile(%q, %q) returned an error: %v", srcFile, dstFile, err)
-		return
-	}
-	destData, err := os.ReadFile(dstFile)
-	if err != nil {
-		t.Errorf("Failed to read destination file: %v", err)
-		return
-	}
-
-	srcData, err := os.ReadFile(srcFile)
-	if err != nil {
-		t.Errorf("Failed to read source file: %v", err)
-		return
-	}
-
-	if string(destData) != string(srcData) {
-		t.Errorf("Destination file content = %q; expected %q", string(destData), string(srcData))
-	}
-	if err := os.Remove(srcFile); err != nil {
-		t.Errorf("Failed to clean up source file: %v", err)
-	}
-	if err := os.Remove(dstFile); err != nil {
-		t.Errorf("Failed to clean up destination file: %v", err)
 	}
 }
 
@@ -349,8 +313,7 @@ func TestFileHash(t *testing.T) {
 		}
 		defer f.Close()
 
-		// Write 10 MB of data
-		data := make([]byte, 1024*1024) // 1 MB chunk
+		data := make([]byte, 1024*1024)
 		for i := 0; i < 10; i++ {
 			_, err := f.Write(data)
 			if err != nil {
@@ -363,9 +326,51 @@ func TestFileHash(t *testing.T) {
 			t.Fatalf("FileHash failed for large file: %v", err)
 		}
 
-		// We're not checking the exact hash here, just that it produced a hash without error
-		if len(hash) != 64 { // SHA-256 hash is always 64 characters in hex
+		if len(hash) != 64 {
 			t.Errorf("Unexpected hash length for large file. Expected 64, Got: %d", len(hash))
 		}
 	})
+}
+
+func TestTree(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "tree-test")
+	if err != nil {
+		t.Fatalf("Failed to create temp directory: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	err = os.MkdirAll(filepath.Join(tempDir, "subdir"), 0755)
+	if err != nil {
+		t.Fatalf("Failed to create subdirectory: %v", err)
+	}
+
+	files := map[string]string{
+		"file1.txt":        "Content of file1",
+		"file2.txt":        "Content of file2",
+		"subdir/file3.txt": "Content of file3",
+		"subdir/file4.txt": "Content of file4",
+	}
+
+	for path, content := range files {
+		err := os.WriteFile(filepath.Join(tempDir, path), []byte(content), 0644)
+		if err != nil {
+			t.Fatalf("Failed to create test file %s: %v", path, err)
+		}
+	}
+
+	result, err := Tree(tempDir)
+	if err != nil {
+		t.Fatalf("Tree function returned an error: %v", err)
+	}
+
+	expected := map[string][]byte{
+		"file1.txt":        []byte("Content of file1"),
+		"file2.txt":        []byte("Content of file2"),
+		"subdir/file3.txt": []byte("Content of file3"),
+		"subdir/file4.txt": []byte("Content of file4"),
+	}
+
+	if !reflect.DeepEqual(result, expected) {
+		t.Errorf("Tree result does not match expected output.\nGot: %v\nExpected: %v", result, expected)
+	}
 }

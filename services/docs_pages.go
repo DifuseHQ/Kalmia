@@ -43,7 +43,6 @@ func (service *DocService) GetPage(id uint) (models.Page, error) {
 
 func (service *DocService) CreatePage(page *models.Page) error {
 	if err := service.DB.Create(&page).Error; err != nil {
-		fmt.Println(err)
 		return fmt.Errorf("failed_to_create_page")
 	}
 
@@ -158,7 +157,6 @@ func (service *DocService) DeletePage(id uint) error {
 	}
 
 	if err != nil {
-		fmt.Println(err)
 		return fmt.Errorf("failed_to_get_documentation_id")
 	}
 

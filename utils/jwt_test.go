@@ -76,10 +76,3 @@ func TestGetJWTUserId(t *testing.T) {
 		t.Errorf("Expected UserId '1', got %s", userId)
 	}
 }
-
-func abs(a int64) int64 {
-	if a < 0 {
-		return -a
-	}
-	return a
-}

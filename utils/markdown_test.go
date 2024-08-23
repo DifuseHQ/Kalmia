@@ -4,144 +4,53 @@ import (
 	"testing"
 )
 
-func TestBlockToMarkdown(t *testing.T) {
+func TestApplyTextStyles(t *testing.T) {
 	tests := []struct {
 		name     string
-		block    Block
+		text     string
+		styles   map[string]interface{}
 		expected string
 	}{
 		{
-			name: "Heading",
-			block: Block{
-				Type: "heading",
-				Props: map[string]interface{}{
-					"level": float64(2),
-				},
-				Content: "Test Heading",
-			},
-			expected: "## Test Heading\n\n",
+			name:     "No styles",
+			text:     "Sample text",
+			styles:   map[string]interface{}{},
+			expected: "Sample text",
 		},
 		{
-			name: "Numbered List Item",
-			block: Block{
-				Type:    "numberedListItem",
-				Content: "Test Item",
+			name: "Bold style",
+			text: "Bold text",
+			styles: map[string]interface{}{
+				"bold": true,
 			},
-			expected: "1. Test Item\n",
+			expected: "<span style={{ fontWeight: 'bold' }}>Bold text</span>",
 		},
 		{
-			name: "Bullet List Item",
-			block: Block{
-				Type:    "bulletListItem",
-				Content: "Test Item",
+			name: "Multiple styles",
+			text: "Styled text",
+			styles: map[string]interface{}{
+				"bold":      true,
+				"italic":    true,
+				"underline": true,
 			},
-			expected: "* Test Item\n",
+			expected: "<span style={{ fontWeight: 'bold', fontStyle: 'italic', textDecoration: 'underline' }}>Styled text</span>",
 		},
 		{
-			name: "Check List Item (Unchecked)",
-			block: Block{
-				Type:    "checkListItem",
-				Content: "Test Item",
-				Props: map[string]interface{}{
-					"checked": false,
-				},
+			name: "Color styles",
+			text: "Colored text",
+			styles: map[string]interface{}{
+				"textColor":       "red",
+				"backgroundColor": "yellow",
 			},
-			expected: "- [ ] Test Item\n",
-		},
-		{
-			name: "Check List Item (Checked)",
-			block: Block{
-				Type:    "checkListItem",
-				Content: "Test Item",
-				Props: map[string]interface{}{
-					"checked": true,
-				},
-			},
-			expected: "- [x] Test Item\n",
+			expected: "<span style={{ color: 'red', backgroundColor: 'yellow' }}>Colored text</span>",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := BlockToMarkdown(tt.block, 0, nil)
+			result := ApplyTextStyles(tt.text, tt.styles)
 			if result != tt.expected {
-				t.Errorf("BlockToMarkdown() = %v, want %v", result, tt.expected)
-			}
-		})
-	}
-}
-
-func TestHeadingToMarkdown(t *testing.T) {
-	tests := []struct {
-		name     string
-		block    Block
-		expected string
-	}{
-		{
-			name: "H1",
-			block: Block{
-				Props:   map[string]interface{}{"level": float64(1)},
-				Content: "Heading 1",
-			},
-			expected: "# Heading 1\n\n",
-		},
-		{
-			name: "H3",
-			block: Block{
-				Props:   map[string]interface{}{"level": float64(3)},
-				Content: "Heading 3",
-			},
-			expected: "### Heading 3\n\n",
-		},
-		{
-			name: "Invalid Level",
-			block: Block{
-				Props:   map[string]interface{}{"level": float64(7)},
-				Content: "Invalid Heading",
-			},
-			expected: "",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := HeadingToMarkdown(tt.block)
-			if result != tt.expected {
-				t.Errorf("HeadingToMarkdown() = %v, want %v", result, tt.expected)
-			}
-		})
-	}
-}
-
-func TestProcodeToMarkdown(t *testing.T) {
-	tests := []struct {
-		name     string
-		props    map[string]interface{}
-		expected string
-	}{
-		{
-			name: "Python Code",
-			props: map[string]interface{}{
-				"code":     "print('Hello, World!')",
-				"language": "python",
-			},
-			expected: "```python\nprint('Hello, World!')\n```\n",
-		},
-		{
-			name: "Go Code",
-			props: map[string]interface{}{
-				"code":     "fmt.Println(\"Hello, World!\")",
-				"language": "go",
-			},
-			expected: "```go\nfmt.Println(\"Hello, World!\")\n```\n",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := ProcodeToMarkdown(tt.props)
-			if result != tt.expected {
-				t.Errorf("ProcodeToMarkdown() = %v, want %v", result, tt.expected)
+				t.Errorf("applyTextStyles() got = %v, want %v", result, tt.expected)
 			}
 		})
 	}
@@ -183,6 +92,117 @@ func TestGetTextContent(t *testing.T) {
 			result := GetTextContent(tt.content)
 			if result != tt.expected {
 				t.Errorf("GetTextContent() = %v, want %v", result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestHeadingToMarkdown(t *testing.T) {
+	tests := []struct {
+		name     string
+		block    Block
+		expected string
+	}{
+		{
+			name: "Valid Heading Level 1",
+			block: Block{
+				Props:   map[string]interface{}{"level": float64(1)},
+				Content: "Heading One",
+			},
+			expected: "# Heading One\n\n",
+		},
+		{
+			name: "Valid Heading Level 3",
+			block: Block{
+				Props:   map[string]interface{}{"level": float64(3)},
+				Content: "Heading Three",
+			},
+			expected: "### Heading Three\n\n",
+		},
+		{
+			name: "Invalid Heading Level 0",
+			block: Block{
+				Props:   map[string]interface{}{"level": float64(0)},
+				Content: "Invalid Level",
+			},
+			expected: "",
+		},
+		{
+			name: "Invalid Heading Level 7",
+			block: Block{
+				Props:   map[string]interface{}{"level": float64(7)},
+				Content: "Invalid Level",
+			},
+			expected: "",
+		},
+		{
+			name: "Non-integer Level",
+			block: Block{
+				Props:   map[string]interface{}{"level": "three"},
+				Content: "Non-integer Level",
+			},
+			expected: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := HeadingToMarkdown(tt.block)
+			if result != tt.expected {
+				t.Errorf("HeadingToMarkdown() got = %v, want %v", result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestProcodeToMarkdown(t *testing.T) {
+	tests := []struct {
+		name     string
+		props    map[string]interface{}
+		expected string
+	}{
+		{
+			name: "Valid Code Block with Language",
+			props: map[string]interface{}{
+				"code":     "fmt.Println(\"Hello, world!\")",
+				"language": "go",
+			},
+			expected: "```go\nfmt.Println(\"Hello, world!\")\n```\n",
+		},
+		{
+			name: "Valid Code Block without Language",
+			props: map[string]interface{}{
+				"code": "print(\"Hello, world!\")",
+			},
+			expected: "```\nprint(\"Hello, world!\")\n```\n",
+		},
+		{
+			name:     "Missing Code",
+			props:    map[string]interface{}{},
+			expected: "",
+		},
+		{
+			name: "Invalid Code Type",
+			props: map[string]interface{}{
+				"code": 123,
+			},
+			expected: "",
+		},
+		{
+			name: "Invalid Language Type",
+			props: map[string]interface{}{
+				"code":     "echo 'Hello, world!';",
+				"language": 123,
+			},
+			expected: "```\necho 'Hello, world!';\n```\n", // Still defaults to generic block
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := ProcodeToMarkdown(tt.props)
+			if result != tt.expected {
+				t.Errorf("ProcodeToMarkdown() got = %v, want %v", result, tt.expected)
 			}
 		})
 	}
