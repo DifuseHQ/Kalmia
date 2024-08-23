@@ -9,7 +9,7 @@ import CreateUser from "./components/CreateUser/CreateUser";
 import { Documentation } from "./components/Documentation/Documentation";
 import EditPage from "./components/EditPage/EditPage";
 import Error from "./components/Error/Error";
-import PageGroupTable from "./components/PageGroup/PageGroupTable";
+import { PageGroupTable } from "./components/PageGroup/PageGroupTable";
 import UserForm from "./components/UserForm/UserForm";
 import UserList from "./components/UserList/UserList";
 import { AuthProvider } from "./context/AuthContext";

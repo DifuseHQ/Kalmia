@@ -1,10 +1,9 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
-import { differenceInSeconds, formatDistance, parseISO } from "date-fns";
+import { formatDistanceToNow, parseISO } from "date-fns";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
-
 import { buildTrigger } from "../../api/Requests";
 
 interface TriggerData {
@@ -20,102 +19,82 @@ export default function BuildTrigger() {
   const docIdString = searchParam.get("id");
   const docId: number | null = docIdString ? parseInt(docIdString, 10) : null;
   const [triggerData, setTriggerData] = useState<TriggerData | null>(null);
-  const [isBuild, setIsBuild] = useState<boolean>(false);
+  const [isBuilding, setIsBuilding] = useState<boolean>(false);
   const [relativeTime, setRelativeTime] = useState<string>("");
-  const [timestamp, setTimestamp] = useState<string | null>(null);
   const { t } = useTranslation();
 
   const updateRelativeTime = useCallback(() => {
-    if (timestamp) {
-      const now = new Date();
-      const seconds = differenceInSeconds(now, parseISO(timestamp));
-
-      if (seconds < 60) {
-        setRelativeTime(`${seconds} seconds ago`);
-      } else {
-        setRelativeTime(
-          formatDistance(parseISO(timestamp), now, { addSuffix: true }),
-        );
+    if (triggerData) {
+      const timestamp = triggerData.completedAt || triggerData.createdAt;
+      if (timestamp) {
+        setRelativeTime(formatDistanceToNow(parseISO(timestamp), { addSuffix: true }));
       }
     }
-  }, [timestamp]);
+  }, [triggerData]);
+
+  const fetchData = useCallback(async () => {
+    if (!docId) return;
+
+    try {
+      const result = await buildTrigger();
+      const allTriggerData: TriggerData[] = result.data;
+      const relevantTriggers = allTriggerData.filter(doc => doc.documentationId === docId);
+      
+      if (relevantTriggers.length > 0) {
+        const latestTrigger = relevantTriggers.sort((a, b) => b.id - a.id)[0];
+        setTriggerData(latestTrigger);
+        setIsBuilding(latestTrigger.completedAt === null);
+      } else {
+        setTriggerData(null);
+        setIsBuilding(false);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  }, [docId]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const result = await buildTrigger();
-        const triggerData: TriggerData[] = result.data;
-        const build = triggerData.find((doc) => doc.documentationId === docId && doc.completedAt === null) || null;
-        if (build) {
-          setTriggerData(build);
-          setIsBuild(build.triggered);
-
-          const newTimestamp = build.completedAt || build.createdAt;
-          setTimestamp(newTimestamp);
-          updateRelativeTime();
-        } else {
-          // find the one with the largest id and the same documentationId
-          const latestBuild = triggerData
-            .filter((doc) => doc.documentationId === docId)
-            .sort((a, b) => b.id - a.id)[0];
-
-          if (latestBuild) {
-            setTriggerData(latestBuild);
-            setIsBuild(latestBuild.triggered);
-
-            const newTimestamp = latestBuild.completedAt || latestBuild.createdAt;
-            setTimestamp(newTimestamp);
-            updateRelativeTime();
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
     fetchData();
-
-    const fetchIntervalId = setInterval(fetchData, 2000);
-
+    const fetchIntervalId = setInterval(fetchData, 1000);
     return () => clearInterval(fetchIntervalId);
-  }, [docId, updateRelativeTime]);
+  }, [fetchData]);
+
+  useEffect(() => {
+    updateRelativeTime();
+    const updateTimeIntervalId = setInterval(updateRelativeTime, 1000);
+    return () => clearInterval(updateTimeIntervalId);
+  }, [updateRelativeTime]);
+
+  if (!triggerData) return null;
 
   return (
-    <>
-      {triggerData?.documentationId === docId && (
-        <AnimatePresence>
-          {isBuild ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              key="build-complete-trigger"
-              className="flex items-center gap-2 bg-green-300 px-3 py-1.5 rounded-md dark:bg-green-800 border border-green-500 dark:border-green-900"
-            >
-              <Icon
-                icon="carbon:checkmark-filled"
-                className="w-6 h-6 text-green-600 dark:text-green-500 "
-              />
-              <span className="dark:text-white text-md whitespace-nowrap">
-                {`${t("Built")} ${relativeTime}`}
-              </span>
-            </motion.div>
-          ) : (
-            <div
-              key="build-progress-trigger"
-              className="flex items-center gap-2 bg-yellow-200 px-3 py-1.5 rounded-md dark:bg-yellow-700 border border-yellow-400 dark:border-yellow-900"
-            >
-              <Icon
-                icon="line-md:loading-twotone-loop"
-                className="w-6 h-6 text-black dark:text-white"
-              />
-              <span className="dark:text-white text-md whitespace-nowrap">
-                {`${t("building_since")} ${relativeTime}`}
-              </span>
-            </div>
-          )}
-        </AnimatePresence>
-      )}
-    </>
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={isBuilding ? "building" : "built"}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.3 }}
+        className={`flex items-center gap-2 px-3 py-1.5 rounded-md border ${
+          isBuilding
+            ? "bg-yellow-200 dark:bg-yellow-700 border-yellow-400 dark:border-yellow-900"
+            : "bg-green-300 dark:bg-green-800 border-green-500 dark:border-green-900"
+        }`}
+      >
+        <Icon
+          icon={isBuilding ? "line-md:loading-twotone-loop" : "carbon:checkmark-filled"}
+          className={`w-6 h-6 ${
+            isBuilding
+              ? "text-black dark:text-white"
+              : "text-green-600 dark:text-green-500"
+          }`}
+        />
+        <span className="dark:text-white text-md whitespace-nowrap">
+          {isBuilding
+            ? `${t("building_since")} ${relativeTime}`
+            : `${t("built")} ${relativeTime}`}
+        </span>
+      </motion.div>
+    </AnimatePresence>
   );
 }
