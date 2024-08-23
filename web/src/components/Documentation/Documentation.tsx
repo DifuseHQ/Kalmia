@@ -189,6 +189,7 @@ export const Documentation = memo(function Documentation() {
     setLoading(false);
   }, [docId, searchParam, getAllVersions, navigate, t]);
 
+
   const fetchPageGroupData = useCallback(async () => {
     setPageGroupLoading(true);
     const [pageGroupsResult, pagesResult] = await Promise.all([
@@ -201,7 +202,7 @@ export const Documentation = memo(function Documentation() {
       pageGroupsResult.status === "success" &&
       pagesResult.status === "success"
     ) {
-      const combinedData: (PageGroup | Page)[] = combinePages(
+      const combinedData = combinePages(
         pageGroupsResult.data || [],
         pagesResult.data || [],
       );
@@ -311,6 +312,7 @@ export const Documentation = memo(function Documentation() {
       closeModal("delete");
       toastMessage(t(result.data?.message), "success");
       refreshData();
+      await refetchData();
     }
   };
 
@@ -342,6 +344,27 @@ export const Documentation = memo(function Documentation() {
     [selectedVersion, navigate, t, closeModal],
   );
 
+  const refetchData = useCallback(async () => {
+    setPageGroupLoading(true);
+    const [pageGroupsResult, pagesResult] = await Promise.all([
+      getPageGroups(),
+      getPages(),
+    ]);
+    handleError(pageGroupsResult, navigate, t);
+    handleError(pagesResult, navigate, t);
+    if (
+      pageGroupsResult.status === "success" &&
+      pagesResult.status === "success"
+    ) {
+      const combinedData = combinePages(
+        pageGroupsResult.data || [],
+        pagesResult.data || [],
+      );
+      setGroupsAndPageData(combinedData);
+    }
+    setPageGroupLoading(false);
+  }, [navigate, t]);
+
   const handleCreatePageGroup = async (title: string) => {
     if (title === "") {
       toastMessage(t("title_is_required"), "warning");
@@ -360,6 +383,7 @@ export const Documentation = memo(function Documentation() {
 
     if (result.status === "success") {
       closeModal("createPageGroup");
+      await refetchData();
       refreshData();
       toastMessage(t(result.data.message), "success");
     }
@@ -392,82 +416,33 @@ export const Documentation = memo(function Documentation() {
     if (result.status === "success") {
       closeModal("createPage");
       refreshData();
+      await refetchData();
       toastMessage(t(result.data.message), "success");
     }
   };
 
-  const handleDragEnd = useCallback(
-    async (result: DropResult) => {
-      const newItems = Array.from(
-        groupsAndPageData.filter(
-          (obj) => obj.documentationId === Number(selectedVersion?.id),
-        ),
-      );
 
-      if (result?.combine) {
-        const ParentItemId = result.combine.draggableId;
-        const extractedParentd = ParentItemId.split(":");
+  const handleDragEnd = async (result: DropResult) => {
+    const newItems = Array.from(
+      groupsAndPageData.filter(
+        (obj) => obj.documentationId === Number(selectedVersion?.id),
+      ),
+    );
 
-        if (extractedParentd?.[0] === "pageGroup") {
-          const reorderedItem = newItems[result?.source?.index];
-          const dragItem = reorderedItem as PageGroup | Page;
-          const type = isPageGroup(reorderedItem);
+    if (result?.combine) {
+      const ParentItemId = result.combine.draggableId;
+      const extractedParentd = ParentItemId.split(":");
 
-          if (type) {
-            reorderedItem.parentId = Number(extractedParentd[1]);
-          } else {
-            reorderedItem.pageGroupId = Number(extractedParentd[1]);
-          }
-
-          const allItems = createOrderItems(newItems);
-
-          try {
-            const result = await commonReorderBulk({ order: allItems });
-
-            if (handleError(result, navigate, t)) return;
-            const type = "slug" in dragItem ? "page" : "pageGroup";
-            toastMessage(
-              t(`${type === "page" ? "page_inserted" : "pageGroup_inserted"}`),
-              "success",
-            );
-          } catch (err) {
-            console.error("Error in bulk reordering:", err);
-          }
-        } else {
-          toastMessage(
-            t("its_not_possible_to_insert_pageGroup_into_page"),
-            "warning",
-          );
-        }
-      } else {
-        if (!result.destination) {
-          return;
-        }
-
-        if (result.destination.index === result.source.index) {
-          toastMessage(
-            t("item_dropped_in_the_same_position_no_changes_made"),
-            "warning",
-          );
-          return;
-        }
-
-        const newIndex: number = result.destination.index;
-        const oldDataAtNewPosition = newItems[newIndex] as PageGroup | Page;
-
-        if (
-          "isIntroPage" in oldDataAtNewPosition &&
-          oldDataAtNewPosition.isIntroPage
-        ) {
-          toastMessage(t("intro_page_cannot_be_reordered"), "warning");
-          return;
-        }
-
-        const [reorderedItem] = newItems.splice(result.source.index, 1);
+      if (extractedParentd?.[0] === "pageGroup") {
+        const reorderedItem = newItems[result?.source?.index];
         const dragItem = reorderedItem as PageGroup | Page;
-        newItems.splice(result.destination.index, 0, reorderedItem);
+        const type = isPageGroup(reorderedItem);
 
-        setGroupsAndPageData(newItems);
+        if (type) {
+          reorderedItem.parentId = Number(extractedParentd[1]);
+        } else {
+          reorderedItem.pageGroupId = Number(extractedParentd[1]);
+        }
 
         const allItems = createOrderItems(newItems);
 
@@ -477,18 +452,66 @@ export const Documentation = memo(function Documentation() {
           if (handleError(result, navigate, t)) return;
           const type = "slug" in dragItem ? "page" : "pageGroup";
           toastMessage(
-            t(`${type === "page" ? "page_reordered" : "page_group_reordered"}`),
+            t(`${type === "page" ? "page_inserted" : "pageGroup_inserted"}`),
             "success",
           );
         } catch (err) {
           console.error("Error in bulk reordering:", err);
         }
+      } else {
+        toastMessage(
+          t("its_not_possible_to_insert_pageGroup_into_page"),
+          "warning",
+        );
+      }
+    } else {
+      if (!result.destination) {
+        return;
       }
 
-      refreshData();
-    },
-    [groupsAndPageData, selectedVersion, navigate, refreshData],
-  );
+      if (result.destination.index === result.source.index) {
+        toastMessage(
+          t("item_dropped_in_the_same_position_no_changes_made"),
+          "warning",
+        );
+        return;
+      }
+
+      const newIndex: number = result.destination.index;
+      const oldDataAtNewPosition = newItems[newIndex] as PageGroup | Page;
+
+      if (
+        "isIntroPage" in oldDataAtNewPosition &&
+        oldDataAtNewPosition.isIntroPage
+      ) {
+        toastMessage(t("intro_page_cannot_be_reordered"), "warning");
+        return;
+      }
+
+      const [reorderedItem] = newItems.splice(result.source.index, 1);
+      const dragItem = reorderedItem as PageGroup | Page;
+      newItems.splice(result.destination.index, 0, reorderedItem);
+
+      setGroupsAndPageData(newItems);
+
+      const allItems = createOrderItems(newItems);
+
+      try {
+        const result = await commonReorderBulk({ order: allItems });
+
+        if (handleError(result, navigate, t)) return;
+        const type = "slug" in dragItem ? "page" : "pageGroup";
+        toastMessage(
+          t(`${type === "page" ? "page_reordered" : "page_group_reordered"}`),
+          "success",
+        );
+      } catch (err) {
+        console.error("Error in bulk reordering:", err);
+      }
+    }
+
+    refreshData();
+  };
 
   const filteredVersions = documentData.filter((version) =>
     version.version.toLowerCase().includes(searchQuery.toLowerCase()),

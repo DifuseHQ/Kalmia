@@ -1,10 +1,9 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
-import { formatDistanceToNow, parseISO } from "date-fns";
+import { differenceInSeconds, parseISO } from "date-fns";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
-
 import { buildTrigger } from "../../api/Requests";
 
 interface TriggerData {
@@ -14,6 +13,21 @@ interface TriggerData {
   createdAt: string | null;
   completedAt: string | null;
 }
+
+const formatTimeDifference = (seconds: number): string => {
+  if (seconds < 60) {
+    return `${seconds} second${seconds !== 1 ? 's' : ''}`;
+  } else if (seconds < 3600) {
+    const minutes = Math.floor(seconds / 60);
+    return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+  } else if (seconds < 86400) {
+    const hours = Math.floor(seconds / 3600);
+    return `${hours} hour${hours !== 1 ? 's' : ''}`;
+  } else {
+    const days = Math.floor(seconds / 86400);
+    return `${days} day${days !== 1 ? 's' : ''}`;
+  }
+};
 
 export default function BuildTrigger() {
   const [searchParam] = useSearchParams();
@@ -28,23 +42,20 @@ export default function BuildTrigger() {
     if (triggerData) {
       const timestamp = triggerData.completedAt || triggerData.createdAt;
       if (timestamp) {
-        setRelativeTime(
-          formatDistanceToNow(parseISO(timestamp), { addSuffix: true }),
-        );
+        const secondsDiff = differenceInSeconds(new Date(), parseISO(timestamp));
+        setRelativeTime(formatTimeDifference(secondsDiff));
       }
     }
   }, [triggerData]);
 
   const fetchData = useCallback(async () => {
     if (!docId) return;
-
     try {
       const result = await buildTrigger();
       const allTriggerData: TriggerData[] = result.data;
       const relevantTriggers = allTriggerData.filter(
         (doc) => doc.documentationId === docId,
       );
-
       if (relevantTriggers.length > 0) {
         const latestTrigger = relevantTriggers.sort((a, b) => b.id - a.id)[0];
         setTriggerData(latestTrigger);
@@ -100,8 +111,8 @@ export default function BuildTrigger() {
         />
         <span className="dark:text-white text-md whitespace-nowrap">
           {isBuilding
-            ? `${t("building_since")} ${relativeTime}`
-            : `${t("built")} ${relativeTime}`}
+            ? `${t("building_since")} ${relativeTime} ago`
+            : `${t("built")} ${relativeTime} ago`}
         </span>
       </motion.div>
     </AnimatePresence>

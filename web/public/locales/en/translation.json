@@ -259,5 +259,6 @@
         "reload_page": "Reload Page",
         "go_back": "Go Back",
         "error_title": "Error {{code}}",
-        "error_description": "An error occurred while processing your request."
+        "error_description": "An error occurred while processing your request.",
+        "crafted_by": "Crafted by"
 }

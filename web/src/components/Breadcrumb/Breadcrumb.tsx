@@ -1,6 +1,6 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { motion } from "framer-motion";
-import { type JSX, useContext, useEffect, useRef, useState } from "react";
+import { type JSX, useContext, useEffect, useRef, useState, memo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Link,
@@ -27,7 +27,7 @@ interface BreadcrumbItem {
   icon: string;
 }
 
-export default function Breadcrumb(): JSX.Element {
+export default memo(function Breadcrumb(): JSX.Element {
   const { id: userIdFromParam } = useParams<{ id: string }>();
   const [breadcrumb, setBreadcrumb] = useState<BreadcrumbItem[]>([]);
   const [searchParams] = useSearchParams();
@@ -282,7 +282,6 @@ export default function Breadcrumb(): JSX.Element {
     updateBreadcrumb();
   }, [
     location.search,
-    navigate,
     location.pathname,
     searchParams,
     user,
@@ -340,4 +339,4 @@ export default function Breadcrumb(): JSX.Element {
       </ol>
     </motion.nav>
   );
-}
+});
