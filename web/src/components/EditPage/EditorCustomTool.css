@@ -4,21 +4,30 @@
     opacity: .5;
 }
 
+.bn-editor:focus-visible {
+    outline: none;
+}
+
 .bn-block-outer {
     margin-bottom: 10px;
 }
 
 .bn-container {
     border-radius: 10px;
+    min-height: 75vh;
+    max-height: 75vh;
+    overflow: auto;
 }
 
 [data-color-scheme="dark"] .bn-container {
-    min-height: 25vh;
+    min-height: 75vh;
+    max-height: 75vh;
     background-color: #374151;
 }
 
 [data-color-scheme="light"] .bn-container {
-    min-height: 25vh;
+    min-height: 75vh;
+    max-height: 75vh;
     background-color: #ffffff;
 }
 
