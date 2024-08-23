@@ -257,6 +257,9 @@ export const uploadFile = (data: FormData) =>
 export const deleteUser = (username: string) =>
   makeRequest("/auth/user/delete", "post", { username });
 
+export const getRootParentId = (docId: number) =>
+  makeRequest(`/docs/documentation/root-parent-id?id=${docId}`);
+
 export const oAuthProviders = async (): Promise<string[]> => {
   const response = await makeRequest<string[]>("/oauth/providers");
   if (response.status === "success") {

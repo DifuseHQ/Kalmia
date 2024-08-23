@@ -570,7 +570,6 @@ func GetRootParentId(service *services.DocService, w http.ResponseWriter, r *htt
 
 	rootParentID, err := service.GetRootParentID(uint(documentationID))
 	if err != nil {
-		logger.Error(err.Error())
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})
 		return
 	}
