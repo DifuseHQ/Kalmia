@@ -61,6 +61,7 @@ const EditorWrapper: React.FC<EditorWrapperProps> = React.memo(
   // eslint-disable-next-line react/prop-types
   ({ editor, theme }) => {
     const [isReady, setIsReady] = useState(false);
+    const { t } = useTranslation();
 
     useEffect(() => {
       if (editor) {
@@ -92,7 +93,7 @@ const EditorWrapper: React.FC<EditorWrapperProps> = React.memo(
     }, [editor]);
 
     if (!isReady) {
-      return <div>Loading editor...</div>;
+      return <div>{t("loading_editor")}...</div>;
     }
 
     return (
@@ -235,9 +236,15 @@ export default function EditPage() {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       //@ts-ignore
       editor.replaceBlocks(editor.document, editorContent);
+      scrollToBottom();
     }
   }, [editor, editorContent]);
-
+  const scrollToBottom = () => {
+    window.scrollTo({
+      top: document.body.scrollHeight,
+      behavior: "smooth",
+    });
+  };
   const handleEdit = useCallback(async () => {
     const result = await updatePage({
       title: pageData?.title,

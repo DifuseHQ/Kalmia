@@ -91,7 +91,7 @@ export default function Navbar() {
                 icon="akar-icons:three-line-horizontal"
                 className="w-7 h-7"
               />
-              <span className="sr-only">Toggle sidebar</span>
+              <span className="sr-only">{t("toggle_sidebar")}</span>
             </button>
           </div>
 
@@ -168,7 +168,7 @@ export default function Navbar() {
                   onClick={toggleDropdown}
                   data-dropdown-toggle={`Dropdown-user-${userDetails.id}`}
                 >
-                  <span className="sr-only">Open user menu</span>
+                  <span className="sr-only">{t("open_user_menu")}</span>
 
                   <img
                     className="w-8 h-8 rounded-full object-cover"
