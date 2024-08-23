@@ -18,8 +18,8 @@ import {
 } from "../../api/Requests";
 import { AuthContext } from "../../context/AuthContext";
 import type { Documentation, Page, PageGroup } from "../../types/doc";
-import { toastMessage } from "../../utils/Toast";
 import { getRootParentIdFromChildId } from "../../utils/Common";
+import { toastMessage } from "../../utils/Toast";
 
 interface BreadcrumbItem {
   title: string;
@@ -124,7 +124,9 @@ export default function Breadcrumb(): JSX.Element {
           : null;
 
       if (clonedFrom !== null) {
-        const parentDocId: number = (versionId) ? (await getRootParentIdFromChildId(parseInt(versionId))) : (await getRootParentIdFromChildId(parseInt(docId!)));
+        const parentDocId: number = versionId
+          ? await getRootParentIdFromChildId(parseInt(versionId))
+          : await getRootParentIdFromChildId(parseInt(docId!));
         const doc = documentations?.find(
           (d: Documentation) =>
             Number.parseInt(d.id.toString()) === Number.parseInt(versionId!),

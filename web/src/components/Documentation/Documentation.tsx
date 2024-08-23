@@ -8,13 +8,13 @@ import { Icon } from "@iconify/react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ChangeEvent,
+  memo,
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
-  memo,
-  useMemo
 } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -131,36 +131,39 @@ export const Documentation = memo(function Documentation() {
     );
   };
 
-  const getAllVersions = useCallback((data: DocumentationData[], startId: number) => {
-    const versions: DocumentationData[] = [];
-    const addVersion = (doc: DocumentationData) => {
-      versions.push(doc);
-      const children = data.filter((item) => item.clonedFrom === doc.id);
-      children.forEach(addVersion);
-    };
-    const startDoc = data?.find((doc) => doc.id === startId);
-    if (startDoc) {
-      if (startDoc.clonedFrom !== null && startDoc.clonedFrom !== undefined) {
-        const parent = data?.find((doc) => doc.id === startDoc.clonedFrom);
-        if (parent) {
-          addVersion(parent);
+  const getAllVersions = useCallback(
+    (data: DocumentationData[], startId: number) => {
+      const versions: DocumentationData[] = [];
+      const addVersion = (doc: DocumentationData) => {
+        versions.push(doc);
+        const children = data.filter((item) => item.clonedFrom === doc.id);
+        children.forEach(addVersion);
+      };
+      const startDoc = data?.find((doc) => doc.id === startId);
+      if (startDoc) {
+        if (startDoc.clonedFrom !== null && startDoc.clonedFrom !== undefined) {
+          const parent = data?.find((doc) => doc.id === startDoc.clonedFrom);
+          if (parent) {
+            addVersion(parent);
+          } else {
+            addVersion(startDoc);
+          }
         } else {
           addVersion(startDoc);
         }
-      } else {
-        addVersion(startDoc);
       }
-    }
-    return versions.sort((a, b) => {
-      return a.version.localeCompare(b.version, undefined, {
-        numeric: true,
-        sensitivity: "base",
+      return versions.sort((a, b) => {
+        return a.version.localeCompare(b.version, undefined, {
+          numeric: true,
+          sensitivity: "base",
+        });
       });
-    });
-  }, []);
+    },
+    [],
+  );
 
   const fetchDocumentationData = useCallback(async () => {
-    console.log('docId changed:', docId);
+    console.log("docId changed:", docId);
     setLoading(true);
     const documentationsResult = await getDocumentations();
     if (handleError(documentationsResult, navigate, t)) {
@@ -169,13 +172,17 @@ export const Documentation = memo(function Documentation() {
     }
     if (documentationsResult.status === "success") {
       const data: DocumentationData[] = documentationsResult.data;
-      const clonedData: DocumentationData[] = getAllVersions(data, Number(docId));
+      const clonedData: DocumentationData[] = getAllVersions(
+        data,
+        Number(docId),
+      );
       setDocumentData(clonedData);
       if (versionId) {
         const currentVersion = getVersion(clonedData, parseInt(versionId));
         setSelectedVersion(currentVersion);
       } else {
-        const latestVersion: VersionOption | null = getClosestVersion(clonedData);
+        const latestVersion: VersionOption | null =
+          getClosestVersion(clonedData);
         setSelectedVersion(latestVersion);
       }
     }
@@ -190,7 +197,10 @@ export const Documentation = memo(function Documentation() {
     ]);
     handleError(pageGroupsResult, navigate, t);
     handleError(pagesResult, navigate, t);
-    if (pageGroupsResult.status === "success" && pagesResult.status === "success") {
+    if (
+      pageGroupsResult.status === "success" &&
+      pagesResult.status === "success"
+    ) {
       const combinedData: (PageGroup | Page)[] = combinePages(
         pageGroupsResult.data || [],
         pagesResult.data || [],
@@ -304,32 +314,33 @@ export const Documentation = memo(function Documentation() {
     }
   };
 
-  const handlePageGroupUpdate = useCallback(async (
-    editTitle: string,
-    _version: string,
-    id: number,
-  ) => {
-    const result = await updatePageGroup({
-      id,
-      name: editTitle,
-      documentationId: Number(selectedVersion?.id),
-    });
+  const handlePageGroupUpdate = useCallback(
+    async (editTitle: string, _version: string, id: number) => {
+      const result = await updatePageGroup({
+        id,
+        name: editTitle,
+        documentationId: Number(selectedVersion?.id),
+      });
 
-    if (handleError(result, navigate, t)) {
-      return;
-    }
+      if (handleError(result, navigate, t)) {
+        return;
+      }
 
-    if (result?.status === "success") {
-      setGroupsAndPageData(prevData => 
-        prevData.map(item => 
-          item.id === id && 'name' in item ? { ...item, name: editTitle } : item
-        )
-      );
-      closeModal("edit");
-      refreshData();
-      toastMessage(t(result.data?.message), "success");
-    }
-  }, [selectedVersion, navigate, t, closeModal]);
+      if (result?.status === "success") {
+        setGroupsAndPageData((prevData) =>
+          prevData.map((item) =>
+            item.id === id && "name" in item
+              ? { ...item, name: editTitle }
+              : item,
+          ),
+        );
+        closeModal("edit");
+        refreshData();
+        toastMessage(t(result.data?.message), "success");
+      }
+    },
+    [selectedVersion, navigate, t, closeModal],
+  );
 
   const handleCreatePageGroup = async (title: string) => {
     if (title === "") {
@@ -385,27 +396,78 @@ export const Documentation = memo(function Documentation() {
     }
   };
 
-  const handleDragEnd = useCallback(async (result: DropResult) => {
-    const newItems = Array.from(
-      groupsAndPageData.filter(
-        (obj) => obj.documentationId === Number(selectedVersion?.id),
-      ),
-    );
+  const handleDragEnd = useCallback(
+    async (result: DropResult) => {
+      const newItems = Array.from(
+        groupsAndPageData.filter(
+          (obj) => obj.documentationId === Number(selectedVersion?.id),
+        ),
+      );
 
-    if (result?.combine) {
-      const ParentItemId = result.combine.draggableId;
-      const extractedParentd = ParentItemId.split(":");
+      if (result?.combine) {
+        const ParentItemId = result.combine.draggableId;
+        const extractedParentd = ParentItemId.split(":");
 
-      if (extractedParentd?.[0] === "pageGroup") {
-        const reorderedItem = newItems[result?.source?.index];
-        const dragItem = reorderedItem as PageGroup | Page;
-        const type = isPageGroup(reorderedItem);
+        if (extractedParentd?.[0] === "pageGroup") {
+          const reorderedItem = newItems[result?.source?.index];
+          const dragItem = reorderedItem as PageGroup | Page;
+          const type = isPageGroup(reorderedItem);
 
-        if (type) {
-          reorderedItem.parentId = Number(extractedParentd[1]);
+          if (type) {
+            reorderedItem.parentId = Number(extractedParentd[1]);
+          } else {
+            reorderedItem.pageGroupId = Number(extractedParentd[1]);
+          }
+
+          const allItems = createOrderItems(newItems);
+
+          try {
+            const result = await commonReorderBulk({ order: allItems });
+
+            if (handleError(result, navigate, t)) return;
+            const type = "slug" in dragItem ? "page" : "pageGroup";
+            toastMessage(
+              t(`${type === "page" ? "page_inserted" : "pageGroup_inserted"}`),
+              "success",
+            );
+          } catch (err) {
+            console.error("Error in bulk reordering:", err);
+          }
         } else {
-          reorderedItem.pageGroupId = Number(extractedParentd[1]);
+          toastMessage(
+            t("its_not_possible_to_insert_pageGroup_into_page"),
+            "warning",
+          );
         }
+      } else {
+        if (!result.destination) {
+          return;
+        }
+
+        if (result.destination.index === result.source.index) {
+          toastMessage(
+            t("item_dropped_in_the_same_position_no_changes_made"),
+            "warning",
+          );
+          return;
+        }
+
+        const newIndex: number = result.destination.index;
+        const oldDataAtNewPosition = newItems[newIndex] as PageGroup | Page;
+
+        if (
+          "isIntroPage" in oldDataAtNewPosition &&
+          oldDataAtNewPosition.isIntroPage
+        ) {
+          toastMessage(t("intro_page_cannot_be_reordered"), "warning");
+          return;
+        }
+
+        const [reorderedItem] = newItems.splice(result.source.index, 1);
+        const dragItem = reorderedItem as PageGroup | Page;
+        newItems.splice(result.destination.index, 0, reorderedItem);
+
+        setGroupsAndPageData(newItems);
 
         const allItems = createOrderItems(newItems);
 
@@ -415,68 +477,18 @@ export const Documentation = memo(function Documentation() {
           if (handleError(result, navigate, t)) return;
           const type = "slug" in dragItem ? "page" : "pageGroup";
           toastMessage(
-            t(`${type === "page" ? "page_inserted" : "pageGroup_inserted"}`),
+            t(`${type === "page" ? "page_reordered" : "page_group_reordered"}`),
             "success",
           );
         } catch (err) {
           console.error("Error in bulk reordering:", err);
         }
-      } else {
-        toastMessage(
-          t("its_not_possible_to_insert_pageGroup_into_page"),
-          "warning",
-        );
-      }
-    } else {
-      if (!result.destination) {
-        return;
       }
 
-      if (result.destination.index === result.source.index) {
-        toastMessage(
-          t("item_dropped_in_the_same_position_no_changes_made"),
-          "warning",
-        );
-        return;
-      }
-
-      const newIndex: number = result.destination.index;
-      const oldDataAtNewPosition = newItems[newIndex] as PageGroup | Page;
-
-      if (
-        "isIntroPage" in oldDataAtNewPosition &&
-        oldDataAtNewPosition.isIntroPage
-      ) {
-        toastMessage(t("intro_page_cannot_be_reordered"), "warning");
-        return;
-      }
-
-      const [reorderedItem] = newItems.splice(result.source.index, 1);
-      const dragItem = reorderedItem as PageGroup | Page;
-      newItems.splice(result.destination.index, 0, reorderedItem);
-
-      setGroupsAndPageData(newItems);
-
-      const allItems = createOrderItems(newItems);
-
-      try {
-        const result = await commonReorderBulk({ order: allItems });
-
-        if (handleError(result, navigate, t)) return;
-        const type = "slug" in dragItem ? "page" : "pageGroup";
-        toastMessage(
-          t(`${type === "page" ? "page_reordered" : "page_group_reordered"}`),
-          "success",
-        );
-      } catch (err) {
-        console.error("Error in bulk reordering:", err);
-      }
-    }
-
-    refreshData();
-  }, [
-    groupsAndPageData, selectedVersion, navigate, refreshData
-  ]);
+      refreshData();
+    },
+    [groupsAndPageData, selectedVersion, navigate, refreshData],
+  );
 
   const filteredVersions = documentData.filter((version) =>
     version.version.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -831,7 +843,8 @@ export const Documentation = memo(function Documentation() {
                                 ref={provided.innerRef}
                               >
                                 {!pageGroupLoading ? (
-                                  memoizedFilteredItems && memoizedFilteredItems.length <= 0 ? (
+                                  memoizedFilteredItems &&
+                                  memoizedFilteredItems.length <= 0 ? (
                                     <motion.tr
                                       initial={{ opacity: 0 }}
                                       animate={{ opacity: 1 }}

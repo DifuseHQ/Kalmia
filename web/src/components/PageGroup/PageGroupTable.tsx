@@ -6,7 +6,7 @@ import {
 } from "@hello-pangea/dnd";
 import { Icon } from "@iconify/react";
 import { AnimatePresence, motion } from "framer-motion";
-import React, { useContext, useEffect, useState, memo } from "react";
+import React, { memo, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
@@ -43,7 +43,7 @@ import CreatePage from "../CreatePageModal/CreatePageModal";
 import DeleteModal from "../DeleteModal/DeleteModal";
 import Table from "../Table/Table";
 
-export const PageGroupTable = memo(() => {
+export const PageGroupTable = memo(function PageGroupTable() {
   const [searchParams] = useSearchParams();
   const docId = searchParams.get("id");
   const pageGroupId = searchParams.get("pageGroupId");

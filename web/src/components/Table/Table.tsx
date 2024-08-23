@@ -1,7 +1,7 @@
 import { DraggableProvided, DraggableStateSnapshot } from "@hello-pangea/dnd";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { motion } from "framer-motion";
-import { useContext, memo } from "react";
+import { memo, useContext } from "react";
 import { Link } from "react-router-dom";
 
 import { ModalContext } from "../../context/ModalContext";

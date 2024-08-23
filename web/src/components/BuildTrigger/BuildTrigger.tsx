@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
+
 import { buildTrigger } from "../../api/Requests";
 
 interface TriggerData {
@@ -27,7 +28,9 @@ export default function BuildTrigger() {
     if (triggerData) {
       const timestamp = triggerData.completedAt || triggerData.createdAt;
       if (timestamp) {
-        setRelativeTime(formatDistanceToNow(parseISO(timestamp), { addSuffix: true }));
+        setRelativeTime(
+          formatDistanceToNow(parseISO(timestamp), { addSuffix: true }),
+        );
       }
     }
   }, [triggerData]);
@@ -38,8 +41,10 @@ export default function BuildTrigger() {
     try {
       const result = await buildTrigger();
       const allTriggerData: TriggerData[] = result.data;
-      const relevantTriggers = allTriggerData.filter(doc => doc.documentationId === docId);
-      
+      const relevantTriggers = allTriggerData.filter(
+        (doc) => doc.documentationId === docId,
+      );
+
       if (relevantTriggers.length > 0) {
         const latestTrigger = relevantTriggers.sort((a, b) => b.id - a.id)[0];
         setTriggerData(latestTrigger);
@@ -82,7 +87,11 @@ export default function BuildTrigger() {
         }`}
       >
         <Icon
-          icon={isBuilding ? "line-md:loading-twotone-loop" : "carbon:checkmark-filled"}
+          icon={
+            isBuilding
+              ? "line-md:loading-twotone-loop"
+              : "carbon:checkmark-filled"
+          }
           className={`w-6 h-6 ${
             isBuilding
               ? "text-black dark:text-white"
