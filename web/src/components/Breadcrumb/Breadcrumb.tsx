@@ -19,6 +19,7 @@ import {
 import { AuthContext } from "../../context/AuthContext";
 import type { Documentation, Page, PageGroup } from "../../types/doc";
 import { toastMessage } from "../../utils/Toast";
+import { getRootParentIdFromChildId } from "../../utils/Common";
 
 interface BreadcrumbItem {
   title: string;
@@ -123,18 +124,14 @@ export default function Breadcrumb(): JSX.Element {
           : null;
 
       if (clonedFrom !== null) {
-        const parentDoc = documentations?.find(
-          (d: Documentation) =>
-            Number.parseInt(d.id.toString()) ===
-            Number.parseInt(clonedFrom.toString()),
-        );
+        const parentDocId: number = (versionId) ? (await getRootParentIdFromChildId(parseInt(versionId))) : (await getRootParentIdFromChildId(parseInt(docId!)));
         const doc = documentations?.find(
           (d: Documentation) =>
             Number.parseInt(d.id.toString()) === Number.parseInt(versionId!),
         );
         newBreadcrumb.push({
           title: doc?.name || "",
-          path: `/dashboard/documentation?id=${parentDoc?.id}&versionId=${doc?.id}&version=${doc?.version}`,
+          path: `/dashboard/documentation?id=${parentDocId}&versionId=${doc?.id}&version=${doc?.version}`,
           icon: "uiw:document",
         });
       } else if (

@@ -1,7 +1,7 @@
 import { TFunction } from "i18next";
 import { RefObject, useEffect } from "react";
 
-import { ApiResponse, OrderItem } from "../api/Requests";
+import { ApiResponse, OrderItem, getRootParentId } from "../api/Requests";
 import { ValidatedJWT } from "../types/auth";
 import { Documentation, Page, PageGroup } from "../types/doc";
 import { toastMessage } from "./Toast";
@@ -496,3 +496,12 @@ export const createOrderItems = (
 
   return [...pageGroups, ...pages];
 };
+
+export const getRootParentIdFromChildId = async (childId: number): Promise<number> => {
+  const rootId = await getRootParentId(childId);
+  if (rootId.data?.rootParentId) {
+    return rootId.data.rootParentId;
+  }
+
+  return 1;
+}
