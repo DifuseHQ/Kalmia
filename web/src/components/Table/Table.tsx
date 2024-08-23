@@ -1,7 +1,7 @@
 import { DraggableProvided, DraggableStateSnapshot } from "@hello-pangea/dnd";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { motion } from "framer-motion";
-import { useContext } from "react";
+import { useContext, memo } from "react";
 import { Link } from "react-router-dom";
 
 import { ModalContext } from "../../context/ModalContext";
@@ -20,7 +20,7 @@ interface TableProps {
 
 const AnimatedTableRow = motion.tr;
 
-export default function Table({
+export default memo(function Table({
   provided,
   snapshot,
   obj,
@@ -198,4 +198,4 @@ export default function Table({
       )}
     </AnimatedTableRow>
   );
-}
+});

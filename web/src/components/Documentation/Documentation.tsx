@@ -13,6 +13,8 @@ import {
   useEffect,
   useRef,
   useState,
+  memo,
+  useMemo
 } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -64,10 +66,10 @@ interface VersionOption {
   createdAt: string;
 }
 
-export default function Documentation() {
+export const Documentation = memo(function Documentation() {
   const navigate = useNavigate();
   const authContext = useContext(AuthContext);
-  const { refresh, refreshData, user } = authContext as AuthContextType;
+  const { refreshData } = authContext as AuthContextType;
   const { t } = useTranslation();
 
   const {
@@ -129,122 +131,98 @@ export default function Documentation() {
     );
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      const versionIdString = searchParam.get("versionId");
-      const versionId: number | null = versionIdString
-        ? parseInt(versionIdString, 10)
-        : null;
-      const documentationsResult = await getDocumentations();
-
-      if (handleError(documentationsResult, navigate, t)) {
-        setLoading(false);
-        return;
-      }
-
-      if (documentationsResult.status === "success") {
-        const data: DocumentationData[] = documentationsResult.data;
-
-        const getAllVersions = (data: DocumentationData[], startId: number) => {
-          const versions: DocumentationData[] = [];
-
-          const addVersion = (doc: DocumentationData) => {
-            versions.push(doc);
-            const children = data.filter((item) => item.clonedFrom === doc.id);
-            children.forEach(addVersion);
-          };
-
-          const startDoc = data?.find((doc) => doc.id === startId);
-          if (startDoc) {
-            if (
-              startDoc.clonedFrom !== null &&
-              startDoc.clonedFrom !== undefined
-            ) {
-              const parent = data?.find(
-                (doc) => doc.id === startDoc.clonedFrom,
-              );
-              if (parent) {
-                addVersion(parent);
-              } else {
-                addVersion(startDoc);
-              }
-            } else {
-              addVersion(startDoc);
-            }
-          }
-
-          return versions.sort((a, b) => {
-            return a.version.localeCompare(b.version, undefined, {
-              numeric: true,
-              sensitivity: "base",
-            });
-          });
-        };
-
-        const clonedData: DocumentationData[] = getAllVersions(
-          data,
-          Number(docId),
-        );
-
-        setDocumentData(clonedData);
-
-        if (versionId) {
-          const currentVersion = getVersion(clonedData, versionId);
-          setSelectedVersion(currentVersion);
+  const getAllVersions = useCallback((data: DocumentationData[], startId: number) => {
+    const versions: DocumentationData[] = [];
+    const addVersion = (doc: DocumentationData) => {
+      versions.push(doc);
+      const children = data.filter((item) => item.clonedFrom === doc.id);
+      children.forEach(addVersion);
+    };
+    const startDoc = data?.find((doc) => doc.id === startId);
+    if (startDoc) {
+      if (startDoc.clonedFrom !== null && startDoc.clonedFrom !== undefined) {
+        const parent = data?.find((doc) => doc.id === startDoc.clonedFrom);
+        if (parent) {
+          addVersion(parent);
         } else {
-          const latestVersion: VersionOption | null =
-            getClosestVersion(clonedData);
-          setSelectedVersion(latestVersion);
+          addVersion(startDoc);
         }
+      } else {
+        addVersion(startDoc);
       }
-      setLoading(false);
-    };
-    if (docId) {
-      fetchData();
-    } else {
-      setLoading(false);
     }
-  }, [docId, refresh, user, navigate]);
+    return versions.sort((a, b) => {
+      return a.version.localeCompare(b.version, undefined, {
+        numeric: true,
+        sensitivity: "base",
+      });
+    });
+  }, []);
+
+  const fetchDocumentationData = useCallback(async () => {
+    console.log('docId changed:', docId);
+    setLoading(true);
+    const documentationsResult = await getDocumentations();
+    if (handleError(documentationsResult, navigate, t)) {
+      setLoading(false);
+      return;
+    }
+    if (documentationsResult.status === "success") {
+      const data: DocumentationData[] = documentationsResult.data;
+      const clonedData: DocumentationData[] = getAllVersions(data, Number(docId));
+      setDocumentData(clonedData);
+      if (versionId) {
+        const currentVersion = getVersion(clonedData, parseInt(versionId));
+        setSelectedVersion(currentVersion);
+      } else {
+        const latestVersion: VersionOption | null = getClosestVersion(clonedData);
+        setSelectedVersion(latestVersion);
+      }
+    }
+    setLoading(false);
+  }, [docId, searchParam, getAllVersions, navigate, t]);
+
+  const fetchPageGroupData = useCallback(async () => {
+    setPageGroupLoading(true);
+    const [pageGroupsResult, pagesResult] = await Promise.all([
+      getPageGroups(),
+      getPages(),
+    ]);
+    handleError(pageGroupsResult, navigate, t);
+    handleError(pagesResult, navigate, t);
+    if (pageGroupsResult.status === "success" && pagesResult.status === "success") {
+      const combinedData: (PageGroup | Page)[] = combinePages(
+        pageGroupsResult.data || [],
+        pagesResult.data || [],
+      );
+      setGroupsAndPageData(combinedData);
+    }
+    setPageGroupLoading(false);
+  }, [navigate, t]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      setPageGroupLoading(true);
-      const [pageGroupsResult, pagesResult] = await Promise.all([
-        getPageGroups(),
-        getPages(),
-      ]);
-
-      handleError(pageGroupsResult, navigate, t);
-      handleError(pagesResult, navigate, t);
-
-      if (
-        pageGroupsResult.status === "success" &&
-        pagesResult.status === "success"
-      ) {
-        const combinedData: (PageGroup | Page)[] = combinePages(
-          pageGroupsResult.data || [],
-          pagesResult.data || [],
-        );
-
-        setGroupsAndPageData(combinedData);
-      }
-      setPageGroupLoading(false);
-    };
     if (docId) {
-      fetchData();
+      fetchDocumentationData();
+    } else {
+      setLoading(false);
+    }
+  }, [docId, fetchDocumentationData]);
+
+  useEffect(() => {
+    if (docId) {
+      fetchPageGroupData();
     } else {
       setPageGroupLoading(false);
     }
-  }, [docId, user, navigate, refresh, versionId]);
+  }, [docId, fetchPageGroupData]);
 
   const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
   };
 
-  const filteredItems: (PageGroup | Page)[] = groupsAndPageData.filter(
-    (obj) => {
+  const memoizedFilteredItems = useMemo(() => {
+    return groupsAndPageData.filter((obj) => {
       if (selectedVersion) {
         const isPage = (obj as Page).title !== undefined;
         const isPageGroup = (obj as PageGroup).name !== undefined;
@@ -261,8 +239,8 @@ export default function Documentation() {
         );
       }
       return false;
-    },
-  );
+    });
+  }, [groupsAndPageData, selectedVersion, searchTerm]);
 
   const handleDelete = async (): Promise<void> => {
     if (selectedVersion) {
@@ -326,7 +304,7 @@ export default function Documentation() {
     }
   };
 
-  const handlePageGroupUpdate = async (
+  const handlePageGroupUpdate = useCallback(async (
     editTitle: string,
     _version: string,
     id: number,
@@ -342,11 +320,16 @@ export default function Documentation() {
     }
 
     if (result?.status === "success") {
+      setGroupsAndPageData(prevData => 
+        prevData.map(item => 
+          item.id === id && 'name' in item ? { ...item, name: editTitle } : item
+        )
+      );
       closeModal("edit");
       refreshData();
       toastMessage(t(result.data?.message), "success");
     }
-  };
+  }, [selectedVersion, navigate, t, closeModal]);
 
   const handleCreatePageGroup = async (title: string) => {
     if (title === "") {
@@ -402,7 +385,7 @@ export default function Documentation() {
     }
   };
 
-  const handleDragEnd = async (result: DropResult) => {
+  const handleDragEnd = useCallback(async (result: DropResult) => {
     const newItems = Array.from(
       groupsAndPageData.filter(
         (obj) => obj.documentationId === Number(selectedVersion?.id),
@@ -491,7 +474,9 @@ export default function Documentation() {
     }
 
     refreshData();
-  };
+  }, [
+    groupsAndPageData, selectedVersion, navigate, refreshData
+  ]);
 
   const filteredVersions = documentData.filter((version) =>
     version.version.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -500,7 +485,7 @@ export default function Documentation() {
   const itemsPerPage = selectPageSize;
   const startIdx = (currentPage - 1) * itemsPerPage;
   const endIdx = startIdx + itemsPerPage;
-  const totalItems = filteredItems.length;
+  const totalItems = memoizedFilteredItems.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
   const handlePageChange = useCallback(
@@ -539,7 +524,6 @@ export default function Documentation() {
     };
   }, [handleClickOutside]);
 
-  // Type guard to check if an object is a Page
   function isPage(obj: PageGroup | Page): obj is Page {
     return (obj as Page).isIntroPage !== undefined;
   }
@@ -794,7 +778,7 @@ export default function Documentation() {
                     </div>
                   </div>
 
-                  {filteredItems && (
+                  {memoizedFilteredItems && (
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -847,7 +831,7 @@ export default function Documentation() {
                                 ref={provided.innerRef}
                               >
                                 {!pageGroupLoading ? (
-                                  filteredItems && filteredItems.length <= 0 ? (
+                                  memoizedFilteredItems && memoizedFilteredItems.length <= 0 ? (
                                     <motion.tr
                                       initial={{ opacity: 0 }}
                                       animate={{ opacity: 1 }}
@@ -863,7 +847,7 @@ export default function Documentation() {
                                       </td>
                                     </motion.tr>
                                   ) : (
-                                    filteredItems
+                                    memoizedFilteredItems
                                       .slice(startIdx, endIdx)
                                       .map((obj, index) => (
                                         <Draggable
@@ -920,7 +904,7 @@ export default function Documentation() {
                     </motion.div>
                   )}
 
-                  {filteredItems.length > 0 && (
+                  {memoizedFilteredItems.length > 0 && (
                     <motion.section
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -1083,4 +1067,4 @@ export default function Documentation() {
       </AnimatePresence>
     </div>
   );
-}
+});

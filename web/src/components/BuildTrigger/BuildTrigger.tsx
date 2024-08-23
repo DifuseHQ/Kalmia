@@ -45,14 +45,8 @@ export default function BuildTrigger() {
       try {
         const result = await buildTrigger();
         const triggerData: TriggerData[] = result.data;
-        
-        //log any that is null
-        console.log("Trigger data:", triggerData.filter((doc) => doc.completedAt === null));
-
-
         const build = triggerData.find((doc) => doc.documentationId === docId && doc.completedAt === null) || null;
         if (build) {
-          console.log("Build data:", build);
           setTriggerData(build);
           setIsBuild(build.triggered);
 
@@ -66,7 +60,6 @@ export default function BuildTrigger() {
             .sort((a, b) => b.id - a.id)[0];
 
           if (latestBuild) {
-            console.log("Latest build data:", latestBuild);
             setTriggerData(latestBuild);
             setIsBuild(latestBuild.triggered);
 

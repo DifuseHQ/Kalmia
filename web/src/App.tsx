@@ -6,7 +6,7 @@ import { ToastContainer } from "react-toastify";
 
 import CreateDocModal from "./components/CreateDocumentModal/CreateDocModal";
 import CreateUser from "./components/CreateUser/CreateUser";
-import Documentation from "./components/Documentation/Documentation";
+import { Documentation } from "./components/Documentation/Documentation";
 import EditPage from "./components/EditPage/EditPage";
 import Error from "./components/Error/Error";
 import PageGroupTable from "./components/PageGroup/PageGroupTable";
