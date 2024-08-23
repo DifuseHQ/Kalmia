@@ -989,7 +989,43 @@ func (service *DocService) WriteHomePage(documentation models.Documentation, con
 	return nil
 }
 
+func (service *DocService) PreBuildCleanup(docId uint) {
+	docsPath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data", "doc_"+strconv.Itoa(int(docId)), "docs")
+
+	_, versions, err := service.GetAllVersions(docId)
+	if err != nil {
+		logger.Error("Failed to get all versions", zap.Error(err))
+		return
+	}
+
+	versionMap := make(map[string]bool)
+	for _, version := range versions {
+		versionMap[version] = true
+	}
+
+	entries, err := os.ReadDir(docsPath)
+	if err != nil {
+		logger.Error("Failed to read docs directory", zap.Error(err))
+		return
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			folderName := entry.Name()
+			if _, exists := versionMap[folderName]; !exists {
+				err := utils.RemovePath(filepath.Join(docsPath, folderName))
+
+				if err != nil {
+					logger.Error("Failed to remove folder", zap.String("folder", folderName), zap.Error(err))
+				}
+			}
+		}
+	}
+}
+
 func (service *DocService) RsPressBuild(docId uint) error {
+	service.PreBuildCleanup(docId)
+
 	docPath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data", "doc_"+strconv.Itoa(int(docId)))
 	buildPath := filepath.Join(docPath, "build")
 	tmpBuildPath := filepath.Join(docPath, "build_tmp")
