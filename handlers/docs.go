@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"git.difuse.io/Difuse/kalmia/db/models"
@@ -552,4 +553,27 @@ func BulkReorderPageOrPageGroup(service *services.DocService, w http.ResponseWri
 	}
 
 	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "pages_and_page_groups_reordered"})
+}
+
+func GetRootParentId(service *services.DocService, w http.ResponseWriter, r *http.Request) {
+	idStr := r.URL.Query().Get("id")
+	if idStr == "" {
+		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "missing or invalid id"})
+		return
+	}
+
+	documentationID, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "invalid id format"})
+		return
+	}
+
+	rootParentID, err := service.GetRootParentID(uint(documentationID))
+	if err != nil {
+		logger.Error(err.Error())
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})
+		return
+	}
+
+	SendJSONResponse(http.StatusOK, w, map[string]uint{"rootParentId": rootParentID})
 }
