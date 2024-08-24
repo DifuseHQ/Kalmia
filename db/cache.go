@@ -9,60 +9,54 @@ import (
 )
 
 var (
-	Cache *MapCache
-	mu    sync.RWMutex
+	Cache *sync.Map
 )
 
-type MapCache struct {
-	data map[string][]byte
+type CacheEntry struct {
+	Data        []byte
+	ContentType string
 }
 
 func InitCache() {
-	Cache = &MapCache{
-		data: make(map[string][]byte),
-	}
+	Cache = &sync.Map{}
 	logger.Info("Cache initialized")
 }
 
-func SetKey(key, value []byte) error {
-	mu.Lock()
-	defer mu.Unlock()
-	Cache.data[string(key)] = value
+func SetKey(key []byte, value []byte, contentType string) error {
+	Cache.Store(string(key), CacheEntry{
+		Data:        value,
+		ContentType: contentType,
+	})
 	return nil
 }
 
-func GetValue(key []byte) (value []byte, err error) {
-	mu.RLock()
-	defer mu.RUnlock()
-	value, ok := Cache.data[string(key)]
-	if !ok {
-		return nil, ErrKeyNotFound
+func GetValue(key []byte) (CacheEntry, error) {
+	if entry, ok := Cache.Load(string(key)); ok {
+		return entry.(CacheEntry), nil
 	}
-	return value, nil
+	return CacheEntry{}, ErrKeyNotFound
 }
 
 func ClearCacheByPrefix(prefix string) error {
-	mu.Lock()
-	defer mu.Unlock()
-	for k := range Cache.data {
-		if strings.HasPrefix(k, prefix) {
-			delete(Cache.data, k)
+	Cache.Range(func(k, v interface{}) bool {
+		if strings.HasPrefix(k.(string), prefix) {
+			Cache.Delete(k)
 		}
-	}
+		return true
+	})
 	return nil
 }
 
 func GetCacheByPrefix(prefix string) (map[string]string, error) {
-	mu.RLock()
-	defer mu.RUnlock()
 	result := make(map[string]string)
-	for k, v := range Cache.data {
-		if strings.HasPrefix(k, prefix) {
-			result[k] = string(v)
+	Cache.Range(func(k, v interface{}) bool {
+		if strings.HasPrefix(k.(string), prefix) {
+			entry := v.(CacheEntry)
+			result[k.(string)] = string(entry.Data)
 		}
-	}
+		return true
+	})
 	return result, nil
 }
 
-// ErrKeyNotFound is returned when a key is not found in the cache
 var ErrKeyNotFound = errors.New("key not found")
