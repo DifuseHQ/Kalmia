@@ -74,6 +74,10 @@
         "toggle_sidebar":"Toggle sidebar",
         "open_user_menu":"Open user menu",
         "crop_image":"Crop Image",
+        "role":"Role",
+        "all":"All",
+        "write":"Write",
+        "read":"Read",
 
         "clone_documentation": "Clone Documentation",
         "delete_documentation": "Delete Documentation",

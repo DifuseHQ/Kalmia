@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
+
 import { buildTrigger } from "../../api/Requests";
 
 interface TriggerData {
@@ -16,16 +17,16 @@ interface TriggerData {
 
 const formatTimeDifference = (seconds: number): string => {
   if (seconds < 60) {
-    return `${seconds} second${seconds !== 1 ? 's' : ''}`;
+    return `${seconds} second${seconds !== 1 ? "s" : ""}`;
   } else if (seconds < 3600) {
     const minutes = Math.floor(seconds / 60);
-    return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+    return `${minutes} minute${minutes !== 1 ? "s" : ""}`;
   } else if (seconds < 86400) {
     const hours = Math.floor(seconds / 3600);
-    return `${hours} hour${hours !== 1 ? 's' : ''}`;
+    return `${hours} hour${hours !== 1 ? "s" : ""}`;
   } else {
     const days = Math.floor(seconds / 86400);
-    return `${days} day${days !== 1 ? 's' : ''}`;
+    return `${days} day${days !== 1 ? "s" : ""}`;
   }
 };
 
@@ -42,7 +43,10 @@ export default function BuildTrigger() {
     if (triggerData) {
       const timestamp = triggerData.completedAt || triggerData.createdAt;
       if (timestamp) {
-        const secondsDiff = differenceInSeconds(new Date(), parseISO(timestamp));
+        const secondsDiff = differenceInSeconds(
+          new Date(),
+          parseISO(timestamp),
+        );
         setRelativeTime(formatTimeDifference(secondsDiff));
       }
     }

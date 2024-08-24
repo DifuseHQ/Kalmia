@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 import { ApiResponse, createUser } from "../../api/Requests";
-import { handleError } from "../../utils/Common";
+import { handleError, role } from "../../utils/Common";
 import { toastMessage } from "../../utils/Toast";
 import Breadcrumb from "../Breadcrumb/Breadcrumb";
 
@@ -14,10 +14,13 @@ interface UserData {
   email: string;
 }
 
+export const requiredField = () => <span className="text-red-500 mx-1">*</span>;
+
 export default function CreateUser(): JSX.Element {
   const { t } = useTranslation();
   const [username, setUsername] = useState<string>("");
   const [email, setEmail] = useState<string>("");
+  const [permissions, setPermissions] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
 
@@ -32,6 +35,11 @@ export default function CreateUser(): JSX.Element {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    // if(permissions === ""){
+    //   toastMessage(t("Please select role"), "warning");
+    //   return;
+    // }
 
     if (password.length < 8) {
       toastMessage(t("password_must_be_at_least_8_characters"), "warning");
@@ -71,6 +79,7 @@ export default function CreateUser(): JSX.Element {
           <div>
             <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               {t("username")}
+              {requiredField()}
             </span>
             <input
               type="text"
@@ -88,6 +97,7 @@ export default function CreateUser(): JSX.Element {
           <div>
             <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               {t("email_address")}
+              {requiredField()}
             </span>
             <input
               type="email"
@@ -101,9 +111,38 @@ export default function CreateUser(): JSX.Element {
             />
           </div>
 
+          <div className="flex gap-10 items-center">
+            <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 ">
+              {t("role")}
+              {requiredField()}
+            </span>
+
+            <div className="flex">
+              {role.map((val) => (
+                <div className="flex items-center me-4" key={val}>
+                  <input
+                    id="inline-checkbox"
+                    checked={permissions === val.toLowerCase()}
+                    onChange={(e) => setPermissions(e.target.value)}
+                    type="checkbox"
+                    value={val.toLowerCase()}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                  />
+                  <label
+                    htmlFor="inline-checkbox"
+                    className="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+                  >
+                    {t(`${val}`)}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div>
             <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               {t("password")}
+              {requiredField()}
             </span>
             <input
               type="password"
@@ -120,6 +159,7 @@ export default function CreateUser(): JSX.Element {
           <div>
             <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               {t("confirm_password")}
+              {requiredField()}
             </span>
             <input
               type="password"

@@ -189,7 +189,6 @@ export const Documentation = memo(function Documentation() {
     setLoading(false);
   }, [docId, searchParam, getAllVersions, navigate, t]);
 
-
   const fetchPageGroupData = useCallback(async () => {
     setPageGroupLoading(true);
     const [pageGroupsResult, pagesResult] = await Promise.all([
@@ -420,7 +419,6 @@ export const Documentation = memo(function Documentation() {
       toastMessage(t(result.data.message), "success");
     }
   };
-
 
   const handleDragEnd = async (result: DropResult) => {
     const newItems = Array.from(

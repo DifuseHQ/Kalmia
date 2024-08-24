@@ -507,3 +507,5 @@ export const getRootParentIdFromChildId = async (
 
   return 1;
 };
+
+export const role: string[] = ["all", "write", "read"];
