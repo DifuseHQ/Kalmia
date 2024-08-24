@@ -2,10 +2,12 @@ package utils
 
 import (
 	"net/url"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -96,4 +98,33 @@ func ConvertToEmoji(codePoint string) string {
 		return "Invalid code point"
 	}
 	return string(rune(codePointInt))
+}
+
+func GetContentType(filename string) string {
+	ext := filepath.Ext(filename)
+	switch strings.ToLower(ext) {
+	case ".html", ".htm":
+		return "text/html"
+	case ".css":
+		return "text/css"
+	case ".js":
+		return "application/javascript"
+	case ".json":
+		return "application/json"
+	case ".png":
+		return "image/png"
+	case ".jpg", ".jpeg":
+		return "image/jpeg"
+	case ".gif":
+		return "image/gif"
+	case ".svg":
+		return "image/svg+xml"
+	default:
+		return "application/octet-stream"
+	}
+}
+
+func TrimFirstRune(s string) string {
+	_, i := utf8.DecodeRuneInString(s)
+	return s[i:]
 }

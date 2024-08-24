@@ -12,6 +12,7 @@ require (
 	github.com/gorilla/mux v1.8.1
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.26.0
+	golang.org/x/mod v0.20.0
 	golang.org/x/oauth2 v0.22.0
 	golang.org/x/text v0.17.0
 	gorm.io/driver/postgres v1.5.9
@@ -44,6 +45,7 @@ require (
 	golang.org/x/net v0.28.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/sys v0.24.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 	modernc.org/libc v1.59.9 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.8.0 // indirect

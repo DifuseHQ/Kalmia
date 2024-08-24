@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"golang.org/x/mod/sumdb/dirhash"
 )
 
 func PathExists(path string) bool {
@@ -69,31 +71,6 @@ func ReplaceManyInFile(filePath string, replacements map[string]string) error {
 	return nil
 }
 
-func FileHash(input interface{}) (string, error) {
-	var reader io.Reader
-
-	switch v := input.(type) {
-	case string:
-		file, err := os.Open(v)
-		if err != nil {
-			return "", err
-		}
-		defer file.Close()
-		reader = file
-	case io.Reader:
-		reader = v
-	default:
-		return "", fmt.Errorf("unsupported input type for FileHash")
-	}
-
-	hash := sha256.New()
-	if _, err := io.Copy(hash, reader); err != nil {
-		return "", err
-	}
-
-	return hex.EncodeToString(hash.Sum(nil)), nil
-}
-
 func Tree(dir string) (map[string][]byte, error) {
 	filesContent := make(map[string][]byte)
 	var traverse func(string, string) error
@@ -125,4 +102,34 @@ func Tree(dir string) (map[string][]byte, error) {
 		return nil, err
 	}
 	return filesContent, nil
+}
+
+func FileHash(input interface{}) (string, error) {
+	var reader io.Reader
+	switch v := input.(type) {
+	case string:
+		file, err := os.Open(v)
+		if err != nil {
+			return "", err
+		}
+		defer file.Close()
+		reader = file
+	case io.Reader:
+		reader = v
+	default:
+		return "", fmt.Errorf("unsupported input type for FileHash")
+	}
+	hash := sha256.New()
+	if _, err := io.Copy(hash, reader); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(hash.Sum(nil)), nil
+}
+
+func DirHash(dir string) (string, error) {
+	hash, err := dirhash.HashDir(dir, dir, dirhash.DefaultHash)
+	if err != nil {
+		return "", err
+	}
+	return hash, nil
 }

@@ -204,14 +204,15 @@ func (service *DocService) RemoveDocFolder(docId uint) error {
 
 func (service *DocService) UpdateWriteBuild(docId uint) error {
 	key := fmt.Sprintf("update_write_build_%d", docId)
-	var mutex *sync.Mutex
 	mutexI, _ := service.UWBMutexMap.LoadOrStore(key, &sync.Mutex{})
-	mutex = mutexI.(*sync.Mutex)
-	acquired := make(chan bool, 1)
+	mutex := mutexI.(*sync.Mutex)
+
+	acquired := make(chan struct{})
 	go func() {
 		mutex.Lock()
-		acquired <- true
+		close(acquired)
 	}()
+
 	select {
 	case <-acquired:
 		defer mutex.Unlock()
@@ -220,7 +221,6 @@ func (service *DocService) UpdateWriteBuild(docId uint) error {
 	}
 
 	rootParentId, err := service.GetRootParentID(docId)
-
 	if err != nil {
 		return err
 	}
@@ -229,27 +229,26 @@ func (service *DocService) UpdateWriteBuild(docId uint) error {
 	docsPath := filepath.Join(allDocsPath, "doc_"+strconv.Itoa(int(rootParentId)))
 
 	doc, err := service.GetDocumentation(docId)
-
 	if err != nil {
+		return err
+	}
+
+	preHash, err := utils.DirHash(docsPath + "/docs")
+	if err != nil && !os.IsNotExist(err) {
 		return err
 	}
 
 	if utils.PathExists(filepath.Join(docsPath, "docs", doc.Version)) {
-		err := utils.RemovePath(filepath.Join(docsPath, "docs", doc.Version))
-		if err != nil {
+		if err := utils.RemovePath(filepath.Join(docsPath, "docs", doc.Version)); err != nil {
 			return err
 		}
 	}
 
-	err = service.StartUpdate(docId, rootParentId)
-
-	if err != nil {
+	if err := service.StartUpdate(docId, rootParentId); err != nil {
 		return err
 	}
 
-	err = service.WriteContents(docId, rootParentId)
-
-	if err != nil {
+	if err := service.WriteContents(docId, rootParentId, preHash); err != nil {
 		return err
 	}
 
@@ -612,6 +611,7 @@ func (service *DocService) writePageGroupsToDirectory(pageGroups []models.PageGr
 		if err != nil {
 			return err
 		}
+
 		if err := service.writePagesToDirectory(pages, fullPath); err != nil {
 			return err
 		}
@@ -729,7 +729,7 @@ func (service *DocService) buildVersionTree(docId uint) ([]VersionInfo, error) {
 	return versionTree, nil
 }
 
-func (service *DocService) WriteContents(docId uint, rootParentId uint) error {
+func (service *DocService) WriteContents(docId uint, rootParentId uint, preHash string) error {
 	docIdPath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data", "doc_"+strconv.Itoa(int(rootParentId)))
 	_, err := service.GetDocumentation(docId)
 
@@ -878,7 +878,22 @@ func (service *DocService) WriteContents(docId uint, rootParentId uint) error {
 		}
 	}
 
-	return service.RsPressBuild(rootParentId)
+	newHash, err := utils.DirHash(docsPath)
+	if err != nil {
+		return err
+	}
+
+	deletionsOccurred, err := service.PreBuildCleanup(rootParentId)
+	if err != nil {
+		return err
+	}
+
+	needRebuild := false
+	if newHash != preHash || deletionsOccurred {
+		needRebuild = true
+	}
+
+	return service.RsPressBuild(rootParentId, needRebuild)
 }
 
 func (service *DocService) WriteHomePage(documentation models.Documentation, contentPath string) error {
@@ -989,13 +1004,15 @@ func (service *DocService) WriteHomePage(documentation models.Documentation, con
 	return nil
 }
 
-func (service *DocService) PreBuildCleanup(docId uint) {
+func (service *DocService) PreBuildCleanup(docId uint) (bool, error) {
 	docsPath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data", "doc_"+strconv.Itoa(int(docId)), "docs")
+
+	deletionsOccurred := false
 
 	_, versions, err := service.GetAllVersions(docId)
 	if err != nil {
 		logger.Error("Failed to get all versions", zap.Error(err))
-		return
+		return deletionsOccurred, err
 	}
 
 	versionMap := make(map[string]bool)
@@ -1006,7 +1023,7 @@ func (service *DocService) PreBuildCleanup(docId uint) {
 	entries, err := os.ReadDir(docsPath)
 	if err != nil {
 		logger.Error("Failed to read docs directory", zap.Error(err))
-		return
+		return deletionsOccurred, err
 	}
 
 	for _, entry := range entries {
@@ -1014,63 +1031,67 @@ func (service *DocService) PreBuildCleanup(docId uint) {
 			folderName := entry.Name()
 			if _, exists := versionMap[folderName]; !exists {
 				err := utils.RemovePath(filepath.Join(docsPath, folderName))
-
 				if err != nil {
 					logger.Error("Failed to remove folder", zap.String("folder", folderName), zap.Error(err))
+					return deletionsOccurred, err
 				}
+				deletionsOccurred = true
 			}
 		}
 	}
+
+	err = db.ClearCacheByPrefix(fmt.Sprintf("rs|doc_%d", docId))
+	if err != nil {
+		logger.Error("Failed to clear cache", zap.Error(err))
+		return deletionsOccurred, err
+	}
+
+	return deletionsOccurred, nil
 }
 
-func (service *DocService) RsPressBuild(docId uint) error {
-	service.PreBuildCleanup(docId)
-
+func (service *DocService) RsPressBuild(docId uint, rebuild bool) error {
 	docPath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data", "doc_"+strconv.Itoa(int(docId)))
 	buildPath := filepath.Join(docPath, "build")
-	tmpBuildPath := filepath.Join(docPath, "build_tmp")
 
-	npmPinged := utils.NpmPing()
+	if rebuild {
+		tmpBuildPath := filepath.Join(docPath, "build_tmp")
 
-	if !npmPinged {
-		return fmt.Errorf("npm_ping_failed")
-	}
-
-	err := utils.RunNpmCommand(docPath, "install", "--no-audit", "--progress=false", "--no-fund")
-
-	if err != nil {
-		return err
-	}
-
-	err = utils.RunNpxCommand(docPath, "tailwindcss", "build", "-i", "styles/input.css", "-o", "styles/output.css")
-
-	if err != nil {
-		return err
-	}
-
-	err = utils.RunNpmCommand(docPath, "run", "build")
-
-	if err != nil {
-		return err
-	}
-
-	if utils.PathExists(tmpBuildPath) {
-		backupBuildPath := filepath.Join(docPath, "build_backup")
-		if utils.PathExists(buildPath) {
-			if err := os.Rename(buildPath, backupBuildPath); err != nil {
-				return fmt.Errorf("failed to rename buildPath to backupBuildPath: %w", err)
-			}
+		npmPinged := utils.NpmPing()
+		if !npmPinged {
+			return fmt.Errorf("npm_ping_failed")
 		}
 
-		if err := os.Rename(tmpBuildPath, buildPath); err != nil {
+		err := utils.RunNpmCommand(docPath, "install", "--no-audit", "--progress=false", "--no-fund")
+		if err != nil {
+			return err
+		}
+
+		err = utils.RunNpxCommand(docPath, "tailwindcss", "build", "-i", "styles/input.css", "-o", "styles/output.css")
+		if err != nil {
+			return err
+		}
+
+		err = utils.RunNpmCommand(docPath, "run", "build")
+		if err != nil {
+			return err
+		}
+
+		if utils.PathExists(tmpBuildPath) {
+			backupBuildPath := filepath.Join(docPath, "build_backup")
+			if utils.PathExists(buildPath) {
+				if err := os.Rename(buildPath, backupBuildPath); err != nil {
+					return fmt.Errorf("failed to rename buildPath to backupBuildPath: %w", err)
+				}
+			}
+			if err := os.Rename(tmpBuildPath, buildPath); err != nil {
+				if utils.PathExists(backupBuildPath) {
+					os.Rename(backupBuildPath, buildPath)
+				}
+				return fmt.Errorf("failed to rename tmpBuildPath to buildPath: %w", err)
+			}
 			if utils.PathExists(backupBuildPath) {
-				os.Rename(backupBuildPath, buildPath)
+				os.RemoveAll(backupBuildPath)
 			}
-			return fmt.Errorf("failed to rename tmpBuildPath to buildPath: %w", err)
-		}
-
-		if utils.PathExists(backupBuildPath) {
-			os.RemoveAll(backupBuildPath)
 		}
 	}
 
@@ -1079,20 +1100,18 @@ func (service *DocService) RsPressBuild(docId uint) error {
 		return err
 	}
 
-	err = db.ClearCacheByPrefix(fmt.Sprintf("rsb|doc_%d", docId))
-
+	err = db.ClearCacheByPrefix(fmt.Sprintf("rs|doc_%d", docId))
 	if err != nil {
 		return err
 	}
 
 	err = db.ClearCacheByPrefix(fmt.Sprintf("burl|doc_%d", docId))
-
 	if err != nil {
 		return err
 	}
 
 	for fileName, content := range filesContent {
-		if err := db.SetKey([]byte(fmt.Sprintf("rs|doc_%d|%s", docId, fileName)), content); err != nil {
+		if err := db.SetKey([]byte(fmt.Sprintf("rs|doc_%d|%s", docId, fileName)), content, utils.GetContentType(fileName)); err != nil {
 			return err
 		}
 	}
@@ -1164,7 +1183,7 @@ func (service *DocService) GetRsPress(urlPath string) (uint, string, string, err
 	}
 
 	cacheKey := fmt.Sprintf("burl|doc_%d", doc.ID)
-	_ = db.SetKey([]byte(cacheKey), []byte(doc.BaseURL))
+	_ = db.SetKey([]byte(cacheKey), []byte(doc.BaseURL), "text/plain")
 
 	return doc.ID, docPath, doc.BaseURL, nil
 }
@@ -1214,10 +1233,9 @@ func (service *DocService) BuildJob() {
 				zap.Int("trigger_count", len(groupTriggers)))
 		}
 
-		now := time.Now()
 		for i := range groupTriggers {
 			groupTriggers[i].Triggered = true
-			groupTriggers[i].CompletedAt = utils.TimePtr(now)
+			groupTriggers[i].CompletedAt = utils.TimePtr(time.Now())
 		}
 
 		if err := service.DB.Save(&groupTriggers).Error; err != nil {
