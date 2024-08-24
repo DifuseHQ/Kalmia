@@ -879,16 +879,21 @@ func (service *DocService) WriteContents(docId uint, rootParentId uint, preHash 
 	}
 
 	newHash, err := utils.DirHash(docsPath)
-
 	if err != nil {
 		return err
 	}
 
-	if newHash == preHash {
-		return service.RsPressBuild(rootParentId, false)
-	} else {
-		return service.RsPressBuild(rootParentId, true)
+	deletionsOccurred, err := service.PreBuildCleanup(rootParentId)
+	if err != nil {
+		return err
 	}
+
+	needRebuild := false
+	if newHash != preHash || deletionsOccurred {
+		needRebuild = true
+	}
+
+	return service.RsPressBuild(rootParentId, needRebuild)
 }
 
 func (service *DocService) WriteHomePage(documentation models.Documentation, contentPath string) error {
@@ -999,13 +1004,15 @@ func (service *DocService) WriteHomePage(documentation models.Documentation, con
 	return nil
 }
 
-func (service *DocService) PreBuildCleanup(docId uint) {
+func (service *DocService) PreBuildCleanup(docId uint) (bool, error) {
 	docsPath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data", "doc_"+strconv.Itoa(int(docId)), "docs")
+
+	deletionsOccurred := false
 
 	_, versions, err := service.GetAllVersions(docId)
 	if err != nil {
 		logger.Error("Failed to get all versions", zap.Error(err))
-		return
+		return deletionsOccurred, err
 	}
 
 	versionMap := make(map[string]bool)
@@ -1016,7 +1023,7 @@ func (service *DocService) PreBuildCleanup(docId uint) {
 	entries, err := os.ReadDir(docsPath)
 	if err != nil {
 		logger.Error("Failed to read docs directory", zap.Error(err))
-		return
+		return deletionsOccurred, err
 	}
 
 	for _, entry := range entries {
@@ -1024,13 +1031,22 @@ func (service *DocService) PreBuildCleanup(docId uint) {
 			folderName := entry.Name()
 			if _, exists := versionMap[folderName]; !exists {
 				err := utils.RemovePath(filepath.Join(docsPath, folderName))
-
 				if err != nil {
 					logger.Error("Failed to remove folder", zap.String("folder", folderName), zap.Error(err))
+					return deletionsOccurred, err
 				}
+				deletionsOccurred = true
 			}
 		}
 	}
+
+	err = db.ClearCacheByPrefix(fmt.Sprintf("rs|doc_%d", docId))
+	if err != nil {
+		logger.Error("Failed to clear cache", zap.Error(err))
+		return deletionsOccurred, err
+	}
+
+	return deletionsOccurred, nil
 }
 
 func (service *DocService) RsPressBuild(docId uint, rebuild bool) error {
@@ -1038,7 +1054,6 @@ func (service *DocService) RsPressBuild(docId uint, rebuild bool) error {
 	buildPath := filepath.Join(docPath, "build")
 
 	if rebuild {
-		service.PreBuildCleanup(docId)
 		tmpBuildPath := filepath.Join(docPath, "build_tmp")
 
 		npmPinged := utils.NpmPing()

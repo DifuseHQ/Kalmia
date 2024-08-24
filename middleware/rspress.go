@@ -50,7 +50,6 @@ func RsPressMiddleware(dS *services.DocService) func(http.Handler) http.Handler 
 				fullPath = filepath.Join(docPath, "build", "index.html")
 			}
 
-			fmt.Println("cache miss", fileKey)
 			http.ServeFile(w, r, fullPath)
 		})
 	}
