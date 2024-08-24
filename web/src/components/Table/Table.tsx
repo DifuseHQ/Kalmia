@@ -147,6 +147,14 @@ export default memo(function Table({
       {isPageGroup(obj) ? (
         <td className="text-center w-3/12 px-4 py-3 cursor-pointer relative whitespace-nowrap">
           <button
+            className="inline-flex items-center gap-2 p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
+            onClick={() => {
+              openModal("pageSelectModal", null);
+            }}
+          >
+            <Icon icon="hugeicons:move" className="w-6 h-6" />
+          </button>
+          <button
             id={`dropdown-button-${obj.id}`}
             data-dropdown-toggle={`dropdown-${obj.id}`}
             className="inline-flex items-center gap-2 p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
@@ -170,6 +178,16 @@ export default memo(function Table({
         </td>
       ) : (
         <td className="text-center px-4 py-3 cursor-pointer relative whitespace-nowrap">
+          {isPage(obj) && (
+            <button
+              className="inline-flex items-center gap-2 p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
+              onClick={() => {
+                openModal("pageSelectModal", null);
+              }}
+            >
+              <Icon icon="hugeicons:move" className="w-6 h-6" />
+            </button>
+          )}
           <button
             id={`dropdown-button-${obj.id}`}
             data-dropdown-toggle={`dropdown-${obj.id}`}

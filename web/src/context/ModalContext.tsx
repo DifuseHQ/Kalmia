@@ -19,6 +19,7 @@ export interface ModalContextType {
   currentModalItem: ModalItem | null;
   pageSizeDropdown: boolean;
   loadingModal: boolean;
+  pageSelectModal: boolean;
   loadingMessage: string;
   setCurrentModalItem: React.Dispatch<React.SetStateAction<ModalItem | null>>;
   setLoadingModal: React.Dispatch<React.SetStateAction<boolean>>;
@@ -33,6 +34,7 @@ const defaultContext: ModalContextType = {
   createPageModal: false,
   editModal: false,
   deleteModal: false,
+  pageSelectModal: false,
   cloneDocumentModal: false,
   currentModalItem: null,
   pageSizeDropdown: false,
@@ -59,6 +61,7 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
   const [editModal, setEditModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
   const [cloneDocumentModal, setCloneDocumentModal] = useState(false);
+  const [pageSelectModal, SetPageSelectModal] = useState(false);
   const [currentModalItem, setCurrentModalItem] = useState<ModalItem | null>(
     null,
   );
@@ -93,6 +96,9 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
       case "loadingModal":
         setLoadingModal(true);
         break;
+      case "pageSelectModal":
+        SetPageSelectModal(true);
+        break;
       default:
         console.warn(`Unknown modal: ${modalName}`);
     }
@@ -125,6 +131,9 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
       case "loadingModal":
         setLoadingModal(false);
         break;
+      case "pageSelectModal":
+        SetPageSelectModal(false);
+        break;
       default:
         console.warn(`Unknown modal: ${modalName}`);
     }
@@ -146,6 +155,7 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
         setLoadingModal,
         loadingMessage,
         setLoadingMessage,
+        pageSelectModal,
         openModal,
         closeModal,
       }}

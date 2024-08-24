@@ -10,6 +10,7 @@ import { Documentation } from "./components/Documentation/Documentation";
 import EditPage from "./components/EditPage/EditPage";
 import Error from "./components/Error/Error";
 import { PageGroupTable } from "./components/PageGroup/PageGroupTable";
+import PageSelectionModal from "./components/PageSelectionModal/PageSelectionModal";
 import UserForm from "./components/UserForm/UserForm";
 import UserList from "./components/UserList/UserList";
 import { AuthProvider } from "./context/AuthContext";
@@ -59,6 +60,10 @@ function App() {
                     <Route
                       path="documentation/edit-page"
                       element={<EditPage />}
+                    />
+                    <Route
+                      path="page-selection"
+                      element={<PageSelectionModal />}
                     />
                     <Route path="user-profile/:id" element={<UserForm />} />
 
