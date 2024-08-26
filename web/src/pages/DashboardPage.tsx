@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 
 import Loading from "../components/Loading/Loading";
 import Navbar from "../components/Navbar/Navbar";
+import PageSelectionModal from "../components/PageSelectionModal/PageSelectionModal";
 import Sidebar from "../components/Sidebar/Sidebar";
 
 export default function DashboardPage() {
@@ -11,6 +12,7 @@ export default function DashboardPage() {
       <Loading />
       <Sidebar />
       <main className="p-4 md:ml-64 min-h-screen pt-20">
+        <PageSelectionModal />
         <Outlet />
       </main>
     </div>

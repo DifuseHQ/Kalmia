@@ -129,7 +129,6 @@ const LabelAndCommunityComponent = ({
       <div>
         <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           {t("label")}
-          <span className="text-red-500 ml-1">*</span>
         </span>
         <input
           type="text"
@@ -616,6 +615,7 @@ export default function CreateDocModal() {
                     value={formData?.name || ""}
                     onChange={handleChange}
                     name="name"
+                    required={true}
                   />
                   <FormField
                     label={t("version")}
@@ -623,6 +623,7 @@ export default function CreateDocModal() {
                     value={formData?.version}
                     onChange={handleChange}
                     name="version"
+                    required={true}
                   />
                 </div>
 
@@ -705,6 +706,7 @@ export default function CreateDocModal() {
                     value={formData?.copyrightText}
                     onChange={handleChange}
                     name="copyrightText"
+                    required={true}
                   />
                   <FormField
                     label={t("social_card_image")}
@@ -723,6 +725,7 @@ export default function CreateDocModal() {
                     value={formData?.organizationName}
                     onChange={handleChange}
                     name="organizationName"
+                    required={true}
                   />
                   <FormField
                     label={t("project_name")}
@@ -731,6 +734,7 @@ export default function CreateDocModal() {
                     onChange={handleChange}
                     name="projectName"
                     type="url"
+                    required={true}
                   />
                 </div>
 
@@ -741,6 +745,7 @@ export default function CreateDocModal() {
                     value={formData?.baseURL}
                     onChange={handleChange}
                     name="baseURL"
+                    required={true}
                   />
                   <FormField
                     label={t("url")}
@@ -749,6 +754,7 @@ export default function CreateDocModal() {
                     onChange={handleChange}
                     name="url"
                     type="url"
+                    required={true}
                   />
                 </div>
               </div>
@@ -768,7 +774,6 @@ export default function CreateDocModal() {
                       <div className="relative">
                         <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                           {t("icon")}
-                          <span className="text-red-500 ml-1">*</span>
                         </span>
                         <button
                           onClick={() => {
@@ -921,6 +926,7 @@ export default function CreateDocModal() {
                           "ctaButtonText",
                         );
                       }}
+                      required={true}
                     />
 
                     <FormField
@@ -936,6 +942,7 @@ export default function CreateDocModal() {
                         );
                       }}
                       type="url"
+                      required={true}
                     />
                   </div>
 
@@ -981,6 +988,7 @@ export default function CreateDocModal() {
                       }
                       name="ctaImageLink"
                       type="url"
+                      required={true}
                     />
                   </div>
 
