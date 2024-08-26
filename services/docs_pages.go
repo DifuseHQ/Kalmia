@@ -67,7 +67,7 @@ func (service *DocService) CreatePage(page *models.Page) error {
 	return nil
 }
 
-func (service *DocService) EditPage(user models.User, id uint, title, slug, content string, order *uint) error {
+func (service *DocService) EditPage(user models.User, id uint, title, slug, content string, order *uint, pageGroupId *uint) error {
 	tx := service.DB.Begin()
 
 	var page models.Page
@@ -84,6 +84,10 @@ func (service *DocService) EditPage(user models.User, id uint, title, slug, cont
 		page.Order = order
 	}
 
+	if pageGroupId != nil {
+		page.PageGroupID = pageGroupId
+	}
+
 	alreadyEditor := false
 	for _, editor := range page.Editors {
 		if editor.ID == user.ID {
@@ -91,6 +95,7 @@ func (service *DocService) EditPage(user models.User, id uint, title, slug, cont
 			break
 		}
 	}
+
 	if !alreadyEditor {
 		page.Editors = append(page.Editors, user)
 	}

@@ -309,11 +309,12 @@ func CreatePage(services *services.ServiceRegistry, w http.ResponseWriter, r *ht
 
 func EditPage(services *services.ServiceRegistry, w http.ResponseWriter, r *http.Request) {
 	type Request struct {
-		ID      uint   `json:"id" validate:"required"`
-		Title   string `json:"title" validate:"required"`
-		Slug    string `json:"slug" validate:"required"`
-		Content string `json:"content" validate:"required"`
-		Order   *uint  `json:"order"`
+		ID          uint   `json:"id" validate:"required"`
+		Title       string `json:"title" validate:"required"`
+		Slug        string `json:"slug" validate:"required"`
+		Content     string `json:"content" validate:"required"`
+		Order       *uint  `json:"order"`
+		PageGroupId *uint  `json:"pageGroupId"`
 	}
 
 	req, err := ValidateRequest[Request](w, r)
@@ -333,7 +334,7 @@ func EditPage(services *services.ServiceRegistry, w http.ResponseWriter, r *http
 		return
 	}
 
-	err = services.DocService.EditPage(user, req.ID, req.Title, req.Slug, req.Content, req.Order)
+	err = services.DocService.EditPage(user, req.ID, req.Title, req.Slug, req.Content, req.Order, req.PageGroupId)
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})
 		return
