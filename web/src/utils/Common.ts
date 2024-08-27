@@ -64,6 +64,11 @@ interface ClosestVersion {
   createdAt: string;
 }
 
+interface Permission {
+  name: string;
+  value: string[];
+}
+
 type NavigateFunction = (path: string, options?: { state?: unknown }) => void;
 
 export const handleError = (
@@ -526,4 +531,26 @@ export const getAllPageGroupNames = (groups: PageGroup[]) => {
     allNames = allNames.concat(getPageGroupNames(group));
   });
   return allNames;
+};
+
+export const permissionList: Permission[] = [
+  { name: "All", value: ["all"] },
+  { name: "Write/Read", value: ["write", "read"] },
+  { name: "Read Only", value: ["read"] },
+  { name: "Write/Read/Delete", value: ["read", "write", "delete"] },
+];
+
+export const formatRole = (permissions: string[]) => {
+  const matchingRole = permissionList.filter((val) => {
+    if (
+      Array.isArray(val.value) &&
+      Array.isArray(permissions) &&
+      val.value.length === permissions.length
+    ) {
+      return val.value.sort().toString() === permissions.sort().toString();
+    }
+    return false;
+  })[0]?.name;
+
+  return matchingRole || "Select Role";
 };

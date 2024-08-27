@@ -18,6 +18,7 @@ export interface UserDetails {
   createdAt: string;
   updatedAt: string;
   photo?: string;
+  permissions?: string[];
 }
 
 export const useUserDetails = (

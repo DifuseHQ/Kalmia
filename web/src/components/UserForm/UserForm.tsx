@@ -4,11 +4,16 @@ import AvatarEditor from "react-avatar-editor";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 
-import { getUser, updateUser, uploadFile } from "../../api/Requests";
+import {
+  getUser,
+  updateUser,
+  UpdateUserPayload,
+  uploadFile,
+} from "../../api/Requests";
 import { AuthContext, AuthContextType } from "../../context/AuthContext";
 import { UserDetails } from "../../hooks/useUserDetails";
 import { DOMEvent } from "../../types/dom";
-import { handleError, role } from "../../utils/Common";
+import { handleError } from "../../utils/Common";
 import { toastMessage } from "../../utils/Toast";
 import Breadcrumb from "../Breadcrumb/Breadcrumb";
 
@@ -32,7 +37,6 @@ export default function UserForm() {
   );
   const [username, setUsername] = useState<string>("");
   const [email, setEmail] = useState<string>("");
-  const [permissions, setPermissions] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [confirmPasswod, setConfirmPassword] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -146,11 +150,13 @@ export default function UserForm() {
       return;
     }
 
-    const result = await updateUser({
+    const updateDetails: UpdateUserPayload = {
       id: Number(userData?.id),
       username,
       email,
-    });
+    };
+
+    const result = await updateUser(updateDetails);
 
     if (handleError(result, navigate, t)) return;
 
@@ -283,33 +289,6 @@ export default function UserForm() {
               } bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
               readOnly={!isEdit}
             />
-          </div>
-
-          <div className="flex gap-10 items-center mb-6">
-            <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 ">
-              {t("role")}
-            </span>
-
-            <div className="flex">
-              {role.map((val) => (
-                <div className="flex items-center me-4" key={val}>
-                  <input
-                    id="inline-checkbox"
-                    checked={permissions === val.toLowerCase()}
-                    onChange={(e) => setPermissions(e.target.value)}
-                    type="checkbox"
-                    value={val.toLowerCase()}
-                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                  />
-                  <label
-                    htmlFor="inline-checkbox"
-                    className="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-                  >
-                    {t(`${val}`)}
-                  </label>
-                </div>
-              ))}
-            </div>
           </div>
 
           <div className="flex justify-start space-x-4">

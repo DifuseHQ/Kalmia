@@ -49,9 +49,8 @@ export default function UserList() {
 
   const filterUser = (userList as User[]).filter(
     (user) =>
-      !user.admin &&
-      (user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email?.toLowerCase().includes(searchTerm.toLowerCase())),
+      user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const handleSearchChange = (e: DOMEvent) => {

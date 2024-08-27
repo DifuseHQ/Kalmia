@@ -19,12 +19,14 @@ func ValidateRequest[T any](w http.ResponseWriter, r *http.Request) (*T, error) 
 	var req T
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
+		fmt.Println(err)
 		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "invalid_request_format"})
 		return nil, err
 	}
 
 	err = validate.Struct(req)
 	if err != nil {
+		fmt.Println(err)
 		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "invalid_request_data"})
 		return nil, err
 	}

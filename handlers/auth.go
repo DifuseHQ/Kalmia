@@ -30,7 +30,7 @@ func CreateUser(authService *services.AuthService, w http.ResponseWriter, r *htt
 		Email       string   `json:"email" validate:"required,email"`
 		Password    string   `json:"password" validate:"required"`
 		Admin       bool     `json:"admin"`
-		Permisisons []string `json:"permissions" validate:"required,alpha"`
+		Permissions []string `json:"permissions" validate:"required"`
 	}
 
 	req, err := ValidateRequest[Request](w, r)
@@ -39,7 +39,7 @@ func CreateUser(authService *services.AuthService, w http.ResponseWriter, r *htt
 		return
 	}
 
-	err = authService.CreateUser(req.Username, req.Email, req.Password, req.Admin, req.Permisisons)
+	err = authService.CreateUser(req.Username, req.Email, req.Password, req.Admin, req.Permissions)
 
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error(), "error": err.Error()})
@@ -57,7 +57,7 @@ func EditUser(authService *services.AuthService, w http.ResponseWriter, r *http.
 		Password    string   `json:"password" validate:"omitempty,min=8,max=32"`
 		Photo       string   `json:"photo" validate:"omitempty,http_url"`
 		Admin       int      `json:"admin" validate:"omitempty"`
-		Permisisons []string `json:"permissions" validate:"omitempty,alpha"`
+		Permissions []string `json:"permissions" validate:"omitempty"`
 	}
 
 	req, err := ValidateRequest[Request](w, r)
@@ -66,7 +66,7 @@ func EditUser(authService *services.AuthService, w http.ResponseWriter, r *http.
 		return
 	}
 
-	err = authService.EditUser(req.ID, req.Username, req.Email, req.Password, req.Photo, req.Admin, req.Permisisons)
+	err = authService.EditUser(req.ID, req.Username, req.Email, req.Password, req.Photo, req.Admin, req.Permissions)
 
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})

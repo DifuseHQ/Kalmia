@@ -77,18 +77,22 @@ interface ReorderBulkDataPayload {
   order: OrderItem[];
 }
 
-interface UserPayload {
+export interface UserPayload {
   username: string;
   email: string;
   password: string;
+  permissions: string[];
+  admin?: boolean;
 }
 
-interface UpdateUserPayload {
+export interface UpdateUserPayload {
   id: number;
   photo?: string;
   username?: string;
   email?: string;
   password?: string;
+  permissions?: string[];
+  admin?: boolean | number;
 }
 
 const ERROR_MESSAGES: ErrorMessages = {

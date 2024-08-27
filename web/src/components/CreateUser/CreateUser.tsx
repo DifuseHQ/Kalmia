@@ -3,16 +3,10 @@ import React, { ChangeEvent, JSX, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
-import { ApiResponse, createUser } from "../../api/Requests";
-import { handleError, role } from "../../utils/Common";
+import { ApiResponse, createUser, UserPayload } from "../../api/Requests";
+import { formatRole, handleError, permissionList } from "../../utils/Common";
 import { toastMessage } from "../../utils/Toast";
 import Breadcrumb from "../Breadcrumb/Breadcrumb";
-
-interface UserData {
-  username: string;
-  password: string;
-  email: string;
-}
 
 export const requiredField = () => <span className="text-red-500 mx-1">*</span>;
 
@@ -20,9 +14,10 @@ export default function CreateUser(): JSX.Element {
   const { t } = useTranslation();
   const [username, setUsername] = useState<string>("");
   const [email, setEmail] = useState<string>("");
-  const [permissions, setPermissions] = useState<string>("");
+  const [permissions, setPermissions] = useState<string[] | null>(null);
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
+  const [dropdown, setDropdown] = useState<boolean>(false);
 
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -36,10 +31,10 @@ export default function CreateUser(): JSX.Element {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // if(permissions === ""){
-    //   toastMessage(t("Please select role"), "warning");
-    //   return;
-    // }
+    if (!permissions) {
+      toastMessage(t("Please select role"), "warning");
+      return;
+    }
 
     if (password.length < 8) {
       toastMessage(t("password_must_be_at_least_8_characters"), "warning");
@@ -51,10 +46,12 @@ export default function CreateUser(): JSX.Element {
       return;
     }
 
-    const userData: UserData = {
+    const userData: UserPayload = {
       username,
       password,
       email,
+      permissions: permissions || [],
+      admin: permissions.length == 1 && permissions[0] === "all" ? true : false,
     };
 
     const result: ApiResponse = await createUser(userData);
@@ -65,6 +62,10 @@ export default function CreateUser(): JSX.Element {
     } else {
       handleError(result, navigate, t);
     }
+  };
+
+  const handleDropdown = () => {
+    setDropdown(!dropdown);
   };
 
   return (
@@ -117,28 +118,58 @@ export default function CreateUser(): JSX.Element {
               {requiredField()}
             </span>
 
-            <div className="flex">
-              {role.map((val) => (
-                <div className="flex items-center me-4" key={val}>
-                  <input
-                    id="inline-checkbox"
-                    checked={permissions === val.toLowerCase()}
-                    onChange={(e) => setPermissions(e.target.value)}
-                    type="checkbox"
-                    value={val.toLowerCase()}
-                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+            <div className="relative space-y-2">
+              <button
+                onClick={handleDropdown}
+                className="text-black border border-gray-400 bg-white dark:border-none dark:text-white hover:bg-gray-300 font-medium rounded-lg text-sm px-5 py-1.5 text-center inline-flex items-center dark:bg-gray-600 dark:hover:bg-gray-700"
+                type="button"
+              >
+                {formatRole(permissions || [])}
+                <svg
+                  className="w-2.5 h-2.5 ms-3"
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 10 6"
+                >
+                  <path
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="m1 1 4 4 4-4"
                   />
-                  <label
-                    htmlFor="inline-checkbox"
-                    className="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+                </svg>
+              </button>
+              {dropdown && (
+                <div className="absolute right-0 lg:left-0 bg-white rounded-lg shadow w-52 dark:bg-gray-700 z-30">
+                  <ul
+                    className="text-sm overflow-hidden rounded-lg text-gray-700 dark:text-gray-200"
+                    aria-labelledby="dropdownInformationButton"
                   >
-                    {t(`${val}`)}
-                  </label>
+                    {permissionList.map((obj, index) => (
+                      <li
+                        className="bg-red-500"
+                        key={index}
+                        onClick={() => {
+                          setPermissions(obj.value);
+                          handleDropdown();
+                        }}
+                      >
+                        <p
+                          className={`cursor-pointer block px-4 py-2  hover:bg-gray-100 dark:hover:bg-gray-500 dark:hover:text-white
+              ${permissions && permissions === obj.value ? "bg-gray-700" : "bg-gray-600"}
+              `}
+                        >
+                          {obj?.name}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              ))}
+              )}
             </div>
           </div>
-
           <div>
             <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               {t("password")}
