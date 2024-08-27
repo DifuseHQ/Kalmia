@@ -13,7 +13,7 @@ import {
 import { AuthContext, AuthContextType } from "../../context/AuthContext";
 import { UserDetails } from "../../hooks/useUserDetails";
 import { DOMEvent } from "../../types/dom";
-import { handleError } from "../../utils/Common";
+import { formatRole, handleError, permissionList } from "../../utils/Common";
 import { toastMessage } from "../../utils/Toast";
 import Breadcrumb from "../Breadcrumb/Breadcrumb";
 
@@ -37,9 +37,11 @@ export default function UserForm() {
   );
   const [username, setUsername] = useState<string>("");
   const [email, setEmail] = useState<string>("");
+  const [permissions, setPermissions] = useState<string[] | null>(null);
   const [password, setPassword] = useState<string>("");
   const [confirmPasswod, setConfirmPassword] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [dropdown, setDropdown] = useState<boolean>(false);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
   const editorRef = useRef<AvatarEditor | null>(null);
@@ -60,6 +62,7 @@ export default function UserForm() {
         setEmail(response.data.email);
         setPassword("");
         setConfirmPassword("");
+        setPermissions(JSON.parse(response?.data?.permissions));
         setProfileImage(response.data.photo || "/assets/images/no-profile.png");
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -145,7 +148,11 @@ export default function UserForm() {
   const handleSubmit = async (e: DOMEvent) => {
     e.preventDefault();
 
-    if (userData?.username === username && userData?.email === email) {
+    if (
+      userData?.username === username &&
+      userData?.email === email &&
+      userData?.permissions === permissions
+    ) {
       toastMessage(t("no_changes_detected"), "warning");
       return;
     }
@@ -154,6 +161,9 @@ export default function UserForm() {
       id: Number(userData?.id),
       username,
       email,
+      permissions: permissions || [],
+      admin:
+        permissions?.length == 1 && permissions[0] === "all" ? 1 : 0,
     };
 
     const result = await updateUser(updateDetails);
@@ -208,6 +218,10 @@ export default function UserForm() {
           : Math.min(2.5, prevScale + 0.1);
       return Number(newScale) || 0.5;
     });
+  };
+
+  const handleDropdown = () => {
+    setDropdown(!dropdown);
   };
 
   return (
@@ -289,6 +303,65 @@ export default function UserForm() {
               } bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
               readOnly={!isEdit}
             />
+          </div>
+
+          <div className="flex gap-10 items-center mb-6">
+            <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 ">
+              {t("role")}
+            </span>
+
+            <div className="relative space-y-2">
+              <button
+                disabled={!isEdit}
+                onClick={handleDropdown}
+                className="text-black border border-gray-400 bg-white dark:border-none dark:text-white hover:bg-gray-300 font-medium rounded-lg text-sm px-5 py-1.5 text-center inline-flex items-center dark:bg-gray-600 dark:hover:bg-gray-700"
+                type="button"
+              >
+                {formatRole(permissions || [])}
+                <svg
+                  className="w-2.5 h-2.5 ms-3"
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 10 6"
+                >
+                  <path
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="m1 1 4 4 4-4"
+                  />
+                </svg>
+              </button>
+              {dropdown && (
+                <div className="absolute right-0 lg:left-0 bg-white rounded-lg shadow w-52 dark:bg-gray-700 z-30">
+                  <ul
+                    className="text-sm overflow-hidden rounded-lg text-gray-700 dark:text-gray-200"
+                    aria-labelledby="dropdownInformationButton"
+                  >
+                    {permissionList.map((obj, index) => (
+                      <li
+                        className="bg-red-500"
+                        key={index}
+                        onClick={() => {
+                          setPermissions(obj.value);
+                          handleDropdown();
+                        }}
+                      >
+                        <p
+                          className={`cursor-pointer block px-4 py-2  hover:bg-gray-100 dark:hover:bg-gray-500 dark:hover:text-white
+              ${permissions === obj.value ? "bg-gray-700" : "bg-gray-600"}
+              `}
+                        >
+                          {obj?.name}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="flex justify-start space-x-4">
