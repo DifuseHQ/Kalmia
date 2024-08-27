@@ -1,9 +1,11 @@
 package utils
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/golang-jwt/jwt/v4"
 	"time"
+
+	"github.com/golang-jwt/jwt/v4"
 )
 
 type JWTData struct {
@@ -14,9 +16,23 @@ type JWTData struct {
 	Email        string            `json:"email"`
 	Photo        string            `json:"photo"`
 	IsAdmin      bool              `json:"admin"`
+	Permissions  []string          `json:"permissions"`
 }
 
-func GenerateJWTAccessToken(dbUserId uint, userId string, email string, photo string, isAdmin bool) (string, int64, error) {
+func GenerateJWTAccessToken(dbUserId uint, userId string, email string, photo string, isAdmin bool, permissions string) (string, int64, error) {
+	permissionsSlice := []string{}
+
+	if permissions != "" {
+		err := json.Unmarshal([]byte(permissions), &permissionsSlice)
+		if err != nil {
+			return "", 0, err
+		}
+	}
+
+	if len(permissionsSlice) == 0 {
+		permissionsSlice = append(permissionsSlice, "read")
+	}
+
 	claims := JWTData{
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
@@ -25,11 +41,12 @@ func GenerateJWTAccessToken(dbUserId uint, userId string, email string, photo st
 			"user_id": userId,
 			"email":   email,
 		},
-		UserId:   fmt.Sprintf("%d", dbUserId),
-		Username: userId,
-		Email:    email,
-		Photo:    photo,
-		IsAdmin:  isAdmin,
+		UserId:      fmt.Sprintf("%d", dbUserId),
+		Username:    userId,
+		Email:       email,
+		Photo:       photo,
+		IsAdmin:     isAdmin,
+		Permissions: permissionsSlice,
 	}
 
 	tokenString := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
