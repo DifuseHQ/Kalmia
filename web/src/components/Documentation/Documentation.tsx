@@ -48,6 +48,7 @@ import {
   getLastPageOrder,
   getVersion,
   handleError,
+  hasPermission,
   isPageGroup,
 } from "../../utils/Common";
 import { toastMessage } from "../../utils/Toast";
@@ -69,7 +70,7 @@ interface VersionOption {
 export const Documentation = memo(function Documentation() {
   const navigate = useNavigate();
   const authContext = useContext(AuthContext);
-  const { refreshData, refresh } = authContext as AuthContextType;
+  const { refreshData, refresh, userDetails } = authContext as AuthContextType;
   const { t } = useTranslation();
 
   const {
@@ -582,48 +583,54 @@ export const Documentation = memo(function Documentation() {
                   className=" lg:mt-0 lg:col-span-5 flex justify-end mr-5 mb-4 gap-3"
                   key="documentation-actions-buttons"
                 >
-                  <motion.button
-                    whileHover={{ scale: 1.3 }}
-                    onClick={() => {
-                      openModal("cloneDocument", null);
-                    }}
-                    title={t("clone_documentation")}
-                    key="clone-button"
-                  >
-                    <Icon
-                      icon="clarity:clone-line"
-                      className="w-6 h-6 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-700"
-                    />
-                  </motion.button>
-
-                  <motion.button
-                    whileHover={{ scale: 1.3 }}
-                    title={t("edit_documentation")}
-                    key="edit-document-button"
-                  >
-                    <Link
-                      to={`/dashboard/edit-documentation?id=${selectedVersion?.id}&mode=edit`}
+                  {hasPermission(["all", "write"], userDetails) && (
+                    <motion.button
+                      whileHover={{ scale: 1.3 }}
+                      onClick={() => {
+                        openModal("cloneDocument", null);
+                      }}
+                      title={t("clone_documentation")}
+                      key="clone-button"
                     >
                       <Icon
-                        icon="material-symbols:edit-outline"
-                        className="w-6 h-6 text-yellow-500 dark:text-yellow-400 hover:text-yellow-600 dark:hover:text-yellow-600"
+                        icon="clarity:clone-line"
+                        className="w-6 h-6 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-700"
                       />
-                    </Link>
-                  </motion.button>
+                    </motion.button>
+                  )}
 
-                  <motion.button
-                    whileHover={{ scale: 1.3 }}
-                    onClick={() => {
-                      openModal("delete", null);
-                    }}
-                    key="delete-document-button"
-                    title={t("delete_documentation")}
-                  >
-                    <Icon
-                      icon="material-symbols:delete"
-                      className="w-6 h-6 text-red-600 dark:text-red-500 hover:text-red-700 dark:hover:text-red-600"
-                    />
-                  </motion.button>
+                  {hasPermission(["all", "write"], userDetails) && (
+                    <motion.button
+                      whileHover={{ scale: 1.3 }}
+                      title={t("edit_documentation")}
+                      key="edit-document-button"
+                    >
+                      <Link
+                        to={`/dashboard/edit-documentation?id=${selectedVersion?.id}&mode=edit`}
+                      >
+                        <Icon
+                          icon="material-symbols:edit-outline"
+                          className="w-6 h-6 text-yellow-500 dark:text-yellow-400 hover:text-yellow-600 dark:hover:text-yellow-600"
+                        />
+                      </Link>
+                    </motion.button>
+                  )}
+
+                  {hasPermission(["all", "delete"], userDetails) && (
+                    <motion.button
+                      whileHover={{ scale: 1.3 }}
+                      onClick={() => {
+                        openModal("delete", null);
+                      }}
+                      key="delete-document-button"
+                      title={t("delete_documentation")}
+                    >
+                      <Icon
+                        icon="material-symbols:delete"
+                        className="w-6 h-6 text-red-600 dark:text-red-500 hover:text-red-700 dark:hover:text-red-600"
+                      />
+                    </motion.button>
+                  )}
                 </motion.div>
 
                 <motion.div
@@ -776,39 +783,42 @@ export const Documentation = memo(function Documentation() {
                     <div className="flex justify-center xl:hidden">
                       <BuildTrigger />
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        onClick={() => openModal("createPageGroup", null)}
-                        type="button"
-                        className="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
-                        key="create-page-group-button"
-                      >
-                        <span className="px-1 text-left items-center dark:text-white text-md">
-                          {t("new_group")}
-                        </span>
-                        <Icon
-                          icon="ei:plus"
-                          className="w-6 h-6 dark:text-white"
-                        />
-                      </motion.button>
 
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        onClick={() => openModal("createPage", null)}
-                        type="button"
-                        className="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
-                        key="create-page-button"
-                      >
-                        <span className="px-1 text-left items-center dark:text-white text-md">
-                          {t("new_page")}
-                        </span>
-                        <Icon
-                          icon="ei:plus"
-                          className="w-6 h-6 dark:text-white"
-                        />
-                      </motion.button>
-                    </div>
+                    {hasPermission(["all", "write", "delete"], userDetails) && (
+                      <div className="flex items-center space-x-2">
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          onClick={() => openModal("createPageGroup", null)}
+                          type="button"
+                          className="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
+                          key="create-page-group-button"
+                        >
+                          <span className="px-1 text-left items-center dark:text-white text-md">
+                            {t("new_group")}
+                          </span>
+                          <Icon
+                            icon="ei:plus"
+                            className="w-6 h-6 dark:text-white"
+                          />
+                        </motion.button>
+
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          onClick={() => openModal("createPage", null)}
+                          type="button"
+                          className="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
+                          key="create-page-button"
+                        >
+                          <span className="px-1 text-left items-center dark:text-white text-md">
+                            {t("new_page")}
+                          </span>
+                          <Icon
+                            icon="ei:plus"
+                            className="w-6 h-6 dark:text-white"
+                          />
+                        </motion.button>
+                      </div>
+                    )}
                   </div>
 
                   {memoizedFilteredItems && (

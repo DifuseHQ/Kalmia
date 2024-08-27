@@ -4,9 +4,10 @@ import { motion } from "framer-motion";
 import { memo, useContext } from "react";
 import { Link } from "react-router-dom";
 
+import { AuthContext, AuthContextType } from "../../context/AuthContext";
 import { ModalContext } from "../../context/ModalContext";
 import { Editor, Page, PageGroup } from "../../types/doc";
-import { getFormattedDate } from "../../utils/Common";
+import { getFormattedDate, hasPermission } from "../../utils/Common";
 
 interface TableProps {
   provided: DraggableProvided;
@@ -30,7 +31,8 @@ export default memo(function Table({
   dir,
 }: TableProps) {
   const { openModal } = useContext(ModalContext);
-
+  const authContext = useContext(AuthContext);
+  const { userDetails } = authContext as AuthContextType;
   function isPage(obj: PageGroup | Page): obj is Page {
     return (obj as Page).isIntroPage === undefined;
   }
@@ -56,11 +58,15 @@ export default memo(function Table({
         className={`w-1/12 items-center ${!isPage(obj) ? "cursor-not-allowed" : "cursor-pointer"} px-4 py-3 font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap dark:text-white`}
         {...provided.dragHandleProps}
       >
-        {isPage(obj) && (
-          <Icon
-            icon="nimbus:drag-dots"
-            className="w-6 h-6 text-gray-600 dark:text-white"
-          />
+        {hasPermission(["all", "write"], userDetails) && (
+          <>
+            {isPage(obj) && (
+              <Icon
+                icon="nimbus:drag-dots"
+                className="w-6 h-6 text-gray-600 dark:text-white"
+              />
+            )}
+          </>
         )}
       </td>
 
@@ -146,39 +152,7 @@ export default memo(function Table({
 
       {isPageGroup(obj) ? (
         <td className="text-center w-3/12 px-4 py-3 cursor-pointer relative whitespace-nowrap">
-          <button
-            className="inline-flex items-center gap-2 p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
-            onClick={() => {
-              openModal("pageGroupListModal", obj);
-            }}
-          >
-            <Icon icon="hugeicons:move" className="w-6 h-6" />
-          </button>
-          <button
-            id={`dropdown-button-${obj.id}`}
-            data-dropdown-toggle={`dropdown-${obj.id}`}
-            className="inline-flex items-center gap-2 p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
-            type="button"
-          >
-            <Icon
-              icon="material-symbols:edit-outline"
-              className="w-6 h-6 text-yellow-500 dark:text-yellow-400"
-              onClick={() => {
-                openModal("edit", obj);
-              }}
-            />
-            <Icon
-              icon="material-symbols:delete"
-              className="w-6 h-6 text-red-600 dark:text-red-500"
-              onClick={() => {
-                openModal("delete", obj);
-              }}
-            />
-          </button>
-        </td>
-      ) : (
-        <td className="text-center px-4 py-3 cursor-pointer relative whitespace-nowrap">
-          {isPage(obj) && (
+          {hasPermission(["all", "write"], userDetails) && (
             <button
               className="inline-flex items-center gap-2 p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
               onClick={() => {
@@ -188,21 +162,31 @@ export default memo(function Table({
               <Icon icon="hugeicons:move" className="w-6 h-6" />
             </button>
           )}
-          <button
-            id={`dropdown-button-${obj.id}`}
-            data-dropdown-toggle={`dropdown-${obj.id}`}
-            className="inline-flex items-center gap-2 p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
-            type="button"
-          >
-            <Link
-              to={`/dashboard/documentation/edit-page?id=${docId}&dir=${dir}&pageGroupId=${pageGroupId}&pageId=${obj.id}&versionId=${docId}&version=${version}`}
+
+          {hasPermission(["all", "write"], userDetails) && (
+            <button
+              id={`dropdown-button-${obj.id}`}
+              data-dropdown-toggle={`dropdown-${obj.id}`}
+              className="inline-flex items-center gap-2 p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
+              type="button"
             >
               <Icon
                 icon="material-symbols:edit-outline"
                 className="w-6 h-6 text-yellow-500 dark:text-yellow-400"
+                onClick={() => {
+                  openModal("edit", obj);
+                }}
               />
-            </Link>
-            {isPage(obj) && (
+            </button>
+          )}
+
+          {hasPermission(["all", "delete"], userDetails) && (
+            <button
+              id={`dropdown-button-${obj.id}`}
+              data-dropdown-toggle={`dropdown-${obj.id}`}
+              className="inline-flex items-center gap-2 p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
+              type="button"
+            >
               <Icon
                 icon="material-symbols:delete"
                 className="w-6 h-6 text-red-600 dark:text-red-500"
@@ -210,8 +194,62 @@ export default memo(function Table({
                   openModal("delete", obj);
                 }}
               />
-            )}
-          </button>
+            </button>
+          )}
+        </td>
+      ) : (
+        <td className="text-center px-4 py-3 cursor-pointer relative whitespace-nowrap">
+          {hasPermission(["all", "write"], userDetails) && (
+            <>
+              {isPage(obj) && (
+                <button
+                  className="inline-flex items-center gap-2 p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
+                  onClick={() => {
+                    openModal("pageGroupListModal", obj);
+                  }}
+                >
+                  <Icon icon="hugeicons:move" className="w-6 h-6" />
+                </button>
+              )}
+            </>
+          )}
+
+          {hasPermission(["all", "write"], userDetails) && (
+            <button
+              id={`dropdown-button-${obj.id}`}
+              data-dropdown-toggle={`dropdown-${obj.id}`}
+              className="inline-flex items-center gap-2 p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
+              type="button"
+            >
+              <Link
+                to={`/dashboard/documentation/edit-page?id=${docId}&dir=${dir}&pageGroupId=${pageGroupId}&pageId=${obj.id}&versionId=${docId}&version=${version}`}
+              >
+                <Icon
+                  icon="material-symbols:edit-outline"
+                  className="w-6 h-6 text-yellow-500 dark:text-yellow-400"
+                />
+              </Link>
+            </button>
+          )}
+
+          {hasPermission(["all", "delete"], userDetails) && (
+            <button
+              id={`dropdown-button-${obj.id}`}
+              data-dropdown-toggle={`dropdown-${obj.id}`}
+              className="inline-flex items-center gap-2 p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
+              type="button"
+            >
+              {isPage(obj) && (
+                <Icon
+                  icon="material-symbols:delete"
+                  className="w-6 h-6 text-red-600 dark:text-red-500"
+                  onClick={() => {
+                    openModal("delete", obj);
+                  }}
+                />
+              )}
+            </button>
+          )}
         </td>
       )}
     </AnimatedTableRow>

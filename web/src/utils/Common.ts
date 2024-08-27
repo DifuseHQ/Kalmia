@@ -2,6 +2,7 @@ import { TFunction } from "i18next";
 import { RefObject, useEffect } from "react";
 
 import { ApiResponse, getRootParentId, OrderItem } from "../api/Requests";
+import { UserDetails } from "../hooks/useUserDetails";
 import { ValidatedJWT } from "../types/auth";
 import { Documentation, Page, PageGroup } from "../types/doc";
 import { toastMessage } from "./Toast";
@@ -553,4 +554,13 @@ export const formatRole = (permissions: string[]) => {
   })[0]?.name;
 
   return matchingRole || "Select Role";
+};
+
+export const hasPermission = (
+  requiredPermissions: string[],
+  userPermissions: UserDetails | null,
+) => {
+  return requiredPermissions.some((permission) =>
+    userPermissions?.permissions?.includes(permission),
+  );
 };

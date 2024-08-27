@@ -20,7 +20,11 @@ import Breadcrumb from "../Breadcrumb/Breadcrumb";
 export default function UserForm() {
   const { t } = useTranslation();
   const authContext = useContext(AuthContext);
-  const { user: currentUser, refreshData } = authContext as AuthContextType;
+  const {
+    user: currentUser,
+    refreshData,
+    userDetails,
+  } = authContext as AuthContextType;
   const { id: userIdString } = useParams();
   const userId: number | null = userIdString
     ? parseInt(userIdString, 10)
@@ -162,8 +166,7 @@ export default function UserForm() {
       username,
       email,
       permissions: permissions || [],
-      admin:
-        permissions?.length == 1 && permissions[0] === "all" ? 1 : 0,
+      admin: permissions?.length == 1 && permissions[0] === "all" ? 1 : 0,
     };
 
     const result = await updateUser(updateDetails);
@@ -305,65 +308,65 @@ export default function UserForm() {
             />
           </div>
 
-          <div className="flex gap-10 items-center mb-6">
-            <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 ">
-              {t("role")}
-            </span>
+          {userData?.username !== userDetails?.username && (
+            <div className="flex gap-10 items-center mb-6">
+              <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 ">
+                {t("role")}
+              </span>
 
-            <div className="relative space-y-2">
-              <button
-                disabled={!isEdit}
-                onClick={handleDropdown}
-                className="text-black border border-gray-400 bg-white dark:border-none dark:text-white hover:bg-gray-300 font-medium rounded-lg text-sm px-5 py-1.5 text-center inline-flex items-center dark:bg-gray-600 dark:hover:bg-gray-700"
-                type="button"
-              >
-                {formatRole(permissions || [])}
-                <svg
-                  className="w-2.5 h-2.5 ms-3"
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 10 6"
+              <div className="relative space-y-2">
+                <button
+                  disabled={!isEdit}
+                  onClick={handleDropdown}
+                  className="text-black border border-gray-400 bg-white dark:border-none dark:text-white hover:bg-gray-300 font-medium rounded-lg text-sm px-5 py-1.5 text-center inline-flex items-center dark:bg-gray-600 dark:hover:bg-gray-700"
+                  type="button"
                 >
-                  <path
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="m1 1 4 4 4-4"
-                  />
-                </svg>
-              </button>
-              {dropdown && (
-                <div className="absolute right-0 lg:left-0 bg-white rounded-lg shadow w-52 dark:bg-gray-700 z-30">
-                  <ul
-                    className="text-sm overflow-hidden rounded-lg text-gray-700 dark:text-gray-200"
-                    aria-labelledby="dropdownInformationButton"
+                  {formatRole(permissions || [])}
+                  <svg
+                    className="w-2.5 h-2.5 ms-3"
+                    aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 10 6"
                   >
-                    {permissionList.map((obj, index) => (
-                      <li
-                        className="bg-red-500"
-                        key={index}
-                        onClick={() => {
-                          setPermissions(obj.value);
-                          handleDropdown();
-                        }}
-                      >
-                        <p
-                          className={`cursor-pointer block px-4 py-2  hover:bg-gray-100 dark:hover:bg-gray-500 dark:hover:text-white
-              ${permissions === obj.value ? "bg-gray-700" : "bg-gray-600"}
-              `}
+                    <path
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="m1 1 4 4 4-4"
+                    />
+                  </svg>
+                </button>
+                {dropdown && (
+                  <div className="absolute right-0 lg:left-0 bg-white rounded-lg shadow w-52 dark:bg-gray-700 z-30">
+                    <ul
+                      className="text-sm overflow-hidden rounded-lg text-gray-700 dark:text-gray-200"
+                      aria-labelledby="dropdownInformationButton"
+                    >
+                      {permissionList.map((obj, index) => (
+                        <li
+                          key={index}
+                          onClick={() => {
+                            setPermissions(obj.value);
+                            handleDropdown();
+                          }}
                         >
-                          {obj?.name}
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+                          <p
+                            className={`cursor-pointer block px-4 py-2  hover:bg-gray-100 dark:hover:bg-gray-500 dark:hover:text-white
+              ${permissions === obj.value ? " bg-gray-300 dark:bg-gray-700" : "dark:bg-gray-600"}
+              `}
+                          >
+                            {obj?.name}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-
+          )}
           <div className="flex justify-start space-x-4">
             {!isEdit ? (
               <button

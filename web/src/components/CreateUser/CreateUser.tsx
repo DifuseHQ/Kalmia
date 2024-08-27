@@ -149,7 +149,6 @@ export default function CreateUser(): JSX.Element {
                   >
                     {permissionList.map((obj, index) => (
                       <li
-                        className="bg-red-500"
                         key={index}
                         onClick={() => {
                           setPermissions(obj.value);
@@ -158,7 +157,7 @@ export default function CreateUser(): JSX.Element {
                       >
                         <p
                           className={`cursor-pointer block px-4 py-2  hover:bg-gray-100 dark:hover:bg-gray-500 dark:hover:text-white
-              ${permissions && permissions === obj.value ? "bg-gray-700" : "bg-gray-600"}
+              ${permissions && permissions === obj.value ? " bg-gray-300 dark:bg-gray-700" : "dark:bg-gray-600"}
               `}
                         >
                           {obj?.name}

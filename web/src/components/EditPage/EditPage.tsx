@@ -32,7 +32,7 @@ import {
 import { AuthContext, AuthContextType } from "../../context/AuthContext";
 import { ModalContext } from "../../context/ModalContext";
 import { ThemeContext, ThemeContextType } from "../../context/ThemeContext";
-import { handleError } from "../../utils/Common";
+import { handleError, hasPermission } from "../../utils/Common";
 import { toastMessage } from "../../utils/Toast";
 import Breadcrumb from "../Breadcrumb/Breadcrumb";
 import DeleteModal from "../DeleteModal/DeleteModal";
@@ -141,7 +141,7 @@ export default function EditPage() {
   const pageGroupId = searchParams.get("pageGroupId");
   const version = searchParams.get("version");
   const authContext = useContext(AuthContext);
-  const { refreshData } = authContext as AuthContextType;
+  const { refreshData, userDetails } = authContext as AuthContextType;
 
   const navigate = useNavigate();
   const [pageData, setPageData] = useState({
@@ -464,28 +464,37 @@ export default function EditPage() {
             </div>
 
             <div className="flex justify-center gap-5">
-              <button
-                onClick={handleEdit}
-                type="submit"
-                className="text-white inline-flex gap-1 items-center bg-yellow-400 hover:bg-yellow-500 dark:bg-yellow-600 dark:hover:bg-yellow-700 dark:focus:ring-yellow-800 focus:ring-4 focus:outline-none focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
-              >
-                <Icon
-                  icon="ri:edit-fill"
-                  className="w-5 h-5 text-white dark:text-white"
-                />
-                {t("edit")}
-              </button>
-
-              {!pageData.isIntroPage && (
+              {hasPermission(["all", "write"], userDetails) && (
                 <button
-                  onClick={() => {
-                    openModal("delete", null);
-                  }}
-                  className="inline-flex items-center gap-1 bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-900 text-white font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+                  onClick={handleEdit}
+                  type="submit"
+                  className="text-white inline-flex gap-1 items-center bg-yellow-400 hover:bg-yellow-500 dark:bg-yellow-600 dark:hover:bg-yellow-700 dark:focus:ring-yellow-800 focus:ring-4 focus:outline-none focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
                 >
-                  <Icon icon="material-symbols:delete" className="w-5 h-5" />
-                  {t("delete")}
+                  <Icon
+                    icon="ri:edit-fill"
+                    className="w-5 h-5 text-white dark:text-white"
+                  />
+                  {t("edit")}
                 </button>
+              )}
+
+              {hasPermission(["all", "delete"], userDetails) && (
+                <>
+                  {!pageData.isIntroPage && (
+                    <button
+                      onClick={() => {
+                        openModal("delete", null);
+                      }}
+                      className="inline-flex items-center gap-1 bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-900 text-white font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+                    >
+                      <Icon
+                        icon="material-symbols:delete"
+                        className="w-5 h-5"
+                      />
+                      {t("delete")}
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </div>

@@ -32,6 +32,7 @@ import {
   createOrderItems,
   getLastPageOrder,
   handleError,
+  hasPermission,
   sortGroupAndPage,
 } from "../../utils/Common";
 import { toastMessage } from "../../utils/Toast";
@@ -56,7 +57,9 @@ export const PageGroupTable = memo(function PageGroupTable() {
   const [searchTerm, setSearchTerm] = useState("");
   const [data, setData] = useState<PageOrGroup[]>([]);
 
-  const { refresh, refreshData } = useContext(AuthContext) as AuthContextType;
+  const { refresh, refreshData, userDetails } = useContext(
+    AuthContext,
+  ) as AuthContextType;
 
   const {
     openModal,
@@ -392,32 +395,35 @@ export const PageGroupTable = memo(function PageGroupTable() {
               <div className="flex justify-center xl:hidden">
                 <BuildTrigger />
               </div>
-              <div className="flex items-center space-x-2">
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  onClick={() => openModal("createPageGroup", null)}
-                  type="button"
-                  className="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
-                >
-                  <span className="px-1 text-left items-center dark:text-white text-md whitespace-nowrap">
-                    {t("new_group")}
-                  </span>
-                  <Icon icon="ei:plus" className="w-6 h-6 dark:text-white" />
-                </motion.button>
 
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  onClick={() => openModal("createPage", null)}
-                  type="button"
-                  className="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
-                  key="create-nest-page-button"
-                >
-                  <span className="px-1 text-left items-center dark:text-white text-md whitespace-nowrap">
-                    {t("new_page")}
-                  </span>
-                  <Icon icon="ei:plus" className="w-6 h-6 dark:text-white" />
-                </motion.button>
-              </div>
+              {hasPermission(["all", "write", "delete"], userDetails) && (
+                <div className="flex items-center space-x-2">
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    onClick={() => openModal("createPageGroup", null)}
+                    type="button"
+                    className="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
+                  >
+                    <span className="px-1 text-left items-center dark:text-white text-md whitespace-nowrap">
+                      {t("new_group")}
+                    </span>
+                    <Icon icon="ei:plus" className="w-6 h-6 dark:text-white" />
+                  </motion.button>
+
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    onClick={() => openModal("createPage", null)}
+                    type="button"
+                    className="flex items-center justify-center text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800"
+                    key="create-nest-page-button"
+                  >
+                    <span className="px-1 text-left items-center dark:text-white text-md whitespace-nowrap">
+                      {t("new_page")}
+                    </span>
+                    <Icon icon="ei:plus" className="w-6 h-6 dark:text-white" />
+                  </motion.button>
+                </div>
+              )}
             </div>
 
             <div className="overflow-x-auto h-auto">

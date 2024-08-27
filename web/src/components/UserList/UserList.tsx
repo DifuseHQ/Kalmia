@@ -25,7 +25,7 @@ export default function UserList() {
 
   const navigate = useNavigate();
   const authcontext = useContext(AuthContext);
-  const { refresh, refreshData } = authcontext as AuthContextType;
+  const { refresh, refreshData, userDetails } = authcontext as AuthContextType;
   const { openModal, closeModal, deleteModal, currentModalItem } =
     useContext(ModalContext);
 
@@ -47,11 +47,14 @@ export default function UserList() {
     fetchData();
   }, [refresh, navigate]);
 
-  const filterUser = (userList as User[]).filter(
-    (user) =>
-      user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email?.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const filterUser = (userList as User[]).filter((user) => {
+    const isDifferentUser = user.username !== userDetails?.username;
+    return (
+      isDifferentUser &&
+      (user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email?.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  });
 
   const handleSearchChange = (e: DOMEvent) => {
     const target = e.target as HTMLInputElement;
