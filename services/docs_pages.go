@@ -78,7 +78,11 @@ func (service *DocService) EditPage(user models.User, id uint, title, slug, cont
 
 	page.Title = title
 	page.Slug = slug
-	page.Content = content
+
+	if content != "" {
+		page.Content = content
+	}
+
 	page.LastEditorID = &user.ID
 	if order != nil {
 		page.Order = order

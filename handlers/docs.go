@@ -312,7 +312,7 @@ func EditPage(services *services.ServiceRegistry, w http.ResponseWriter, r *http
 		ID          uint   `json:"id" validate:"required"`
 		Title       string `json:"title" validate:"required"`
 		Slug        string `json:"slug" validate:"required"`
-		Content     string `json:"content" validate:"required"`
+		Content     string `json:"content"`
 		Order       *uint  `json:"order"`
 		PageGroupId *uint  `json:"pageGroupId"`
 	}
