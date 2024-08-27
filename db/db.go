@@ -51,6 +51,9 @@ func SetupDatabase(env string, database string, dataPath string) *gorm.DB {
 		&models.Page{},
 	)
 
+	db.Exec("UPDATE pages SET is_page = TRUE WHERE is_page IS NULL")
+	db.Exec("UPDATE pages SET is_page_group = TRUE WHERE is_page_group IS NULL")
+
 	if err != nil {
 		logger.Error("failed to migrate database", zap.Error(err))
 	}

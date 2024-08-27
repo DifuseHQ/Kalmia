@@ -21,6 +21,7 @@ type Page struct {
 	Editors         []User     `gorm:"many2many:page_editors;" json:"editors,omitempty"`
 	LastEditorID    *uint      `json:"lastEditorId,omitempty"`
 	IsIntroPage     bool       `json:"isIntroPage,omitempty" gorm:"default:false"`
+	IsPage          bool       `json:"isPage" gorm:"default:true"`
 }
 
 func (s Page) MarshalJSON() ([]byte, error) {
@@ -41,6 +42,7 @@ type PageGroup struct {
 	Editors         []User     `gorm:"many2many:pagegroup_editors;" json:"editors,omitempty"`
 	LastEditorID    *uint      `json:"lastEditorId,omitempty"`
 	Pages           []Page     `json:"pages,omitempty" gorm:"foreignKey:PageGroupID;constraint:OnDelete:CASCADE"`
+	IsPageGroup     bool       `json:"isPagGroup" gorm:"default:true"`
 }
 
 func (s PageGroup) MarshalJSON() ([]byte, error) {

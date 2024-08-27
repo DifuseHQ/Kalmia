@@ -45,6 +45,7 @@ func convertPageGroupToMap(group models.PageGroup) map[string]interface{} {
 			"author":          simplifiedAuthors,
 			"editors":         simplifiedEditors,
 			"lastEditorId":    page.LastEditorID,
+			"isPage":          page.IsPage,
 		})
 	}
 
@@ -82,6 +83,7 @@ func convertPageGroupToMap(group models.PageGroup) map[string]interface{} {
 		"author":          simplifiedAuthors,
 		"editors":         simplifiedEditors,
 		"lastEditorId":    group.LastEditorID,
+		"isPageGroup":     group.IsPageGroup,
 	}
 }
 
@@ -110,12 +112,12 @@ func (service *DocService) recursiveFetchPageGroups(groupMap map[string]interfac
 func (service *DocService) GetPageGroups() ([]map[string]interface{}, error) {
 	var pageGroups []models.PageGroup
 	if err := service.DB.Preload("Pages", func(db *gorm.DB) *gorm.DB {
-		return db.Select("ID", "Title", "Slug", "PageGroupID", "Order", "DocumentationID", "CreatedAt", "UpdatedAt", "AuthorID", "LastEditorID")
+		return db.Select("ID", "Title", "Slug", "PageGroupID", "Order", "DocumentationID", "CreatedAt", "UpdatedAt", "AuthorID", "LastEditorID", "IsPage")
 	}).Preload("Pages.Author").
 		Preload("Pages.Editors").
 		Preload("Author").
 		Preload("Editors").
-		Select("ID", "Name", "DocumentationID", "ParentID", "Order", "CreatedAt", "UpdatedAt", "AuthorID", "LastEditorID").
+		Select("ID", "Name", "DocumentationID", "ParentID", "Order", "CreatedAt", "UpdatedAt", "AuthorID", "LastEditorID", "IsPageGroup").
 		Where("parent_id IS NULL").
 		Find(&pageGroups).Error; err != nil {
 		return nil, fmt.Errorf("failed_to_fetch_page_groups")

@@ -69,7 +69,7 @@ interface VersionOption {
 export const Documentation = memo(function Documentation() {
   const navigate = useNavigate();
   const authContext = useContext(AuthContext);
-  const { refreshData } = authContext as AuthContextType;
+  const { refreshData, refresh } = authContext as AuthContextType;
   const { t } = useTranslation();
 
   const {
@@ -163,7 +163,7 @@ export const Documentation = memo(function Documentation() {
   );
 
   const fetchDocumentationData = useCallback(async () => {
-    console.log("docId changed:", docId);
+    // console.log("docId changed:", docId);
     setLoading(true);
     const documentationsResult = await getDocumentations();
     if (handleError(documentationsResult, navigate, t)) {
@@ -224,7 +224,7 @@ export const Documentation = memo(function Documentation() {
     } else {
       setPageGroupLoading(false);
     }
-  }, [docId, fetchPageGroupData]);
+  }, [docId, fetchPageGroupData, refresh]);
 
   const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);

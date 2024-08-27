@@ -25,7 +25,7 @@ export interface Page {
   lastEditorId: number;
   isIntroPage?: boolean;
   content?: string;
-  isPageGroup?: boolean;
+  isPage: boolean;
 }
 
 export interface PageGroup {
@@ -40,7 +40,7 @@ export interface PageGroup {
   pages: Page[];
   parentId: number | null;
   updatedAt: string;
-  isPageGroup?: boolean;
+  isPageGroup: boolean;
   pageGroups: PageGroup[];
 }
 

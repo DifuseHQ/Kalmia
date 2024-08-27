@@ -78,7 +78,7 @@ export const handleError = (
       window.location.pathname !== "/login" &&
       window.location.pathname !== "/admin/login"
     ) {
-      console.log(result);
+      console.error(result);
       alert("Session expired. Please login again.");
       isRedirecting = true;
       toastMessage(t(result.message), "error");
@@ -509,3 +509,21 @@ export const getRootParentIdFromChildId = async (
 };
 
 export const role: string[] = ["all", "write", "read"];
+
+export const getPageGroupNames = (group: PageGroup) => {
+  let names: PageGroup[] = [group];
+  if (group.pageGroups?.length > 0) {
+    group.pageGroups.forEach((subGroup) => {
+      names = names.concat(getPageGroupNames(subGroup));
+    });
+  }
+  return names;
+};
+
+export const getAllPageGroupNames = (groups: PageGroup[]) => {
+  let allNames: PageGroup[] = [];
+  groups.forEach((group) => {
+    allNames = allNames.concat(getPageGroupNames(group));
+  });
+  return allNames;
+};

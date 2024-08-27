@@ -78,6 +78,9 @@
         "all":"All",
         "write":"Write",
         "read":"Read",
+        "root":"Root",
+        "no_search_found":"No Search Found",
+        "move":"Move",
 
         "clone_documentation": "Clone Documentation",
         "delete_documentation": "Delete Documentation",

@@ -502,9 +502,14 @@ func (service *DocService) StartUpdate(docId uint, rootParentId uint) error {
 }
 
 func (service *DocService) CraftPage(pageID uint, title string, slug string, content string) (string, error) {
+	if content == `"[]"` {
+		return "", nil
+	}
+
 	var blocks []Block
 	err := json.Unmarshal([]byte(content), &blocks)
 	if err != nil {
+		fmt.Println("Error unmarshalling content", err)
 		return "", err
 	}
 
