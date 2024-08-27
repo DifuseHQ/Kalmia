@@ -226,13 +226,14 @@ func (service *AuthService) CreateJWT(username, password string) (map[string]int
 	}
 
 	return map[string]interface{}{
-		"token":    tokenString,
-		"expiry":   claims.ExpiresAt.Time.String(),
-		"email":    claims.Email,
-		"username": claims.Username,
-		"photo":    claims.Photo,
-		"userId":   claims.UserId,
-		"admin":    user.Admin,
+		"token":       tokenString,
+		"expiry":      claims.ExpiresAt.Time.String(),
+		"email":       claims.Email,
+		"username":    claims.Username,
+		"photo":       claims.Photo,
+		"userId":      claims.UserId,
+		"admin":       user.Admin,
+		"permissions": claims.Permissions,
 	}, nil
 }
 
