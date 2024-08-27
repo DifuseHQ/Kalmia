@@ -204,7 +204,7 @@ func (service *AuthService) CreateJWT(username, password string) (map[string]int
 		return nil, fmt.Errorf("invalid_password")
 	}
 
-	tokenString, expiry, err := utils.GenerateJWTAccessToken(user.ID, user.Username, user.Email, user.Photo, user.Admin)
+	tokenString, expiry, err := utils.GenerateJWTAccessToken(user.ID, user.Username, user.Email, user.Photo, user.Admin, user.Permissions)
 	if err != nil {
 		return nil, fmt.Errorf("failed_to_generate_jwt")
 	}
@@ -243,7 +243,7 @@ func (service *AuthService) CreateJWTFromEmail(email string) (string, error) {
 		return "", fmt.Errorf("user_not_found")
 	}
 
-	tokenString, expiry, err := utils.GenerateJWTAccessToken(user.ID, user.Username, user.Email, user.Photo, user.Admin)
+	tokenString, expiry, err := utils.GenerateJWTAccessToken(user.ID, user.Username, user.Email, user.Photo, user.Admin, user.Permissions)
 	if err != nil {
 		return "", fmt.Errorf("failed_to_generate_jwt")
 	}
@@ -278,7 +278,13 @@ func (service *AuthService) RefreshJWT(token string) (string, error) {
 		return "", fmt.Errorf("failed_to_convert_user_id")
 	}
 
-	newToken, expiry, err := utils.GenerateJWTAccessToken(userId, claims.Username, claims.Email, claims.Photo, claims.IsAdmin)
+	permissionsJSON, err := json.Marshal(claims.Permissions)
+
+	if err != nil {
+		return "", fmt.Errorf("failed_to_marshal_permissions")
+	}
+
+	newToken, expiry, err := utils.GenerateJWTAccessToken(userId, claims.Username, claims.Email, claims.Photo, claims.IsAdmin, string(permissionsJSON))
 	if err != nil {
 		return "", fmt.Errorf("failed_to_generate_new_jwt")
 	}
