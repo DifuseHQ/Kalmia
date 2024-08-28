@@ -39,6 +39,8 @@ export default memo(function Breadcrumb(): JSX.Element {
 
   const { t } = useTranslation();
 
+  const docId = searchParams.get("id");
+
   useEffect(() => {
     async function updateBreadcrumb() {
       const newBreadcrumb: BreadcrumbItem[] = [];
@@ -109,10 +111,8 @@ export default memo(function Breadcrumb(): JSX.Element {
         icon: "uiw:home",
       });
 
-      const docId = searchParams.get("id");
       const pageId = searchParams.get("pageId");
       const pageGroupId = searchParams.get("pageGroupId");
-      const isCreatePage = location.pathname.includes("/create-page");
       const versionId = searchParams.get("versionId");
       const version = searchParams.get("version");
       const clonedFrom =
@@ -188,22 +188,7 @@ export default memo(function Breadcrumb(): JSX.Element {
         }
       }
 
-      if (isCreatePage) {
-        if (pageGroupId) {
-          addPageGroupsBreadcrumb(
-            Number.parseInt(pageGroupId),
-            pageGroups,
-            newBreadcrumb,
-            versionId,
-            version,
-          );
-        }
-        newBreadcrumb.push({
-          title: "Create Page",
-          path: location.pathname + location.search,
-          icon: "mdi:file-document-plus",
-        });
-      } else if (location.pathname.includes("/edit-page") && pageId) {
+      if (location.pathname.includes("/edit-page") && pageId) {
         const page = pages?.find((p: Page) => p.id === Number.parseInt(pageId));
         if (page) {
           if (page.pageGroupId != null && page.pageGroupId !== undefined) {
@@ -217,11 +202,11 @@ export default memo(function Breadcrumb(): JSX.Element {
           }
           newBreadcrumb.push({
             title: page.title,
-            path: `/dashboard/documentation/edit-page?id=${page.documentationId}&pageId=${page.id}&versionId=${versionId}&version=${version}`,
+            path: `/dashboard/documentation/edit-page?id=${docId}&pageId=${page.id}&versionId=${versionId}&version=${version}`,
             icon: "iconoir:page",
           });
         }
-      } else if (location.pathname.includes("/page-group") && pageGroupId) {
+      } else if (location.pathname.includes("/documentation") && pageGroupId) {
         addPageGroupsBreadcrumb(
           Number.parseInt(pageGroupId),
           pageGroups,
@@ -266,7 +251,7 @@ export default memo(function Breadcrumb(): JSX.Element {
         }
         newBreadcrumb.push({
           title: group.name,
-          path: `/dashboard/documentation/page-group?id=${group.documentationId}&pageGroupId=${group.id}&versionId=${versionId}&version=${version}`,
+          path: `/dashboard/documentation?id=${docId}&pageGroupId=${group.id}&versionId=${versionId}&version=${version}`,
           icon: "clarity:folder-solid",
         });
       }

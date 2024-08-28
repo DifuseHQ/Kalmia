@@ -41,8 +41,6 @@ export default memo(function TableRow({
     return "name" in obj;
   }
 
-  console.log("obj", obj);
-
   return (
     <AnimatedTableRow
       initial={{ opacity: 0 }}

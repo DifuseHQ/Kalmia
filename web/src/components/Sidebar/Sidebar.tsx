@@ -119,7 +119,6 @@ export default function Sidebar() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isSidebarOpen, handleClickOutside]);
-  console.log(userDetails);
 
   return (
     <AnimatePresence>
