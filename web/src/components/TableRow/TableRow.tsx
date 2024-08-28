@@ -12,23 +12,23 @@ import { getFormattedDate, hasPermission } from "../../utils/Common";
 interface TableProps {
   provided: DraggableProvided;
   snapshot: DraggableStateSnapshot;
-  docId: number | undefined;
-  pageGroupId: number;
+  docId: string | null;
+  pageGroupId: number | undefined | null;
   obj: PageGroup | Page;
   version: string | undefined;
-  dir: string;
+  versionId: number | undefined;
 }
 
 const AnimatedTableRow = motion.tr;
 
-export default memo(function Table({
+export default memo(function TableRow({
   provided,
   snapshot,
   obj,
   pageGroupId,
   docId,
+  versionId,
   version,
-  dir,
 }: TableProps) {
   const { openModal } = useContext(ModalContext);
   const authContext = useContext(AuthContext);
@@ -40,6 +40,8 @@ export default memo(function Table({
   function isPageGroup(obj: PageGroup | Page): obj is PageGroup {
     return "name" in obj;
   }
+
+  console.log("obj", obj);
 
   return (
     <AnimatedTableRow
@@ -75,8 +77,8 @@ export default memo(function Table({
           className="flex items-center gap-1"
           to={
             isPageGroup(obj)
-              ? `/dashboard/documentation/page-group?id=${docId}&pageGroupId=${obj.id}&versionId=${docId}&version=${version}`
-              : `/dashboard/documentation/edit-page?id=${docId}&dir=${dir}&pageGroupId=${pageGroupId}&pageId=${obj.id}&versionId=${docId}&version=${version}`
+              ? `/dashboard/documentation?id=${docId}&pageGroupId=${obj.id}&versionId=${versionId}&version=${version}`
+              : `/dashboard/documentation/edit-page?id=${docId}${pageGroupId ? `&pageGroupId=${pageGroupId}` : ""}&pageId=${obj.id}&versionId=${versionId}&version=${version}`
           }
         >
           {isPageGroup(obj) ? (
@@ -154,7 +156,7 @@ export default memo(function Table({
         <td className="text-center w-3/12 px-4 py-3 cursor-pointer relative whitespace-nowrap">
           {hasPermission(["all", "write"], userDetails) && (
             <button
-              className="inline-flex items-center gap-2 p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
+              className="inline-flex items-center px-1.5 gap-2 p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
               onClick={() => {
                 openModal("pageGroupListModal", obj);
               }}
@@ -203,7 +205,7 @@ export default memo(function Table({
             <>
               {isPage(obj) && (
                 <button
-                  className="inline-flex items-center gap-2 p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
+                  className="inline-flex items-center gap-2 px-1.5 p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
                   onClick={() => {
                     openModal("pageGroupListModal", obj);
                   }}
@@ -222,7 +224,7 @@ export default memo(function Table({
               type="button"
             >
               <Link
-                to={`/dashboard/documentation/edit-page?id=${docId}&dir=${dir}&pageGroupId=${pageGroupId}&pageId=${obj.id}&versionId=${docId}&version=${version}`}
+                to={`/dashboard/documentation/edit-page?id=${docId}${pageGroupId ? `&pageGroupId=${pageGroupId}` : ""}&pageId=${obj.id}&versionId=${versionId}&version=${version}`}
               >
                 <Icon
                   icon="material-symbols:edit-outline"

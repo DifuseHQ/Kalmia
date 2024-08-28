@@ -136,10 +136,10 @@ export default function EditPage() {
 
   const [searchParams] = useSearchParams();
   const docId = searchParams.get("id");
-  const dir = searchParams.get("dir");
   const pageId = searchParams.get("pageId");
   const pageGroupId = searchParams.get("pageGroupId");
   const version = searchParams.get("version");
+  const versionID = searchParams.get("versionID");
   const authContext = useContext(AuthContext);
   const { refreshData, userDetails } = authContext as AuthContextType;
 
@@ -275,11 +275,11 @@ export default function EditPage() {
       toastMessage(t(result.data.message), "success");
       refreshData();
 
-      if (dir === "true") {
+      if (!pageGroupId) {
         navigate(`/dashboard/documentation?id=${docId}`);
       } else {
         navigate(
-          `/dashboard/documentation/page-group?id=${docId}&pageGroupId=${pageGroupId}&versionId=${docId}&version=${version}`,
+          `/dashboard/documentation/page-group?id=${docId}&pageGroupId=${pageGroupId}&versionId=${versionID}&version=${version}`,
         );
       }
     }
@@ -402,10 +402,16 @@ export default function EditPage() {
       >
         <div className="w-full h-full md:h-auto">
           <div className="relative p-4 dark:bg-gray-800 rounded-lg sm:p-5">
-            <div className="flex justify-start items-center pb-4 mb-4 rounded-t border-b sm:mb-5 dark:border-gray-600">
+            <div className="flex justify-between items-center pb-4 mb-4 rounded-t border-b sm:mb-5 dark:border-gray-600">
               <h3 className="text-2xl  font-semibold text-gray-900 dark:text-white">
                 {t("edit_page")}
               </h3>
+              <p
+                className="px-5 py-1.5 rounded-lg font-semibold dark:text-white"
+                title="Version"
+              >
+                version : {version}
+              </p>
             </div>
 
             <div className="grid gap-4 mb-4 grid-cols-1">

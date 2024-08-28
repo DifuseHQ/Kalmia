@@ -29,6 +29,7 @@ import {
   deletePage,
   deletePageGroup,
   getDocumentations,
+  getPageGroup,
   getPageGroups,
   getPages,
   updatePageGroup,
@@ -50,6 +51,7 @@ import {
   handleError,
   hasPermission,
   isPageGroup,
+  sortGroupAndPage,
 } from "../../utils/Common";
 import { toastMessage } from "../../utils/Toast";
 import { pageSizes } from "../../utils/Utils";
@@ -59,7 +61,7 @@ import EditDocumentModal from "../CreateDocumentModal/EditDocumentModal";
 import CreatePageGroup from "../CreatePageGroup/CreatePageGroup";
 import CreatePage from "../CreatePageModal/CreatePageModal";
 import DeleteModal from "../DeleteModal/DeleteModal";
-import Table from "../Table/Table";
+import TableRow from "../TableRow/TableRow";
 
 interface VersionOption {
   id: number;
@@ -88,6 +90,7 @@ export const Documentation = memo(function Documentation() {
   const [searchParam] = useSearchParams();
   const docId = searchParam.get("id");
   const versionId = searchParam.get("versionId");
+  const pageGroupId = searchParam.get("pageGroupId");
   const [loading, setLoading] = useState<boolean>(true);
   const [pageGroupLoading, setPageGroupLoading] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -164,7 +167,6 @@ export const Documentation = memo(function Documentation() {
   );
 
   const fetchDocumentationData = useCallback(async () => {
-    // console.log("docId changed:", docId);
     setLoading(true);
     const documentationsResult = await getDocumentations();
     if (handleError(documentationsResult, navigate, t)) {
@@ -188,7 +190,7 @@ export const Documentation = memo(function Documentation() {
       }
     }
     setLoading(false);
-  }, [docId, searchParam, getAllVersions, navigate, t]);
+  }, [docId]);
 
   const fetchPageGroupData = useCallback(async () => {
     setPageGroupLoading(true);
@@ -220,12 +222,31 @@ export const Documentation = memo(function Documentation() {
   }, [docId, fetchDocumentationData]);
 
   useEffect(() => {
-    if (docId) {
-      fetchPageGroupData();
-    } else {
-      setPageGroupLoading(false);
-    }
-  }, [docId, fetchPageGroupData, refresh]);
+    const fetchData = async () => {
+      setPageGroupLoading(true);
+      if (docId) {
+        if (pageGroupId) {
+          const result = await getPageGroup(parseInt(pageGroupId));
+          if (handleError(result, navigate, t)) {
+            return;
+          }
+          if (result.status === "success") {
+            const groupData = result.data.pageGroups;
+            const pages = result.data.pages;
+            const combineData = sortGroupAndPage(groupData || [], pages || []);
+            setGroupsAndPageData(combineData);
+            setPageGroupLoading(false);
+          }
+        } else {
+          fetchPageGroupData();
+        }
+      } else {
+        setPageGroupLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [docId, fetchPageGroupData, refresh, pageGroupId]);
 
   const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -237,6 +258,7 @@ export const Documentation = memo(function Documentation() {
       if (selectedVersion) {
         const isPage = (obj as Page).title !== undefined;
         const isPageGroup = (obj as PageGroup).name !== undefined;
+
         return (
           obj.documentationId === selectedVersion.id &&
           ((isPageGroup &&
@@ -318,11 +340,14 @@ export const Documentation = memo(function Documentation() {
 
   const handlePageGroupUpdate = useCallback(
     async (editTitle: string, _version: string, id: number) => {
-      const result = await updatePageGroup({
+      const updatePageGroupPayload = {
         id,
         name: editTitle,
         documentationId: Number(selectedVersion?.id),
-      });
+        ...(pageGroupId && { parentId: Number(pageGroupId) }),
+      };
+
+      const result = await updatePageGroup(updatePageGroupPayload);
 
       if (handleError(result, navigate, t)) {
         return;
@@ -371,11 +396,15 @@ export const Documentation = memo(function Documentation() {
       return;
     }
     const lastOrder: number = getLastPageOrder(groupsAndPageData);
-    const result = await createPageGroup({
+
+    const createUserPayload = {
       name: title,
       documentationId: Number(selectedVersion?.id),
       order: lastOrder,
-    });
+      ...(pageGroupId && { parentId: Number(pageGroupId) }),
+    };
+
+    const result = await createPageGroup(createUserPayload);
 
     if (handleError(result, navigate, t)) {
       return;
@@ -401,13 +430,16 @@ export const Documentation = memo(function Documentation() {
     const lastOrder: number = getLastPageOrder(groupsAndPageData);
     const docIdOrVersionId = selectedVersion?.id ? selectedVersion.id : docId;
 
-    const result = await createPageAPI({
+    const createPagePayload = {
       title,
       slug,
       content: JSON.stringify([]),
       documentationId: Number(docIdOrVersionId),
-      order: Number(lastOrder),
-    });
+      order: lastOrder,
+      ...(pageGroupId && { pageGroupId: Number(pageGroupId) }),
+    };
+
+    const result = await createPageAPI(createPagePayload);
 
     if (handleError(result, navigate, t)) {
       return;
@@ -569,7 +601,7 @@ export const Documentation = memo(function Documentation() {
 
         {!loading && (
           <>
-            {documentData.length !== 0 ? (
+            {!loading && documentData.length !== 0 ? (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -687,14 +719,23 @@ export const Documentation = memo(function Documentation() {
                         key="documentation-version-listing-container"
                         className="relative inline-block z-20 "
                       >
-                        <div
-                          id="dropdownSelect"
-                          className="flex items-center border gap-2 border-gray-400 hover:bg-gray-200 px-3 py-1.5 rounded-lg cursor-pointer dark:bg-gray-600 dark:border-gray-700 dark:hover:bg-gray-800 dark:text-white"
-                          onClick={toggleDropdown}
-                        >
-                          {selectedVersion?.version}
-                          <Icon icon="mingcute:down-fill" className="h-6 w-6" />
-                        </div>
+                        {!pageGroupId ? (
+                          <div
+                            id="dropdownSelect"
+                            className="flex items-center border gap-2 border-gray-400 hover:bg-gray-200 px-3 py-1.5 rounded-lg cursor-pointer dark:bg-gray-600 dark:border-gray-700 dark:hover:bg-gray-800 dark:text-white"
+                            onClick={toggleDropdown}
+                          >
+                            {selectedVersion?.version}
+                            <Icon
+                              icon="mingcute:down-fill"
+                              className="h-6 w-6"
+                            />
+                          </div>
+                        ) : (
+                          <div className="flex items-center border gap-2 border-gray-400 hover:bg-gray-200 px-3 py-1.5 rounded-lg cursor-pointer dark:bg-gray-600 dark:border-gray-700 dark:hover:bg-gray-800 dark:text-white">
+                            {selectedVersion?.version}
+                          </div>
+                        )}
 
                         {showVersionDropdown && (
                           <motion.div
@@ -776,13 +817,17 @@ export const Documentation = memo(function Documentation() {
                           </motion.div>
                         )}
                       </motion.div>
-                      <div className="hidden xl:block">
+                      {!pageGroupId && (
+                        <div className="hidden xl:block">
+                          <BuildTrigger />
+                        </div>
+                      )}
+                    </div>
+                    {!pageGroupId && (
+                      <div className="flex justify-center xl:hidden">
                         <BuildTrigger />
                       </div>
-                    </div>
-                    <div className="flex justify-center xl:hidden">
-                      <BuildTrigger />
-                    </div>
+                    )}
 
                     {hasPermission(["all", "write", "delete"], userDetails) && (
                       <div className="flex items-center space-x-2">
@@ -873,25 +918,11 @@ export const Documentation = memo(function Documentation() {
                                 {...provided.droppableProps}
                                 ref={provided.innerRef}
                               >
-                                {!pageGroupLoading ? (
-                                  memoizedFilteredItems &&
-                                  memoizedFilteredItems.length <= 0 ? (
-                                    <motion.tr
-                                      initial={{ opacity: 0 }}
-                                      animate={{ opacity: 1 }}
-                                      exit={{ opacity: 0 }}
-                                      className="border-b dark:bg-gray-700"
-                                      key="no-pages-found-message"
-                                    >
-                                      <td
-                                        colSpan={5}
-                                        className="w-12/12 text-center py-12"
-                                      >
-                                        {t("no_pages_found")}
-                                      </td>
-                                    </motion.tr>
-                                  ) : (
-                                    memoizedFilteredItems
+                                {!loading &&
+                                !pageGroupLoading &&
+                                memoizedFilteredItems ? (
+                                  <>
+                                    {memoizedFilteredItems
                                       .slice(startIdx, endIdx)
                                       .map((obj, index) => (
                                         <Draggable
@@ -911,19 +942,39 @@ export const Documentation = memo(function Documentation() {
                                           }
                                         >
                                           {(provided, snapshot) => (
-                                            <Table
+                                            <TableRow
                                               provided={provided}
                                               snapshot={snapshot}
                                               obj={obj}
-                                              dir="true"
-                                              docId={selectedVersion?.id}
-                                              pageGroupId={obj.id}
+                                              docId={docId}
+                                              versionId={selectedVersion?.id}
+                                              pageGroupId={
+                                                isPage(obj)
+                                                  ? obj.pageGroupId
+                                                  : (obj as PageGroup).parentId
+                                              }
                                               version={selectedVersion?.version}
                                             />
                                           )}
                                         </Draggable>
-                                      ))
-                                  )
+                                      ))}
+                                    {memoizedFilteredItems.length <= 0 && (
+                                      <motion.tr
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="border-b dark:bg-gray-700"
+                                        key="no-pages-found-message"
+                                      >
+                                        <td
+                                          colSpan={5}
+                                          className="w-12/12 text-center py-12"
+                                        >
+                                          {t("no_pages_found")}
+                                        </td>
+                                      </motion.tr>
+                                    )}
+                                  </>
                                 ) : (
                                   <motion.tr
                                     initial={{ opacity: 0 }}

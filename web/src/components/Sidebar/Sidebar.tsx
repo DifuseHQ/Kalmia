@@ -64,9 +64,12 @@ export default function Sidebar() {
   const location = useLocation();
   const path = location.pathname + location.search;
 
-  const isActive = ["user-list", "edit-user", "user-profile"].some(
-    (substring) => path.includes(substring),
-  );
+  const isActive = [
+    "user-list",
+    "edit-user",
+    "user-profile",
+    "create-user",
+  ].some((substring) => path.includes(substring));
 
   useEffect(() => {
     const fetchData = async () => {
@@ -116,6 +119,7 @@ export default function Sidebar() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isSidebarOpen, handleClickOutside]);
+  console.log(userDetails);
 
   return (
     <AnimatePresence>

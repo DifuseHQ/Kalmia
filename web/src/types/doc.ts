@@ -38,7 +38,7 @@ export interface PageGroup {
   name: string;
   order: number;
   pages: Page[];
-  parentId: number | null;
+  parentId?: number | null;
   updatedAt: string;
   isPageGroup: boolean;
   pageGroups: PageGroup[];
