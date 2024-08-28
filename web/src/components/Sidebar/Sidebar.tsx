@@ -64,6 +64,10 @@ export default function Sidebar() {
   const location = useLocation();
   const path = location.pathname + location.search;
 
+  const isActive = ["user-list", "edit-user", "user-profile"].some(
+    (substring) => path.includes(substring),
+  );
+
   useEffect(() => {
     const fetchData = async () => {
       const documentations = await getDocumentations();
@@ -213,7 +217,7 @@ export default function Sidebar() {
                   to="/dashboard/admin/user-list"
                   className={`flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-200 dark:text-white dark:hover:bg-gray-700
                     ${
-                      path === "/dashboard/admin/user-list"
+                      isActive
                         ? "text-black-500 bg-gray-300 dark:bg-gray-600"
                         : "text-gray-900"
                     }
