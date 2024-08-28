@@ -134,12 +134,10 @@ func (service *AuthService) EditUser(id uint, username, email, password, photo s
 		user.Photo = photo
 	}
 
-	if admin != 0 {
-		if admin == 1 {
-			user.Admin = false
-		} else {
-			user.Admin = true
-		}
+	if admin == 0 {
+		user.Admin = false
+	} else {
+		user.Admin = true
 	}
 
 	if len(permissions) > 0 {
