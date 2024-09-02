@@ -53,6 +53,13 @@ func SetupDatabase(env string, database string, dataPath string) *gorm.DB {
 
 	db.Exec("UPDATE pages SET is_page = TRUE WHERE is_page IS NULL")
 	db.Exec("UPDATE pages SET is_page_group = TRUE WHERE is_page_group IS NULL")
+	db.Exec(`UPDATE users
+				SET permissions = CASE
+				WHEN (permissions IS NULL OR permissions = '') AND (admin = 1 OR admin = true) THEN '["all"]'
+				WHEN (permissions IS NULL OR permissions = '') AND (admin = 0 OR admin = false OR admin IS NULL) THEN '["read"]'
+				ELSE permissions
+				END
+				WHERE permissions IS NULL OR permissions = '';`)
 
 	if err != nil {
 		logger.Error("failed to migrate database", zap.Error(err))
