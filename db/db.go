@@ -3,8 +3,10 @@ package db
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"path"
+	"strings"
 
 	"git.difuse.io/Difuse/kalmia/config"
 	"git.difuse.io/Difuse/kalmia/db/models"
@@ -51,18 +53,17 @@ func SetupDatabase(env string, database string, dataPath string) *gorm.DB {
 		&models.Page{},
 	)
 
+	if err != nil {
+		logger.Panic("failed to migrate database", zap.Error(err))
+	}
+
 	db.Exec("UPDATE pages SET is_page = TRUE WHERE is_page IS NULL")
 	db.Exec("UPDATE pages SET is_page_group = TRUE WHERE is_page_group IS NULL")
-	db.Exec(`UPDATE users
-				SET permissions = CASE
-				WHEN (permissions IS NULL OR permissions = '') AND (admin = 1 OR admin = true) THEN '["all"]'
-				WHEN (permissions IS NULL OR permissions = '') AND (admin = 0 OR admin = false OR admin IS NULL) THEN '["read"]'
-				ELSE permissions
-				END
-				WHERE permissions IS NULL OR permissions = '';`)
+
+	err = updateUserPermissions(db)
 
 	if err != nil {
-		logger.Error("failed to migrate database", zap.Error(err))
+		logger.Error("User permissions update failed", zap.Error(err))
 	}
 
 	return db
@@ -116,4 +117,39 @@ func SetupBasicData(db *gorm.DB, admins []config.User) {
 	}
 
 	logger.Info("Database initialized")
+}
+
+func updateUserPermissions(db *gorm.DB) error {
+	var result *gorm.DB
+	dialectName := strings.ToLower(db.Dialector.Name())
+
+	if dialectName == "postgres" {
+		result = db.Exec(`
+            UPDATE users
+            SET permissions = CASE
+                WHEN (permissions IS NULL OR permissions = '') AND (admin::boolean = true) THEN '["all"]'
+                WHEN (permissions IS NULL OR permissions = '') AND (admin::boolean = false OR admin IS NULL) THEN '["read"]'
+                ELSE permissions
+            END
+            WHERE permissions IS NULL OR permissions = ''
+        `)
+	} else if dialectName == "sqlite" {
+		result = db.Exec(`
+            UPDATE users
+            SET permissions = CASE
+                WHEN (permissions IS NULL OR permissions = '') AND (admin = 1) THEN '["all"]'
+                WHEN (permissions IS NULL OR permissions = '') AND (admin = 0 OR admin IS NULL) THEN '["read"]'
+                ELSE permissions
+            END
+            WHERE permissions IS NULL OR permissions = ''
+        `)
+	} else {
+		return fmt.Errorf("unsupported database dialect: %s", dialectName)
+	}
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	return nil
 }
