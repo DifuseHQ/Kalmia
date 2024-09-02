@@ -145,7 +145,7 @@ func EditDocumentation(services *services.ServiceRegistry, w http.ResponseWriter
 		FooterLabelLinks string `json:"footerLabelLinks"`
 		MoreLabelLinks   string `json:"moreLabelLinks"`
 		CopyrightText    string `json:"copyrightText" validate:"required"`
-		RequireAuth      bool   `json:"requireAuth" validate:"required"`
+		RequireAuth      bool   `json:"requireAuth"`
 	}
 
 	req, err := ValidateRequest[Request](w, r)
