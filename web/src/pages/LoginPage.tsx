@@ -1,11 +1,13 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { KeyboardEventHandler, useContext, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import { baseURL } from "../api/AxiosInstance";
 import { oAuthProviders } from "../api/Requests";
 import Navbar from "../components/Navbar/Navbar";
 import { AuthContext, AuthContextType } from "../context/AuthContext";
+import { b64ToString } from "../utils/Common";
 
 export default function LoginPage() {
   const authContext = useContext(AuthContext);
@@ -14,6 +16,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [availableProviders, setAvailableProviders] = useState<string[]>([]);
+  const [searchParams] = useSearchParams();
+  const [docAuth, setDocAuth] = useState<string>("");
+
+  useEffect(() => {
+    const docAuthParam = searchParams.get("docAuth") || "";
+    setDocAuth(docAuthParam);
+  }, [searchParams]);
 
   const { login, loginOAuth } = authContext as AuthContextType;
 
@@ -47,7 +56,11 @@ export default function LoginPage() {
   const handleSubmit = async () => {
     setIsLoading(true);
     try {
-      await login(username, password);
+      if (docAuth) {
+        await login(username, password, true, b64ToString(docAuth));
+      } else {
+        await login(username, password, false, "");
+      }
     } catch (error) {
       console.error("Login failed:", error);
     } finally {
@@ -115,6 +128,11 @@ export default function LoginPage() {
               <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white text-center">
                 {t("sign_in_to_your_account")}
               </h1>
+              {docAuth && docAuth !== "" && (
+                <p className="mt-2 text-sm text-red-600 dark:text-red-400 text-center font-bold">
+                  {t("this_doc_requires_auth")}
+                </p>
+              )}
               <div className="space-y-4 md:space-y-6">
                 <div>
                   <span className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">

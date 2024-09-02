@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/base64"
 	"net/url"
 	"path/filepath"
 	"regexp"
@@ -127,4 +128,17 @@ func GetContentType(filename string) string {
 func TrimFirstRune(s string) string {
 	_, i := utf8.DecodeRuneInString(s)
 	return s[i:]
+}
+
+func ArrayContains(arr []string, value string) bool {
+	for _, item := range arr {
+		if item == value {
+			return true
+		}
+	}
+	return false
+}
+
+func ToBase64(input string) string {
+	return base64.StdEncoding.EncodeToString([]byte(input))
 }

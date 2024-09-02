@@ -42,7 +42,7 @@ func (service *DocService) GetDocumentations() ([]models.Documentation, error) {
 		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
 	}).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID", "Version", "ClonedFrom",
 		"LastEditorID", "Favicon", "MetaImage", "NavImage", "NavImageDark", "CustomCSS", "FooterLabelLinks", "MoreLabelLinks",
-		"URL", "OrganizationName", "LanderDetails", "ProjectName", "BaseURL").
+		"URL", "OrganizationName", "LanderDetails", "ProjectName", "BaseURL", "RequireAuth").
 		Find(&documentations).Error; err != nil {
 		return nil, fmt.Errorf("failed_to_get_documentations")
 	}
@@ -88,7 +88,7 @@ func (service *DocService) GetDocumentation(id uint) (models.Documentation, erro
 		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
 	}).Where("id = ?", id).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID", "Version", "LastEditorID", "Favicon",
 		"MetaImage", "NavImage", "NavImageDark", "CustomCSS", "FooterLabelLinks", "MoreLabelLinks", "CopyrightText",
-		"BaseURL", "URL", "OrganizationName", "LanderDetails", "ProjectName", "ClonedFrom").
+		"BaseURL", "URL", "OrganizationName", "LanderDetails", "ProjectName", "ClonedFrom", "Password", "RequireAuth").
 		Find(&documentation).Error; err != nil {
 		return models.Documentation{}, fmt.Errorf("failed_to_get_documentation")
 	}
@@ -145,7 +145,6 @@ func (service *DocService) GetAllVersions(id uint) (string, []string, error) {
 	var docs []models.Documentation
 	db := service.DB
 
-	// First, traverse up to find the root
 	rootID := id
 	for {
 		var doc models.Documentation
@@ -153,12 +152,11 @@ func (service *DocService) GetAllVersions(id uint) (string, []string, error) {
 			return "", nil, fmt.Errorf("documentation_not_found: %w", err)
 		}
 		if doc.ClonedFrom == nil || *doc.ClonedFrom == 0 {
-			break // We've found the root
+			break
 		}
 		rootID = *doc.ClonedFrom
 	}
 
-	// Now, traverse down from the root to get all versions
 	var fetchDocs func(uint) error
 	fetchDocs = func(docID uint) error {
 		var doc models.Documentation
@@ -182,12 +180,10 @@ func (service *DocService) GetAllVersions(id uint) (string, []string, error) {
 		return "", nil, err
 	}
 
-	// Sort documents by creation time
 	sort.Slice(docs, func(i, j int) bool {
 		return docs[i].CreatedAt.Before(*docs[j].CreatedAt)
 	})
 
-	// Extract versions
 	versions := make([]string, len(docs))
 	for i, doc := range docs {
 		versions[i] = doc.Version
@@ -260,7 +256,7 @@ func (service *DocService) CreateDocumentation(documentation *models.Documentati
 	return nil
 }
 
-func (service *DocService) EditDocumentation(user models.User, id uint, name, description, version, favicon, metaImage, navImage, navImageDark, customCSS, footerLabelLinks, moreLabelLinks, copyrightText, url, organizationName, projectName, baseURL, landerDetails string) error {
+func (service *DocService) EditDocumentation(user models.User, id uint, name, description, version, favicon, metaImage, navImage, navImageDark, customCSS, footerLabelLinks, moreLabelLinks, copyrightText, url, organizationName, projectName, baseURL, landerDetails string, requireAuth bool) error {
 	tx := service.DB.Begin()
 	if !utils.IsBaseURLValid(baseURL) {
 		return fmt.Errorf("invalid_base_url")
@@ -283,6 +279,7 @@ func (service *DocService) EditDocumentation(user models.User, id uint, name, de
 		doc.FooterLabelLinks = footerLabelLinks
 		doc.MoreLabelLinks = moreLabelLinks
 		doc.CopyrightText = copyrightText
+		doc.RequireAuth = requireAuth
 		if isTarget && version != "" {
 			doc.Version = version
 		}
@@ -506,6 +503,7 @@ func (service *DocService) CreateDocumentationVersion(originalDocId uint, newVer
 		Author:           originalDoc.Author,
 		Editors:          originalDoc.Editors,
 		LastEditorID:     originalDoc.LastEditorID,
+		RequireAuth:      originalDoc.RequireAuth,
 	}
 
 	err = service.DB.Transaction(func(tx *gorm.DB) error {

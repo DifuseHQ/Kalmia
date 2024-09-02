@@ -12,11 +12,16 @@ import { createJWT, refreshJWT, signOut, validateJWT } from "../api/Requests";
 import { useToken } from "../hooks/useToken";
 import { UpdateUserFunction, UserType, useUser } from "../hooks/useUser";
 import { UserDetails, useUserDetails } from "../hooks/useUserDetails";
-import { handleError, isTokenExpiringSoon } from "../utils/Common";
+import { handleError, isTokenExpiringSoon, setCookie } from "../utils/Common";
 import { toastMessage } from "../utils/Toast";
 
 export interface AuthContextType {
-  login: (username: string, password: string) => Promise<void>;
+  login: (
+    username: string,
+    password: string,
+    setSession: boolean,
+    redirectTo: string,
+  ) => Promise<void>;
   loginOAuth: (code: string) => Promise<void>;
   user: UserType;
   setUser: UpdateUserFunction;
@@ -59,13 +64,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setRefresh((prev) => !prev);
   };
 
-  const login = async (username: string, password: string) => {
+  const login = async (
+    username: string,
+    password: string,
+    setSession: boolean = false,
+    redirectTo: string = "",
+  ) => {
     const response = await createJWT({ username, password });
     if (handleError(response, navigate, t)) return;
     if (response.status === "success") {
       const data = response.data.token;
       setToken(data);
       setUser(data);
+      if (setSession !== false) {
+        setCookie("viewToken", data, 1);
+        if (redirectTo) {
+          window.location.href = redirectTo;
+          return;
+        }
+      }
       localStorage.setItem("accessToken", JSON.stringify(response?.data));
       navigate("/dashboard", { replace: true });
     }

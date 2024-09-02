@@ -564,3 +564,12 @@ export const hasPermission = (
     userPermissions?.permissions?.includes(permission),
   );
 };
+
+export const setCookie = (name: string, value: string, days: number) => {
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${value}; expires=${expires}; path=/`;
+};
+
+export const b64ToString = (base64: string) => {
+  return window.atob(base64);
+};

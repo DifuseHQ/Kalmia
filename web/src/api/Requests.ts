@@ -39,6 +39,7 @@ export interface DocumentationPayload {
   footerLabelLinks?: FooterLabelLinks[] | string;
   moreLabelLinks?: MoreLabelLinks[] | string;
   copyrightText: string;
+  requireAuth?: boolean;
 }
 
 interface CreateVersionPayload {

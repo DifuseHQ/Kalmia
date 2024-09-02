@@ -16,11 +16,26 @@ func RsPressMiddleware(dS *services.DocService) func(http.Handler) http.Handler 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			urlPath := r.URL.Path
-			docId, docPath, baseURL, err := dS.GetRsPress(urlPath)
+			docId, docPath, baseURL, reqAuth, err := dS.GetRsPress(urlPath)
+			cookieToken := ""
+
+			for _, cookie := range r.Cookies() {
+				if cookie.Name == "viewToken" {
+					cookieToken = cookie.Value
+					break
+				}
+			}
 
 			if err != nil {
 				next.ServeHTTP(w, r)
 				return
+			}
+
+			if strings.HasPrefix(urlPath, baseURL) {
+				if reqAuth && cookieToken == "" {
+					http.Redirect(w, r, "/admin/login?docAuth="+utils.ToBase64(r.URL.Path), http.StatusTemporaryRedirect)
+					return
+				}
 			}
 
 			fileKey := strings.TrimPrefix(urlPath, baseURL)

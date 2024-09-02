@@ -1,4 +1,5 @@
 {
+        "this_doc_requires_auth": "You need to login to view this documentation",
         "sign_in_to_your_account": "Sign in to your account",
         "username": "Username",
         "password": "Password",

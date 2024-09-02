@@ -44,7 +44,12 @@ func (service *AuthService) VerifyTokenInDb(token string, needAdmin bool) bool {
 func (service *AuthService) IsTokenAdmin(token string) bool {
 	var tokenRecord models.Token
 
-	query := service.DB.Joins("JOIN users ON users.id = tokens.user_id").Where("tokens.token = ?", token).Select("users.admin").First(&tokenRecord)
+	query := service.DB.
+		Joins("JOIN users ON users.id = tokens.user_id").
+		Where("tokens.token = ?", token).
+		Select("tokens.user_id").
+		First(&tokenRecord)
+
 	if query.Error != nil {
 		return false
 	}
@@ -55,6 +60,21 @@ func (service *AuthService) IsTokenAdmin(token string) bool {
 	}
 
 	return user.Admin
+}
+
+func (service *AuthService) GetUserPermissions(token string) ([]string, error) {
+	user, err := service.GetUserFromToken(token)
+	if err != nil {
+		return nil, err
+	}
+
+	var permissions []string
+	err = json.Unmarshal([]byte(user.Permissions), &permissions)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse permissions: %w", err)
+	}
+
+	return permissions, nil
 }
 
 func (service *AuthService) GetUserFromToken(token string) (models.User, error) {

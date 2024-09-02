@@ -102,6 +102,7 @@ export interface Documentation {
   pageGroups?: PageGroup[];
   pages?: Page[];
   copyrightText: string;
+  requireAuth?: boolean;
 }
 
 export interface FormField {

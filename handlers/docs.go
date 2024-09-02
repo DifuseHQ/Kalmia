@@ -83,6 +83,7 @@ func CreateDocumentation(services *services.ServiceRegistry, w http.ResponseWrit
 		FooterLabelLinks string `json:"footerLabelLinks"`
 		MoreLabelLinks   string `json:"moreLabelLinks"`
 		CopyrightText    string `json:"copyrightText" validate:"required"`
+		RequireAuth      bool   `json:"requireAuth" validate:"required"`
 	}
 
 	req, err := ValidateRequest[Request](w, r)
@@ -112,6 +113,7 @@ func CreateDocumentation(services *services.ServiceRegistry, w http.ResponseWrit
 		FooterLabelLinks: req.FooterLabelLinks,
 		MoreLabelLinks:   req.MoreLabelLinks,
 		CopyrightText:    req.CopyrightText,
+		RequireAuth:      req.RequireAuth,
 	}
 
 	err = services.DocService.CreateDocumentation(documentation, user)
@@ -143,6 +145,7 @@ func EditDocumentation(services *services.ServiceRegistry, w http.ResponseWriter
 		FooterLabelLinks string `json:"footerLabelLinks"`
 		MoreLabelLinks   string `json:"moreLabelLinks"`
 		CopyrightText    string `json:"copyrightText" validate:"required"`
+		RequireAuth      bool   `json:"requireAuth" validate:"required"`
 	}
 
 	req, err := ValidateRequest[Request](w, r)
@@ -163,7 +166,7 @@ func EditDocumentation(services *services.ServiceRegistry, w http.ResponseWriter
 		return
 	}
 
-	err = services.DocService.EditDocumentation(user, req.ID, req.Name, req.Description, req.Version, req.Favicon, req.MetaImage, req.NavImage, req.NavImageDark, req.CustomCSS, req.FooterLabelLinks, req.MoreLabelLinks, req.CopyrightText, req.URL, req.OrganizationName, req.ProjectName, req.BaseURL, req.LanderDetails)
+	err = services.DocService.EditDocumentation(user, req.ID, req.Name, req.Description, req.Version, req.Favicon, req.MetaImage, req.NavImage, req.NavImageDark, req.CustomCSS, req.FooterLabelLinks, req.MoreLabelLinks, req.CopyrightText, req.URL, req.OrganizationName, req.ProjectName, req.BaseURL, req.LanderDetails, req.RequireAuth)
 
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})
@@ -517,7 +520,7 @@ func GetRsPress(service *services.DocService, w http.ResponseWriter, r *http.Req
 	fmt.Println("hit 2")
 	urlPath := r.URL.Path
 
-	_, docPath, baseURL, err := service.GetRsPress(urlPath)
+	_, docPath, baseURL, _, err := service.GetRsPress(urlPath)
 	if err != nil {
 		http.Redirect(w, r, "/admin/", http.StatusTemporaryRedirect)
 		return

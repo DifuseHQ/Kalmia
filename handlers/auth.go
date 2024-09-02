@@ -117,6 +117,22 @@ func GetUser(authService *services.AuthService, w http.ResponseWriter, r *http.R
 		return
 	}
 
+	token, err := GetTokenFromHeader(r)
+
+	if err != nil {
+		return
+	}
+
+	if !authService.IsTokenAdmin(token) {
+		user, err := authService.GetUserFromToken(token)
+		if err != nil {
+			SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"status": "error", "message": "invalid_token"})
+			return
+		}
+
+		req.Id = user.ID
+	}
+
 	user, err := authService.GetUser(req.Id)
 
 	if err != nil {

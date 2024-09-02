@@ -11,6 +11,7 @@ export const baseURL: string =
 
 const instance: AxiosInstance = axios.create({
   baseURL,
+  withCredentials: false,
 });
 
 instance.interceptors.response.use(

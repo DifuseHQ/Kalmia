@@ -492,3 +492,69 @@ func TestConvertToEmoji(t *testing.T) {
 		}
 	}
 }
+
+func TestArrayContains(t *testing.T) {
+	tests := []struct {
+		name     string
+		arr      []string
+		value    string
+		expected bool
+	}{
+		{
+			name:     "Value exists in array",
+			arr:      []string{"apple", "banana", "cherry"},
+			value:    "banana",
+			expected: true,
+		},
+		{
+			name:     "Value does not exist in array",
+			arr:      []string{"apple", "banana", "cherry"},
+			value:    "grape",
+			expected: false,
+		},
+		{
+			name:     "Empty array",
+			arr:      []string{},
+			value:    "apple",
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := ArrayContains(tt.arr, tt.value)
+			if result != tt.expected {
+				t.Errorf("ArrayContains(%v, %q) = %v; expected %v", tt.arr, tt.value, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestToBase64(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{
+			input:    "Hello, World!",
+			expected: "SGVsbG8sIFdvcmxkIQ==",
+		},
+		{
+			input:    "1234567890",
+			expected: "MTIzNDU2Nzg5MA==",
+		},
+		{
+			input:    "",
+			expected: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			output := ToBase64(tt.input)
+			if output != tt.expected {
+				t.Errorf("ToBase64(%q) = %q, expected %q", tt.input, output, tt.expected)
+			}
+		})
+	}
+}

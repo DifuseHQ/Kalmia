@@ -12,7 +12,7 @@ func TestGenerateJWTAccessToken(t *testing.T) {
 	photo := "photo.jpg"
 	isAdmin := true
 
-	token, expiry, err := GenerateJWTAccessToken(dbUserId, userId, email, photo, isAdmin)
+	token, expiry, err := GenerateJWTAccessToken(dbUserId, userId, email, photo, isAdmin, `["read", "write"]`)
 	if err != nil {
 		t.Fatalf("GenerateJWTAccessToken returned an error: %v", err)
 	}
@@ -26,7 +26,7 @@ func TestGenerateJWTAccessToken(t *testing.T) {
 }
 
 func TestGetJWTExpirationTime(t *testing.T) {
-	token, _, err := GenerateJWTAccessToken(1, "testUser", "test@example.com", "photo.jpg", true)
+	token, _, err := GenerateJWTAccessToken(1, "testUser", "test@example.com", "photo.jpg", true, `["read", "write"]`)
 	if err != nil {
 		t.Fatalf("GenerateJWTAccessToken returned an error: %v", err)
 	}
@@ -42,7 +42,7 @@ func TestGetJWTExpirationTime(t *testing.T) {
 }
 
 func TestValidateJWT(t *testing.T) {
-	token, _, err := GenerateJWTAccessToken(1, "testUser", "test@example.com", "photo.jpg", true)
+	token, _, err := GenerateJWTAccessToken(1, "testUser", "test@example.com", "photo.jpg", true, `["read", "write"]`)
 	if err != nil {
 		t.Fatalf("GenerateJWTAccessToken returned an error: %v", err)
 	}
@@ -63,7 +63,7 @@ func TestValidateJWT(t *testing.T) {
 }
 
 func TestGetJWTUserId(t *testing.T) {
-	token, _, err := GenerateJWTAccessToken(1, "testUser", "test@example.com", "photo.jpg", true)
+	token, _, err := GenerateJWTAccessToken(1, "testUser", "test@example.com", "photo.jpg", true, `["read", "write"]`)
 	if err != nil {
 		t.Fatalf("GenerateJWTAccessToken returned an error: %v", err)
 	}

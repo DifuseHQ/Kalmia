@@ -509,7 +509,6 @@ func (service *DocService) CraftPage(pageID uint, title string, slug string, con
 	var blocks []Block
 	err := json.Unmarshal([]byte(content), &blocks)
 	if err != nil {
-		fmt.Println("Error unmarshalling content", err)
 		return "", err
 	}
 
@@ -1124,13 +1123,22 @@ func (service *DocService) RsPressBuild(docId uint, rebuild bool) error {
 	return nil
 }
 
-func (service *DocService) GetRsPress(urlPath string) (uint, string, string, error) {
+func (service *DocService) GetRsPress(urlPath string) (uint, string, string, bool, error) {
 	cachedBaseURLs, err := db.GetCacheByPrefix("burl|doc_")
+
 	if err == nil && len(cachedBaseURLs) > 0 {
 		for cacheKey, baseURL := range cachedBaseURLs {
 			if strings.HasPrefix(urlPath, baseURL) {
-				docID := strings.TrimPrefix(cacheKey, "burl|doc_")
+				split := strings.Split(cacheKey, "|")
+				docID := strings.TrimPrefix("doc_", split[1])
+				reqAuth, err := strconv.ParseBool(split[2])
+
+				if err != nil {
+					continue
+				}
+
 				id, err := strconv.Atoi(docID)
+
 				if err != nil {
 					continue
 				}
@@ -1145,7 +1153,7 @@ func (service *DocService) GetRsPress(urlPath string) (uint, string, string, err
 					continue
 				}
 
-				return uint(id), docPath, baseURL, nil
+				return uint(id), docPath, baseURL, reqAuth, nil
 			}
 		}
 	}
@@ -1159,7 +1167,7 @@ func (service *DocService) GetRsPress(urlPath string) (uint, string, string, err
 		query = "? LIKE base_url || ?"
 		args = []interface{}{urlPath, "%"}
 	default:
-		return 0, "", "", fmt.Errorf("unsupported_database_type: %s", dialectName)
+		return 0, "", "", false, fmt.Errorf("unsupported_database_type: %s", dialectName)
 	}
 
 	err = service.DB.Where(query, args...).
@@ -1167,30 +1175,30 @@ func (service *DocService) GetRsPress(urlPath string) (uint, string, string, err
 		First(&doc).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return 0, "", "", fmt.Errorf("doc_does_not_exist")
+			return 0, "", "", false, fmt.Errorf("doc_does_not_exist")
 		}
-		return 0, "", "", fmt.Errorf("database_error: %v", err)
+		return 0, "", "", false, fmt.Errorf("database_error: %v", err)
 	}
 
 	docPath := filepath.Join("data", "rspress_data", fmt.Sprintf("doc_%d", doc.ID), "build")
 	if _, err := os.Stat(docPath); os.IsNotExist(err) {
-		return 0, "", "", fmt.Errorf("rspress_build_not_found")
+		return 0, "", "", false, fmt.Errorf("rspress_build_not_found")
 	}
 
 	files, err := os.ReadDir(docPath)
 
 	if err != nil {
-		return 0, "", "", fmt.Errorf("error_reading_rspress_directory")
+		return 0, "", "", false, fmt.Errorf("error_reading_rspress_directory")
 	}
 
 	if len(files) == 0 {
-		return 0, "", "", fmt.Errorf("rspress_build_empty")
+		return 0, "", "", false, fmt.Errorf("rspress_build_empty")
 	}
 
-	cacheKey := fmt.Sprintf("burl|doc_%d", doc.ID)
+	cacheKey := fmt.Sprintf("burl|doc_%d|%t", doc.ID, doc.RequireAuth)
 	_ = db.SetKey([]byte(cacheKey), []byte(doc.BaseURL), "text/plain")
 
-	return doc.ID, docPath, doc.BaseURL, nil
+	return doc.ID, docPath, doc.BaseURL, doc.RequireAuth, nil
 }
 
 func (service *DocService) AddBuildTrigger(docId uint) error {
