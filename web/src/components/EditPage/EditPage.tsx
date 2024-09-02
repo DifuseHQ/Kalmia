@@ -410,7 +410,11 @@ export default function EditPage() {
                 className="px-5 py-1.5 rounded-lg font-semibold dark:text-white"
                 title="Version"
               >
-                version : {version}
+                <div className="relative inline-block z-20 opacity-100">
+                  <div className="flex items-center border gap-2 border-gray-400 px-3 py-1.5 rounded-lg dark:bg-gray-600 dark:border-gray-700 dark:text-white">
+                    {version}
+                  </div>
+                </div>
               </p>
             </div>
 

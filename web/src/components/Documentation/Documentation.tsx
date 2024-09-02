@@ -732,7 +732,7 @@ export const Documentation = memo(function Documentation() {
                             />
                           </div>
                         ) : (
-                          <div className="flex items-center border gap-2 border-gray-400 hover:bg-gray-200 px-3 py-1.5 rounded-lg cursor-pointer dark:bg-gray-600 dark:border-gray-700 dark:hover:bg-gray-800 dark:text-white">
+                          <div className="flex items-center border gap-2 border-gray-400 px-3 py-1.5 rounded-lg dark:bg-gray-600 dark:border-gray-700 dark:text-white">
                             {selectedVersion?.version}
                           </div>
                         )}
