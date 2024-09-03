@@ -233,7 +233,7 @@ func (service *DocService) UpdateWriteBuild(docId uint) error {
 		return err
 	}
 
-	preHash, err := utils.DirHash(docsPath + "/docs")
+	preHashDocs, err := utils.DirHash(docsPath + "/docs")
 	if err != nil && !os.IsNotExist(err) {
 		return err
 	}
@@ -244,9 +244,13 @@ func (service *DocService) UpdateWriteBuild(docId uint) error {
 		}
 	}
 
-	if err := service.StartUpdate(docId, rootParentId); err != nil {
+	configHash, err := service.StartUpdate(docId, rootParentId)
+
+	if err != nil {
 		return err
 	}
+
+	preHash := utils.HashStrings([]string{preHashDocs, configHash})
 
 	if err := service.WriteContents(docId, rootParentId, preHash); err != nil {
 		return err
@@ -366,16 +370,16 @@ func (service *DocService) InitRsPress(docId uint) error {
 	return nil
 }
 
-func (service *DocService) StartUpdate(docId uint, rootParentId uint) error {
+func (service *DocService) StartUpdate(docId uint, rootParentId uint) (string, error) {
 	doc, err := service.GetDocumentation(docId)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	docConfigTemplate, err := embedded.ReadEmbeddedFile("rspress.config.ts")
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	docPath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data", "doc_"+strconv.Itoa(int(rootParentId)))
@@ -473,21 +477,21 @@ func (service *DocService) StartUpdate(docId uint, rootParentId uint) error {
 
 	if utils.PathExists(docConfig) {
 		if err := os.Remove(docConfig); err != nil {
-			return err
+			return "", err
 		}
 	}
 
 	latest, versions, err := service.GetAllVersions(docId)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	multiVersions := Versions{Default: latest, Versions: versions}
 	multiVersionsJSON, err := json.Marshal(multiVersions)
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	replacements["__MULTI_VERSIONS__"] = "multiVersion: " + string(multiVersionsJSON)
@@ -495,10 +499,16 @@ func (service *DocService) StartUpdate(docId uint, rootParentId uint) error {
 	err = utils.WriteToFile(docConfig, utils.ReplaceMany(string(docConfigTemplate), replacements))
 
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	configHash, err := utils.FileHash(docConfig)
+
+	if err != nil {
+		return "", err
+	}
+
+	return configHash, nil
 }
 
 func (service *DocService) CraftPage(pageID uint, title string, slug string, content string) (string, error) {
@@ -882,12 +892,21 @@ func (service *DocService) WriteContents(docId uint, rootParentId uint, preHash 
 		}
 	}
 
-	newHash, err := utils.DirHash(docsPath)
+	newDocsHash, err := utils.DirHash(docsPath)
+
 	if err != nil {
 		return err
 	}
 
+	newConfigHash, err := utils.FileHash(filepath.Join(docIdPath, "rspress.config.ts"))
+
+	if err != nil {
+		return err
+	}
+
+	newHash := utils.HashStrings([]string{newDocsHash, newConfigHash})
 	deletionsOccurred, err := service.PreBuildCleanup(rootParentId)
+
 	if err != nil {
 		return err
 	}
