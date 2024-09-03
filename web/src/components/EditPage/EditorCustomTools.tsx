@@ -152,7 +152,7 @@ export const CodeBlock = createReactBlockSpec(
     type: CODEBLOCK_TYPE,
     propSchema: {
       language: {
-        default: "javascript",
+        default: "shell",
       },
       code: {
         default: "",
@@ -162,7 +162,8 @@ export const CodeBlock = createReactBlockSpec(
   },
   {
     render: ({ block, editor }) => {
-      const language = block.props.language || "javascript";
+      const language = block.props.language || "shell";
+
       const code = block.props.code || "";
 
       const onInputChange = (val: string) => {
@@ -173,7 +174,7 @@ export const CodeBlock = createReactBlockSpec(
 
       const languageExtension = isValidLanguage(language)
         ? langs[language]
-        : langs.javascript;
+        : langs.shell;
 
       return (
         <div style={{ minHeight: "65px", width: "100%" }}>
@@ -271,7 +272,7 @@ export const handleBacktickInput = (editor: BlockNoteEditor) => {
   const match = text.match(backtickInputRegex);
 
   if (match) {
-    const language = match[1] || "javascript";
+    const language = match[1] || "shell";
     editor.updateBlock(currentBlock, {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore

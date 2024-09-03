@@ -220,7 +220,9 @@ export default function CreateDocModal() {
   const { openModal, closeModal, setLoadingMessage } = useContext(ModalContext);
   const themeContext = useContext(ThemeContext);
   const { darkMode } = themeContext as ThemeContextType;
-  const [isAuthenticationToggleOn, SetIsAuthenticationToggleOn] = useState<boolean | undefined>(false);
+  const [isAuthenticationToggleOn, SetIsAuthenticationToggleOn] = useState<
+    boolean | undefined
+  >(false);
   const [isToggleOn, SetIsToggleOn] = useState<boolean>(false);
   const [activeFieldIndex, setActiveFieldIndex] = useState<number | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
@@ -473,7 +475,7 @@ export default function CreateDocModal() {
       navImage: formData.navImage || "",
       copyrightText: formData.copyrightText || "",
       metaImage: formData.metaImage || "",
-      requireAuth:isAuthenticationToggleOn || false,
+      requireAuth: isAuthenticationToggleOn || false,
       landerDetails: JSON.stringify(landingData),
       footerLabelLinks: socialPlatformField
         ? JSON.stringify(socialPlatformField)
@@ -588,7 +590,7 @@ export default function CreateDocModal() {
     updateFeature(index, "emoji", emojiObject.unified);
     setShowEmojiPicker(false);
   };
-console.log(isAuthenticationToggleOn);
+  console.log(isAuthenticationToggleOn);
 
   return (
     <AnimatePresence>
@@ -608,26 +610,25 @@ console.log(isAuthenticationToggleOn);
                 : t("new_documentation")}
             </h3>
           </div>
-          
 
           <div className="relative bg-white rounded-lg shadow dark:bg-gray-800 sm:p-3">
             <div className="overflow-auto p-1">
               <div className="space-y-6">
-                <div  className="grid gap-4 sm:grid-cols-1">
-                <label className="inline-flex items-center cursor-pointer gpa-5 mb-4">
-                <span className="text-lg font-medium text-gray-900 dark:text-gray-300 mr-3">
-                  {t("enableAuthentication")}
-                </span>
-                <input
-                  type="checkbox"
-                  checked={isAuthenticationToggleOn}
-                  onChange={(e) => {
-                    SetIsAuthenticationToggleOn(e.target.checked);
-                  }}
-                  className="sr-only peer"
-                />
-                <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-              </label>
+                <div className="grid gap-4 sm:grid-cols-1">
+                  <label className="inline-flex items-center cursor-pointer gpa-5 mb-4">
+                    <span className="text-lg font-medium text-gray-900 dark:text-gray-300 mr-3">
+                      {t("enableAuthentication")}
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={isAuthenticationToggleOn}
+                      onChange={(e) => {
+                        SetIsAuthenticationToggleOn(e.target.checked);
+                      }}
+                      className="sr-only peer"
+                    />
+                    <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                  </label>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <FormField

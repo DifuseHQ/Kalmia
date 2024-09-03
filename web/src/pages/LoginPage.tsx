@@ -1,7 +1,7 @@
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { KeyboardEventHandler, useContext, useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 
 import { baseURL } from "../api/AxiosInstance";
 import { oAuthProviders } from "../api/Requests";

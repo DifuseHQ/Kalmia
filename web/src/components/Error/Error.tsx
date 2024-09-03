@@ -51,7 +51,7 @@ export default function Error(): JSX.Element {
   }, [errorCode, title]);
 
   const goBack = (): void => navigate(-1);
-  const reloadPage = (): void => navigate(0);
+  const reloadPage = (): void => navigate(-1);
 
   const isServerError = errorCode >= 500;
 
