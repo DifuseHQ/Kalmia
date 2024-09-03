@@ -82,6 +82,8 @@
         "root":"Root",
         "no_search_found":"No Search Found",
         "move":"Move",
+        "enableAuthentication":"Enable Authentication",
+
 
         "clone_documentation": "Clone Documentation",
         "delete_documentation": "Delete Documentation",
