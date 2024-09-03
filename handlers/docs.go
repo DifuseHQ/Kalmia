@@ -83,7 +83,7 @@ func CreateDocumentation(services *services.ServiceRegistry, w http.ResponseWrit
 		FooterLabelLinks string `json:"footerLabelLinks"`
 		MoreLabelLinks   string `json:"moreLabelLinks"`
 		CopyrightText    string `json:"copyrightText" validate:"required"`
-		RequireAuth      bool   `json:"requireAuth" validate:"required"`
+		RequireAuth      bool   `json:"requireAuth"`
 	}
 
 	req, err := ValidateRequest[Request](w, r)

@@ -6,6 +6,7 @@ import { AuthContext, AuthContextType } from "../context/AuthContext";
 export default function RequireAuth() {
   const location = useLocation();
   const { user } = useContext(AuthContext) as AuthContextType;
+
   return user ? (
     <Outlet />
   ) : (
