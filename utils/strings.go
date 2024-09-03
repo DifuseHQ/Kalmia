@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"net/url"
 	"path/filepath"
 	"regexp"
@@ -141,4 +143,10 @@ func ArrayContains(arr []string, value string) bool {
 
 func ToBase64(input string) string {
 	return base64.StdEncoding.EncodeToString([]byte(input))
+}
+
+func HashStrings(data []string) string {
+	h := sha256.New()
+	h.Write([]byte(strings.Join(data, "")))
+	return hex.EncodeToString(h.Sum(nil))
 }
