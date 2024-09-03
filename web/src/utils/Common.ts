@@ -280,16 +280,7 @@ export const isValidURL = (url: string) => {
 };
 
 function isValidBaseURL(baseURL: string) {
-  const invalidBaseURLs = [
-    "admin",
-    "/admin",
-    "/admin/",
-    "/docs",
-    "/auth",
-    "/oauth",
-    "/health",
-  ];
-
+  const invalidBaseURLs = ["admin", "/admin", "/admin/"];
   for (const invalidBaseURL of invalidBaseURLs) {
     if (baseURL.startsWith(invalidBaseURL)) {
       return false;

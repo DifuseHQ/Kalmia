@@ -159,15 +159,15 @@ async function makeRequest<T = any>(
 }
 
 export const createJWT = (data: AuthCredentials): Promise<ApiResponse> =>
-  makeRequest("/auth/jwt/create", "post", data);
+  makeRequest("/kal-api/auth/jwt/create", "post", data);
 
 export const refreshJWT = (token: string | null): Promise<ApiResponse> =>
-  makeRequest("/auth/jwt/refresh", "post", { token });
+  makeRequest("/kal-api/auth/jwt/refresh", "post", { token });
 
 export const validateJWT = async (token: string): Promise<ApiResponse> => {
   try {
     const response: AxiosResponse = await makeRequestWithCustomAuth(
-      "/auth/jwt/validate",
+      "/kal-api/auth/jwt/validate",
       "post",
       token,
     );
@@ -194,79 +194,82 @@ export const validateJWT = async (token: string): Promise<ApiResponse> => {
 };
 
 export const signOut = (token: string | null): Promise<ApiResponse> =>
-  makeRequest("/auth/jwt/revoke", "post", { token });
+  makeRequest("/kal-api/auth/jwt/revoke", "post", { token });
 
-export const getDocumentations = () => makeRequest("/docs/documentations");
+export const getDocumentations = () =>
+  makeRequest("/kal-api/docs/documentations");
 
 export const getDocumentation = (id: number) =>
-  makeRequest("/docs/documentation", "post", { id });
+  makeRequest("/kal-api/docs/documentation", "post", { id });
 
 export const createDocumentation = (data: DocumentationPayload) =>
-  makeRequest("/docs/documentation/create", "post", data);
+  makeRequest("/kal-api/docs/documentation/create", "post", data);
 
 export const updateDocumentation = (data: DocumentationPayload) =>
-  makeRequest("/docs/documentation/edit", "post", data);
+  makeRequest("/kal-api/docs/documentation/edit", "post", data);
 
 export const deleteDocumentation = (id: number) =>
-  makeRequest("/docs/documentation/delete", "post", { id });
+  makeRequest("/kal-api/docs/documentation/delete", "post", { id });
 
 export const createDocumentationVersion = (data: CreateVersionPayload) =>
-  makeRequest("/docs/documentation/version", "post", data);
+  makeRequest("/kal-api/docs/documentation/version", "post", data);
 
-export const buildTrigger = () => makeRequest("/health/last-trigger");
-export const getPageGroups = () => makeRequest("/docs/page-groups");
+export const buildTrigger = () => makeRequest("/kal-api/health/last-trigger");
+export const getPageGroups = () => makeRequest("/kal-api/docs/page-groups");
 
 export const getPageGroup = (id: number) =>
-  makeRequest("/docs/page-group", "post", { id });
+  makeRequest("/kal-api/docs/page-group", "post", { id });
 
 export const createPageGroup = (data: PageGroupPayload) =>
-  makeRequest("/docs/page-group/create", "post", data);
+  makeRequest("/kal-api/docs/page-group/create", "post", data);
 
 export const updatePageGroup = (data: PageGroupPayload) =>
-  makeRequest("/docs/page-group/edit", "post", data);
+  makeRequest("/kal-api/docs/page-group/edit", "post", data);
 
 export const deletePageGroup = (id: number) =>
-  makeRequest("/docs/page-group/delete", "post", { id });
+  makeRequest("/kal-api/docs/page-group/delete", "post", { id });
 
-export const getPages = () => makeRequest("/docs/pages");
+export const getPages = () => makeRequest("/kal-api/docs/pages");
 
 export const getPage = (id: number) =>
-  makeRequest("/docs/page", "post", { id });
+  makeRequest("/kal-api/docs/page", "post", { id });
 
 export const createPage = (data: PagePayload) =>
-  makeRequest("/docs/page/create", "post", data);
+  makeRequest("/kal-api/docs/page/create", "post", data);
 
 export const updatePage = (data: PagePayload) =>
-  makeRequest("/docs/page/edit", "post", data);
+  makeRequest("/kal-api/docs/page/edit", "post", data);
 
 export const deletePage = (id: number) =>
-  makeRequest("/docs/page/delete", "post", { id });
+  makeRequest("/kal-api/docs/page/delete", "post", { id });
 
 export const commonReorderBulk = (data: ReorderBulkDataPayload) =>
-  makeRequest("/docs/documentation/reorder-bulk", "post", data);
+  makeRequest("/kal-api/docs/documentation/reorder-bulk", "post", data);
 
-export const getUsers = () => makeRequest("/auth/users");
+export const getUsers = () => makeRequest("/kal-api/auth/users");
 
 export const getUser = (id: number) =>
-  makeRequest("/auth/user", "post", { id: Number.parseInt(id.toString()) });
+  makeRequest("/kal-api/auth/user", "post", {
+    id: Number.parseInt(id.toString()),
+  });
 
 export const createUser = (data: UserPayload) =>
-  makeRequest("/auth/user/create", "post", data);
+  makeRequest("/kal-api/auth/user/create", "post", data);
 
 export const updateUser = (data: UpdateUserPayload) =>
-  makeRequest("/auth/user/edit", "post", data);
+  makeRequest("/kal-api/auth/user/edit", "post", data);
 
 export const uploadFile = (data: FormData) =>
-  makeRequest("/auth/user/upload-file", "post", data);
+  makeRequest("/kal-api/auth/user/upload-file", "post", data);
 
 export const deleteUser = (username: string) =>
-  makeRequest("/auth/user/delete", "post", { username });
+  makeRequest("/kal-api/auth/user/delete", "post", { username });
 
 export const getRootParentId = (docId: number) =>
   makeRequest(`/docs/documentation/root-parent-id?id=${docId}`);
 
 export const oAuthProviders = async (): Promise<string[]> => {
-  const response = await makeRequest<string[]>("/oauth/providers");
+  const response = await makeRequest<string[]>("/kal-api/oauth/providers");
   if (response.status === "success") {
     return response.data as string[];
   } else {

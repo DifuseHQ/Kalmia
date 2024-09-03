@@ -58,13 +58,14 @@ func main() {
 
 	/* Setup router */
 	r := mux.NewRouter()
+	kRouter := r.PathPrefix("/kal-api").Subrouter()
 
 	/* Health endpoints */
-	healthRouter := r.PathPrefix("/health").Subrouter()
+	healthRouter := kRouter.PathPrefix("/health").Subrouter()
 	healthRouter.HandleFunc("/ping", handlers.HealthPing).Methods("GET")
 	healthRouter.HandleFunc("/last-trigger", func(w http.ResponseWriter, r *http.Request) { handlers.TriggerCheck(dS, w, r) }).Methods("GET")
 
-	oAuthRouter := r.PathPrefix("/oauth").Subrouter()
+	oAuthRouter := kRouter.PathPrefix("/oauth").Subrouter()
 	oAuthRouter.HandleFunc("/github", func(w http.ResponseWriter, r *http.Request) { handlers.GithubLogin(aS, w, r) }).Methods("GET")
 	oAuthRouter.HandleFunc("/github/callback", func(w http.ResponseWriter, r *http.Request) { handlers.GithubCallback(aS, w, r) }).Methods("GET")
 	oAuthRouter.HandleFunc("/microsoft", func(w http.ResponseWriter, r *http.Request) { handlers.MicrosoftLogin(aS, w, r) }).Methods("GET")
@@ -73,7 +74,7 @@ func main() {
 	oAuthRouter.HandleFunc("/google/callback", func(w http.ResponseWriter, r *http.Request) { handlers.GoogleCallback(aS, w, r) }).Methods("GET")
 	oAuthRouter.HandleFunc("/providers", func(w http.ResponseWriter, r *http.Request) { handlers.GetOAuthProviders(aS, w, r) }).Methods("GET")
 
-	authRouter := r.PathPrefix("/auth").Subrouter()
+	authRouter := kRouter.PathPrefix("/auth").Subrouter()
 	authRouter.Use(middleware.EnsureAuthenticated(aS))
 
 	authRouter.HandleFunc("/user/create", func(w http.ResponseWriter, r *http.Request) { handlers.CreateUser(aS, w, r) }).Methods("POST")
@@ -89,7 +90,7 @@ func main() {
 	authRouter.HandleFunc("/jwt/validate", func(w http.ResponseWriter, r *http.Request) { handlers.ValidateJWT(aS, w, r) }).Methods("POST")
 	authRouter.HandleFunc("/jwt/revoke", func(w http.ResponseWriter, r *http.Request) { handlers.RevokeJWT(aS, w, r) }).Methods("POST")
 
-	docsRouter := r.PathPrefix("/docs").Subrouter()
+	docsRouter := kRouter.PathPrefix("/docs").Subrouter()
 	docsRouter.Use(middleware.EnsureAuthenticated(aS))
 	docsRouter.HandleFunc("/documentations", func(w http.ResponseWriter, r *http.Request) { handlers.GetDocumentations(dS, w, r) }).Methods("GET")
 	docsRouter.HandleFunc("/documentation", func(w http.ResponseWriter, r *http.Request) { handlers.GetDocumentation(dS, w, r) }).Methods("POST")

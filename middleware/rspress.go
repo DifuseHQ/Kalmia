@@ -31,13 +31,6 @@ func RsPressMiddleware(dS *services.DocService) func(http.Handler) http.Handler 
 				return
 			}
 
-			if strings.HasPrefix(urlPath, baseURL) {
-				if reqAuth && cookieToken == "" {
-					http.Redirect(w, r, "/admin/login?docAuth="+utils.ToBase64(r.URL.Path), http.StatusTemporaryRedirect)
-					return
-				}
-			}
-
 			fileKey := strings.TrimPrefix(urlPath, baseURL)
 			fullPath := filepath.Join(docPath, fileKey)
 
@@ -56,6 +49,10 @@ func RsPressMiddleware(dS *services.DocService) func(http.Handler) http.Handler 
 			fileKey = fmt.Sprintf("rs|doc_%d|%s", docId, utils.TrimFirstRune(fileKey))
 			value, err := db.GetValue([]byte(fileKey))
 			if err == nil {
+				if reqAuth && cookieToken == "" {
+					http.Redirect(w, r, "/admin/login?docAuth="+utils.ToBase64(r.URL.Path), http.StatusTemporaryRedirect)
+					return
+				}
 				w.Header().Set("Content-Type", value.ContentType)
 				w.Write(value.Data)
 				return
@@ -65,7 +62,12 @@ func RsPressMiddleware(dS *services.DocService) func(http.Handler) http.Handler 
 				fullPath = filepath.Join(docPath, "build", "index.html")
 			}
 
-			http.ServeFile(w, r, fullPath)
+			if reqAuth && cookieToken == "" {
+				http.Redirect(w, r, "/admin/login?docAuth="+utils.ToBase64(r.URL.Path), http.StatusTemporaryRedirect)
+				return
+			} else {
+				http.ServeFile(w, r, fullPath)
+			}
 		})
 	}
 }
