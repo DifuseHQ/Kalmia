@@ -79,13 +79,13 @@ export default function LoginPage() {
     return () => {
       switch (provider) {
         case "github":
-          window.location.href = `${baseURL}/oauth/github`;
+          window.location.href = `${baseURL}/kal-api/oauth/github`;
           break;
         case "google":
-          window.location.href = `${baseURL}/oauth/google`;
+          window.location.href = `${baseURL}/kal-api/oauth/google`;
           break;
         case "microsoft":
-          window.location.href = `${baseURL}/oauth/microsoft`;
+          window.location.href = `${baseURL}/kal-api/oauth/microsoft`;
           break;
         default:
           break;

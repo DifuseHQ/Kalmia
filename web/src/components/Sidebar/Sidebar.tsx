@@ -14,7 +14,7 @@ import { AuthContext, AuthContextType } from "../../context/AuthContext";
 import { ModalContext } from "../../context/ModalContext";
 import { Documentation } from "../../types/doc";
 import { DOMEvent } from "../../types/dom";
-import { handleError } from "../../utils/Common";
+import { handleError, hasPermission } from "../../utils/Common";
 
 export default function Sidebar() {
   const { t } = useTranslation();
@@ -150,21 +150,23 @@ export default function Sidebar() {
                 />
               </NavLink>
             </li>
-            <li>
-              <motion.button
-                onClick={() => {
-                  openModal("createDocumentation", null);
-                  navigate("/dashboard/create-documentation");
-                }}
-                whileHover={{ scale: 1.05 }}
-                className="flex w-full py-2 px-5 my-5 justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-md  text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
-              >
-                <span className=" px-1 pt-1 text-left items-center dark:text-white text-md text-sm">
-                  {t("new_documentation")}
-                </span>
-                <Icon icon="ei:plus" className="w-7 h-7 dark:text-white" />
-              </motion.button>
-            </li>
+            {hasPermission(["all", "write"], userDetails) && (
+              <li>
+                <motion.button
+                  onClick={() => {
+                    openModal("createDocumentation", null);
+                    navigate("/dashboard/create-documentation");
+                  }}
+                  whileHover={{ scale: 1.05 }}
+                  className="flex w-full py-2 px-5 my-5 justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-md  text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                >
+                  <span className=" px-1 pt-1 text-left items-center dark:text-white text-md text-sm">
+                    {t("new_documentation")}
+                  </span>
+                  <Icon icon="ei:plus" className="w-7 h-7 dark:text-white" />
+                </motion.button>
+              </li>
+            )}
             {!documentation || documentation.length <= 0 ? (
               <motion.li
                 whileHover={{ scale: 1.05, originX: 0 }}

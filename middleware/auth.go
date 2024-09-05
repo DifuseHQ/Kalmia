@@ -11,7 +11,10 @@ import (
 func EnsureAuthenticated(authService *services.AuthService) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == "/kal-api/auth/jwt/create" {
+			if r.URL.Path == "/kal-api/auth/jwt/create" ||
+				r.URL.Path == "/kal-api/auth/jwt/validate" ||
+				r.URL.Path == "/admin/error" ||
+				r.URL.Path == "/admin/404" {
 				next.ServeHTTP(w, r)
 				return
 			}
@@ -47,29 +50,33 @@ func hasPermissionForRoute(path string, permissions []string, isAdmin bool) bool
 	}
 
 	routePermissions := map[string]string{
-		"/auth/user":                       "read",
-		"/auth/users":                      "read",
-		"/auth/user/edit":                  "read",
-		"/auth/jwt/revoke":                 "read",
-		"/auth/jwt/validate":               "read",
-		"/auth/user/upload-file":           "read",
-		"/docs/documentations":             "read",
-		"/docs/pages":                      "read",
-		"/docs/page-groups":                "read",
-		"/docs/documentation":              "read",
-		"/docs/page":                       "read",
-		"/docs/page-group":                 "read",
-		"/docs/documentation/edit":         "write",
-		"/docs/documentation/version":      "write",
-		"/docs/documentation/reorder-bulk": "write",
-		"/docs/page/edit":                  "write",
-		"/docs/page-group/edit":            "write",
-		"/docs/documentation/delete":       "delete",
-		"/docs/page/delete":                "delete",
-		"/docs/page-group/delete":          "delete",
+		"/kal-api/auth/user":                       "read",
+		"/kal-api/auth/users":                      "read",
+		"/kal-api/auth/user/edit":                  "read",
+		"/kal-api/auth/jwt/revoke":                 "read",
+		"/kal-api/auth/jwt/validate":               "read",
+		"/kal-api/auth/user/upload-file":           "read",
+		"/kal-api/docs/documentations":             "read",
+		"/kal-api/docs/pages":                      "read",
+		"/kal-api/docs/page-groups":                "read",
+		"/kal-api/docs/documentation":              "read",
+		"/kal-api/docs/page":                       "read",
+		"/kal-api/docs/page-group":                 "read",
+		"/kal-api/docs/documentation/create":       "write",
+		"/kal-api/docs/documentation/edit":         "write",
+		"/kal-api/docs/documentation/version":      "write",
+		"/kal-api/docs/documentation/reorder-bulk": "write",
+		"/kal-api/docs/page/create":                "write",
+		"/kal-api/docs/page/edit":                  "write",
+		"/kal-api/docs/page-group/create":          "write",
+		"/kal-api/docs/page-group/edit":            "write",
+		"/kal-api/docs/documentation/delete":       "delete",
+		"/kal-api/docs/page/delete":                "delete",
+		"/kal-api/docs/page-group/delete":          "delete",
 	}
 
 	requiredPermission, exists := routePermissions[path]
+
 	if !exists {
 		return false
 	}
