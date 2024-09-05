@@ -1,0 +1,35 @@
+name: Test
+
+on:
+  push:
+  pull_request:
+
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.22.1'
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20.15.0'
+
+    - name: Install dependencies
+      run: |
+        go mod download
+        cd web && npm install
+        cd ..
+        make deps
+    
+    - name: Create Config
+      run: cp config.example.json config.json && sed -i 's|<ENDPOINT>|dummy-endpoint|g; s|<ACCESS_KEY_ID>|dummy-access-key-id|g; s|<SECRET_ACCESS>|dummy-secret-access|g; s|<BUCKET_NAME>|dummy-bucket|g; s|<ACCOUNT_ID>|dummy-account-id|g; s|<API_KEY>|dummy-api-key|g; s|<CLIENT_ID>|dummy-client-id|g; s|<CLIENT_SECRET>|dummy-client-secret|g; s|<DIRECTORY_ID>|dummy-directory-id|g; s|<domain>|dummy-domain.com|g; s|<CALLBACK_URL>|dummy-callback-url|g' config.json
+
+    - name: Run tests
+      run: make test
