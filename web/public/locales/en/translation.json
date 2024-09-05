@@ -266,7 +266,7 @@
         "gateway_timeout": "Gateway Timeout",
         "error_message_client": "We're sorry, but it seems like there was an error on your end. Please check your request and try again.",
         "error_message_server": "We apologize, but there seems to be a problem on our end. Our team has been notified and is working on resolving the issue.",
-        "reload_page": "Reload Page",
+        "go_home": "Go to Dashboard",
         "go_back": "Go Back",
         "error_title": "Error {{code}}",
         "error_description": "An error occurred while processing your request.",

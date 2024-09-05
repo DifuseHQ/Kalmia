@@ -51,7 +51,7 @@ export default function Error(): JSX.Element {
   }, [errorCode, title]);
 
   const goBack = (): void => navigate(-1);
-  const reloadPage = (): void => navigate(-1);
+  const reloadPage = (): void => navigate("/");
 
   const isServerError = errorCode >= 500;
 
@@ -76,10 +76,10 @@ export default function Error(): JSX.Element {
             className="inline-flex items-center text-lg text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg px-5 py-2.5 text-center dark:focus:ring-primary-900 my-4 transition duration-150 ease-in-out"
           >
             <Icon
-              icon={isServerError ? "carbon:restart" : "carbon:arrow-left"}
+              icon={isServerError ? "carbon:home" : "carbon:arrow-left"}
               className="mr-2"
             />
-            {isServerError ? t("reload_page") : t("go_back")}
+            {isServerError ? t("go_home") : t("go_back")}
           </button>
         </div>
       </div>
