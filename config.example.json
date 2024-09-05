@@ -27,10 +27,6 @@
     "usePathStyle": true,
     "publicUrlFormat": "https://<domain>/%s"
   },
-  "cloudflare": {
-    "account_id": "<ACCOUNT_ID>",
-    "api_key": "<API_KEY>"
-  },
   "githubOAuth": {
     "clientId": "<CLIENT_ID>",
     "clientSecret": "<CLIENT_SECRET>",
