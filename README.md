@@ -3,7 +3,7 @@
 > [!WARNING]
 > This project is still in development so expect breaking changes!
 
-<video src="https://github.com/user-attachments/assets/8201774b-85ef-4fce-96bb-5021a0de8415" width="720" height="1280" controls></video>
+<video src="https://downloads-bucket.difuse.io/kalmia-demo-fin.mp4" width="720" height="1280" controls></video>
 
 
 Kalmia is a Go tool with a web interface for managing RsPress documentation. It supports multiple versions, multiple users, and includes a markdown editor for easy edits. Please visit our [website](https://kalmia.difuse.io) for more information on how to use Kalmia and its features.
