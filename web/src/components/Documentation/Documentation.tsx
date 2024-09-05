@@ -219,7 +219,7 @@ export const Documentation = memo(function Documentation() {
     } else {
       setLoading(false);
     }
-  }, [docId, fetchDocumentationData]);
+  }, [docId, fetchDocumentationData, refresh]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -334,7 +334,6 @@ export const Documentation = memo(function Documentation() {
       closeModal("delete");
       toastMessage(t(result.data?.message), "success");
       refreshData();
-      await refetchData();
     }
   };
 
@@ -369,27 +368,6 @@ export const Documentation = memo(function Documentation() {
     [selectedVersion, navigate, t, closeModal],
   );
 
-  const refetchData = useCallback(async () => {
-    setPageGroupLoading(true);
-    const [pageGroupsResult, pagesResult] = await Promise.all([
-      getPageGroups(),
-      getPages(),
-    ]);
-    handleError(pageGroupsResult, navigate, t);
-    handleError(pagesResult, navigate, t);
-    if (
-      pageGroupsResult.status === "success" &&
-      pagesResult.status === "success"
-    ) {
-      const combinedData = combinePages(
-        pageGroupsResult.data || [],
-        pagesResult.data || [],
-      );
-      setGroupsAndPageData(combinedData);
-    }
-    setPageGroupLoading(false);
-  }, [navigate, t]);
-
   const handleCreatePageGroup = async (title: string) => {
     if (title === "") {
       toastMessage(t("title_is_required"), "warning");
@@ -412,7 +390,6 @@ export const Documentation = memo(function Documentation() {
 
     if (result.status === "success") {
       closeModal("createPageGroup");
-      await refetchData();
       refreshData();
       toastMessage(t(result.data.message), "success");
     }
@@ -448,7 +425,6 @@ export const Documentation = memo(function Documentation() {
     if (result.status === "success") {
       closeModal("createPage");
       refreshData();
-      await refetchData();
       toastMessage(t(result.data.message), "success");
     }
   };
