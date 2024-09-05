@@ -406,7 +406,7 @@ export default function EditPage() {
               <h3 className="text-2xl  font-semibold text-gray-900 dark:text-white">
                 {t("edit_page")}
               </h3>
-              <p
+              <div
                 className="px-5 py-1.5 rounded-lg font-semibold dark:text-white"
                 title="Version"
               >
@@ -415,7 +415,7 @@ export default function EditPage() {
                     {version}
                   </div>
                 </div>
-              </p>
+              </div>
             </div>
 
             <div className="grid gap-4 mb-4 grid-cols-1">
