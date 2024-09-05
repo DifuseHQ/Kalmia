@@ -35,7 +35,7 @@ build-freebsd64:
 	GOOS=freebsd GOARCH=amd64 go build -ldflags "-s -w" -o dist/$(APP_NAME)_$(APP_VERSION)_freebsd64 main.go
 
 build-macos-arm64:
-	GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w" -o dist/$(APP_NAME)_$(APP_VERSION)_macos64 main.go
+	GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w" -o dist/$(APP_NAME)_$(APP_VERSION)_macos_arm64 main.go
 
 build-macos-amd64:
 	GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o dist/$(APP_NAME)_$(APP_VERSION)_macos64 main.go
