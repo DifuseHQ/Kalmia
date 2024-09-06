@@ -17,6 +17,45 @@ func PathExists(path string) bool {
 	return !os.IsNotExist(err)
 }
 
+func CopyFile(src, dst string) error {
+	sourceFile, err := os.Open(src)
+
+	if err != nil {
+		return err
+	}
+
+	defer sourceFile.Close()
+
+	destFile, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+
+	defer destFile.Close()
+
+	_, err = io.Copy(destFile, sourceFile)
+	if err != nil {
+		return err
+	}
+
+	return destFile.Sync()
+}
+
+func TouchFile(path string) error {
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+
+	_, err = file.WriteString("1")
+
+	if err != nil {
+		return err
+	}
+
+	return file.Close()
+}
+
 func MakeDir(path string) error {
 	return os.MkdirAll(path, 0755)
 }

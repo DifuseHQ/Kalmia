@@ -20,7 +20,7 @@ export default defineConfig({
   mediumZoom: {
     selector: '.rspress-doc img',
   },
-  outDir: 'build_tmp',
+  outDir: '__OUT_DIR__',
   plugins: [],
   builderConfig: {
     source: {

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useNavigate, useLocation } from 'rspress/runtime';
+import { useNavigate, useLocation, usePageData } from 'rspress/runtime';
 
 interface RedirectProps {
   to: string;
@@ -9,10 +9,15 @@ interface RedirectProps {
 export const Redirect: React.FC<RedirectProps> = ({ to, from }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const pageData = usePageData();
 
   useEffect(() => {
     if (!from || location.pathname === from) {
-      navigate(to, { replace: true });
+      if (pageData.siteData.base === "/") {
+        navigate(`/guides/index.html`, { replace: true });
+      } else {
+        navigate(to, { replace: true });
+      }
     }
   }, [to, from, navigate, location]);
 
