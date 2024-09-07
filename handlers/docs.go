@@ -88,6 +88,7 @@ func CreateDocumentation(services *services.ServiceRegistry, w http.ResponseWrit
 		GitBranch        string `json:"gitBranch"`
 		GitUser          string `json:"gitUser"`
 		GitPassword      string `json:"gitPassword"`
+		GitEmail         string `json:"gitEmail"`
 	}
 
 	req, err := ValidateRequest[Request](w, r)
@@ -122,6 +123,7 @@ func CreateDocumentation(services *services.ServiceRegistry, w http.ResponseWrit
 		GitBranch:        req.GitBranch,
 		GitUser:          req.GitUser,
 		GitPassword:      req.GitPassword,
+		GitEmail:         req.GitEmail,
 	}
 
 	err = services.DocService.CreateDocumentation(documentation, user)
@@ -156,6 +158,7 @@ func EditDocumentation(services *services.ServiceRegistry, w http.ResponseWriter
 		RequireAuth      bool   `json:"requireAuth"`
 		GitRepo          string `json:"gitRepo"`
 		GitBranch        string `json:"gitBranch"`
+		GitEmail         string `json:"gitEmail"`
 		GitUser          string `json:"gitUser"`
 		GitPassword      string `json:"gitPassword"`
 	}
@@ -180,7 +183,8 @@ func EditDocumentation(services *services.ServiceRegistry, w http.ResponseWriter
 
 	err = services.DocService.EditDocumentation(user, req.ID, req.Name, req.Description, req.Version, req.Favicon, req.MetaImage,
 		req.NavImage, req.NavImageDark, req.CustomCSS, req.FooterLabelLinks, req.MoreLabelLinks, req.CopyrightText,
-		req.URL, req.OrganizationName, req.ProjectName, req.BaseURL, req.LanderDetails, req.RequireAuth, req.GitRepo, req.GitBranch, req.GitUser, req.GitPassword)
+		req.URL, req.OrganizationName, req.ProjectName, req.BaseURL, req.LanderDetails, req.RequireAuth, req.GitRepo,
+		req.GitBranch, req.GitUser, req.GitPassword, req.GitEmail)
 
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})

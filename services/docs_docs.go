@@ -261,7 +261,7 @@ func (service *DocService) CreateDocumentation(documentation *models.Documentati
 func (service *DocService) EditDocumentation(user models.User, id uint, name, description, version, favicon, metaImage, navImage,
 	navImageDark, customCSS, footerLabelLinks, moreLabelLinks, copyrightText, url,
 	organizationName, projectName, baseURL, landerDetails string, requireAuth bool,
-	gitRepo string, gitBranch string, gitUser string, gitPassword string) error {
+	gitRepo string, gitBranch string, gitUser string, gitPassword string, gitEmail string) error {
 	tx := service.DB.Begin()
 	if !utils.IsBaseURLValid(baseURL) {
 		return fmt.Errorf("invalid_base_url")
@@ -289,6 +289,7 @@ func (service *DocService) EditDocumentation(user models.User, id uint, name, de
 		doc.GitBranch = gitBranch
 		doc.GitUser = gitUser
 		doc.GitPassword = gitPassword
+		doc.GitEmail = gitEmail
 		if isTarget && version != "" {
 			doc.Version = version
 		}
@@ -517,6 +518,7 @@ func (service *DocService) CreateDocumentationVersion(originalDocId uint, newVer
 		GitBranch:        originalDoc.GitBranch,
 		GitUser:          originalDoc.GitUser,
 		GitPassword:      originalDoc.GitPassword,
+		GitEmail:         originalDoc.GitEmail,
 	}
 
 	err = service.DB.Transaction(func(tx *gorm.DB) error {
