@@ -453,8 +453,6 @@ export default function CreateDocModal() {
   };
 
   const handleCreateDocument = async () => {
-    console.log(formData);
-
     const validate = validateFormData(formData, gitDeployOn);
     if (validate.status) {
       toastMessage(t(validate.message), "error");
@@ -1150,7 +1148,7 @@ export default function CreateDocModal() {
                     <div className="grid gap-4 grid-cols-2 mb-5">
                       <FormField
                         label={t("git_user")}
-                        placeholder={t("organization_name_placeholder")}
+                        placeholder={t("git_user_palceholder")}
                         value={formData?.gitUser}
                         onChange={handleChange}
                         name="gitUser"
@@ -1159,7 +1157,7 @@ export default function CreateDocModal() {
 
                       <FormField
                         label={t("git_repo")}
-                        placeholder={t("organization_name_placeholder")}
+                        placeholder={t("git_repo_placeholder")}
                         value={formData?.gitRepo}
                         onChange={handleChange}
                         name="gitRepo"
@@ -1170,7 +1168,7 @@ export default function CreateDocModal() {
                     <div className="grid gap-4 sm:grid-cols-3 mb-5">
                       <FormField
                         label={t("git_email")}
-                        placeholder={t("organization_name_placeholder")}
+                        placeholder={t("git_email_placeholder")}
                         value={formData?.gitEmail}
                         onChange={handleChange}
                         name="gitEmail"
@@ -1178,7 +1176,7 @@ export default function CreateDocModal() {
                       />
                       <FormField
                         label={t("git_password")}
-                        placeholder={t("organization_name_placeholder")}
+                        placeholder={t("git_password_placeholder")}
                         value={formData?.gitPassword}
                         onChange={handleChange}
                         name="gitPassword"
@@ -1187,7 +1185,7 @@ export default function CreateDocModal() {
                       />
                       <FormField
                         label={t("git_branch")}
-                        placeholder={t("organization_name_placeholder")}
+                        placeholder={t("git_branch_palceholder")}
                         value={formData?.gitBranch}
                         onChange={handleChange}
                         name="gitBranch"

@@ -371,7 +371,7 @@ export const validateFormData = (
       if (!formData[field]) {
         return {
           status: true,
-          message: `${field}_is_required_when_git_deploy_is_enabled`,
+          message: `${field}_is_required`,
         };
       }
     }
