@@ -76,7 +76,7 @@ func CreateDocumentation(services *services.ServiceRegistry, w http.ResponseWrit
 		ProjectName      string `json:"projectName" validate:"required"`
 		BaseURL          string `json:"baseURL" validate:"required"`
 		Favicon          string `json:"favicon"`
-		MetaImage        string `json:"metaImage" validate:"required"`
+		MetaImage        string `json:"metaImage"`
 		NavImage         string `json:"navImage"`
 		NavImageDark     string `json:"navImageDark"`
 		CustomCSS        string `json:"customCSS" validate:"required"`
@@ -148,7 +148,7 @@ func EditDocumentation(services *services.ServiceRegistry, w http.ResponseWriter
 		BaseURL          string `json:"baseURL" validate:"required"`
 		Version          string `json:"version" validate:"required"`
 		Favicon          string `json:"favicon"`
-		MetaImage        string `json:"metaImage" validate:"required"`
+		MetaImage        string `json:"metaImage"`
 		NavImage         string `json:"navImage"`
 		NavImageDark     string `json:"navImageDark"`
 		CustomCSS        string `json:"customCSS" validate:"required"`
