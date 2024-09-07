@@ -607,7 +607,7 @@ export const Documentation = memo(function Documentation() {
                     </motion.button>
                   )}
 
-                  {hasPermission(["all", "write"], userDetails) && (
+                  {userDetails?.admin === true && (
                     <motion.button
                       whileHover={{ scale: 1.3 }}
                       title={t("edit_documentation")}
@@ -624,7 +624,7 @@ export const Documentation = memo(function Documentation() {
                     </motion.button>
                   )}
 
-                  {hasPermission(["all", "delete"], userDetails) && (
+                  {userDetails?.admin === true && (
                     <motion.button
                       whileHover={{ scale: 1.3 }}
                       onClick={() => {

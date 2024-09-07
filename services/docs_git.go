@@ -18,7 +18,6 @@ import (
 
 func (service *DocService) GitDeploy(docId uint) error {
 	doc, err := service.GetDocumentation(docId)
-
 	if err != nil {
 		return fmt.Errorf("failed to get documentation: %v", err)
 	}
@@ -35,6 +34,7 @@ func (service *DocService) GitDeploy(docId uint) error {
 		return fmt.Errorf("documentation path does not exist: %v", err)
 	}
 
+	// Build the documentation
 	err = utils.RunNpxCommand(docPath, "rspress", "build", "--config", "rspress.config.git.ts")
 	if err != nil {
 		return fmt.Errorf("failed to run npx command: %v", err)
@@ -47,21 +47,30 @@ func (service *DocService) GitDeploy(docId uint) error {
 		}
 	}
 
+	// Check if the remote repository exists and if its URL matches the current one
 	repo, err := git.PlainOpen(gitRemotePath)
-	if err != nil {
-		if err == git.ErrRepositoryNotExists {
-			repo, err = git.PlainClone(gitRemotePath, false, &git.CloneOptions{
-				URL: doc.GitRepo,
-				Auth: &http.BasicAuth{
-					Username: doc.GitUser,
-					Password: doc.GitPassword,
-				},
-			})
-			if err != nil {
-				return fmt.Errorf("failed to clone repository: %v", err)
+	if err == nil {
+		remote, err := repo.Remote("origin")
+		if err == nil {
+			if remote.Config().URLs[0] != doc.GitRepo {
+				// Repository URL has changed, remove the old repository
+				os.RemoveAll(gitRemotePath)
+				repo = nil
 			}
-		} else {
-			return fmt.Errorf("failed to open git repo: %v", err)
+		}
+	}
+
+	// If the repository doesn't exist or was removed, clone it
+	if repo == nil {
+		repo, err = git.PlainClone(gitRemotePath, false, &git.CloneOptions{
+			URL: doc.GitRepo,
+			Auth: &http.BasicAuth{
+				Username: doc.GitUser,
+				Password: doc.GitPassword,
+			},
+		})
+		if err != nil {
+			return fmt.Errorf("failed to clone repository: %v", err)
 		}
 	}
 
@@ -70,33 +79,23 @@ func (service *DocService) GitDeploy(docId uint) error {
 		return fmt.Errorf("failed to get worktree: %v", err)
 	}
 
-	status, err := w.Status()
-	if err != nil {
-		return fmt.Errorf("failed to get worktree status: %v", err)
-	}
-
-	if !status.IsClean() {
-		err = w.Reset(&git.ResetOptions{Mode: git.HardReset})
-		if err != nil {
-			return fmt.Errorf("failed to reset unstaged changes: %v", err)
-		}
-	}
-
+	// Fetch the latest changes
 	err = repo.Fetch(&git.FetchOptions{
 		Auth: &http.BasicAuth{
 			Username: doc.GitUser,
 			Password: doc.GitPassword,
 		},
 	})
-
 	if err != nil && err != git.NoErrAlreadyUpToDate {
 		return fmt.Errorf("failed to fetch from remote: %v", err)
 	}
 
+	// Check if the branch exists locally
 	branchRef := plumbing.NewBranchReferenceName(doc.GitBranch)
 	_, err = repo.Reference(branchRef, true)
 	branchExists := err == nil
 
+	// Checkout or create the branch
 	if branchExists {
 		err = w.Checkout(&git.CheckoutOptions{
 			Branch: branchRef,
@@ -111,21 +110,26 @@ func (service *DocService) GitDeploy(docId uint) error {
 		return fmt.Errorf("failed to checkout branch %s: %v", doc.GitBranch, err)
 	}
 
+	// Reset the branch to match the remote
 	remoteRef, err := repo.Reference(plumbing.NewRemoteReferenceName("origin", doc.GitBranch), true)
-
 	if err != nil {
-		return fmt.Errorf("failed to get remote reference: %v", err)
+		if err == plumbing.ErrReferenceNotFound {
+			// If the remote branch doesn't exist, we'll create it when we push
+			remoteRef = plumbing.NewHashReference(branchRef, plumbing.ZeroHash)
+		} else {
+			return fmt.Errorf("failed to get remote reference: %v", err)
+		}
 	}
 
 	err = w.Reset(&git.ResetOptions{
 		Commit: remoteRef.Hash(),
 		Mode:   git.HardReset,
 	})
-
 	if err != nil {
 		return fmt.Errorf("failed to reset branch to match remote: %v", err)
 	}
 
+	// Clean the gitRemotePath
 	err = filepath.Walk(gitRemotePath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			if os.IsNotExist(err) {
@@ -147,11 +151,11 @@ func (service *DocService) GitDeploy(docId uint) error {
 		}
 		return nil
 	})
-
 	if err != nil {
 		return fmt.Errorf("failed to clean gitRemotePath: %v", err)
 	}
 
+	// Copy new files
 	err = filepath.Walk(gitBuildPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -166,18 +170,18 @@ func (service *DocService) GitDeploy(docId uint) error {
 		}
 		return utils.CopyFile(path, destPath)
 	})
-
 	if err != nil {
 		return fmt.Errorf("failed to copy new files: %v", err)
 	}
 
+	// Add changes
 	_, err = w.Add(".")
 	if err != nil {
 		return fmt.Errorf("failed to add changes: %v", err)
 	}
 
-	status, err = w.Status()
-
+	// Check if there are changes to commit
+	status, err := w.Status()
 	if err != nil {
 		return fmt.Errorf("failed to get worktree status: %v", err)
 	}
@@ -187,8 +191,8 @@ func (service *DocService) GitDeploy(docId uint) error {
 		return nil
 	}
 
+	// Commit changes
 	updateMessage := fmt.Sprintf("Update @ %s", time.Now().Format("2006-01-02 15:04:05"))
-
 	_, err = w.Commit(updateMessage, &git.CommitOptions{
 		All: true,
 		Author: &object.Signature{
@@ -197,11 +201,11 @@ func (service *DocService) GitDeploy(docId uint) error {
 			When:  time.Now(),
 		},
 	})
-
 	if err != nil {
 		return fmt.Errorf("failed to commit changes: %v", err)
 	}
 
+	// Push changes
 	err = repo.Push(&git.PushOptions{
 		RemoteName: "origin",
 		Auth: &http.BasicAuth{
@@ -209,7 +213,6 @@ func (service *DocService) GitDeploy(docId uint) error {
 			Password: doc.GitPassword,
 		},
 	})
-
 	if err != nil && err != git.NoErrAlreadyUpToDate {
 		return fmt.Errorf("failed to push changes: %v", err)
 	}

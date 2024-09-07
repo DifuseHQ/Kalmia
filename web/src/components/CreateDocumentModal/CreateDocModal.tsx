@@ -53,6 +53,7 @@ interface FormFieldData {
   ref?: React.Ref<HTMLInputElement>;
 }
 
+
 const FormField: React.FC<FormFieldData> = ({
   label,
   placeholder,
@@ -63,22 +64,39 @@ const FormField: React.FC<FormFieldData> = ({
   required = false,
   ref,
 }) => {
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
     <div>
       <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
         {label} {required && <span className="text-red-500 ml-1">*</span>}
       </span>
-      <input
-        ref={ref}
-        onChange={onChange}
-        value={value}
-        type={type}
-        name={name}
-        id={name}
-        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
-        placeholder={placeholder}
-        required={required}
-      />
+      <div className="relative">
+        <input
+          ref={ref}
+          onChange={onChange}
+          value={value}
+          type={type === "password" && showPassword ? "text" : type}
+          name={name}
+          id={name}
+          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+          placeholder={placeholder}
+          required={required}
+        />
+        {type === "password" && (
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute inset-y-0 right-0 flex items-center pr-3 bg-gray-50 dark:bg-gray-700"
+          >
+            {showPassword ? (
+              <Icon icon="bx:bxs-show" className="w-5 h-5 text-gray-400" />
+            ) : (
+              <Icon icon="bx:bxs-hide" className="w-5 h-5 text-gray-400" />
+            )}
+          </button>
+        )}
+      </div>
     </div>
   );
 };
