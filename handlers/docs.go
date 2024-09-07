@@ -76,7 +76,7 @@ func CreateDocumentation(services *services.ServiceRegistry, w http.ResponseWrit
 		ProjectName      string `json:"projectName" validate:"required"`
 		BaseURL          string `json:"baseURL" validate:"required"`
 		Favicon          string `json:"favicon"`
-		MetaImage        string `json:"metaImage" validate:"required"`
+		MetaImage        string `json:"metaImage"`
 		NavImage         string `json:"navImage"`
 		NavImageDark     string `json:"navImageDark"`
 		CustomCSS        string `json:"customCSS" validate:"required"`
@@ -84,6 +84,11 @@ func CreateDocumentation(services *services.ServiceRegistry, w http.ResponseWrit
 		MoreLabelLinks   string `json:"moreLabelLinks"`
 		CopyrightText    string `json:"copyrightText" validate:"required"`
 		RequireAuth      bool   `json:"requireAuth"`
+		GitRepo          string `json:"gitRepo"`
+		GitBranch        string `json:"gitBranch"`
+		GitUser          string `json:"gitUser"`
+		GitPassword      string `json:"gitPassword"`
+		GitEmail         string `json:"gitEmail"`
 	}
 
 	req, err := ValidateRequest[Request](w, r)
@@ -114,6 +119,11 @@ func CreateDocumentation(services *services.ServiceRegistry, w http.ResponseWrit
 		MoreLabelLinks:   req.MoreLabelLinks,
 		CopyrightText:    req.CopyrightText,
 		RequireAuth:      req.RequireAuth,
+		GitRepo:          req.GitRepo,
+		GitBranch:        req.GitBranch,
+		GitUser:          req.GitUser,
+		GitPassword:      req.GitPassword,
+		GitEmail:         req.GitEmail,
 	}
 
 	err = services.DocService.CreateDocumentation(documentation, user)
@@ -138,7 +148,7 @@ func EditDocumentation(services *services.ServiceRegistry, w http.ResponseWriter
 		BaseURL          string `json:"baseURL" validate:"required"`
 		Version          string `json:"version" validate:"required"`
 		Favicon          string `json:"favicon"`
-		MetaImage        string `json:"metaImage" validate:"required"`
+		MetaImage        string `json:"metaImage"`
 		NavImage         string `json:"navImage"`
 		NavImageDark     string `json:"navImageDark"`
 		CustomCSS        string `json:"customCSS" validate:"required"`
@@ -146,6 +156,11 @@ func EditDocumentation(services *services.ServiceRegistry, w http.ResponseWriter
 		MoreLabelLinks   string `json:"moreLabelLinks"`
 		CopyrightText    string `json:"copyrightText" validate:"required"`
 		RequireAuth      bool   `json:"requireAuth"`
+		GitRepo          string `json:"gitRepo"`
+		GitBranch        string `json:"gitBranch"`
+		GitEmail         string `json:"gitEmail"`
+		GitUser          string `json:"gitUser"`
+		GitPassword      string `json:"gitPassword"`
 	}
 
 	req, err := ValidateRequest[Request](w, r)
@@ -166,7 +181,10 @@ func EditDocumentation(services *services.ServiceRegistry, w http.ResponseWriter
 		return
 	}
 
-	err = services.DocService.EditDocumentation(user, req.ID, req.Name, req.Description, req.Version, req.Favicon, req.MetaImage, req.NavImage, req.NavImageDark, req.CustomCSS, req.FooterLabelLinks, req.MoreLabelLinks, req.CopyrightText, req.URL, req.OrganizationName, req.ProjectName, req.BaseURL, req.LanderDetails, req.RequireAuth)
+	err = services.DocService.EditDocumentation(user, req.ID, req.Name, req.Description, req.Version, req.Favicon, req.MetaImage,
+		req.NavImage, req.NavImageDark, req.CustomCSS, req.FooterLabelLinks, req.MoreLabelLinks, req.CopyrightText,
+		req.URL, req.OrganizationName, req.ProjectName, req.BaseURL, req.LanderDetails, req.RequireAuth, req.GitRepo,
+		req.GitBranch, req.GitUser, req.GitPassword, req.GitEmail)
 
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})

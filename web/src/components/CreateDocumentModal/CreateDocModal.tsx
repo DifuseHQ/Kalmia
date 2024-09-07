@@ -7,6 +7,7 @@ import data from "@emoji-mart/data";
 import { EmojiMartData } from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
 import EmojiClickData from "@emoji-mart/react";
+import { Field, Label, Switch } from "@headlessui/react";
 import { Icon } from "@iconify/react";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useContext, useEffect, useRef, useState } from "react";
@@ -52,6 +53,7 @@ interface FormFieldData {
   ref?: React.Ref<HTMLInputElement>;
 }
 
+
 const FormField: React.FC<FormFieldData> = ({
   label,
   placeholder,
@@ -62,22 +64,39 @@ const FormField: React.FC<FormFieldData> = ({
   required = false,
   ref,
 }) => {
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
     <div>
       <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
         {label} {required && <span className="text-red-500 ml-1">*</span>}
       </span>
-      <input
-        ref={ref}
-        onChange={onChange}
-        value={value}
-        type={type}
-        name={name}
-        id={name}
-        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
-        placeholder={placeholder}
-        required={required}
-      />
+      <div className="relative">
+        <input
+          ref={ref}
+          onChange={onChange}
+          value={value}
+          type={type === "password" && showPassword ? "text" : type}
+          name={name}
+          id={name}
+          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+          placeholder={placeholder}
+          required={required}
+        />
+        {type === "password" && (
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute inset-y-0 right-0 flex items-center pr-3 bg-gray-50 dark:bg-gray-700"
+          >
+            {showPassword ? (
+              <Icon icon="bx:bxs-show" className="w-5 h-5 text-gray-400" />
+            ) : (
+              <Icon icon="bx:bxs-hide" className="w-5 h-5 text-gray-400" />
+            )}
+          </button>
+        )}
+      </div>
     </div>
   );
 };
@@ -145,7 +164,6 @@ const LabelAndCommunityComponent = ({
       <div>
         <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           {t("link")}
-          <span className="text-red-500 ml-1">*</span>
         </span>
         <input
           type="text"
@@ -206,6 +224,11 @@ interface FormData {
   navImage: string;
   copyrightText: string;
   metaImage: string;
+  gitUser: string | undefined;
+  gitRepo: string | undefined;
+  gitEmail: string | undefined;
+  gitPassword: string | undefined;
+  gitBranch: string | undefined;
 }
 
 type LanderDetailsKeys = keyof LanderDetails;
@@ -224,6 +247,7 @@ export default function CreateDocModal() {
     boolean | undefined
   >(false);
   const [isToggleOn, SetIsToggleOn] = useState<boolean>(false);
+  const [gitDeployOn, SetGitDeployOn] = useState<boolean>(false);
   const [activeFieldIndex, setActiveFieldIndex] = useState<number | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -249,6 +273,11 @@ export default function CreateDocModal() {
     navImage: "",
     copyrightText: "",
     metaImage: "",
+    gitUser: "",
+    gitRepo: "",
+    gitEmail: "",
+    gitPassword: "",
+    gitBranch: "",
   });
 
   const [moreField, setMoreField] = useState<MoreLabelLinks[]>([
@@ -275,7 +304,7 @@ export default function CreateDocModal() {
 
   useOutsideAlerter(socialMediaRef, () => setIsIconSelectOpen(false));
   useEffect(() => {
-    if (isToggleOn) {
+    if (isToggleOn || gitDeployOn) {
       window.scrollTo({
         top: document.documentElement.scrollHeight,
         behavior: "smooth",
@@ -286,7 +315,7 @@ export default function CreateDocModal() {
         behavior: "smooth",
       });
     }
-  }, [isToggleOn]);
+  }, [isToggleOn, gitDeployOn]);
 
   useEffect(() => {
     if (mode === "edit") {
@@ -298,6 +327,9 @@ export default function CreateDocModal() {
             const data: Documentation = result.data;
             setFormData(data);
 
+            if (data.gitUser) {
+              SetGitDeployOn(true);
+            }
             const footerLabelLinks: FooterLabelLinks[] = Array.isArray(
               data.footerLabelLinks,
             )
@@ -364,6 +396,11 @@ export default function CreateDocModal() {
         navImage: "",
         copyrightText: "",
         metaImage: "",
+        gitUser: "",
+        gitRepo: "",
+        gitEmail: "",
+        gitPassword: "",
+        gitBranch: "",
       });
       SetIsAuthenticationToggleOn(false);
       setSocialPlatformField([{ icon: "", link: "" }]);
@@ -434,7 +471,7 @@ export default function CreateDocModal() {
   };
 
   const handleCreateDocument = async () => {
-    const validate = validateFormData(formData);
+    const validate = validateFormData(formData, gitDeployOn);
     if (validate.status) {
       toastMessage(t(validate.message), "error");
       return;
@@ -460,6 +497,16 @@ export default function CreateDocModal() {
 
     const landingData = isToggleOn ? landingPage : {};
 
+    const gitFields = gitDeployOn
+      ? {
+          gitUser: formData.gitUser || "",
+          gitRepo: formData.gitRepo || "",
+          gitEmail: formData.gitEmail || "",
+          gitPassword: formData.gitPassword || "",
+          gitBranch: formData.gitBranch || "",
+        }
+      : {};
+
     const payload: DocumentationPayload = {
       id: docId,
       name: formData.name || "",
@@ -476,6 +523,7 @@ export default function CreateDocModal() {
       copyrightText: formData.copyrightText || "",
       metaImage: formData.metaImage || "",
       requireAuth: isAuthenticationToggleOn || false,
+      ...gitFields,
       landerDetails: JSON.stringify(landingData),
       footerLabelLinks: socialPlatformField
         ? JSON.stringify(socialPlatformField)
@@ -590,7 +638,6 @@ export default function CreateDocModal() {
     updateFeature(index, "emoji", emojiObject.unified);
     setShowEmojiPicker(false);
   };
-  console.log(isAuthenticationToggleOn);
 
   return (
     <AnimatePresence>
@@ -916,187 +963,256 @@ export default function CreateDocModal() {
                 </div>
               </div>
 
-              <label className="inline-flex items-center cursor-pointer gpa-5 mb-4">
-                <span className="text-lg font-medium text-gray-900 dark:text-gray-300 mr-3">
-                  {t("enable_landing_page")}
-                </span>
-                <input
-                  type="checkbox"
-                  checked={isToggleOn}
-                  onChange={(e) => {
-                    SetIsToggleOn(e.target.checked);
-                  }}
-                  className="sr-only peer"
-                />
-                <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-              </label>
+              <div>
+                <label className="inline-flex items-center cursor-pointer gpa-5 mb-4">
+                  <span className="text-lg font-medium text-gray-900 dark:text-gray-300 mr-3">
+                    {t("enable_landing_page")}
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={isToggleOn}
+                    onChange={(e) => {
+                      SetIsToggleOn(e.target.checked);
+                    }}
+                    className="sr-only peer"
+                  />
+                  <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                </label>
 
-              {isToggleOn && (
-                <div className="">
-                  <div className="grid gap-4 grid-cols-2 mb-5">
-                    <FormField
-                      name="cta_button_text_name"
-                      label={t("cta_button_text")}
-                      placeholder={t("cta_button_text_placeholder")}
-                      value={
-                        landingPage?.ctaButtonText?.ctaButtonLinkLabel || ""
-                      }
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                        updateCtaButtonText(
-                          "ctaButtonLinkLabel",
-                          e.target.value,
-                          "ctaButtonText",
-                        );
-                      }}
-                      required={true}
-                    />
+                {isToggleOn && (
+                  <div className="">
+                    <div className="grid gap-4 grid-cols-2 mb-5">
+                      <FormField
+                        name="cta_button_text_name"
+                        label={t("cta_button_text")}
+                        placeholder={t("cta_button_text_placeholder")}
+                        value={
+                          landingPage?.ctaButtonText?.ctaButtonLinkLabel || ""
+                        }
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          updateCtaButtonText(
+                            "ctaButtonLinkLabel",
+                            e.target.value,
+                            "ctaButtonText",
+                          );
+                        }}
+                        required={true}
+                      />
 
-                    <FormField
-                      name="cta_button_link_name"
-                      label={t("cta_button_link")}
-                      placeholder={t("cta_button_link_placeholder")}
-                      value={landingPage?.ctaButtonText?.ctaButtonLink}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                        updateCtaButtonText(
-                          "ctaButtonLink",
-                          e.target.value,
-                          "ctaButtonText",
-                        );
-                      }}
-                      type="url"
-                      required={true}
-                    />
-                  </div>
-
-                  <div className="grid gap-4 sm:grid-cols-3 mb-5">
-                    <FormField
-                      name="second_cta_button_text"
-                      label={t("second_cta_button_text")}
-                      placeholder={t("second_cta_button_text_placeholder")}
-                      value={
-                        landingPage?.secondCtaButtonText?.ctaButtonLinkLabel
-                      }
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        updateCtaButtonText(
-                          "ctaButtonLinkLabel",
-                          e.target.value,
-                          "secondCtaButtonText",
-                        )
-                      }
-                    />
-                    <FormField
-                      name="second_cta_button_link"
-                      label={t("second_cta_button_link")}
-                      placeholder={t("second_cta_link_placeholder")}
-                      value={landingPage?.secondCtaButtonText?.ctaButtonLink}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        updateCtaButtonText(
-                          "ctaButtonLink",
-                          e.target.value,
-                          "secondCtaButtonText",
-                        )
-                      }
-                      type="url"
-                    />
-                    <FormField
-                      label={t("cta_image_link")}
-                      placeholder={t("cta_image_link_palceholder")}
-                      value={landingPage.ctaImageLink || ""}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        setLandingPage((prevState) => ({
-                          ...prevState,
-                          ctaImageLink: e.target.value,
-                        }))
-                      }
-                      name="ctaImageLink"
-                      type="url"
-                      required={true}
-                    />
-                  </div>
-
-                  <div className="flex justify-start items-center">
-                    <span className="block text-md font-medium text-gray-700 dark:text-gray-300 ">
-                      {t("features")}
-                    </span>
-                  </div>
-                  <hr className="mt-2 mb-4 border-t-1 dark:border-gray-500" />
-
-                  {landingPage.features.map((obj, index) => (
-                    <div className="grid gap-4 grid-cols-3 my-2" key={index}>
-                      <div className="relative">
-                        <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          {t("emoji")}
-                        </span>
-                        <input
-                          ref={(el) => (inputRefs.current[index] = el)}
-                          onFocus={() => toggleEmojiPicker(index)}
-                          placeholder={`${convertToEmoji("26a1")} ${t("pick_your_emoji")}`}
-                          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                          value={convertToEmoji(obj.emoji)}
-                          readOnly
-                        />
-                        {activeFieldIndex === index && showEmojiPicker && (
-                          <div
-                            ref={pickerRef}
-                            className={
-                              "absolute left-0 bg-white rounded-lg shadow w-52 dark:bg-gray-700 z-30"
-                            }
-                            style={{ transform: "translateY(-110%)" }}
-                          >
-                            <Picker
-                              data={data as EmojiMartData}
-                              onEmojiSelect={(emoji: typeof EmojiClickData) =>
-                                handleEmojiClick(index, emoji)
-                              }
-                            />
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="relative">
-                        <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          {t("title_label")}
-                        </span>
-                        <input
-                          onChange={(e) =>
-                            updateFeature(index, "title", e.target.value)
-                          }
-                          value={obj.title}
-                          type="text"
-                          placeholder={t("landing_page_title_placeholder")}
-                          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                        />
-                      </div>
-
-                      <div className="relative">
-                        <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          {t("text")}
-                        </span>
-                        <input
-                          onChange={(e) =>
-                            updateFeature(index, "text", e.target.value)
-                          }
-                          value={obj.text}
-                          type="text"
-                          id="feature_desc"
-                          placeholder={t("text_placeholder")}
-                          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                        />
-                      </div>
+                      <FormField
+                        name="cta_button_link_name"
+                        label={t("cta_button_link")}
+                        placeholder={t("cta_button_link_placeholder")}
+                        value={landingPage?.ctaButtonText?.ctaButtonLink}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          updateCtaButtonText(
+                            "ctaButtonLink",
+                            e.target.value,
+                            "ctaButtonText",
+                          );
+                        }}
+                        type="url"
+                        required={true}
+                      />
                     </div>
-                  ))}
-                  <div className="flex justify-end gap-3 my-2">
-                    <AddButton
-                      onClick={() => Promise.resolve(addRow("feature-filed"))}
-                    />
-                    <DeleteButton
-                      onClick={() =>
-                        Promise.resolve(deleteRow("feature-filed"))
-                      }
-                    />
+
+                    <div className="grid gap-4 sm:grid-cols-3 mb-5">
+                      <FormField
+                        name="second_cta_button_text"
+                        label={t("second_cta_button_text")}
+                        placeholder={t("second_cta_button_text_placeholder")}
+                        value={
+                          landingPage?.secondCtaButtonText?.ctaButtonLinkLabel
+                        }
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          updateCtaButtonText(
+                            "ctaButtonLinkLabel",
+                            e.target.value,
+                            "secondCtaButtonText",
+                          )
+                        }
+                      />
+                      <FormField
+                        name="second_cta_button_link"
+                        label={t("second_cta_button_link")}
+                        placeholder={t("second_cta_link_placeholder")}
+                        value={landingPage?.secondCtaButtonText?.ctaButtonLink}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          updateCtaButtonText(
+                            "ctaButtonLink",
+                            e.target.value,
+                            "secondCtaButtonText",
+                          )
+                        }
+                        type="url"
+                      />
+                      <FormField
+                        label={t("cta_image_link")}
+                        placeholder={t("cta_image_link_palceholder")}
+                        value={landingPage.ctaImageLink || ""}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setLandingPage((prevState) => ({
+                            ...prevState,
+                            ctaImageLink: e.target.value,
+                          }))
+                        }
+                        name="ctaImageLink"
+                        type="url"
+                        required={true}
+                      />
+                    </div>
+
+                    <div className="flex justify-start items-center">
+                      <span className="block text-md font-medium text-gray-700 dark:text-gray-300 ">
+                        {t("features")}
+                      </span>
+                    </div>
+                    <hr className="mt-2 mb-4 border-t-1 dark:border-gray-500" />
+
+                    {landingPage.features.map((obj, index) => (
+                      <div className="grid gap-4 grid-cols-3 my-2" key={index}>
+                        <div className="relative">
+                          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            {t("emoji")}
+                          </span>
+                          <input
+                            ref={(el) => (inputRefs.current[index] = el)}
+                            onFocus={() => toggleEmojiPicker(index)}
+                            placeholder={`${convertToEmoji("26a1")} ${t("pick_your_emoji")}`}
+                            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                            value={convertToEmoji(obj.emoji)}
+                            readOnly
+                          />
+                          {activeFieldIndex === index && showEmojiPicker && (
+                            <div
+                              ref={pickerRef}
+                              className={
+                                "absolute left-0 bg-white rounded-lg shadow w-52 dark:bg-gray-700 z-30"
+                              }
+                              style={{ transform: "translateY(-110%)" }}
+                            >
+                              <Picker
+                                data={data as EmojiMartData}
+                                onEmojiSelect={(emoji: typeof EmojiClickData) =>
+                                  handleEmojiClick(index, emoji)
+                                }
+                              />
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="relative">
+                          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            {t("title_label")}
+                          </span>
+                          <input
+                            onChange={(e) =>
+                              updateFeature(index, "title", e.target.value)
+                            }
+                            value={obj.title}
+                            type="text"
+                            placeholder={t("landing_page_title_placeholder")}
+                            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                          />
+                        </div>
+
+                        <div className="relative">
+                          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            {t("text")}
+                          </span>
+                          <input
+                            onChange={(e) =>
+                              updateFeature(index, "text", e.target.value)
+                            }
+                            value={obj.text}
+                            type="text"
+                            id="feature_desc"
+                            placeholder={t("text_placeholder")}
+                            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                    <div className="flex justify-end gap-3 my-2">
+                      <AddButton
+                        onClick={() => Promise.resolve(addRow("feature-filed"))}
+                      />
+                      <DeleteButton
+                        onClick={() =>
+                          Promise.resolve(deleteRow("feature-filed"))
+                        }
+                      />
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+
+              <div className="space-y-4">
+                <Field className="inline-flex items-center space-x-3">
+                  <Label className="text-lg font-medium text-gray-900 dark:text-gray-300 ">
+                    {t("deploy_to_git")}
+                  </Label>
+                  <Switch
+                    checked={gitDeployOn}
+                    onChange={SetGitDeployOn}
+                    className="group inline-flex h-6 w-11 items-center rounded-full bg-gray-200 dark:bg-gray-600 transition data-[checked]:bg-blue-600 dark:data-[checked]:bg-blue-600 "
+                  >
+                    <span className="size-4 translate-x-1 rounded-full bg-white dark:bg-white transition group-data-[checked]:translate-x-6" />
+                  </Switch>
+                </Field>
+
+                {gitDeployOn && (
+                  <div className="">
+                    <div className="grid gap-4 grid-cols-2 mb-5">
+                      <FormField
+                        label={t("git_user")}
+                        placeholder={t("git_user_palceholder")}
+                        value={formData?.gitUser}
+                        onChange={handleChange}
+                        name="gitUser"
+                        required={true}
+                      />
+
+                      <FormField
+                        label={t("git_repo")}
+                        placeholder={t("git_repo_placeholder")}
+                        value={formData?.gitRepo}
+                        onChange={handleChange}
+                        name="gitRepo"
+                        required={true}
+                      />
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-3 mb-5">
+                      <FormField
+                        label={t("git_email")}
+                        placeholder={t("git_email_placeholder")}
+                        value={formData?.gitEmail}
+                        onChange={handleChange}
+                        name="gitEmail"
+                        required={true}
+                      />
+                      <FormField
+                        label={t("git_password")}
+                        placeholder={t("git_password_placeholder")}
+                        value={formData?.gitPassword}
+                        onChange={handleChange}
+                        name="gitPassword"
+                        type="password"
+                        required={true}
+                      />
+                      <FormField
+                        label={t("git_branch")}
+                        placeholder={t("git_branch_palceholder")}
+                        value={formData?.gitBranch}
+                        onChange={handleChange}
+                        name="gitBranch"
+                        required={true}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <div className="flex justify-center items-center mt-7">
                 <button

@@ -78,6 +78,11 @@ type Documentation struct {
 	PageGroups       []PageGroup `gorm:"foreignKey:DocumentationID;constraint:OnDelete:CASCADE" json:"pageGroups,omitempty"`
 	Pages            []Page      `gorm:"foreignKey:DocumentationID;constraint:OnDelete:CASCADE" json:"pages,omitempty"`
 	RequireAuth      bool        `json:"requireAuth" gorm:"default:false"`
+	GitRepo          string      `json:"gitRepo,omitempty"`
+	GitEmail         string      `json:"gitEmail,omitempty"`
+	GitUser          string      `json:"gitUser,omitempty"`
+	GitPassword      string      `json:"gitPassword,omitempty"`
+	GitBranch        string      `json:"gitBranch,omitempty"`
 }
 
 func (s Documentation) MarshalJSON() ([]byte, error) {

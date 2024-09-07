@@ -121,7 +121,7 @@ func (service *DocService) GenerateHead(docID uint, pageId uint, pageType string
 		}
 
 		buffer.WriteString(fmt.Sprintf(`<Meta rawJson='%s' />%s`, string(metaJSON), "\n"))
-		buffer.WriteString(fmt.Sprintf(`<Redirect to={'%s'} />%s`, doc.BaseURL+"/guides", "\n\n"))
+		buffer.WriteString(fmt.Sprintf(`<Redirect to={'%s'} />%s`, doc.BaseURL+"/guides/index.html", "\n\n"))
 
 		return buffer.String(), nil
 	} else {
@@ -384,6 +384,13 @@ func (service *DocService) StartUpdate(docId uint, rootParentId uint) (string, e
 
 	docPath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data", "doc_"+strconv.Itoa(int(rootParentId)))
 	docConfig := filepath.Join(docPath, "rspress.config.ts")
+	gitDocConfig := filepath.Join(docPath, "rspress.config.git.ts")
+
+	if !utils.PathExists(gitDocConfig) {
+		if err := utils.CopyFile(docConfig, gitDocConfig); err != nil {
+			return "", err
+		}
+	}
 
 	replacements := map[string]string{
 		"__TITLE__":             doc.Name,
@@ -400,6 +407,7 @@ func (service *DocService) StartUpdate(docId uint, rootParentId uint) (string, e
 		"__PROJECT_NAME__":      "Kalmia",
 		"__SOCIAL_LINKS__":      "[]",
 		"__FOOTER_CONTENT__":    "Made with ❤️ by Difuse",
+		"__OUT_DIR__":           "build_tmp",
 	}
 
 	if doc.NavImage != "" {
@@ -497,6 +505,15 @@ func (service *DocService) StartUpdate(docId uint, rootParentId uint) (string, e
 	replacements["__MULTI_VERSIONS__"] = "multiVersion: " + string(multiVersionsJSON)
 
 	err = utils.WriteToFile(docConfig, utils.ReplaceMany(string(docConfigTemplate), replacements))
+
+	if err != nil {
+		return "", err
+	}
+
+	replacements["__BASE_URL__"] = "/"
+	replacements["__OUT_DIR__"] = "gitbuild"
+
+	err = utils.WriteToFile(gitDocConfig, utils.ReplaceMany(string(docConfigTemplate), replacements))
 
 	if err != nil {
 		return "", err
@@ -1017,7 +1034,7 @@ func (service *DocService) WriteHomePage(documentation models.Documentation, con
 			homePage = head
 		}
 
-		homePage += fmt.Sprintf("\n\n <meta http-equiv=\"refresh\" content=\"0;url=%s\" />", documentation.BaseURL+"/guides")
+		// homePage += fmt.Sprintf("\n\n <meta http-equiv=\"refresh\" content=\"0;url=%s\" />", documentation.BaseURL+"/guides/wop.html")
 		homePagePath = filepath.Join(contentPath, "../", "index.mdx")
 	}
 
@@ -1263,6 +1280,16 @@ func (service *DocService) BuildJob() {
 				zap.Uint("doc_id", docID),
 				zap.Duration("elapsed", elapsed),
 				zap.Int("trigger_count", len(groupTriggers)))
+
+			gitTime := time.Now()
+			err := service.GitDeploy(docID)
+			gitElapsed := time.Since(gitTime)
+
+			if err != nil {
+				logger.Error("Failed to deploy to git", zap.Error(err))
+			} else {
+				logger.Info("Git Deploy completed", zap.Uint("doc_id", docID), zap.Duration("elapsed", gitElapsed), zap.Int("trigger_count", len(groupTriggers)))
+			}
 		}
 
 		for i := range groupTriggers {

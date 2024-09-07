@@ -33,6 +33,79 @@ func TestPathExists(t *testing.T) {
 	}
 }
 
+func TestCopyFile(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "copyfile_test")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	srcPath := filepath.Join(tempDir, "source.txt")
+	content := []byte("Hello, World!")
+	err = os.WriteFile(srcPath, content, 0644)
+	if err != nil {
+		t.Fatalf("Failed to create source file: %v", err)
+	}
+
+	dstPath := filepath.Join(tempDir, "destination.txt")
+
+	err = CopyFile(srcPath, dstPath)
+	if err != nil {
+		t.Fatalf("CopyFile failed: %v", err)
+	}
+
+	if _, err := os.Stat(dstPath); os.IsNotExist(err) {
+		t.Fatal("Destination file was not created")
+	}
+
+	copiedContent, err := os.ReadFile(dstPath)
+	if err != nil {
+		t.Fatalf("Failed to read destination file: %v", err)
+	}
+
+	if string(copiedContent) != string(content) {
+		t.Fatalf("Copied content does not match source content. Got %s, want %s", string(copiedContent), string(content))
+	}
+}
+
+func TestTouchFile(t *testing.T) {
+	tempDir, err := os.MkdirTemp("", "touchfile_test")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	testFilePath := filepath.Join(tempDir, "testfile.txt")
+
+	err = TouchFile(testFilePath)
+	if err != nil {
+		t.Fatalf("TouchFile failed: %v", err)
+	}
+
+	if _, err := os.Stat(testFilePath); os.IsNotExist(err) {
+		t.Fatal("Test file was not created")
+	}
+
+	content, err := os.ReadFile(testFilePath)
+	if err != nil {
+		t.Fatalf("Failed to read test file: %v", err)
+	}
+
+	if string(content) != "1" {
+		t.Fatalf("File content is incorrect. Got %s, want 1", string(content))
+	}
+
+	fileInfo, err := os.Stat(testFilePath)
+	if err != nil {
+		t.Fatalf("Failed to get file info: %v", err)
+	}
+
+	expectedPerm := os.FileMode(0644)
+	if fileInfo.Mode().Perm() != expectedPerm {
+		t.Fatalf("File permissions are incorrect. Got %v, want %v", fileInfo.Mode().Perm(), expectedPerm)
+	}
+}
+
 func TestMakeDir(t *testing.T) {
 	testDir := "./testdir/subdir"
 

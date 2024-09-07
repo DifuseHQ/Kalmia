@@ -1,9 +1,12 @@
 package utils
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
+	"fmt"
 	"net/url"
 	"path/filepath"
 	"regexp"
@@ -103,28 +106,25 @@ func ConvertToEmoji(codePoint string) string {
 	return string(rune(codePointInt))
 }
 
+var contentTypes = map[string]string{
+	".html": "text/html",
+	".htm":  "text/html",
+	".css":  "text/css",
+	".js":   "application/javascript",
+	".json": "application/json",
+	".png":  "image/png",
+	".jpg":  "image/jpeg",
+	".jpeg": "image/jpeg",
+	".gif":  "image/gif",
+	".svg":  "image/svg+xml",
+}
+
 func GetContentType(filename string) string {
-	ext := filepath.Ext(filename)
-	switch strings.ToLower(ext) {
-	case ".html", ".htm":
-		return "text/html"
-	case ".css":
-		return "text/css"
-	case ".js":
-		return "application/javascript"
-	case ".json":
-		return "application/json"
-	case ".png":
-		return "image/png"
-	case ".jpg", ".jpeg":
-		return "image/jpeg"
-	case ".gif":
-		return "image/gif"
-	case ".svg":
-		return "image/svg+xml"
-	default:
-		return "application/octet-stream"
+	ext := strings.ToLower(filepath.Ext(filename))
+	if contentType, ok := contentTypes[ext]; ok {
+		return contentType
 	}
+	return "application/octet-stream"
 }
 
 func TrimFirstRune(s string) string {
@@ -149,4 +149,13 @@ func HashStrings(data []string) string {
 	h := sha256.New()
 	h.Write([]byte(strings.Join(data, "")))
 	return hex.EncodeToString(h.Sum(nil))
+}
+
+func PrettyJSON(input string) (string, error) {
+	var prettyJSON bytes.Buffer
+	err := json.Indent(&prettyJSON, []byte(input), "", "  ")
+	if err != nil {
+		return "", fmt.Errorf("error formatting JSON: %v", err)
+	}
+	return prettyJSON.String(), nil
 }

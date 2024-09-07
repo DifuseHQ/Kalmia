@@ -103,6 +103,11 @@ export interface Documentation {
   pages?: Page[];
   copyrightText: string;
   requireAuth?: boolean;
+  gitUser: string;
+  gitRepo: string;
+  gitEmail: string;
+  gitPassword: string;
+  gitBranch: string;
 }
 
 export interface FormField {

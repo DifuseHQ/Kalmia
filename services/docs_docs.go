@@ -42,7 +42,8 @@ func (service *DocService) GetDocumentations() ([]models.Documentation, error) {
 		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
 	}).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID", "Version", "ClonedFrom",
 		"LastEditorID", "Favicon", "MetaImage", "NavImage", "NavImageDark", "CustomCSS", "FooterLabelLinks", "MoreLabelLinks",
-		"URL", "OrganizationName", "LanderDetails", "ProjectName", "BaseURL", "RequireAuth").
+		"URL", "OrganizationName", "LanderDetails", "ProjectName", "BaseURL", "RequireAuth",
+		"GitRepo", "GitEmail", "GitUser", "GitPassword", "GitBranch").
 		Find(&documentations).Error; err != nil {
 		return nil, fmt.Errorf("failed_to_get_documentations")
 	}
@@ -88,7 +89,8 @@ func (service *DocService) GetDocumentation(id uint) (models.Documentation, erro
 		return db.Select("users.ID", "users.Username", "users.Email", "users.Photo")
 	}).Where("id = ?", id).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID", "Version", "LastEditorID", "Favicon",
 		"MetaImage", "NavImage", "NavImageDark", "CustomCSS", "FooterLabelLinks", "MoreLabelLinks", "CopyrightText",
-		"BaseURL", "URL", "OrganizationName", "LanderDetails", "ProjectName", "ClonedFrom", "RequireAuth").
+		"BaseURL", "URL", "OrganizationName", "LanderDetails", "ProjectName", "ClonedFrom", "RequireAuth",
+		"GitRepo", "GitEmail", "GitUser", "GitPassword", "GitBranch").
 		Find(&documentation).Error; err != nil {
 		return models.Documentation{}, fmt.Errorf("failed_to_get_documentation")
 	}
@@ -256,7 +258,10 @@ func (service *DocService) CreateDocumentation(documentation *models.Documentati
 	return nil
 }
 
-func (service *DocService) EditDocumentation(user models.User, id uint, name, description, version, favicon, metaImage, navImage, navImageDark, customCSS, footerLabelLinks, moreLabelLinks, copyrightText, url, organizationName, projectName, baseURL, landerDetails string, requireAuth bool) error {
+func (service *DocService) EditDocumentation(user models.User, id uint, name, description, version, favicon, metaImage, navImage,
+	navImageDark, customCSS, footerLabelLinks, moreLabelLinks, copyrightText, url,
+	organizationName, projectName, baseURL, landerDetails string, requireAuth bool,
+	gitRepo string, gitBranch string, gitUser string, gitPassword string, gitEmail string) error {
 	tx := service.DB.Begin()
 	if !utils.IsBaseURLValid(baseURL) {
 		return fmt.Errorf("invalid_base_url")
@@ -280,6 +285,11 @@ func (service *DocService) EditDocumentation(user models.User, id uint, name, de
 		doc.MoreLabelLinks = moreLabelLinks
 		doc.CopyrightText = copyrightText
 		doc.RequireAuth = requireAuth
+		doc.GitRepo = gitRepo
+		doc.GitBranch = gitBranch
+		doc.GitUser = gitUser
+		doc.GitPassword = gitPassword
+		doc.GitEmail = gitEmail
 		if isTarget && version != "" {
 			doc.Version = version
 		}
@@ -504,6 +514,11 @@ func (service *DocService) CreateDocumentationVersion(originalDocId uint, newVer
 		Editors:          originalDoc.Editors,
 		LastEditorID:     originalDoc.LastEditorID,
 		RequireAuth:      originalDoc.RequireAuth,
+		GitRepo:          originalDoc.GitRepo,
+		GitBranch:        originalDoc.GitBranch,
+		GitUser:          originalDoc.GitUser,
+		GitPassword:      originalDoc.GitPassword,
+		GitEmail:         originalDoc.GitEmail,
 	}
 
 	err = service.DB.Transaction(func(tx *gorm.DB) error {

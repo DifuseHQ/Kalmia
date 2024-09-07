@@ -106,8 +106,5 @@ func TestRunNpxCommand(t *testing.T) {
 
 func TestNpmPing(t *testing.T) {
 	result := NpmPing()
-
-	// Since we're using the real npm ping, the result may vary depending on the network connection
-	// We'll just check if the function runs without panicking
 	t.Logf("NpmPing result: %v", result)
 }
