@@ -44,11 +44,19 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: |
+            dist/kalmia_${{ github.ref_name }}_freebsd_amd64
+            dist/kalmia_${{ github.ref_name }}_freebsd_arm64
+            dist/kalmia_${{ github.ref_name }}_linux_386
             dist/kalmia_${{ github.ref_name }}_linux_amd64
+            dist/kalmia_${{ github.ref_name }}_linux_arm
             dist/kalmia_${{ github.ref_name }}_linux_arm64
-            dist/kalmia_${{ github.ref_name }}_win64.exe
-            dist/kalmia_${{ github.ref_name }}_freebsd64
-            dist/kalmia_${{ github.ref_name }}_macos64
+            dist/kalmia_${{ github.ref_name }}_linux_riscv64
+            dist/kalmia_${{ github.ref_name }}_macos_amd64
+            dist/kalmia_${{ github.ref_name }}_macos_arm64
+            dist/kalmia_${{ github.ref_name }}_windows_386.exe
+            dist/kalmia_${{ github.ref_name }}_windows_amd64.exe
+            dist/kalmia_${{ github.ref_name }}_windows_arm64.exe
+
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
