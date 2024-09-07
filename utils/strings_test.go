@@ -493,6 +493,56 @@ func TestConvertToEmoji(t *testing.T) {
 	}
 }
 
+func TestGetContentType(t *testing.T) {
+	tests := []struct {
+		filename string
+		expected string
+	}{
+		{"index.html", "text/html"},
+		{"styles.css", "text/css"},
+		{"script.js", "application/javascript"},
+		{"data.json", "application/json"},
+		{"image.png", "image/png"},
+		{"photo.jpg", "image/jpeg"},
+		{"photo.jpeg", "image/jpeg"},
+		{"animation.gif", "image/gif"},
+		{"icon.svg", "image/svg+xml"},
+		{"document.pdf", "application/octet-stream"},
+		{"FILE.HTML", "text/html"},
+		{"path/to/file.CSS", "text/css"},
+	}
+
+	for _, test := range tests {
+		result := GetContentType(test.filename)
+		if result != test.expected {
+			t.Errorf("GetContentType(%q) = %q, want %q", test.filename, result, test.expected)
+		}
+	}
+}
+
+func TestTrimFirstRune(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"hello", "ello"},
+		{"世界", "界"},
+		{"🍕pizza", "pizza"},
+		{"a", ""},
+		{"", ""},
+		{"ab", "b"},
+		{"abc", "bc"},
+		{"日本語", "本語"},
+	}
+
+	for _, test := range tests {
+		result := TrimFirstRune(test.input)
+		if result != test.expected {
+			t.Errorf("TrimFirstRune(%q) = %q, want %q", test.input, result, test.expected)
+		}
+	}
+}
+
 func TestArrayContains(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -556,5 +606,44 @@ func TestToBase64(t *testing.T) {
 				t.Errorf("ToBase64(%q) = %q, expected %q", tt.input, output, tt.expected)
 			}
 		})
+	}
+}
+
+func TestHashStrings(t *testing.T) {
+	tests := []struct {
+		input    []string
+		expected string
+	}{
+		{
+			[]string{"hello", "world"},
+			"936a185caaa266bb9cbe981e9e05cb78cd732b0b3280eb944412bb6f8f8f07af",
+		},
+		{
+			[]string{"test"},
+			"9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+		},
+		{
+			[]string{""},
+			"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+		},
+		{
+			[]string{},
+			"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+		},
+		{
+			[]string{"a", "b", "c"},
+			"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+		},
+		{
+			[]string{"longer", "string", "with", "multiple", "elements"},
+			"6867f4ecd42a070a41a9da96caedd09e305475e575034876eda6f926ed150bc3",
+		},
+	}
+
+	for _, test := range tests {
+		result := HashStrings(test.input)
+		if result != test.expected {
+			t.Errorf("HashStrings(%v) = %s, want %s", test.input, result, test.expected)
+		}
 	}
 }

@@ -143,7 +143,7 @@ func GetUser(authService *services.AuthService, w http.ResponseWriter, r *http.R
 	SendJSONResponse(http.StatusOK, w, user)
 }
 
-func UploadFile(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
+func UploadFile(db *gorm.DB, w http.ResponseWriter, r *http.Request, cfg *config.Config) {
 	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
 		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "failed_to_parse_form"})
@@ -170,7 +170,7 @@ func UploadFile(db *gorm.DB, w http.ResponseWriter, r *http.Request) {
 
 	contentType := http.DetectContentType(fileBytes)
 
-	fileURL, err := services.UploadToStorage(bytes.NewReader(fileBytes), header.Filename, contentType)
+	fileURL, err := services.UploadToStorage(bytes.NewReader(fileBytes), header.Filename, contentType, cfg)
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "failed_to_upload_file"})
 		return
