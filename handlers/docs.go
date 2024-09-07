@@ -84,6 +84,10 @@ func CreateDocumentation(services *services.ServiceRegistry, w http.ResponseWrit
 		MoreLabelLinks   string `json:"moreLabelLinks"`
 		CopyrightText    string `json:"copyrightText" validate:"required"`
 		RequireAuth      bool   `json:"requireAuth"`
+		GitRepo          string `json:"gitRepo"`
+		GitBranch        string `json:"gitBranch"`
+		GitUser          string `json:"gitUser"`
+		GitPassword      string `json:"gitPassword"`
 	}
 
 	req, err := ValidateRequest[Request](w, r)
@@ -114,6 +118,10 @@ func CreateDocumentation(services *services.ServiceRegistry, w http.ResponseWrit
 		MoreLabelLinks:   req.MoreLabelLinks,
 		CopyrightText:    req.CopyrightText,
 		RequireAuth:      req.RequireAuth,
+		GitRepo:          req.GitRepo,
+		GitBranch:        req.GitBranch,
+		GitUser:          req.GitUser,
+		GitPassword:      req.GitPassword,
 	}
 
 	err = services.DocService.CreateDocumentation(documentation, user)
@@ -146,6 +154,10 @@ func EditDocumentation(services *services.ServiceRegistry, w http.ResponseWriter
 		MoreLabelLinks   string `json:"moreLabelLinks"`
 		CopyrightText    string `json:"copyrightText" validate:"required"`
 		RequireAuth      bool   `json:"requireAuth"`
+		GitRepo          string `json:"gitRepo"`
+		GitBranch        string `json:"gitBranch"`
+		GitUser          string `json:"gitUser"`
+		GitPassword      string `json:"gitPassword"`
 	}
 
 	req, err := ValidateRequest[Request](w, r)
@@ -166,7 +178,9 @@ func EditDocumentation(services *services.ServiceRegistry, w http.ResponseWriter
 		return
 	}
 
-	err = services.DocService.EditDocumentation(user, req.ID, req.Name, req.Description, req.Version, req.Favicon, req.MetaImage, req.NavImage, req.NavImageDark, req.CustomCSS, req.FooterLabelLinks, req.MoreLabelLinks, req.CopyrightText, req.URL, req.OrganizationName, req.ProjectName, req.BaseURL, req.LanderDetails, req.RequireAuth)
+	err = services.DocService.EditDocumentation(user, req.ID, req.Name, req.Description, req.Version, req.Favicon, req.MetaImage,
+		req.NavImage, req.NavImageDark, req.CustomCSS, req.FooterLabelLinks, req.MoreLabelLinks, req.CopyrightText,
+		req.URL, req.OrganizationName, req.ProjectName, req.BaseURL, req.LanderDetails, req.RequireAuth, req.GitRepo, req.GitBranch, req.GitUser, req.GitPassword)
 
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})
