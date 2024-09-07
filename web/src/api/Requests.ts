@@ -40,6 +40,11 @@ export interface DocumentationPayload {
   moreLabelLinks?: MoreLabelLinks[] | string;
   copyrightText: string;
   requireAuth?: boolean;
+  gitUser?: string;
+  gitRepo?: string;
+  gitEmail?: string;
+  gitPassword?: string;
+  gitBranch?: string;
 }
 
 interface CreateVersionPayload {

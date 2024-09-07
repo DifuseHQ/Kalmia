@@ -83,7 +83,12 @@
         "no_search_found":"No Search Found",
         "move":"Move",
         "enableAuthentication":"Enable Authentication",
-
+        "deploy_to_git":"Deploy to Git",
+        "git_user":"Git User",
+        "git_repo":"Git Repo",
+        "git_email":"Git Email",
+        "git_password":"Git Password",
+        "git_branch":"Git Branch",
 
         "clone_documentation": "Clone Documentation",
         "delete_documentation": "Delete Documentation",

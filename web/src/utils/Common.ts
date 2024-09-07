@@ -57,6 +57,11 @@ interface CreateDocumentFormData {
   navImage: string;
   copyrightText: string;
   metaImage: string;
+  gitUser: string | undefined;
+  gitRepo: string | undefined;
+  gitEmail: string | undefined;
+  gitPassword: string | undefined;
+  gitBranch: string | undefined;
 }
 
 interface ClosestVersion {
@@ -269,6 +274,11 @@ export function getLastPageOrder(data: (PageGroup | Page)[]) {
   return 0;
 }
 
+export const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
 export const isValidURL = (url: string) => {
   try {
     new URL(url);
@@ -309,6 +319,7 @@ function isValidBaseURL(baseURL: string) {
 
 export const validateFormData = (
   formData: CreateDocumentFormData,
+  gitDeploy = false,
 ): ValidationResult => {
   const requiredFields: (keyof CreateDocumentFormData)[] = [
     "name",
@@ -347,6 +358,32 @@ export const validateFormData = (
     return { status: true, message: "valid_url_required" };
   }
 
+  if (gitDeploy) {
+    const gitFields: (keyof CreateDocumentFormData)[] = [
+      "gitUser",
+      "gitRepo",
+      "gitEmail",
+      "gitPassword",
+      "gitBranch",
+    ];
+
+    for (const field of gitFields) {
+      if (!formData[field]) {
+        return {
+          status: true,
+          message: `${field}_is_required_when_git_deploy_is_enabled`,
+        };
+      }
+    }
+
+    if (formData.gitRepo && !isValidURL(formData.gitRepo)) {
+      return { status: true, message: "valid_gitRepo_url_required" };
+    }
+
+    if (formData.gitEmail && !isValidEmail(formData.gitEmail)) {
+      return { status: true, message: "valid_gitEmail_format_required" };
+    }
+  }
   return { status: false, message: "" };
 };
 
