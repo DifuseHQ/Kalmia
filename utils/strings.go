@@ -1,9 +1,12 @@
 package utils
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
+	"fmt"
 	"net/url"
 	"path/filepath"
 	"regexp"
@@ -146,4 +149,13 @@ func HashStrings(data []string) string {
 	h := sha256.New()
 	h.Write([]byte(strings.Join(data, "")))
 	return hex.EncodeToString(h.Sum(nil))
+}
+
+func PrettyJSON(input string) (string, error) {
+	var prettyJSON bytes.Buffer
+	err := json.Indent(&prettyJSON, []byte(input), "", "  ")
+	if err != nil {
+		return "", fmt.Errorf("error formatting JSON: %v", err)
+	}
+	return prettyJSON.String(), nil
 }

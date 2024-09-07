@@ -18,6 +18,60 @@ func NewAuthService(db *gorm.DB) *AuthService {
 	return &AuthService{DB: db}
 }
 
+func (service *AuthService) GetUsers() ([]models.User, error) {
+	var users []models.User
+
+	if err := service.DB.Find(&users).Error; err != nil {
+		return nil, fmt.Errorf("failed_to_get_users")
+	}
+
+	return users, nil
+}
+
+func (service *AuthService) CreateJWT(username, password string) (map[string]interface{}, error) {
+	var user models.User
+
+	if err := service.DB.Where("username = ?", username).First(&user).Error; err != nil {
+		return nil, fmt.Errorf("user_not_found")
+	}
+
+	if !utils.CheckPasswordHash(password, user.Password) {
+		return nil, fmt.Errorf("invalid_password")
+	}
+
+	tokenString, expiry, err := utils.GenerateJWTAccessToken(user.ID, user.Username, user.Email, user.Photo, user.Admin, user.Permissions)
+	if err != nil {
+		return nil, fmt.Errorf("failed_to_generate_jwt")
+	}
+
+	newToken := models.Token{
+		UserID: user.ID,
+		Token:  tokenString,
+		Expiry: expiry,
+	}
+
+	if err := service.DB.Create(&newToken).Error; err != nil {
+		return nil, fmt.Errorf("failed_to_create_token")
+	}
+
+	claims, err := utils.ValidateJWT(tokenString)
+	if err != nil {
+		service.DB.Where("token = ?", tokenString).Delete(&models.Token{})
+		return nil, fmt.Errorf("invalid_jwt_created")
+	}
+
+	return map[string]interface{}{
+		"token":       tokenString,
+		"expiry":      claims.ExpiresAt.Time.String(),
+		"email":       claims.Email,
+		"username":    claims.Username,
+		"photo":       claims.Photo,
+		"userId":      claims.UserId,
+		"admin":       user.Admin,
+		"permissions": claims.Permissions,
+	}, nil
+}
+
 func (service *AuthService) VerifyTokenInDb(token string, needAdmin bool) bool {
 	var tokenRecord models.Token
 
@@ -191,16 +245,6 @@ func (service *AuthService) DeleteUser(username string) error {
 	return nil
 }
 
-func (service *AuthService) GetUsers() ([]models.User, error) {
-	var users []models.User
-
-	if err := service.DB.Find(&users).Error; err != nil {
-		return nil, fmt.Errorf("failed_to_get_users")
-	}
-
-	return users, nil
-}
-
 func (service *AuthService) GetUser(id uint) (models.User, error) {
 	var user models.User
 
@@ -209,50 +253,6 @@ func (service *AuthService) GetUser(id uint) (models.User, error) {
 	}
 
 	return user, nil
-}
-
-func (service *AuthService) CreateJWT(username, password string) (map[string]interface{}, error) {
-	var user models.User
-
-	if err := service.DB.Where("username = ?", username).First(&user).Error; err != nil {
-		return nil, fmt.Errorf("user_not_found")
-	}
-
-	if !utils.CheckPasswordHash(password, user.Password) {
-		return nil, fmt.Errorf("invalid_password")
-	}
-
-	tokenString, expiry, err := utils.GenerateJWTAccessToken(user.ID, user.Username, user.Email, user.Photo, user.Admin, user.Permissions)
-	if err != nil {
-		return nil, fmt.Errorf("failed_to_generate_jwt")
-	}
-
-	newToken := models.Token{
-		UserID: user.ID,
-		Token:  tokenString,
-		Expiry: expiry,
-	}
-
-	if err := service.DB.Create(&newToken).Error; err != nil {
-		return nil, fmt.Errorf("failed_to_create_token")
-	}
-
-	claims, err := utils.ValidateJWT(tokenString)
-	if err != nil {
-		service.DB.Where("token = ?", tokenString).Delete(&models.Token{})
-		return nil, fmt.Errorf("invalid_jwt_created")
-	}
-
-	return map[string]interface{}{
-		"token":       tokenString,
-		"expiry":      claims.ExpiresAt.Time.String(),
-		"email":       claims.Email,
-		"username":    claims.Username,
-		"photo":       claims.Photo,
-		"userId":      claims.UserId,
-		"admin":       user.Admin,
-		"permissions": claims.Permissions,
-	}, nil
 }
 
 func (service *AuthService) CreateJWTFromEmail(email string) (string, error) {
