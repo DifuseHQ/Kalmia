@@ -647,3 +647,37 @@ func TestHashStrings(t *testing.T) {
 		}
 	}
 }
+
+func TestPrettyJSON(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+		hasError bool
+	}{
+		{
+			input: `{"name":"John","age":30,"city":"New York"}`,
+			expected: `{
+  "name": "John",
+  "age": 30,
+  "city": "New York"
+}`,
+			hasError: false,
+		},
+		{
+			input:    `{"name":"John","age":30,"city":"New York"`, // Invalid JSON
+			expected: "",
+			hasError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		pretty, err := PrettyJSON(tt.input)
+		if (err != nil) != tt.hasError {
+			t.Fatalf("Expected error: %v, got: %v", tt.hasError, err)
+		}
+
+		if pretty != tt.expected && !tt.hasError {
+			t.Fatalf("Expected:\n%s\nGot:\n%s", tt.expected, pretty)
+		}
+	}
+}
