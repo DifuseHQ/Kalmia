@@ -22,9 +22,9 @@ import {
 } from "../../api/Requests";
 import { ModalContext } from "../../context/ModalContext";
 import { ThemeContext, ThemeContextType } from "../../context/ThemeContext";
-import AddButton from "../../lib/AddBUtton";
-import DeleteButton from "../../lib/DeleteButton";
-import ToggleSwitch from "../../lib/ToggleSwitch";
+import AddButton from "../../lib/components/AddButton";
+import DeleteButton from "../../lib/components/DeleteButton";
+import ToggleSwitch from "../../lib/components/ToggleSwitch";
 import {
   Documentation,
   Features,
