@@ -7,7 +7,6 @@ import data from "@emoji-mart/data";
 import { EmojiMartData } from "@emoji-mart/data";
 import Picker from "@emoji-mart/react";
 import EmojiClickData from "@emoji-mart/react";
-import { Field, Label, Switch } from "@headlessui/react";
 import { Icon } from "@iconify/react";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { useContext, useEffect, useRef, useState } from "react";
@@ -23,10 +22,15 @@ import {
 } from "../../api/Requests";
 import { ModalContext } from "../../context/ModalContext";
 import { ThemeContext, ThemeContextType } from "../../context/ThemeContext";
+import AddButton from "../../lib/AddBUtton";
+import DeleteButton from "../../lib/DeleteButton";
+import ToggleSwitch from "../../lib/ToggleSwitch";
 import {
   Documentation,
   Features,
   FooterLabelLinks,
+  FormData,
+  FormFieldData,
   LanderDetails,
   MoreLabelLinks,
 } from "../../types/doc";
@@ -41,18 +45,6 @@ import {
 import { toastMessage } from "../../utils/Toast";
 import { customCSSInitial, SocialLinkIcon } from "../../utils/Utils";
 import Breadcrumb from "../Breadcrumb/Breadcrumb";
-
-interface FormFieldData {
-  label: string;
-  placeholder: string;
-  value?: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  name: string;
-  type?: string;
-  required?: boolean;
-  ref?: React.Ref<HTMLInputElement>;
-}
-
 
 const FormField: React.FC<FormFieldData> = ({
   label,
@@ -109,156 +101,43 @@ type HandleArrayFieldChange = (
   saveField: "moreFooter" | "socialPlatform",
 ) => void;
 
-interface OnClick {
-  onClick: () => Promise<void>;
-}
-
-interface LabelAndCommunity {
-  index: number;
-  labelId: string;
-  linkId: string;
-  data: {
-    label: string;
-    link: string;
-  };
-  onChange: HandleArrayFieldChange;
-  state: {
-    label: string;
-    link: string;
-  }[];
-}
-
-const LabelAndCommunityComponent = ({
-  index,
-  labelId,
-  linkId,
-  data,
-  onChange,
-  state,
-}: LabelAndCommunity) => {
-  const { t } = useTranslation();
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="grid gap-4 grid-cols-2 my-2"
-      key={`footer-more-field-${index}`}
-    >
-      <div>
-        <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          {t("label")}
-        </span>
-        <input
-          type="text"
-          id={labelId}
-          value={data?.label || ""}
-          name={index.toString()}
-          onChange={(e) =>
-            onChange(index, "label", e.target.value, state, "moreFooter")
-          }
-          placeholder={t("label_placeholder")}
-          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-        />
-      </div>
-      <div>
-        <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          {t("link")}
-        </span>
-        <input
-          type="text"
-          value={data?.link || ""}
-          id={linkId}
-          name={index.toString()}
-          onChange={(e) =>
-            onChange(index, "link", e.target.value, state, "moreFooter")
-          }
-          placeholder={t("more_footer_link_placeholder")}
-          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-        />
-      </div>
-    </motion.div>
-  );
-};
-
-const AddButton: React.FC<OnClick> = ({ onClick }) => {
-  const { t } = useTranslation();
-  return (
-    <button
-      title={t("add_new_field")}
-      onClick={onClick}
-      className="flex items-center gap-1 text-blue-600 rounded-lg text-sm  "
-    >
-      <Icon icon="ei:plus" className="w-8 h-8  hover:text-blue-400" />
-    </button>
-  );
-};
-
-const DeleteButton: React.FC<OnClick> = ({ onClick }) => {
-  const { t } = useTranslation();
-  return (
-    <button
-      onClick={onClick}
-      title={t("delete_field")}
-      className="flex items-center gap-1 rounded-lg text-sm "
-    >
-      <Icon
-        icon="material-symbols:delete"
-        className="text-red-500 dark:text-red-600 hover:text-red-800 h-7 w-7"
-      />
-    </button>
-  );
-};
-
-interface FormData {
-  name: string;
-  description: string;
-  version: string;
-  baseURL: string;
-  url: string;
-  organizationName: string;
-  projectName: string;
-  customCSS: string;
-  favicon: string;
-  navImageDark: string;
-  navImage: string;
-  copyrightText: string;
-  metaImage: string;
-  gitUser: string | undefined;
-  gitRepo: string | undefined;
-  gitEmail: string | undefined;
-  gitPassword: string | undefined;
-  gitBranch: string | undefined;
-}
-
 type LanderDetailsKeys = keyof LanderDetails;
 
 export default function CreateDocModal() {
+  // Contexts
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParam] = useSearchParams();
-  const docIdString = searchParam.get("id");
-  const docId: number | null = docIdString ? parseInt(docIdString) : null;
-  const mode = searchParam.get("mode");
   const { openModal, closeModal, setLoadingMessage } = useContext(ModalContext);
   const themeContext = useContext(ThemeContext);
   const { darkMode } = themeContext as ThemeContextType;
+
+  // Search Parameters
+  const docIdString = searchParam.get("id");
+  const docId: number | null = docIdString ? parseInt(docIdString) : null;
+  const mode = searchParam.get("mode");
+
+  // State Variables
   const [isAuthenticationToggleOn, SetIsAuthenticationToggleOn] = useState<
     boolean | undefined
   >(false);
-  const [isToggleOn, SetIsToggleOn] = useState<boolean>(false);
-  const [gitDeployOn, SetGitDeployOn] = useState<boolean>(false);
+  const [isToggleOn, SetIsToggleOn] = useState<boolean | undefined>(false);
+  const [gitDeployOn, SetGitDeployOn] = useState<boolean | undefined>(false);
   const [activeFieldIndex, setActiveFieldIndex] = useState<number | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const titleRef = useRef<HTMLInputElement | null>(null);
   const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(
     null,
   );
-  const pickerRef = useRef<HTMLDivElement | null>(null);
-  const socialMediaRef = useRef<HTMLDivElement | null>(null);
   const [isIconSelectOpen, setIsIconSelectOpen] = useState<boolean>(false);
 
+  // Refs
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const titleRef = useRef<HTMLInputElement | null>(null);
+
+  const pickerRef = useRef<HTMLDivElement | null>(null);
+  const socialMediaRef = useRef<HTMLDivElement | null>(null);
+
+  // Form Data
   const [formData, setFormData] = useState<FormData>({
     name: "",
     description: "",
@@ -303,6 +182,7 @@ export default function CreateDocModal() {
   useOutsideAlerter(pickerRef, () => setShowEmojiPicker(false));
 
   useOutsideAlerter(socialMediaRef, () => setIsIconSelectOpen(false));
+
   useEffect(() => {
     if (isToggleOn || gitDeployOn) {
       window.scrollTo({
@@ -377,6 +257,7 @@ export default function CreateDocModal() {
           }
         } else {
           console.error("docId is null");
+          return;
         }
       };
       fetchDoc();
@@ -594,7 +475,7 @@ export default function CreateDocModal() {
 
     if (saveField === "moreFooter") {
       setMoreField(updatedFields as MoreLabelLinks[]);
-    } else {
+    } else if (saveField === "socialPlatform") {
       setSocialPlatformField(updatedFields as FooterLabelLinks[]);
     }
   };
@@ -662,20 +543,11 @@ export default function CreateDocModal() {
             <div className="overflow-auto p-1">
               <div className="space-y-6">
                 <div className="grid gap-4 sm:grid-cols-1">
-                  <label className="inline-flex items-center cursor-pointer gpa-5 mb-4">
-                    <span className="text-lg font-medium text-gray-900 dark:text-gray-300 mr-3">
-                      {t("enableAuthentication")}
-                    </span>
-                    <input
-                      type="checkbox"
-                      checked={isAuthenticationToggleOn}
-                      onChange={(e) => {
-                        SetIsAuthenticationToggleOn(e.target.checked);
-                      }}
-                      className="sr-only peer"
-                    />
-                    <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                  </label>
+                  <ToggleSwitch
+                    name="enableAuthentication"
+                    checked={isAuthenticationToggleOn}
+                    setChange={SetIsAuthenticationToggleOn}
+                  />
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <FormField
@@ -944,14 +816,58 @@ export default function CreateDocModal() {
                   {moreField &&
                     moreField.map((obj, index) => (
                       <div key={`more-label-${index}`}>
-                        <LabelAndCommunityComponent
-                          labelId={`more-label-${index}`}
-                          linkId={`more-link-${index}`}
-                          index={index}
-                          data={obj}
-                          state={moreField}
-                          onChange={handleArrayFieldChange}
-                        />
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="grid gap-4 grid-cols-2 my-2"
+                          key={`footer-more-field-${index}`}
+                        >
+                          <div>
+                            <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              {t("label")}
+                            </span>
+                            <input
+                              type="text"
+                              id={`more-label-${index}`}
+                              value={obj?.label || ""}
+                              name={index.toString()}
+                              onChange={(e) =>
+                                handleArrayFieldChange(
+                                  index,
+                                  "label",
+                                  e.target.value,
+                                  moreField,
+                                  "moreFooter",
+                                )
+                              }
+                              placeholder={t("label_placeholder")}
+                              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                            />
+                          </div>
+                          <div>
+                            <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              {t("link")}
+                            </span>
+                            <input
+                              type="text"
+                              value={obj?.link || ""}
+                              id={`more-link-${index}`}
+                              name={index.toString()}
+                              onChange={(e) =>
+                                handleArrayFieldChange(
+                                  index,
+                                  "link",
+                                  e.target.value,
+                                  moreField,
+                                  "moreFooter",
+                                )
+                              }
+                              placeholder={t("more_footer_link_placeholder")}
+                              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                            />
+                          </div>
+                        </motion.div>
                       </div>
                     ))}
                 </div>
@@ -964,20 +880,11 @@ export default function CreateDocModal() {
               </div>
 
               <div>
-                <label className="inline-flex items-center cursor-pointer gpa-5 mb-4">
-                  <span className="text-lg font-medium text-gray-900 dark:text-gray-300 mr-3">
-                    {t("enable_landing_page")}
-                  </span>
-                  <input
-                    type="checkbox"
-                    checked={isToggleOn}
-                    onChange={(e) => {
-                      SetIsToggleOn(e.target.checked);
-                    }}
-                    className="sr-only peer"
-                  />
-                  <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                </label>
+                <ToggleSwitch
+                  name="enable_landing_page"
+                  checked={isToggleOn}
+                  setChange={SetIsToggleOn}
+                />
 
                 {isToggleOn && (
                   <div className="">
@@ -1147,19 +1054,12 @@ export default function CreateDocModal() {
                 )}
               </div>
 
-              <div className="space-y-4">
-                <Field className="inline-flex items-center space-x-3">
-                  <Label className="text-lg font-medium text-gray-900 dark:text-gray-300 ">
-                    {t("deploy_to_git")}
-                  </Label>
-                  <Switch
-                    checked={gitDeployOn}
-                    onChange={SetGitDeployOn}
-                    className="group inline-flex h-6 w-11 items-center rounded-full bg-gray-200 dark:bg-gray-600 transition data-[checked]:bg-blue-600 dark:data-[checked]:bg-blue-600 "
-                  >
-                    <span className="size-4 translate-x-1 rounded-full bg-white dark:bg-white transition group-data-[checked]:translate-x-6" />
-                  </Switch>
-                </Field>
+              <div className="mt-3 space-y-4">
+                <ToggleSwitch
+                  name="deploy_to_git"
+                  checked={gitDeployOn}
+                  setChange={SetGitDeployOn}
+                />
 
                 {gitDeployOn && (
                   <div className="">

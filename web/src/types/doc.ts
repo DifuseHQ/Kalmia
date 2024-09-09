@@ -121,6 +121,38 @@ export interface FormField {
   ref: React.RefObject<HTMLInputElement>;
 }
 
+export interface FormFieldData {
+  label: string;
+  placeholder: string;
+  value?: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  name: string;
+  type?: string;
+  required?: boolean;
+  ref?: React.Ref<HTMLInputElement>;
+}
+
+export interface FormData {
+  name: string;
+  description: string;
+  version: string;
+  baseURL: string;
+  url: string;
+  organizationName: string;
+  projectName: string;
+  customCSS: string;
+  favicon: string;
+  navImageDark: string;
+  navImage: string;
+  copyrightText: string;
+  metaImage: string;
+  gitUser: string | undefined;
+  gitRepo: string | undefined;
+  gitEmail: string | undefined;
+  gitPassword: string | undefined;
+  gitBranch: string | undefined;
+}
+
 export function isPage(item: PageOrGroup): item is Page {
   return (item as Page).title !== undefined;
 }
