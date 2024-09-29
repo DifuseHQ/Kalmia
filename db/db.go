@@ -58,7 +58,7 @@ func SetupDatabase(env string, database string, dataPath string) *gorm.DB {
 	}
 
 	db.Exec("UPDATE pages SET is_page = TRUE WHERE is_page IS NULL")
-	db.Exec("UPDATE pages SET is_page_group = TRUE WHERE is_page_group IS NULL")
+	db.Exec("UPDATE page_groups SET is_page_group = TRUE WHERE is_page_group IS NULL")
 
 	err = updateUserPermissions(db)
 
