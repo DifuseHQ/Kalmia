@@ -2,17 +2,26 @@ import React from 'react';
 import { getColorClass } from '../utils/style';
 import { useDark } from 'rspress/runtime';
 
+interface CellStyles {
+  bold?: boolean;
+  textColor?: string;
+  strike?: boolean;
+  backgroundColor?: string;
+  underline?: boolean;
+}
+
 interface TableCell {
   type: 'text' | 'link';
   text?: string;
   href?: string;
-  styles?: {
-    bold?: boolean;
-    textColor?: string;
-    strike?: boolean;
-    backgroundColor?: string;
-    underline?: boolean;
-  };
+  styles?: CellStyles;
+  content?: CellContent[];
+}
+
+interface CellContent {
+  styles?: CellStyles;
+  text: string;
+  type: 'text';
 }
 
 interface TableRow {
@@ -40,24 +49,31 @@ interface TableProps {
 }
 
 const renderTableCell = (cell: TableCell, cellIndex: number): React.ReactNode => {
-  const cellClasses = [
-    cell.styles?.bold ? 'kal-font-bold' : '',
-    getColorClass(cell.styles?.textColor),
-    getColorClass(cell.styles?.backgroundColor, true),
-    cell.styles?.strike ? 'kal-line-through' : '',
-    cell.styles?.underline ? 'kal-underline' : ''
-  ].filter(Boolean).join(' ');
+  const getStyles = (styles: CellStyles = {}) => [
+    styles.bold ? 'kal-font-bold' : '',
+    getColorClass(styles.textColor),
+    getColorClass(styles.backgroundColor, true),
+    styles.strike ? 'kal-line-through' : '',
+    styles.underline ? 'kal-underline' : ''
+  ].filter(Boolean);
 
-  if (cell.type === 'link') {
+  if (cell.type === 'link' && cell.content && cell.content.length > 0) {
+    const linkContent = cell.content[0];
+    const cellClasses = [
+      ...getStyles(linkContent.styles),
+      'kal-underline',
+      'kal-text-blue-500'
+    ];
+
     return (
-      <a key={cellIndex} href={cell.href} className={`${cellClasses} kal-text-blue-500`}>
-        {cell.text}
+      <a key={cellIndex} href={cell.href || ''} className={cellClasses.join(' ')} target="_blank">
+        {linkContent.text?.trim() || ''}
       </a>
     );
   }
 
   return (
-    <span key={cellIndex} className={cellClasses}>
+    <span key={cellIndex} className={getStyles(cell.styles).join(' ')}>
       {cell.text}
     </span>
   );
