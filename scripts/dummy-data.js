@@ -1,6 +1,6 @@
 import { LoremIpsum } from "lorem-ipsum";
 
-const ENDPOINT = 'http://127.0.0.1:2727';
+const ENDPOINT = 'http://127.0.0.1:2727/kal-api';
 const TOKEN = await authenticateUser('admin', 'admin');
 
 const documentations = [
