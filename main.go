@@ -139,7 +139,8 @@ func createSPAHandler() http.HandlerFunc {
 		path := r.URL.Path
 
 		if path == "/" {
-			path = "index.html"
+			http.Redirect(w, r, "/admin", http.StatusFound)
+			return
 		}
 
 		if config.ParsedConfig.Environment != "dev" {
