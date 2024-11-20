@@ -86,7 +86,7 @@ func ParsingAndCreatingMDFile(services *services.ServiceRegistry, fileDestPath s
 	pageMeta := models.Page{
 		AuthorID:        User.ID,
 		Author:          User,
-		DocumentationID: 4,
+		DocumentationID: doc_Id,
 		Title:           utils.TitleCreater(filename),
 		Content:         jsonString,
 		Slug:            utils.GenerateSlug(),
@@ -211,7 +211,7 @@ func ProcessDirectory(services *services.ServiceRegistry, extractDirPath string,
 		entryPath := filepath.Join(extractDirPath, entry.Name())
 		if entry.IsDir() {
 			entryPath := filepath.Join(extractDirPath, entry.Name())
-			PageGroupID, err := CreatNestedPageGroup(services, doc_Id, entry.Name())
+			PageGroupID, err := CreateNestedPageGroup(services, doc_Id, entry.Name())
 			if err != nil {
 				return fmt.Errorf("error: %w", err)
 			}
@@ -235,7 +235,7 @@ func ProcessDirectory(services *services.ServiceRegistry, extractDirPath string,
 	return nil
 }
 
-func CreatNestedPageGroup(services *services.ServiceRegistry, doc_id uint, pageGroupName string) (uint, error) {
+func CreateNestedPageGroup(services *services.ServiceRegistry, doc_id uint, pageGroupName string) (uint, error) {
 	pageGroupMeta := models.PageGroup{
 		Name:            pageGroupName,
 		DocumentationID: doc_Id,
@@ -244,7 +244,9 @@ func CreatNestedPageGroup(services *services.ServiceRegistry, doc_id uint, pageG
 		Editors:         []models.User{User},
 		LastEditorID:    &User.ID,
 	}
-
+	if pageGroup_id != 0 {
+		pageGroupMeta.ParentID = &pageGroup_id
+	}
 	// Create the page group
 	pageGroup_id, err := services.DocService.CreatePageGroup(&pageGroupMeta)
 	if err != nil {
@@ -273,5 +275,5 @@ func CleanDirectory(dir string) {
 			return
 		}
 	}
-	log.Printf("Directory:%s cleaned successfully removed", dir)
+	log.Printf("Directory:%s Successfully Cleared", dir)
 }

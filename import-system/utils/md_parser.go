@@ -295,7 +295,7 @@ func createMediaBlock(name, mediaType, url, caption string) map[string]interface
 	}
 }
 
-// *** Helper functions for type detection ***//
+// *** Helper function for type detection ***//
 func isNumberedList(line string) bool {
 	return len(line) > 1 && line[0] >= '0' && line[0] <= '9' && line[1] == '.'
 }
