@@ -154,15 +154,14 @@ func (service *DocService) GetPageGroup(id uint) (map[string]interface{}, error)
 	return groupMap, nil
 }
 
-func (service *DocService) CreatePageGroup(group *models.PageGroup) error {
+func (service *DocService) CreatePageGroup(group *models.PageGroup) (uint, error) {
 	if err := service.DB.Create(&group).Error; err != nil {
-		return fmt.Errorf("failed_to_create_page_group")
+		return 0, fmt.Errorf("failed_to_create_page_group")
 	}
 
 	docId, err := service.GetDocumentationIDOfPageGroup(group.ID)
-
 	if err != nil {
-		return fmt.Errorf("failed_to_get_documentation_id")
+		return 0, fmt.Errorf("failed_to_get_documentation_id")
 	}
 
 	parentDocId, _ := service.GetRootParentID(docId)
@@ -174,12 +173,11 @@ func (service *DocService) CreatePageGroup(group *models.PageGroup) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("failed_to_update_write_build")
+		return 0, fmt.Errorf("failed_to_update_write_build")
 	}
 
-	return nil
+	return group.ID, nil
 }
-
 func (service *DocService) EditPageGroup(user models.User, id uint, name string, documentationID uint, parentID *uint, order *uint) error {
 	var pageGroup models.PageGroup
 	if err := service.DB.First(&pageGroup, id).Error; err != nil {

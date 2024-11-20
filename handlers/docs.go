@@ -470,7 +470,7 @@ func CreatePageGroup(services *services.ServiceRegistry, w http.ResponseWriter, 
 		pageGroup.Order = req.Order
 	}
 
-	err = services.DocService.CreatePageGroup(&pageGroup)
+	_, err = services.DocService.CreatePageGroup(&pageGroup)
 
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})
