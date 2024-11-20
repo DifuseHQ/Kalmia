@@ -32,10 +32,8 @@ var User = models.User{
 }
 
 var (
-	// pageGroup_id uint
-	// parent_id    uint
-	doc_Id       uint = 4
-	pageGroup_id uint = 0
+	doc_Id       uint = 4 //staic for now
+	pageGroup_Id uint = 0
 )
 
 func ImportedMDFileController(services *services.ServiceRegistry, filename string, file multipart.File) error {
@@ -77,7 +75,7 @@ func Content_to_Block_to_JsonString(fileDestPath string) (string, error) {
 	return string(jsonString), nil
 }
 
-func ParsingAndCreatingMDFile(services *services.ServiceRegistry, fileDestPath string, filename string, pageGroup_id uint) (uint, error) {
+func ParsingAndCreatingMDFile(services *services.ServiceRegistry, fileDestPath string, filename string, pageGroup_Id uint) (uint, error) {
 
 	jsonString, err := Content_to_Block_to_JsonString(fileDestPath)
 	if err != nil {
@@ -94,8 +92,8 @@ func ParsingAndCreatingMDFile(services *services.ServiceRegistry, fileDestPath s
 		IsIntroPage:     false,
 		IsPage:          true,
 	}
-	if pageGroup_id != 0 {
-		pageMeta.PageGroupID = &pageGroup_id
+	if pageGroup_Id != 0 {
+		pageMeta.PageGroupID = &pageGroup_Id
 	}
 	err = services.DocService.CreatePage(&pageMeta)
 	if err != nil {
@@ -136,7 +134,7 @@ func ImportedDocumentationController(services *services.ServiceRegistry, filenam
 
 	// Call DocumentationUploader with the extracted directory
 	if extracted {
-		err := DocumentationUploader(services, extractDirPath, doc_Id, pageGroup_id)
+		err := DocumentationUploader(services, extractDirPath, doc_Id, pageGroup_Id)
 		if err != nil {
 			return fmt.Errorf("uploading failed: %w", err)
 		}
@@ -196,12 +194,13 @@ func extractFile(file *zip.File, filePath string) error {
 	return nil
 }
 
-func DocumentationUploader(services *services.ServiceRegistry, extractDirPath string, doc_Id uint, pagegroup_id uint) error {
-	return ProcessDirectory(services, extractDirPath, doc_Id, pagegroup_id)
+func DocumentationUploader(services *services.ServiceRegistry, extractDirPath string, doc_Id uint, pageGroup_Id uint) error {
+	return ProcessDirectory(services, extractDirPath, doc_Id, pageGroup_Id)
 }
 
 // ****** Recursively calling when nested directory hits ******//
-func ProcessDirectory(services *services.ServiceRegistry, extractDirPath string, doc_Id uint, PageGroupID uint) error {
+
+func ProcessDirectory(services *services.ServiceRegistry, extractDirPath string, doc_Id uint, pageGroup_Id uint) error {
 	entries, err := os.ReadDir(extractDirPath) // Read directory entries
 	if err != nil {
 		return fmt.Errorf("error reading directory %s: %w", extractDirPath, err)
@@ -210,22 +209,21 @@ func ProcessDirectory(services *services.ServiceRegistry, extractDirPath string,
 	for _, entry := range entries {
 		entryPath := filepath.Join(extractDirPath, entry.Name())
 		if entry.IsDir() {
-			entryPath := filepath.Join(extractDirPath, entry.Name())
-			PageGroupID, err := CreateNestedPageGroup(services, doc_Id, entry.Name())
+			pageGroup_Id, err := CreateNestedPageGroup(services, doc_Id, pageGroup_Id, entry.Name())
 			if err != nil {
 				return fmt.Errorf("error: %w", err)
 			}
-			err = ProcessDirectory(services, entryPath, doc_Id, PageGroupID)
+			err = ProcessDirectory(services, entryPath, doc_Id, pageGroup_Id)
 			if err != nil {
 				return fmt.Errorf("error processing subdirectory %s: %w", entryPath, err)
 			}
 		} else {
 			if !strings.HasSuffix(entry.Name(), ".zip") {
-				_, err := ParsingAndCreatingMDFile(services, entryPath, entry.Name(), PageGroupID)
+				_, err := ParsingAndCreatingMDFile(services, entryPath, entry.Name(), pageGroup_Id)
 				if err != nil {
 					return fmt.Errorf("error processing file %s: %w", entryPath, err)
 				}
-				fmt.Printf("File processed: %s\n", entry.Name())
+				log.Printf("File: %s created", entry.Name())
 			}
 		}
 	}
@@ -235,7 +233,7 @@ func ProcessDirectory(services *services.ServiceRegistry, extractDirPath string,
 	return nil
 }
 
-func CreateNestedPageGroup(services *services.ServiceRegistry, doc_id uint, pageGroupName string) (uint, error) {
+func CreateNestedPageGroup(services *services.ServiceRegistry, doc_Id uint, pageGroup_Id uint, pageGroupName string) (uint, error) {
 	pageGroupMeta := models.PageGroup{
 		Name:            pageGroupName,
 		DocumentationID: doc_Id,
@@ -244,15 +242,15 @@ func CreateNestedPageGroup(services *services.ServiceRegistry, doc_id uint, page
 		Editors:         []models.User{User},
 		LastEditorID:    &User.ID,
 	}
-	if pageGroup_id != 0 {
-		pageGroupMeta.ParentID = &pageGroup_id
+	if pageGroup_Id != 0 {
+		pageGroupMeta.ParentID = &pageGroup_Id
 	}
 	// Create the page group
-	pageGroup_id, err := services.DocService.CreatePageGroup(&pageGroupMeta)
+	pageGroup_Id, err := services.DocService.CreatePageGroup(&pageGroupMeta)
 	if err != nil {
 		return 0, fmt.Errorf("failed to create page group for directory %w", err)
 	}
-	return pageGroup_id, nil
+	return pageGroup_Id, nil
 }
 
 // cleaning '/uploads' directory after creation
