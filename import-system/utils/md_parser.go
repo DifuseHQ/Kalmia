@@ -127,7 +127,6 @@ func parseParagraph(line string) map[string]interface{} {
 	if strings.HasPrefix(line, "![") {
 		return nil
 	}
-
 	return createBlock("paragraph", nil, []map[string]interface{}{
 		{"type": "text",
 			"text":   line,

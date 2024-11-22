@@ -209,6 +209,7 @@ export default function EditPage() {
   );
 
   useEffect(() => {
+
     const fetchData = async () => {
       const result = await getPage(Number(pageId));
 
@@ -232,7 +233,7 @@ export default function EditPage() {
   }, [pageId, navigate, editor, t, parsedContent]);
 
   useEffect(() => {
-    if (editor && editorContent.length > 0) {
+    if (editor && editorContent.length > 0) {  
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       //@ts-ignore
       editor.replaceBlocks(editor.document, editorContent);
