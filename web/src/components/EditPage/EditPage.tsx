@@ -43,6 +43,7 @@ import {
   insertAlert,
   insertCode,
 } from "./EditorCustomTools";
+import { ChangeEvent } from "react";
 
 const schema = BlockNoteSchema.create({
   blockSpecs: {
@@ -112,13 +113,13 @@ const EditorWrapper: React.FC<EditorWrapperProps> = React.memo(
                 insertAlert(editor),
                 insertCode(editor),
               ],
-              query,
+              query
             )
           }
         />
       </BlockNoteView>
     );
-  },
+  }
 );
 
 EditorWrapper.displayName = "EditorWrapper";
@@ -131,6 +132,12 @@ export default function EditPage() {
   const { openModal, closeModal, deleteModal } = useContext(ModalContext);
 
   useEffect(() => {
+    // const BlocksToMdx = editor.blocksToMarkdownLossy([{"id":"fa01e096-3187-4628-8f1e-77728cee3aa6","type":"heading","props":{"textColor":"default","backgroundColor":"default","textAlignment":"left","level":1},"content":[{"type":"text","text":"Introduction","styles":{}}],"children":[]},{"id":"64a26e8f-7733-4f8a-b3fb-f2c9a770d727","type":"paragraph","props":{"textColor":"default","backgroundColor":"default","textAlignment":"left"},"content":[{"type":"text","text":"Welcome to the ","styles":{}},{"type":"text","text":"introductory page","styles":{"bold":true}},{"type":"text","text":" of this documentation!","styles":{}}],"children":[]},{"id":"90f28c74-6195-4074-8861-35b82b9bfb1c","type":"paragraph","props":{"textColor":"default","backgroundColor":"default","textAlignment":"left"},"content":[],"children":[]}])
+    // const MdxToBlocks = editor.tryParseMarkdownToBlocks(mdx);
+
+    // console.log('BlocksToMdx',BlocksToMdx);
+    // console.log('MdxToBlocks', MdxToBlocks);
+
     setThemeKey((prev) => prev + 1);
   }, [darkMode]);
 
@@ -188,7 +195,16 @@ export default function EditPage() {
       const result = await uploadFile(formData);
 
       if (result?.status === "success") {
+        console.log("yes uplaoding");
+
         if (result.data.file) {
+          // console.log('yes uplaoding returning');
+
+          console.log(result.data.file);
+
+          const MdxToBlocks = editor.tryParseMarkdownToBlocks(result.data.file);
+          console.log("file upload mdx to block", MdxToBlocks);
+
           return result.data.file;
         }
       }
@@ -198,14 +214,14 @@ export default function EditPage() {
   const parsedContent = useCallback(
     (data: string) => {
       try {
-        return JSON.parse(data);
+        return typeof data === "string" ? JSON.parse(data) : data;
       } catch (e) {
         console.error(e);
         toastMessage(t("error_parsing_page_content"), "error");
         return {};
       }
     },
-    [t],
+    [t]
   );
 
   useEffect(() => {
@@ -223,7 +239,10 @@ export default function EditPage() {
           slug: data.slug || "",
           isIntroPage: data.isIntroPage || false,
         }));
+
         const parsed = parsedContent(data.content);
+        console.log("parsed", parsed);
+
         setEditorContent(parsed.length > 0 ? parsed : []);
       }
     };
@@ -279,7 +298,7 @@ export default function EditPage() {
         navigate(`/dashboard/documentation?id=${docId}`);
       } else {
         navigate(
-          `/dashboard/documentation/page-group?id=${docId}&pageGroupId=${pageGroupId}&versionId=${versionID}&version=${version}`,
+          `/dashboard/documentation/page-group?id=${docId}&pageGroupId=${pageGroupId}&versionId=${versionID}&version=${version}`
         );
       }
     }
@@ -377,6 +396,53 @@ export default function EditPage() {
     dark: darkTheme,
   };
 
+  const handleImportFile = async (
+    e: ChangeEvent<HTMLInputElement>
+  ): Promise<void> => {
+    const files = e.target.files;
+
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    const fileType = file.type;
+    const fileName = file.name.toLowerCase();
+
+    if (fileType !== "text/markdown" && !fileName.endsWith(".md")) {
+      toastMessage(t("Please upload a valid Markdown (.md) file"), "warning");
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = async (event: ProgressEvent<FileReader>) => {
+      const fileContent = event.target?.result as string;
+
+      try {
+        const parsedContent =
+          await editor.tryParseMarkdownToBlocks(fileContent);
+
+        for (const content of parsedContent) {
+          if (content.props?.url) {
+            const url = content.props.url;
+            if (url.endsWith(".mp4")) {
+              content.type = "video";
+            } else if (url.endsWith(".mp3")) {
+              content.type = "audio";
+            }
+          }
+        }
+        setEditorContent(parsedContent);
+      } catch (err) {
+        console.error("Error parsing Markdown:", err);
+      }
+    };
+
+    reader.onerror = (error) => {
+      console.error("Error reading file:", error);
+    };
+
+    reader.readAsText(file);
+  };
   return (
     <AnimatePresence>
       {deleteModal && (
@@ -406,12 +472,34 @@ export default function EditPage() {
               <h3 className="text-2xl  font-semibold text-gray-900 dark:text-white">
                 {t("edit_page")}
               </h3>
-              <div
-                className="px-5 py-1.5 rounded-lg font-semibold dark:text-white"
-                title="Version"
-              >
+              <div className="flex px-5 py-1.5 rounded-lg font-semibold dark:text-white gap-2">
+                <div
+                  title={t("upload_markdown_file")}
+                  className="flex items-center justify-start z-20 opacity-100 border gap-2 border-gray-400 px-3 py-1.5 rounded-lg dark:bg-gray-600 dark:border-gray-700 dark:text-white"
+                >
+                  <label
+                    htmlFor="file-upload"
+                    className="cursor-pointer flex items-center space-x-2"
+                  >
+                    <span> {t("import")}</span>
+                    <Icon
+                      icon="iconoir:import"
+                      className="w-5 h-5 dark:text-white text-black"
+                    />
+                  </label>
+                  <input
+                    id="file-upload"
+                    type="file"
+                    className="hidden"
+                    onChange={handleImportFile}
+                  />
+                </div>
+
                 <div className="relative inline-block z-20 opacity-100">
-                  <div className="flex items-center border gap-2 border-gray-400 px-3 py-1.5 rounded-lg dark:bg-gray-600 dark:border-gray-700 dark:text-white">
+                  <div
+                    title="Version"
+                    className="flex items-center border gap-2 border-gray-400 px-3 py-1.5 rounded-lg dark:bg-gray-600 dark:border-gray-700 dark:text-white"
+                  >
                     {version}
                   </div>
                 </div>
@@ -459,10 +547,11 @@ export default function EditPage() {
               </div>
 
               <div>
-                <span className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                  {t("content")}
-                </span>
-
+                <div className="flex items-center gap-3">
+                  <span className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                    {t("content")}
+                  </span>
+                </div>
                 {editor && (
                   <EditorWrapper
                     key={themeKey}

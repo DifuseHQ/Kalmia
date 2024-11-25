@@ -137,5 +137,9 @@
     "minimum_one_more_field_required": "न्यूनतम एक अतिरिक्त फ़ील्ड आवश्यक है",
     "enter_at_least_one_field": "कम से कम एक फ़ील्ड दर्ज करें",
     "delete_documentation_successfully": "दस्तावेज़ सफलतापूर्वक हटा दिया गया",
-    "page_deleted_successfully": "पृष्ठ सफलतापूर्वक हटा दिया गया"
+    "page_deleted_successfully": "पृष्ठ सफलतापूर्वक हटा दिया गया",
+    "import": "आयात",
+    "upload_markdown_file": "मार्कडाउन फ़ाइल अपलोड करें"
+
+
 }

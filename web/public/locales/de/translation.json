@@ -295,5 +295,9 @@
         "go_back": "Zurück",
         "error_title": "Fehler {{code}}",
         "error_description": "Beim Verarbeiten Ihrer Anfrage ist ein Fehler aufgetreten.",
-        "crafted_by": "Entwickelt von"
+        "crafted_by": "Entwickelt von",
+        "import": "Importieren",
+        "upload_markdown_file": "Markdown-Datei hochladen"
+
+
 }

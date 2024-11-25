@@ -285,5 +285,9 @@
         "go_back": "返回",
         "error_title": "錯誤 {{code}}",
         "error_description": "處理您的請求時發生錯誤。",
-        "crafted_by": "由 Iridia 精心製作"
+        "crafted_by": "由 Iridia 精心製作",
+        "import": "导入",
+        "upload_markdown_file": "上传Markdown文件"
+
+
 }
