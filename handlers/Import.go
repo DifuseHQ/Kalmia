@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"path/filepath"
+	"strconv"
 
 	system "git.difuse.io/Difuse/kalmia/import-system/controlls"
 	"git.difuse.io/Difuse/kalmia/services"
@@ -60,4 +61,20 @@ func ImportMDFile(services *services.ServiceRegistry, w http.ResponseWriter, r *
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func PostGitbook_URL(services *services.ServiceRegistry, w http.ResponseWriter, r *http.Request) {
+
+	//Parsing doc_id from query parameters
+	docIdstr := r.URL.Query().Get("doc_id")
+	if docIdstr == "" {
+		http.Error(w, "Missing 'doc_id' query parameter", http.StatusBadRequest)
+		return
+	}
+
+	docId, err := strconv.Atoi(docIdstr)
+	if err != nil {
+		http.Error(w, "Invalid 'doc_id' parameter", http.StatusBadRequest)
+		return
+	}
 }
