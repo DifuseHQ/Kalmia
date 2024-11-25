@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -77,4 +78,16 @@ func PostGitbook_URL(services *services.ServiceRegistry, w http.ResponseWriter, 
 		http.Error(w, "Invalid 'doc_id' parameter", http.StatusBadRequest)
 		return
 	}
+
+	err = services.DocService.GitDeploy(uint(docId))
+	if err != nil {
+		http.Error(w, "Failed to deploy documentation to Git: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"status":  "success",
+		"message": "Documentation deployed to Git successfully",
+	})
 }
