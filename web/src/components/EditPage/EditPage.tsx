@@ -154,7 +154,7 @@ export default function EditPage() {
   });
 
   const [editorContent, setEditorContent] = useState([
-    { type: "paragraph", content: "" },
+    { type: "paragraph", content: "" } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
   ]);
 
   const generateSlug = (title: string) => {
@@ -405,12 +405,14 @@ export default function EditPage() {
           await editor.tryParseMarkdownToBlocks(fileContent);
 
         for (const content of parsedContent) {
-          if (content.props?.url) {
-            const url = content.props.url;
-            if (url.endsWith(".mp4")) {
-              content.type = "video";
-            } else if (url.endsWith(".mp3")) {
-              content.type = "audio";
+          if (content.props) {
+            if ("url" in content.props) {
+              const url = content.props.url;
+              if (url.endsWith(".mp4")) {
+                content.type = "video";
+              } else if (url.endsWith(".mp3")) {
+                content.type = "audio";
+              }
             }
           }
         }
