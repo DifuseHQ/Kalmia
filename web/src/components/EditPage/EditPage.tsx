@@ -132,12 +132,6 @@ export default function EditPage() {
   const { openModal, closeModal, deleteModal } = useContext(ModalContext);
 
   useEffect(() => {
-    // const BlocksToMdx = editor.blocksToMarkdownLossy([{"id":"fa01e096-3187-4628-8f1e-77728cee3aa6","type":"heading","props":{"textColor":"default","backgroundColor":"default","textAlignment":"left","level":1},"content":[{"type":"text","text":"Introduction","styles":{}}],"children":[]},{"id":"64a26e8f-7733-4f8a-b3fb-f2c9a770d727","type":"paragraph","props":{"textColor":"default","backgroundColor":"default","textAlignment":"left"},"content":[{"type":"text","text":"Welcome to the ","styles":{}},{"type":"text","text":"introductory page","styles":{"bold":true}},{"type":"text","text":" of this documentation!","styles":{}}],"children":[]},{"id":"90f28c74-6195-4074-8861-35b82b9bfb1c","type":"paragraph","props":{"textColor":"default","backgroundColor":"default","textAlignment":"left"},"content":[],"children":[]}])
-    // const MdxToBlocks = editor.tryParseMarkdownToBlocks(mdx);
-
-    // console.log('BlocksToMdx',BlocksToMdx);
-    // console.log('MdxToBlocks', MdxToBlocks);
-
     setThemeKey((prev) => prev + 1);
   }, [darkMode]);
 
@@ -195,16 +189,7 @@ export default function EditPage() {
       const result = await uploadFile(formData);
 
       if (result?.status === "success") {
-        console.log("yes uplaoding");
-
         if (result.data.file) {
-          // console.log('yes uplaoding returning');
-
-          console.log(result.data.file);
-
-          const MdxToBlocks = editor.tryParseMarkdownToBlocks(result.data.file);
-          console.log("file upload mdx to block", MdxToBlocks);
-
           return result.data.file;
         }
       }
@@ -241,8 +226,6 @@ export default function EditPage() {
         }));
 
         const parsed = parsedContent(data.content);
-        console.log("parsed", parsed);
-
         setEditorContent(parsed.length > 0 ? parsed : []);
       }
     };
