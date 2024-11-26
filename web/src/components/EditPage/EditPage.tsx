@@ -212,7 +212,6 @@ export default function EditPage() {
 
     const fetchData = async () => {
       const result = await getPage(Number(pageId));
-console.log('fetch dara', result.data);
 
       const data = result.data;
       if (handleError(result, navigate, t)) return;
@@ -379,42 +378,6 @@ console.log('fetch dara', result.data);
     dark: darkTheme,
   };
 
-  const handleImportFile = async (e) => {
-    const result = e.target.files;
-  
-    if (result.length > 0) {
-      const file = result[0]; 
-  
-      const fileType = file.type; 
-      const fileName = file.name.toLowerCase(); 
-  
-      if (fileType !== 'text/markdown' && !fileName.endsWith('.md')) {
-        toastMessage(t("Please upload a valid Markdown (.md) file"), "warning");
-        return;
-      }
-  
-      const reader = new FileReader();
-  
-      reader.onload = async (event) => {
-        const fileContent = event.target.result;
-  
-        try {
-          let parsedContent = await editor.tryParseMarkdownToBlocks(fileContent);
-          setEditorContent(parsedContent);
-        } catch (err) {
-          console.error("Error parsing Markdown:", err);
-        }
-      };
-  
-      reader.onerror = (error) => {
-        console.error("Error reading file:", error);
-      };
-
-      reader.readAsText(file);
-    }
-  };
-  
-  
   return (
     <AnimatePresence>
       {deleteModal && (
@@ -497,26 +460,18 @@ console.log('fetch dara', result.data);
               </div>
 
               <div>
+                <span className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                  {t("content")}
+                </span>
 
-<div className="flex items-center gap-3">
-<span className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-  {t("content")}
-</span>
-<span className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-<label htmlFor="file-upload" className="cursor-pointer underline">
-Import file
-</label>
-<input id="file-upload" type="file" className="hidden" onChange={handleImportFile}/>
-</span>
-</div>
-{editor && (
-  <EditorWrapper
-    key={themeKey}
-    editor={editor}
-    theme={darkMode ? blueTheme.dark : blueTheme.light}
-  />
-)}
-</div>
+                {editor && (
+                  <EditorWrapper
+                    key={themeKey}
+                    editor={editor}
+                    theme={darkMode ? blueTheme.dark : blueTheme.light}
+                  />
+                )}
+              </div>
             </div>
 
             <div className="flex justify-center gap-5">

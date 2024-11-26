@@ -2,10 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"path/filepath"
-	"strconv"
 
+	"git.difuse.io/Difuse/kalmia/config"
 	system "git.difuse.io/Difuse/kalmia/import-system/controlls"
 	"git.difuse.io/Difuse/kalmia/services"
 )
@@ -64,30 +65,27 @@ func ImportMDFile(services *services.ServiceRegistry, w http.ResponseWriter, r *
 	w.WriteHeader(http.StatusOK)
 }
 
-func PostGitbook_URL(services *services.ServiceRegistry, w http.ResponseWriter, r *http.Request) {
+func PostGitbookByURL(services *services.ServiceRegistry, w http.ResponseWriter, r *http.Request, cfg *config.Config) {
 
-	//Parsing doc_id from query parameters
-	docIdstr := r.URL.Query().Get("doc_id")
-	if docIdstr == "" {
-		http.Error(w, "Missing 'doc_id' query parameter", http.StatusBadRequest)
+	var request struct {
+		URL string `json:"git_url"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Invalid_url", http.StatusBadRequest)
 		return
 	}
 
-	docId, err := strconv.Atoi(docIdstr)
+	if request.URL == "" {
+		http.Error(w, "Git url is required ", http.StatusBadRequest)
+		return
+	}
+
+	jsonString, err := services.DocService.CloneRepo(request.URL, cfg)
 	if err != nil {
-		http.Error(w, "Invalid 'doc_id' parameter", http.StatusBadRequest)
+		http.Error(w, "Failed to process GitBook: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	err = services.DocService.GitDeploy(uint(docId))
-	if err != nil {
-		http.Error(w, "Failed to deploy documentation to Git: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{
-		"status":  "success",
-		"message": "Documentation deployed to Git successfully",
-	})
+	fmt.Println("JsonString", jsonString)
+	w.WriteHeader(http.StatusOK)
 }

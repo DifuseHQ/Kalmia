@@ -103,7 +103,9 @@ func main() {
 	/***** Importing Documentation Routes *****/
 	r.HandleFunc("/import/markdown-file", func(w http.ResponseWriter, r *http.Request) { handlers.ImportMDFile(serviceRegistry, w, r) }).Methods("POST")
 	r.HandleFunc("/import/markdown-documentation", func(w http.ResponseWriter, r *http.Request) { handlers.ImportDocumentation(serviceRegistry, w, r) }).Methods("POST")
-	// r.HandleFunc("/import/gitbook-url", func(w http.ResponseWriter, r *http.Request) { handlers.ImportFromGitbook(serviceRegistry, w, r) }).Methods("POST")
+	r.HandleFunc("/import/gitbook-url", func(w http.ResponseWriter, r *http.Request) {
+		handlers.PostGitbookByURL(serviceRegistry, w, r, config.ParsedConfig)
+	}).Methods("POST")
 
 	docsRouter.HandleFunc("/pages", func(w http.ResponseWriter, r *http.Request) { handlers.GetPages(dS, w, r) }).Methods("GET")
 	docsRouter.HandleFunc("/page", func(w http.ResponseWriter, r *http.Request) { handlers.GetPage(dS, w, r) }).Methods("POST")
