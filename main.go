@@ -100,11 +100,11 @@ func main() {
 	docsRouter.HandleFunc("/documentation/version", func(w http.ResponseWriter, r *http.Request) { handlers.CreateDocumentationVersion(dS, w, r) }).Methods("POST")
 	docsRouter.HandleFunc("/documentation/reorder-bulk", func(w http.ResponseWriter, r *http.Request) { handlers.BulkReorderPageOrPageGroup(dS, w, r) }).Methods("POST")
 	docsRouter.HandleFunc("/documentation/root-parent-id", func(w http.ResponseWriter, r *http.Request) { handlers.GetRootParentId(dS, w, r) }).Methods("GET")
-	/***** Importing Documentation Routes *****/
-	r.HandleFunc("/import/markdown-file", func(w http.ResponseWriter, r *http.Request) { handlers.ImportMDFile(serviceRegistry, w, r) }).Methods("POST")
-	r.HandleFunc("/import/markdown-documentation", func(w http.ResponseWriter, r *http.Request) { handlers.ImportDocumentation(serviceRegistry, w, r) }).Methods("POST")
-	r.HandleFunc("/import/gitbook-url", func(w http.ResponseWriter, r *http.Request) {
-		handlers.PostGitbookByURL(serviceRegistry, w, r, config.ParsedConfig)
+
+	importRouter := docsRouter.PathPrefix("/import").Subrouter()
+	importRouter.Use(middleware.EnsureAuthenticated(aS))
+	importRouter.HandleFunc("/gitbook", func(w http.ResponseWriter, r *http.Request) {
+		handlers.ImportGitbook(serviceRegistry, w, r, config.ParsedConfig)
 	}).Methods("POST")
 
 	docsRouter.HandleFunc("/pages", func(w http.ResponseWriter, r *http.Request) { handlers.GetPages(dS, w, r) }).Methods("GET")

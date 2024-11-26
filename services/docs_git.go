@@ -1,21 +1,14 @@
 package services
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"log"
-	"net/url"
 	"os"
 	"path/filepath"
-	"regexp"
-	"strings"
 	"time"
 
 	"git.difuse.io/Difuse/kalmia/config"
 	"git.difuse.io/Difuse/kalmia/logger"
 	"git.difuse.io/Difuse/kalmia/utils"
-	"github.com/gabriel-vasile/mimetype"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
@@ -93,6 +86,7 @@ func (service *DocService) GitDeploy(docId uint) error {
 			Password: doc.GitPassword,
 		},
 	})
+
 	if err != nil && err != git.NoErrAlreadyUpToDate {
 		return fmt.Errorf("failed to fetch from remote: %v", err)
 	}
@@ -132,6 +126,7 @@ func (service *DocService) GitDeploy(docId uint) error {
 		Commit: remoteRef.Hash(),
 		Mode:   git.HardReset,
 	})
+
 	if err != nil {
 		return fmt.Errorf("failed to reset branch to match remote: %v", err)
 	}
@@ -225,150 +220,4 @@ func (service *DocService) GitDeploy(docId uint) error {
 	}
 
 	return nil
-}
-
-func (service *DocService) CloneRepo(url string, cfg *config.Config) (string, error) {
-	// Create a temporary directory for cloning
-	tempDir, err := os.MkdirTemp("", "repo-clone-")
-	if err != nil {
-		return "", fmt.Errorf("failed to create temporary directory: %v", err)
-	}
-	defer os.RemoveAll(tempDir)
-
-	// Clone repository
-	cloneOptions := &git.CloneOptions{
-		URL: url,
-	}
-
-	_, err = git.PlainClone(tempDir, false, cloneOptions)
-	if err != nil {
-		return "", fmt.Errorf("failed to clone repository: %v", err)
-	}
-
-	// Parse Markdown files
-	doc := make(map[string]interface{})
-	err = parseMarkdownFiles(tempDir, doc, cfg)
-	if err != nil {
-		return "", fmt.Errorf("failed to parse markdown files: %v", err)
-	}
-
-	// Convert to JSON with indentation for readability
-	jsonBytes, err := json.MarshalIndent(doc, "", "  ")
-	if err != nil {
-		return "", fmt.Errorf("failed to convert to JSON: %v", err)
-	}
-
-	return string(jsonBytes), nil
-}
-
-func parseMarkdownFiles(dir string, doc map[string]interface{}, cfg *config.Config) error {
-	files, err := ioutil.ReadDir(dir)
-	if err != nil {
-		return err
-	}
-
-	for _, file := range files {
-		fullPath := filepath.Join(dir, file.Name())
-
-		// Skip hidden files and directories
-		if strings.HasPrefix(file.Name(), ".") {
-			continue
-		}
-
-		// If it's a directory, recurse into it
-		if file.IsDir() {
-			subGroup := make(map[string]interface{})
-
-			// Recurse into the subdirectory
-			err := parseMarkdownFiles(fullPath, subGroup, cfg)
-			if err != nil {
-				return err
-			}
-
-			// Only add non-empty subdirectories
-			if len(subGroup) > 0 {
-				doc[file.Name()] = subGroup
-			}
-		} else if strings.HasSuffix(file.Name(), ".md") {
-			// If it's a .md file, read its content
-			content, err := ioutil.ReadFile(fullPath)
-			if err != nil {
-				return err
-			}
-			strContent := string(content)
-
-			// Process media URLs and upload them to S3
-			strContent, err = processMediaAndUploadToS3(strContent, dir, cfg)
-			if err != nil {
-				return err
-			}
-
-			doc[file.Name()] = strContent
-		}
-	}
-	return nil
-}
-
-var (
-	MediaRegex = regexp.MustCompile(`!\[[^\]]*\]\(([^)]+)\)|\[[^\]]*\]\(([^)]+)\)`)
-)
-
-func processMediaAndUploadToS3(content, dir string, cfg *config.Config) (string, error) {
-	URLSlice := MediaRegex.FindAllStringSubmatch(content, -1)
-	for _, Sub := range URLSlice {
-		mediaPath := ""
-		if Sub[1] != "" {
-			mediaPath = Sub[1]
-		} else if Sub[2] != "" {
-			mediaPath = Sub[2]
-		}
-
-		if strings.HasPrefix(mediaPath, "http") {
-			continue
-		}
-		// Decode URL-encoded characters in the media path
-		decodedMediaPath, err := url.QueryUnescape(mediaPath)
-		if err != nil {
-			return content, fmt.Errorf("error decoding media path: %v", err)
-		}
-
-		// Resolve the absolute path to the media file
-		absPath, err := filepath.Abs(filepath.Join(dir, decodedMediaPath))
-		if err != nil {
-			return content, fmt.Errorf("error resolving media path: %v", err)
-		}
-		// Open the file (e.g., image, audio, etc.)
-		file, err := os.Open(absPath)
-		if err != nil {
-			return content, fmt.Errorf("error opening media file: %v", err)
-		}
-		defer file.Close()
-
-		// Detect MIME type
-		mime, _ := mimetype.DetectReader(file)
-		_, err = file.Seek(0, 0) // Reset file reader position
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// Upload the media to S3 and get the S3 URL
-		s3URL, err := uploadMediaToS3(file, filepath.Base(mediaPath), mime.String(), cfg)
-		if err != nil {
-			return content, err
-		}
-
-		// Replace the local media path with the public S3 URL in markdown
-		content = strings.ReplaceAll(content, mediaPath, s3URL)
-	}
-
-	return content, nil
-}
-
-func uploadMediaToS3(file *os.File, filename, mimeType string, cfg *config.Config) (string, error) {
-	s3URL, err := UploadToStorage(file, filename, mimeType, cfg)
-	if err != nil {
-		return "", fmt.Errorf("error uploading media to S3: %v", err)
-	}
-
-	return s3URL, nil
 }
