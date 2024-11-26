@@ -137,5 +137,9 @@
     "minimum_one_more_field_required": "കുറഞ്ഞത് ഒരു കൂടുതൽ ഫീൽഡ് ആവശ്യമാണ്",
     "enter_at_least_one_field": "കുറഞ്ഞത് ഒരു ഫീൽഡ് നൽകുക",
     "delete_documentation_successfully": "ഡോക്യുമെന്റേഷൻ വിജയകരമായി നീക്കം ചെയ്തു",
-    "page_deleted_successfully": "പേജ് വിജയകരമായി നീക്കം ചെയ്തു"
+    "page_deleted_successfully": "പേജ് വിജയകരമായി നീക്കം ചെയ്തു",
+    "import": "ഇംപോർട്ട്",
+    "upload_markdown_file": "മാർക്ക്ഡൗൺ ഫയൽ അപ്ലോഡ് ചെയ്യുക"
+
+
 }
