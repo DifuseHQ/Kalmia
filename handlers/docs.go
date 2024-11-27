@@ -133,7 +133,7 @@ func CreateDocumentation(services *services.ServiceRegistry, w http.ResponseWrit
 		return
 	}
 
-	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "documentation_created"})
+	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "documentation_created", "id": fmt.Sprint(documentation.ID)})
 }
 
 func EditDocumentation(services *services.ServiceRegistry, w http.ResponseWriter, r *http.Request) {
@@ -191,7 +191,7 @@ func EditDocumentation(services *services.ServiceRegistry, w http.ResponseWriter
 		return
 	}
 
-	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "documentation_updated"})
+	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "documentation_updated", "id": fmt.Sprint(req.ID)})
 }
 
 func DeleteDocumentation(service *services.DocService, w http.ResponseWriter, r *http.Request) {
@@ -212,7 +212,7 @@ func DeleteDocumentation(service *services.DocService, w http.ResponseWriter, r 
 		return
 	}
 
-	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "documentation_deleted"})
+	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "documentation_deleted", "id": fmt.Sprint(req.ID)})
 }
 
 func CreateDocumentationVersion(service *services.DocService, w http.ResponseWriter, r *http.Request) {
@@ -325,7 +325,7 @@ func CreatePage(services *services.ServiceRegistry, w http.ResponseWriter, r *ht
 		return
 	}
 
-	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "page_created"})
+	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "page_created", "id": fmt.Sprint(page.ID)})
 }
 
 func EditPage(services *services.ServiceRegistry, w http.ResponseWriter, r *http.Request) {
@@ -361,7 +361,7 @@ func EditPage(services *services.ServiceRegistry, w http.ResponseWriter, r *http
 		return
 	}
 
-	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "page_updated"})
+	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "page_updated", "id": fmt.Sprint(req.ID)})
 }
 
 func DeletePage(service *services.DocService, w http.ResponseWriter, r *http.Request) {
@@ -386,7 +386,7 @@ func DeletePage(service *services.DocService, w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "page_deleted"})
+	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "page_deleted", "id": fmt.Sprint(req.ID)})
 }
 
 func GetPageGroups(service *services.DocService, w http.ResponseWriter, r *http.Request) {
@@ -477,7 +477,7 @@ func CreatePageGroup(services *services.ServiceRegistry, w http.ResponseWriter, 
 		return
 	}
 
-	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "page_group_created"})
+	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "page_group_created", "id": fmt.Sprint(pageGroup.ID)})
 }
 
 func EditPageGroup(services *services.ServiceRegistry, w http.ResponseWriter, r *http.Request) {
@@ -512,7 +512,7 @@ func EditPageGroup(services *services.ServiceRegistry, w http.ResponseWriter, r 
 		return
 	}
 
-	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "page_group_updated"})
+	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "page_group_updated", "id": fmt.Sprint(req.ID)})
 }
 
 func DeletePageGroup(service *services.DocService, w http.ResponseWriter, r *http.Request) {
@@ -531,7 +531,7 @@ func DeletePageGroup(service *services.DocService, w http.ResponseWriter, r *htt
 		return
 	}
 
-	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "page_group_deleted"})
+	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "page_group_deleted", "id": fmt.Sprint(req.ID)})
 }
 
 func GetRsPress(service *services.DocService, w http.ResponseWriter, r *http.Request) {
