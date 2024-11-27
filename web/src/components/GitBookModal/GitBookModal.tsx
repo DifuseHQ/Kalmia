@@ -3,6 +3,7 @@ import { useContext, useState } from "react";
 import { ModalContext } from "../../context/ModalContext";
 import {
   createDocumentation,
+  deleteDocumentation,
   DocumentationPayload,
   getDocumentations,
   importGitBook,
@@ -61,7 +62,7 @@ export default function GitBookModal() {
 
   function processContent(
     obj: CurrentObj,
-    docId: number,
+    docId: number | null = null,
     parentId: number | null = null
   ) {
     async function createPage(
@@ -124,46 +125,57 @@ export default function GitBookModal() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    let docId: number | null = null;
 
     closeModal("gitBookModal");
     openModal("loadingModal", null);
 
-    const docs = (await getDocumentations()).data;
-    const largestId =
-      docs.length > 0
-        ? Math.max(...docs.map((doc: DocumentationPayload) => doc.id))
-        : 0;
+    try {
+      const res = await importGitBook(details);
+      if (res.status === "error") {
+        toastMessage(t(`${res.data.message}`), "error");
+        closeModal("loadingModal");
+        return;
+      }
 
-    const payload: DocumentationPayload = {
-      id: null,
-      name: `gitbook-import-${largestId + 1}`,
-      version: "1.0.0",
-      url: "http://localhost:2727",
-      organizationName: "N/A",
-      projectName: "N/A",
-      landerDetails: "",
-      baseURL: `/gitbook-import-${largestId + 1}`,
-      description: "N/A",
-      favicon: "https://downloads-bucket.difuse.io/favicon-final-kalmia.ico",
-      metaImage: "https://difuse.io/assets/images/meta/meta.webp",
-      navImage: "https://downloads-bucket.difuse.io/kalmia-sideways-black.png",
-      navImageDark:
-        "https://downloads-bucket.difuse.io/kalmia-sideways-white-final.png",
-      customCSS: customCSSInitial(),
-      copyrightText: "N/A",
-    };
+      const docs = (await getDocumentations()).data;
+      const largestId =
+        docs.length > 0
+          ? Math.max(...docs.map((doc: DocumentationPayload) => doc.id))
+          : 0;
 
-    const createResponse = await createDocumentation(payload);
-    let docId = createResponse.data.id;
+      const payload: DocumentationPayload = {
+        id: null,
+        name: `gitbook-import-${largestId + 1}`,
+        version: "1.0.0",
+        url: "http://localhost:2727",
+        organizationName: "N/A",
+        projectName: "N/A",
+        landerDetails: "",
+        baseURL: `/gitbook-import-${largestId + 1}`,
+        description: "N/A",
+        favicon: "https://downloads-bucket.difuse.io/favicon-final-kalmia.ico",
+        metaImage: "https://difuse.io/assets/images/meta/meta.webp",
+        navImage:
+          "https://downloads-bucket.difuse.io/kalmia-sideways-black.png",
+        navImageDark:
+          "https://downloads-bucket.difuse.io/kalmia-sideways-white-final.png",
+        customCSS: customCSSInitial(),
+        copyrightText: "N/A",
+      };
 
-    const res = await importGitBook(details);
+      const createResponse = await createDocumentation(payload);
+      docId = createResponse.data.id;
+      processContent(JSON.parse(res.data), docId);
 
-    processContent(JSON.parse(res.data), docId);
+      closeModal("loadingModal");
+      navigate(`/dashboard/edit-documentation?id=${docId}&mode=edit`);
 
-    closeModal("loadingModal");
-    navigate(`/dashboard/edit-documentation?id=${docId}&mode=edit`);
-
-    toastMessage(t("documentation_created"), "success");
+      toastMessage(t("documentation_created"), "success");
+    } catch (error) {
+      closeModal("loadingModal");
+      toastMessage(t("error_creating_documentation"), "error");
+    }
   };
 
   return (
