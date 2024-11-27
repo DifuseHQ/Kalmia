@@ -2,6 +2,7 @@ import { Icon } from "@iconify/react";
 import { useContext, useState } from "react";
 import { ModalContext } from "../../context/ModalContext";
 import { importGitBook } from "../../api/Requests";
+import { t } from "i18next";
 
 export default function GitBookModal() {
   const { closeModal } = useContext(ModalContext);
@@ -48,7 +49,7 @@ export default function GitBookModal() {
                   htmlFor="email"
                   className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                 >
-                  Username
+                  {t("username")}
                 </label>
                 <input
                   type="email"
@@ -67,7 +68,7 @@ export default function GitBookModal() {
                   htmlFor="password"
                   className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                 >
-                  Password
+                  {t("password")}
                 </label>
                 <input
                   type="password"
@@ -86,7 +87,7 @@ export default function GitBookModal() {
                   htmlFor="password"
                   className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                 >
-                  URL <span className="text-red-500 ">*</span>
+                  {t("url")} <span className="text-red-500 ">*</span>
                 </label>
                 <input
                   type="url"
@@ -104,15 +105,15 @@ export default function GitBookModal() {
               <div className="flex justify-between gap-3">
                 <button
                   onClick={() => closeModal("gitBookModal")}
-                  className="w-full  text-white  focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:border dark:border-gray-500 "
+                  className="w-full  dark:text-white   focus:outline-none  font-medium rounded-lg text-sm px-5 py-2.5 text-center border border-gary-400 dark:border-gray-500 hover:bg-gray-200 dark:hover:bg-gray-500 "
                 >
-                  Cancel
+                  {t("cancel")}
                 </button>
                 <button
                   type="submit"
-                  className="w-full  text-white bg-blue-700 hover:bg-blue-800  font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 "
+                  className="w-full flex items-center text-white bg-blue-700 hover:bg-blue-800  font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 "
                 >
-                  Submit
+                  <Icon icon="ei:plus" className="w-6 h-6" /> {t("new_gitbook")}
                 </button>
               </div>
             </form>

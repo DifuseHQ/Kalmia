@@ -41,7 +41,7 @@ export default function Navbar() {
         setTranslateDropdown(false);
       }
     },
-    [setIsOpen, setTranslateDropdown],
+    [setIsOpen, setTranslateDropdown]
   );
 
   useEffect(() => {
@@ -57,6 +57,7 @@ export default function Navbar() {
   }, [isOpen, translateDropdown, handleClickOutside]);
 
   const changeLanguage = (lng: string) => {
+    if (lng === i18n.language) return;
     i18n.changeLanguage(lng);
     setTranslateDropdown(false);
   };
