@@ -3,7 +3,6 @@ import { useContext, useState } from "react";
 import { ModalContext } from "../../context/ModalContext";
 import {
   createDocumentation,
-  deleteDocumentation,
   DocumentationPayload,
   getDocumentations,
   importGitBook,
