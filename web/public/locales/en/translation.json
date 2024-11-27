@@ -297,5 +297,7 @@
         "error_description": "An error occurred while processing your request.",
         "crafted_by": "Crafted by",
         "import": "Import",
-        "upload_markdown_file":"Upload Markdown File"
+        "upload_markdown_file":"Upload Markdown File",
+        "new_gitbook":"New Gitbook",
+        "import_gitbook":"Import Gitbook"
 }

@@ -139,7 +139,7 @@
     "delete_documentation_successfully": "ഡോക്യുമെന്റേഷൻ വിജയകരമായി നീക്കം ചെയ്തു",
     "page_deleted_successfully": "പേജ് വിജയകരമായി നീക്കം ചെയ്തു",
     "import": "ഇംപോർട്ട്",
-    "upload_markdown_file": "മാർക്ക്ഡൗൺ ഫയൽ അപ്ലോഡ് ചെയ്യുക"
-
-
+    "upload_markdown_file": "മാർക്ക്ഡൗൺ ഫയൽ അപ്ലോഡ് ചെയ്യുക",
+    "new_gitbook": "പുതിയ ഗിറ്റ്ബുക്ക്",
+     "import_gitbook": "ഗിറ്റ്ബുക്ക് ഇറക്കുമതി ചെയ്യുക"
 }

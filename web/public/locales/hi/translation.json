@@ -139,7 +139,7 @@
     "delete_documentation_successfully": "दस्तावेज़ सफलतापूर्वक हटा दिया गया",
     "page_deleted_successfully": "पृष्ठ सफलतापूर्वक हटा दिया गया",
     "import": "आयात",
-    "upload_markdown_file": "मार्कडाउन फ़ाइल अपलोड करें"
-
-
+    "upload_markdown_file": "मार्कडाउन फ़ाइल अपलोड करें",
+    "new_gitbook": "नया गिटबुक",
+    "import_gitbook": "गिटबुक आयात करें"
 }
