@@ -237,7 +237,7 @@ export default function GitBookModal() {
                   type="url"
                   name="gitBookurl"
                   id="gitbookURL"
-                  placeholder="https://github.com/example/ExampleDocumentation"
+                  placeholder="https://git.difuse.io/Difuse/gitbook-export-example"
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
                   required
                   value={details.url}
@@ -255,9 +255,9 @@ export default function GitBookModal() {
                 </button>
                 <button
                   type="submit"
-                  className="w-full flex items-center text-white bg-blue-700 hover:bg-blue-800  font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 "
+                  className="w-full flex justify-center items-center text-white bg-blue-700 hover:bg-blue-800  font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 "
                 >
-                  <Icon icon="ei:plus" className="w-6 h-6" /> {t("new_gitbook")}
+                  <Icon icon="mdi:import" className="w-6 h-6" /> {t("import")}
                 </button>
               </div>
             </form>
