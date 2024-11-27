@@ -141,14 +141,20 @@ func (service *DocService) GenerateHead(docID uint, pageId uint, pageType string
 		componentTypes := []string{"paragraph", "table", "image", "video", "audio", "file", "alert"}
 		caser := cases.Title(language.English)
 		addedComponents := make(map[string]bool)
-		contentObjects := strings.Split(strings.Trim(page.Content, "[]"), "},{")
+		var contentObjects []map[string]interface{}
+		err = json.Unmarshal([]byte(page.Content), &contentObjects)
+		if err != nil {
+			return "", err
+		}
 
 		for _, obj := range contentObjects {
-			for _, componentType := range componentTypes {
-				if strings.Contains(obj, fmt.Sprintf(`"type":"%s"`, componentType)) && !addedComponents[componentType] {
-					componentName := caser.String(componentType)
-					buffer.WriteString(fmt.Sprintf(`import { %s } from "@components/%s";%s`, componentName, componentName, "\n"))
-					addedComponents[componentType] = true
+			if objType, ok := obj["type"].(string); ok {
+				for _, componentType := range componentTypes {
+					if objType == componentType && !addedComponents[componentType] {
+						componentName := caser.String(componentType)
+						buffer.WriteString(fmt.Sprintf(`import { %s } from "@components/%s";%s`, componentName, componentName, "\n"))
+						addedComponents[componentType] = true
+					}
 				}
 			}
 		}
