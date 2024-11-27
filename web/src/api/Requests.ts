@@ -91,6 +91,12 @@ export interface UserPayload {
   admin?: boolean;
 }
 
+export interface GitBookPayload {
+  username: string;
+  password: string;
+  url: string;
+}
+
 export interface UpdateUserPayload {
   id: number;
   photo?: string;
@@ -272,6 +278,9 @@ export const deleteUser = (username: string) =>
 
 export const getRootParentId = (docId: number) =>
   makeRequest(`/docs/documentation/root-parent-id?id=${docId}`);
+
+export const importGitBook = (data: GitBookPayload) =>
+  makeRequest("kal-api/docs/import/gitbook", "post", data);
 
 export const oAuthProviders = async (): Promise<string[]> => {
   const response = await makeRequest<string[]>("/kal-api/oauth/providers");
