@@ -26,6 +26,7 @@ export interface ModalContextType {
   loadingModal: boolean;
   pageGroupListModal: boolean;
   loadingMessage: string;
+  gitBookModal: boolean;
   setCurrentModalItem: React.Dispatch<React.SetStateAction<ModalItem | null>>;
   setLoadingModal: React.Dispatch<React.SetStateAction<boolean>>;
   setLoadingMessage: React.Dispatch<React.SetStateAction<string>>;
@@ -45,6 +46,7 @@ const defaultContext: ModalContextType = {
   pageSizeDropdown: false,
   loadingModal: false,
   loadingMessage: "Loading..",
+  gitBookModal: false,
   setCurrentModalItem: () => {},
   setLoadingModal: () => {},
   setLoadingMessage: () => {},
@@ -67,8 +69,9 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
   const [deleteModal, setDeleteModal] = useState(false);
   const [cloneDocumentModal, setCloneDocumentModal] = useState(false);
   const [pageGroupListModal, SetPageGroupListModal] = useState(false);
+  const [gitBookModal, setGitBookModal] = useState(false);
   const [currentModalItem, setCurrentModalItem] = useState<ModalItem | null>(
-    null,
+    null
   );
   const [pageSizeDropdown, setpageSizeDropdown] = useState(false);
   const [loadingModal, setLoadingModal] = useState(false);
@@ -103,6 +106,9 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
         break;
       case "pageGroupListModal":
         SetPageGroupListModal(true);
+        break;
+      case "gitBookModal":
+        setGitBookModal(true);
         break;
       default:
         console.warn(`Unknown modal: ${modalName}`);
@@ -139,6 +145,9 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
       case "pageGroupListModal":
         SetPageGroupListModal(false);
         break;
+      case "gitBookModal":
+        setGitBookModal(false);
+        break;
       default:
         console.warn(`Unknown modal: ${modalName}`);
     }
@@ -163,6 +172,7 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
         pageGroupListModal,
         openModal,
         closeModal,
+        gitBookModal,
       }}
     >
       {children}

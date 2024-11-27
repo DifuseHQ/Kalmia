@@ -1,6 +1,6 @@
 import { Icon } from "@iconify/react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   NavLink,
@@ -13,7 +13,6 @@ import { getDocumentations } from "../../api/Requests";
 import { AuthContext, AuthContextType } from "../../context/AuthContext";
 import { ModalContext } from "../../context/ModalContext";
 import { Documentation } from "../../types/doc";
-import { DOMEvent } from "../../types/dom";
 import { handleError, hasPermission } from "../../utils/Common";
 
 export default function Sidebar() {
@@ -92,33 +91,40 @@ export default function Sidebar() {
 
   const smallestId = documentation.reduce(
     (min, doc) => (doc.id < min ? doc.id : min),
-    documentation[0]?.id,
+    documentation[0]?.id
   );
 
   const sidebarRef = useRef<HTMLDivElement | null>(null);
-  const handleClickOutside = useCallback(
-    (event: DOMEvent) => {
-      if (
-        sidebarRef.current &&
-        !sidebarRef.current.contains(event.target as Node)
-      ) {
-        setIsSidebarOpen(false);
+  const [newDocumentDropdown, setNewDocumentDropdown] =
+    useState<boolean>(false);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  const handleClickOutside = (
+    ref: React.RefObject<HTMLElement>,
+    setState: (state: boolean) => void
+  ) => {
+    return (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setState(false);
       }
-    },
-    [setIsSidebarOpen],
-  );
+    };
+  };
 
   useEffect(() => {
-    if (isSidebarOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      document.removeEventListener("mousedown", handleClickOutside);
-    }
+    const handleSidebarClick = handleClickOutside(sidebarRef, setIsSidebarOpen);
+    const handleDropdownClick = handleClickOutside(
+      dropdownRef,
+      setNewDocumentDropdown
+    );
+
+    document.addEventListener("mousedown", handleSidebarClick);
+    document.addEventListener("mousedown", handleDropdownClick);
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("mousedown", handleSidebarClick);
+      document.removeEventListener("mousedown", handleDropdownClick);
     };
-  }, [isSidebarOpen, handleClickOutside]);
+  }, [sidebarRef, setIsSidebarOpen, dropdownRef, setNewDocumentDropdown]);
 
   return (
     <AnimatePresence>
@@ -151,20 +157,76 @@ export default function Sidebar() {
               </NavLink>
             </li>
             {hasPermission(["all", "write"], userDetails) && (
-              <li>
-                <motion.button
+              <li className="relative inline-block z-20 w-full">
+                <button
                   onClick={() => {
-                    openModal("createDocumentation", null);
-                    navigate("/dashboard/create-documentation");
+                    newDocumentDropdown
+                      ? setNewDocumentDropdown(false)
+                      : setNewDocumentDropdown(true);
                   }}
-                  whileHover={{ scale: 1.05 }}
-                  className="flex w-full py-2 px-5 my-5 justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-md  text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+                  id="dropdownDefaultButton"
+                  data-dropdown-toggle="dropdown"
+                  className="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex  justify-center items-center gap-1 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                  type="button"
                 >
-                  <span className=" px-1 pt-1 text-left items-center dark:text-white text-md text-sm">
-                    {t("new_documentation")}
-                  </span>
-                  <Icon icon="ei:plus" className="w-7 h-7 dark:text-white" />
-                </motion.button>
+                  <Icon
+                    icon="gridicons:add-outline"
+                    className="w-6 h-6 dark:text-white"
+                  />
+                  New
+                </button>
+                {newDocumentDropdown && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    ref={dropdownRef}
+                    className="w-full absolute mt-2 right-0 lg:left-0 bg-white rounded-lg shadow-2xl shadow-gary-400 border border-gray-300 dark:border-none dark:bg-gray-700 z-30"
+                  >
+                    <motion.ul
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className=" text-sm text-gray-700 rounded-lg dark:text-gray-200 divide-y divide-gray-200 dark:divide-gray-600 overflow-hidden"
+                      aria-labelledby="new-documnetation-dropdown"
+                    >
+                      <motion.li
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="relative w-full hover:bg-gray-200 py-1 cursor-pointer dark:hover:bg-gray-600 "
+                      >
+                        <div
+                          className={`flex w-full text-start items-center  rounded "}`}
+                          onClick={() => {
+                            openModal("createDocumentation", null);
+                            navigate("/dashboard/create-documentation");
+                          }}
+                        >
+                          <p className="w-full p-2.5 ms-2 text-md font-medium text-gray-900 rounded dark:text-gray-300">
+                            {t("new_documentation")}
+                          </p>
+                        </div>
+                      </motion.li>
+                      <motion.li
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="relative w-full hover:bg-gray-200 py-1 cursor-pointer dark:hover:bg-gray-600 "
+                      >
+                        <div
+                          className={`flex w-full text-start items-center  rounded "}`}
+                          onClick={() => {
+                            openModal("gitBookModal", null);
+                          }}
+                        >
+                          <p className="w-full p-2.5 ms-2 text-md font-medium text-gray-900 rounded dark:text-gray-300">
+                            {t("import_gitbook")}
+                          </p>
+                        </div>
+                      </motion.li>
+                    </motion.ul>
+                  </motion.div>
+                )}
               </li>
             )}
             {!documentation || documentation.length <= 0 ? (
