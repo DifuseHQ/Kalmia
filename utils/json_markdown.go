@@ -109,15 +109,11 @@ func BlockToMarkdown(block Block, depth int, numbering *[]int) string {
 	switch block.Type {
 	case "heading":
 		return HeadingToMarkdown(block)
-	case "numberedListItem":
-		return numberedListItemToMarkdown(block, depth, numbering, styledContent)
-	case "bulletListItem":
-		return bulletListItemToMarkdown(block, depth, styledContent)
 	case "checkListItem":
 		return checkListItemToMarkdown(block, depth, styledContent)
 	case "procode":
 		return ProcodeToMarkdown(block.Props)
-	case "paragraph", "table", "image", "video", "audio", "file", "alert":
+	case "paragraph", "table", "image", "video", "audio", "file", "alert", "numberedListItem", "bulletListItem":
 		return BlockToMDX(block)
 	default:
 		return ""

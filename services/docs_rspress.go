@@ -138,7 +138,7 @@ func (service *DocService) GenerateHead(docID uint, pageId uint, pageType string
 
 		buffer.WriteString("import { Meta } from '@components/Meta';\n")
 
-		componentTypes := []string{"paragraph", "table", "image", "video", "audio", "file", "alert"}
+		componentTypes := []string{"paragraph", "table", "image", "video", "audio", "file", "alert", "numberedListItem", "bulletListItem"}
 		caser := cases.Title(language.English)
 		addedComponents := make(map[string]bool)
 		var contentObjects []map[string]interface{}
@@ -152,6 +152,9 @@ func (service *DocService) GenerateHead(docID uint, pageId uint, pageType string
 				for _, componentType := range componentTypes {
 					if objType == componentType && !addedComponents[componentType] {
 						componentName := caser.String(componentType)
+						if componentName == "Numberedlistitem" {
+							componentName = "NumberedListItem"
+						}
 						buffer.WriteString(fmt.Sprintf(`import { %s } from "@components/%s";%s`, componentName, componentName, "\n"))
 						addedComponents[componentType] = true
 					}
