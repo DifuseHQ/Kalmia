@@ -13,6 +13,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
+	figure "github.com/mangoumbrella/goldmark-figure"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer/html"
@@ -22,6 +23,9 @@ func processMarkdown(content, dir string, cfg *config.Config) (string, error) {
 	gm := goldmark.New(
 		goldmark.WithRendererOptions(html.WithUnsafe()),
 		goldmark.WithParserOptions(parser.WithAutoHeadingID()),
+		goldmark.WithExtensions(
+			figure.Figure,
+		),
 	)
 
 	var output bytes.Buffer
@@ -50,15 +54,28 @@ func processMarkdown(content, dir string, cfg *config.Config) (string, error) {
 
 			absPath := filepath.Join(dir, decodedSrc)
 			file, err := os.Open(absPath)
+			if err != nil {
+				return
+			}
+			defer file.Close()
 
-			if err == nil {
-				mime := utils.GetContentType(absPath)
+			mime := utils.GetContentType(absPath)
 
-				s3URL, err := UploadToStorage(file, filepath.Base(absPath), mime, cfg)
+			s3URL, err := UploadToStorage(file, filepath.Base(absPath), mime, cfg)
+			if err != nil {
+				return
+			}
 
-				if err == nil {
-					s.SetAttr("src", s3URL)
-				}
+			if strings.HasPrefix(mime, "image/") {
+				s.SetAttr("src", s3URL)
+			} else if strings.HasPrefix(mime, "video/") {
+				s.BeforeHtml(fmt.Sprintf(`<video controls src="%s"></video>`, s3URL))
+				s.Remove()
+			} else if strings.HasPrefix(mime, "audio/") {
+				s.BeforeHtml(fmt.Sprintf(`<audio controls src="%s"></audio>`, s3URL))
+				s.Remove()
+			} else {
+				s.SetAttr("src", s3URL)
 			}
 		}
 	})
