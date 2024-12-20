@@ -34,6 +34,7 @@ interface ListItemProps {
 
 const ListItem: React.FC<ListItemProps> = ({ item, depth = 0 }) => {
     const { props, content, children } = item;
+
   
     const containerClasses = [
       getColorClass(props.textColor),
@@ -93,8 +94,17 @@ const ListItem: React.FC<ListItemProps> = ({ item, depth = 0 }) => {
 
     // lets simplify and show only content
     return (
-        <li>
-            {content.map((segment, index) => renderTextSegment(segment, index))}
+      <li className={containerClasses}>
+            <div>
+                {content.map((segment, index) => renderTextSegment(segment, index))}
+            </div>
+            {children.length > 0 && (
+                <ul className={item.type === 'numberedListItem' ? 'kal-list-decimal kal-ml-4 kal-mb-2' : 'kal-list-disc kal-ml-4 kal-mb-2'}>
+                    {children.map((child) => (
+                        <ListItem key={child.id} item={child} depth={depth + 1} />
+                    ))}
+                </ul>
+            )}
         </li>
     )
 };
@@ -111,9 +121,12 @@ export const List: React.FC<ListProps> = ({ rawJson }) => {
 
   for (let i = 0; i < rawJson.length; i++) {
     if (rawJson[i].type === "numberedListItem") {
+      console.log('row number list ',  rawJson[i]);
+      
       type = "kal-list-decimal";
       break;
     } else if (rawJson[i].type === "bulletListItem") {
+      console.log('row Bullet list ',  rawJson[i]);
       type = "kal-list-disc";
       break;
     }
@@ -122,6 +135,8 @@ export const List: React.FC<ListProps> = ({ rawJson }) => {
   if (type === "") return null;
 
   if (type === "kal-list-disc") {
+    console.log('kal-list-disc');
+    
     return (
       <ul className="kal-list-disc">
         {rawJson.map((item) => (
