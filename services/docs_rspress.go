@@ -152,8 +152,8 @@ func (service *DocService) GenerateHead(docID uint, pageId uint, pageType string
 				for _, componentType := range componentTypes {
 					if objType == componentType && !addedComponents[componentType] {
 						componentName := caser.String(componentType)
-						if componentName == "Numberedlistitem" {
-							componentName = "NumberedListItem"
+						if componentType == "numberedListItem" || componentType == "bulletListItem" {
+							componentName = "List"
 						}
 						buffer.WriteString(fmt.Sprintf(`import { %s } from "@components/%s";%s`, componentName, componentName, "\n"))
 						addedComponents[componentType] = true
@@ -549,18 +549,30 @@ func (service *DocService) CraftPage(pageID uint, title string, slug string, con
 	}
 
 	markdown := ""
+	listItems := []Block{}
+
 	for _, block := range blocks {
-		markdown += utils.BlockToMarkdown(block, 0, nil)
+		if block.Type == "numberedListItem" || block.Type == "bulletListItem" {
+			listItems = append(listItems, block)
+		} else {
+			if len(listItems) > 0 {
+				markdown += utils.ListToMDX(listItems)
+				listItems = []Block{}
+			}
+			markdown += utils.BlockToMarkdown(block, 0, nil)
+		}
+	}
+
+	if len(listItems) > 0 {
+		markdown += utils.ListToMDX(listItems)
 	}
 
 	docId, err := service.GetDocIdByPageId(pageID)
-
 	if err != nil {
 		return "", err
 	}
 
 	top, err := service.GenerateHead(docId, pageID, "doc")
-
 	if err != nil {
 		return "", err
 	}

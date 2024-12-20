@@ -9,7 +9,6 @@ import (
 	"golang.org/x/net/html"
 )
 
-// Updated ProcessHTML function
 func ProcessHTML(node ast.Node, source []byte, output *strings.Builder) error {
 	for child := node.FirstChild(); child != nil; child = child.NextSibling() {
 		switch n := child.(type) {
@@ -39,7 +38,6 @@ func ProcessHTML(node ast.Node, source []byte, output *strings.Builder) error {
 	return nil
 }
 
-// Extract HTML attributes for specific elements
 func ExtractAssetFromHTML(content string) (string, string, string, bool) {
 	doc, err := html.Parse(strings.NewReader(content))
 	if err != nil {
