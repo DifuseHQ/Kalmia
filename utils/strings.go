@@ -134,6 +134,7 @@ func GetContentType(filename string) string {
 	if contentType, ok := contentTypes[ext]; ok {
 		return contentType
 	}
+
 	return "application/octet-stream"
 }
 

@@ -507,7 +507,7 @@ func TestGetContentType(t *testing.T) {
 		{"photo.jpeg", "image/jpeg"},
 		{"animation.gif", "image/gif"},
 		{"icon.svg", "image/svg+xml"},
-		{"document.pdf", "application/octet-stream"},
+		{"document.pdf", "application/pdf"},
 		{"FILE.HTML", "text/html"},
 		{"path/to/file.CSS", "text/css"},
 	}
