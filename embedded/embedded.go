@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -56,24 +57,24 @@ func CopyEmbeddedFile(path string, to string) error {
 	return err
 }
 
-func CopyEmbeddedFolder(path string, to string) error {
-	dir := filepath.Join("rspress", path)
+func CopyEmbeddedFolder(currentPath string, to string) error {
+	dir := path.Join("rspress", currentPath)
 	entries, err := RspressFS.ReadDir(dir)
 	if err != nil {
 		return err
 	}
 
 	for _, entry := range entries {
-		destPath := filepath.Join(to, entry.Name())
+		destPath := path.Join(to, entry.Name())
 		if entry.IsDir() {
 			if err := os.MkdirAll(destPath, 0755); err != nil {
 				return err
 			}
-			if err := CopyEmbeddedFolder(filepath.Join(path, entry.Name()), destPath); err != nil {
+			if err := CopyEmbeddedFolder(path.Join(currentPath, entry.Name()), destPath); err != nil {
 				return err
 			}
 		} else {
-			if err := CopyEmbeddedFile(filepath.Join(path, entry.Name()), destPath); err != nil {
+			if err := CopyEmbeddedFile(path.Join(currentPath, entry.Name()), destPath); err != nil {
 				return err
 			}
 		}
