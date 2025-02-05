@@ -259,14 +259,47 @@ func (service *DocService) UpdateWriteBuild(docId uint) error {
 	return nil
 }
 
+func checkAndDeleteIfNoLockFile(folderPath string) error {
+	lockFilePath := filepath.Join(folderPath, "pnpm-lock.yaml")
+	if _, err := os.Stat(lockFilePath); os.IsNotExist(err) {
+		fmt.Printf("No lock file found in %s, deleting folder...\n", folderPath)
+		return os.RemoveAll(folderPath)
+	} else if err != nil {
+		return fmt.Errorf("failed to stat lock file: %w", err)
+	}
+	return nil
+}
+
 func (service *DocService) StartupCheck() error {
+	cfg := config.ParsedConfig
+	rsPressPCPath := filepath.Join(cfg.DataPath, "rspress_pc")
+	rsPressDataPath := filepath.Join(cfg.DataPath, "rspress_data")
+
+	if err := checkAndDeleteIfNoLockFile(rsPressPCPath); err != nil {
+		return fmt.Errorf("failed to check rspress_pc folder: %w", err)
+	}
+
+	entries, err := os.ReadDir(rsPressDataPath)
+	if err != nil {
+		return fmt.Errorf("failed to read rspress_data directory: %w", err)
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			subfolderPath := filepath.Join(rsPressDataPath, entry.Name())
+			if err := checkAndDeleteIfNoLockFile(subfolderPath); err != nil {
+				return fmt.Errorf("failed to check folder %s: %w", subfolderPath, err)
+			}
+		}
+	}
+
 	logger.Debug("Starting DocService.StartupCheck")
 	npmPinged := utils.NpmPing()
 	if !npmPinged {
 		logger.Panic("Startup check failed for NPM, exiting...")
 	}
 
-	err := service.InitRsPressPackageCache()
+	err = service.InitRsPressPackageCache()
 
 	if err != nil {
 		logger.Fatal("Initializing Package Cache Failed...", zap.Error(err))
@@ -309,23 +342,14 @@ func (service *DocService) InitRsPressPackageCache() error {
 		}
 	}
 
-	err := utils.RunNpmCommand(packageCachePath, "cache", "verify")
-
-	if err != nil {
-		return err
-	}
-
-	err = embedded.CopyInitFiles(packageCachePath)
+	err := embedded.CopyInitFiles(packageCachePath)
 	if err != nil {
 		return err
 	}
 
 	installStart := time.Now()
 
-	err = utils.RunNpmCommand(packageCachePath, "install",
-		"--no-audit",
-		"--progress=false",
-		"--no-fund")
+	err = utils.RunNpmCommand(packageCachePath, "install")
 
 	if err != nil {
 		return err
@@ -358,10 +382,10 @@ func (service *DocService) InitRsPress(docId uint) error {
 	npmPing := utils.NpmPing()
 
 	if !npmPing {
-		return fmt.Errorf("NPM ping failed for %d initialization", docId)
+		return fmt.Errorf("NPM/PNPM ping failed for %d initialization", docId)
 	}
 
-	err = utils.RunNpmCommand(docPath, "install", "--no-audit", "--progress=false", "--no-fund")
+	err = utils.RunNpmCommand(docPath, "install")
 
 	if err != nil {
 		return err
@@ -1098,10 +1122,10 @@ func (service *DocService) RsPressBuild(docId uint, rebuild bool) error {
 
 		npmPinged := utils.NpmPing()
 		if !npmPinged {
-			return fmt.Errorf("npm_ping_failed")
+			return fmt.Errorf("npm_or_ping_failed")
 		}
 
-		err := utils.RunNpmCommand(docPath, "install", "--no-audit", "--progress=false", "--no-fund")
+		err := utils.RunNpmCommand(docPath, "install")
 		if err != nil {
 			return err
 		}

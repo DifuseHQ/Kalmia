@@ -23,7 +23,7 @@ func RunNpmCommand(dir string, command string, args ...string) error {
 	var err error
 
 	for i := 0; i < maxRetries; i++ {
-		cmd := exec.Command("npm", fullCommand...)
+		cmd := exec.Command("pnpm", fullCommand...)
 		cmd.Dir = dir
 
 		output, err = cmd.CombinedOutput()
@@ -89,6 +89,15 @@ func NpmPing() bool {
 
 	for i := 0; i < maxRetries; i++ {
 		cmd := exec.Command("npm", "ping")
+		output, err := cmd.CombinedOutput()
+
+		if strings.Contains(string(output), "PONG") && err == nil {
+			return true
+		}
+	}
+
+	for i := 0; i < maxRetries; i++ {
+		cmd := exec.Command("pnpm", "ping")
 		output, err := cmd.CombinedOutput()
 
 		if strings.Contains(string(output), "PONG") && err == nil {
