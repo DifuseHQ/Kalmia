@@ -8,7 +8,7 @@ import (
 func TestRunNpmCommand(t *testing.T) {
 	tempDir := createTempTestDir(t)
 
-	initCmd := RunNpmCommand(tempDir, "init", "-y")
+	initCmd := RunNpmCommand(tempDir, "init")
 	if initCmd != nil {
 		t.Fatalf("Failed to initialize npm project: %v", initCmd)
 	}
