@@ -117,6 +117,16 @@ var contentTypes = map[string]string{
 	".jpeg": "image/jpeg",
 	".gif":  "image/gif",
 	".svg":  "image/svg+xml",
+	".mp4":  "video/mp4",
+	".webm": "video/webm",
+	".ogg":  "video/ogg",
+	".mp3":  "audio/mpeg",
+	".wav":  "audio/wav",
+	".pdf":  "application/pdf",
+	".doc":  "application/msword",
+	".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+	".xls":  "application/vnd.ms-excel",
+	".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 }
 
 func GetContentType(filename string) string {
@@ -124,6 +134,7 @@ func GetContentType(filename string) string {
 	if contentType, ok := contentTypes[ext]; ok {
 		return contentType
 	}
+
 	return "application/octet-stream"
 }
 
@@ -158,4 +169,17 @@ func PrettyJSON(input string) (string, error) {
 		return "", fmt.Errorf("error formatting JSON: %v", err)
 	}
 	return prettyJSON.String(), nil
+}
+
+func MarshalWithoutEscape(input map[string]interface{}) (string, error) {
+	var buffer bytes.Buffer
+	encoder := json.NewEncoder(&buffer)
+	encoder.SetEscapeHTML(false) // Prevent escaping HTML characters
+
+	err := encoder.Encode(input)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal JSON: %v", err)
+	}
+
+	return buffer.String(), nil
 }

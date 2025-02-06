@@ -138,17 +138,26 @@ func (service *DocService) GenerateHead(docID uint, pageId uint, pageType string
 
 		buffer.WriteString("import { Meta } from '@components/Meta';\n")
 
-		componentTypes := []string{"paragraph", "table", "image", "video", "audio", "file", "alert"}
+		componentTypes := []string{"paragraph", "table", "image", "video", "audio", "file", "alert", "numberedListItem", "bulletListItem"}
 		caser := cases.Title(language.English)
 		addedComponents := make(map[string]bool)
-		contentObjects := strings.Split(strings.Trim(page.Content, "[]"), "},{")
+		var contentObjects []map[string]interface{}
+		err = json.Unmarshal([]byte(page.Content), &contentObjects)
+		if err != nil {
+			return "", err
+		}
 
 		for _, obj := range contentObjects {
-			for _, componentType := range componentTypes {
-				if strings.Contains(obj, fmt.Sprintf(`"type":"%s"`, componentType)) && !addedComponents[componentType] {
-					componentName := caser.String(componentType)
-					buffer.WriteString(fmt.Sprintf(`import { %s } from "@components/%s";%s`, componentName, componentName, "\n"))
-					addedComponents[componentType] = true
+			if objType, ok := obj["type"].(string); ok {
+				for _, componentType := range componentTypes {
+					if objType == componentType && !addedComponents[componentType] {
+						componentName := caser.String(componentType)
+						if componentType == "numberedListItem" || componentType == "bulletListItem" {
+							componentName = "List"
+						}
+						buffer.WriteString(fmt.Sprintf(`import { %s } from "@components/%s";%s`, componentName, componentName, "\n"))
+						addedComponents[componentType] = true
+					}
 				}
 			}
 		}
@@ -563,18 +572,30 @@ func (service *DocService) CraftPage(pageID uint, title string, slug string, con
 	}
 
 	markdown := ""
+	listItems := []Block{}
+
 	for _, block := range blocks {
-		markdown += utils.BlockToMarkdown(block, 0, nil)
+		if block.Type == "numberedListItem" || block.Type == "bulletListItem" {
+			listItems = append(listItems, block)
+		} else {
+			if len(listItems) > 0 {
+				markdown += utils.ListToMDX(listItems)
+				listItems = []Block{}
+			}
+			markdown += utils.BlockToMarkdown(block, 0, nil)
+		}
+	}
+
+	if len(listItems) > 0 {
+		markdown += utils.ListToMDX(listItems)
 	}
 
 	docId, err := service.GetDocIdByPageId(pageID)
-
 	if err != nil {
 		return "", err
 	}
 
 	top, err := service.GenerateHead(docId, pageID, "doc")
-
 	if err != nil {
 		return "", err
 	}
