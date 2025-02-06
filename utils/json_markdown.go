@@ -109,15 +109,11 @@ func BlockToMarkdown(block Block, depth int, numbering *[]int) string {
 	switch block.Type {
 	case "heading":
 		return HeadingToMarkdown(block)
-	case "numberedListItem":
-		return numberedListItemToMarkdown(block, depth, numbering, styledContent)
-	case "bulletListItem":
-		return bulletListItemToMarkdown(block, depth, styledContent)
 	case "checkListItem":
 		return checkListItemToMarkdown(block, depth, styledContent)
 	case "procode":
 		return ProcodeToMarkdown(block.Props)
-	case "paragraph", "table", "image", "video", "audio", "file", "alert":
+	case "paragraph", "table", "image", "video", "audio", "file", "alert", "numberedListItem", "bulletListItem":
 		return BlockToMDX(block)
 	default:
 		return ""
@@ -156,35 +152,16 @@ func ParagraphToMDX(block Block) string {
 	return componentString + "\n"
 }
 
-func numberedListItemToMarkdown(block Block, depth int, numbering *[]int, content string) string {
-	if numbering == nil {
-		numbering = &[]int{0}
+func ListToMDX(blocks []Block) string {
+	listJson, err := json.Marshal(blocks)
+	if err != nil {
+		return ""
 	}
 
-	if len(*numbering) < depth+1 {
-		*numbering = append(*numbering, 1)
-	} else {
-		(*numbering)[depth]++
-	}
+	jsonString := strings.Replace(string(listJson), "`", "\\`", -1)
+	componentString := fmt.Sprintf(`<List rawJson={%s} />`, jsonString)
 
-	indent := strings.Repeat("    ", depth)
-	markdown := fmt.Sprintf("%s%d. %s\n", indent, (*numbering)[depth], content)
-
-	for _, child := range block.Children {
-		markdown += BlockToMarkdown(child, depth+1, numbering)
-	}
-
-	return markdown
-}
-
-func bulletListItemToMarkdown(block Block, depth int, content string) string {
-	indent := strings.Repeat("    ", depth)
-	markdown := fmt.Sprintf("%s* %s\n", indent, content)
-	for _, child := range block.Children {
-		markdown += BlockToMarkdown(child, depth+1, nil)
-	}
-
-	return markdown
+	return componentString + "\n"
 }
 
 func checkListItemToMarkdown(block Block, depth int, content string) string {

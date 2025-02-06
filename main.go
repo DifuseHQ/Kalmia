@@ -51,6 +51,7 @@ func main() {
 	go func() {
 		startupWg.Wait()
 		for {
+			dS.DeleteJob()
 			dS.BuildJob()
 			time.Sleep(10 * time.Second)
 		}

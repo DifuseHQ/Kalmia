@@ -249,7 +249,7 @@ func (service *DocService) CreateDocumentation(documentation *models.Documentati
 		return fmt.Errorf("failed_to_init_rspress")
 	}
 
-	err = service.AddBuildTrigger(documentation.ID)
+	err = service.AddBuildTrigger(documentation.ID, false)
 
 	if err != nil {
 		return fmt.Errorf("failed_to_add_build_trigger")
@@ -379,7 +379,7 @@ func (service *DocService) EditDocumentation(user models.User, id uint, name, de
 		rootID = *doc.ClonedFrom
 	}
 
-	if err := service.AddBuildTrigger(rootID); err != nil {
+	if err := service.AddBuildTrigger(rootID, false); err != nil {
 		return fmt.Errorf("failed_to_add_build_trigger")
 	}
 
@@ -473,7 +473,7 @@ func (service *DocService) DeleteDocumentation(id uint) error {
 		return fmt.Errorf("failed_to_commit_changes: %v", err)
 	}
 
-	err = service.AddBuildTrigger(parentId)
+	err = service.AddBuildTrigger(parentId, true)
 	if err != nil {
 		return fmt.Errorf("failed_to_add_build_trigger: %v", err)
 	}
@@ -656,7 +656,7 @@ func (service *DocService) CreateDocumentationVersion(originalDocId uint, newVer
 		return err
 	}
 
-	err = service.AddBuildTrigger(originalDocId)
+	err = service.AddBuildTrigger(originalDocId, false)
 
 	if err != nil {
 		return fmt.Errorf("failed_to_add_build_trigger")
@@ -813,7 +813,7 @@ func (service *DocService) BulkReorderPageOrPageGroup(pageOrder []struct {
 		triggerDocId = parentDocId
 	}
 
-	if err := service.AddBuildTrigger(triggerDocId); err != nil {
+	if err := service.AddBuildTrigger(triggerDocId, true); err != nil {
 		return fmt.Errorf("failed to update write build: %w", err)
 	}
 

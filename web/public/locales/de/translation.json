@@ -299,5 +299,7 @@
         "import": "Importieren",
         "upload_markdown_file": "Markdown-Datei hochladen",
         "new_gitbook": "Neues Gitbook",
-        "import_gitbook": "GitBook importieren"
+        "import_gitbook": "GitBook importieren",
+        "gitbook_proccessing_failed": "GitBook-Verarbeitung fehlgeschlagen",
+        "error_creating_documentation": "Fehler beim Erstellen der Dokumentation"
 }
