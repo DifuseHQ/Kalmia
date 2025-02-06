@@ -16,6 +16,13 @@ Kalmia is a Go tool with a web interface for managing RsPress documentation. It 
 - Go >= 1.22
 - Node.js (version v20.15.0 or later)
 - npm (usually comes with Node.js)
+- pnpm (version v10 or later)
+Download pnpm using this command
+```bash
+npm install -g pnpm@latest-10
+
+```
+Refer to pnpm [installation](https://pnpm.io/installation) if facing any trouble installing through `npm`
 - PostgreSQL >= 15 (If you're not using SQLite)
 
 ## Installation
