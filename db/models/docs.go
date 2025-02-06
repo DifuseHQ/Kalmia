@@ -94,6 +94,7 @@ type BuildTriggers struct {
 	ID              uint       `gorm:"primarykey" json:"id"`
 	DocumentationID uint       `json:"documentationId"`
 	Triggered       bool       `json:"triggered"`
+	IsDelete        bool       `json:"isDelete"`
 	CreatedAt       *time.Time `gorm:"autoCreateTime" json:"createdAt"`
 	CompletedAt     *time.Time `json:"completedAt"`
 }
