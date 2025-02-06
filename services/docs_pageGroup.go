@@ -167,9 +167,9 @@ func (service *DocService) CreatePageGroup(group *models.PageGroup) (uint, error
 	parentDocId, _ := service.GetRootParentID(docId)
 
 	if parentDocId == 0 {
-		err = service.AddBuildTrigger(docId)
+		err = service.AddBuildTrigger(docId, false)
 	} else {
-		err = service.AddBuildTrigger(parentDocId)
+		err = service.AddBuildTrigger(parentDocId, false)
 	}
 
 	if err != nil {
@@ -239,9 +239,9 @@ func (service *DocService) EditPageGroup(user models.User, id uint, name string,
 	parentDocId, _ := service.GetRootParentID(docId)
 
 	if parentDocId == 0 {
-		err = service.AddBuildTrigger(docId)
+		err = service.AddBuildTrigger(docId, false)
 	} else {
-		err = service.AddBuildTrigger(parentDocId)
+		err = service.AddBuildTrigger(parentDocId, false)
 	}
 
 	if err != nil {
@@ -316,7 +316,7 @@ func (service *DocService) DeletePageGroup(id uint) error {
 		triggerDocId = parentDocId
 	}
 
-	if err := service.AddBuildTrigger(triggerDocId); err != nil {
+	if err := service.AddBuildTrigger(triggerDocId, false); err != nil {
 		return fmt.Errorf("failed_to_update_write_build: %v", err)
 	}
 
@@ -357,9 +357,9 @@ func (service *DocService) ReorderPageGroup(id uint, order *uint, parentID *uint
 	parentDocId, _ := service.GetRootParentID(docId)
 
 	if parentDocId == 0 {
-		err = service.AddBuildTrigger(docId)
+		err = service.AddBuildTrigger(docId, false)
 	} else {
-		err = service.AddBuildTrigger(parentDocId)
+		err = service.AddBuildTrigger(parentDocId, false)
 	}
 
 	if err != nil {

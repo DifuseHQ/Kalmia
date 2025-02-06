@@ -141,5 +141,8 @@
     "import": "ഇംപോർട്ട്",
     "upload_markdown_file": "മാർക്ക്ഡൗൺ ഫയൽ അപ്ലോഡ് ചെയ്യുക",
     "new_gitbook": "പുതിയ ഗിറ്റ്ബുക്ക്",
-     "import_gitbook": "ഗിറ്റ്ബുക്ക് ഇറക്കുമതി ചെയ്യുക"
+     "import_gitbook": "ഗിറ്റ്ബുക്ക് ഇറക്കുമതി ചെയ്യുക",
+     "gitbook_proccessing_failed": "ഗിറ്റ്ബുക്ക് പ്രോസസ്സിംഗ് പരാജയപ്പെട്ടു",
+     "error_creating_documentation": "ഡോക്യുമെന്റേഷൻ സൃഷ്ടിക്കുന്നതില് പിശക്"
+     
 }

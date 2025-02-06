@@ -138,17 +138,26 @@ func (service *DocService) GenerateHead(docID uint, pageId uint, pageType string
 
 		buffer.WriteString("import { Meta } from '@components/Meta';\n")
 
-		componentTypes := []string{"paragraph", "table", "image", "video", "audio", "file", "alert"}
+		componentTypes := []string{"paragraph", "table", "image", "video", "audio", "file", "alert", "numberedListItem", "bulletListItem"}
 		caser := cases.Title(language.English)
 		addedComponents := make(map[string]bool)
-		contentObjects := strings.Split(strings.Trim(page.Content, "[]"), "},{")
+		var contentObjects []map[string]interface{}
+		err = json.Unmarshal([]byte(page.Content), &contentObjects)
+		if err != nil {
+			return "", err
+		}
 
 		for _, obj := range contentObjects {
-			for _, componentType := range componentTypes {
-				if strings.Contains(obj, fmt.Sprintf(`"type":"%s"`, componentType)) && !addedComponents[componentType] {
-					componentName := caser.String(componentType)
-					buffer.WriteString(fmt.Sprintf(`import { %s } from "@components/%s";%s`, componentName, componentName, "\n"))
-					addedComponents[componentType] = true
+			if objType, ok := obj["type"].(string); ok {
+				for _, componentType := range componentTypes {
+					if objType == componentType && !addedComponents[componentType] {
+						componentName := caser.String(componentType)
+						if componentType == "numberedListItem" || componentType == "bulletListItem" {
+							componentName = "List"
+						}
+						buffer.WriteString(fmt.Sprintf(`import { %s } from "@components/%s";%s`, componentName, componentName, "\n"))
+						addedComponents[componentType] = true
+					}
 				}
 			}
 		}
@@ -262,7 +271,6 @@ func (service *DocService) UpdateWriteBuild(docId uint) error {
 func checkAndDeleteIfNoLockFile(folderPath string) error {
 	lockFilePath := filepath.Join(folderPath, "pnpm-lock.yaml")
 	if _, err := os.Stat(lockFilePath); os.IsNotExist(err) {
-		fmt.Printf("No lock file found in %s, deleting folder...\n", folderPath)
 		return os.RemoveAll(folderPath)
 	} else if err != nil {
 		return fmt.Errorf("failed to stat lock file: %w", err)
@@ -320,7 +328,7 @@ func (service *DocService) StartupCheck() error {
 			return err
 		}
 
-		err = service.AddBuildTrigger(doc.ID)
+		err = service.AddBuildTrigger(doc.ID, false)
 
 		if err != nil {
 			logger.Error("Failed to add build trigger", zap.Uint("doc_id", doc.ID), zap.Error(err))
@@ -564,18 +572,30 @@ func (service *DocService) CraftPage(pageID uint, title string, slug string, con
 	}
 
 	markdown := ""
+	listItems := []Block{}
+
 	for _, block := range blocks {
-		markdown += utils.BlockToMarkdown(block, 0, nil)
+		if block.Type == "numberedListItem" || block.Type == "bulletListItem" {
+			listItems = append(listItems, block)
+		} else {
+			if len(listItems) > 0 {
+				markdown += utils.ListToMDX(listItems)
+				listItems = []Block{}
+			}
+			markdown += utils.BlockToMarkdown(block, 0, nil)
+		}
+	}
+
+	if len(listItems) > 0 {
+		markdown += utils.ListToMDX(listItems)
 	}
 
 	docId, err := service.GetDocIdByPageId(pageID)
-
 	if err != nil {
 		return "", err
 	}
 
 	top, err := service.GenerateHead(docId, pageID, "doc")
-
 	if err != nil {
 		return "", err
 	}
@@ -1261,11 +1281,12 @@ func (service *DocService) GetRsPress(urlPath string) (uint, string, string, boo
 	return doc.ID, docPath, doc.BaseURL, doc.RequireAuth, nil
 }
 
-func (service *DocService) AddBuildTrigger(docId uint) error {
+func (service *DocService) AddBuildTrigger(docId uint, isDelete bool) error {
 	trigger := models.BuildTriggers{
 		DocumentationID: docId,
 		Triggered:       false,
 		CompletedAt:     nil,
+		IsDelete:        isDelete,
 	}
 	if err := service.DB.Create(&trigger).Error; err != nil {
 		return err
@@ -1273,18 +1294,74 @@ func (service *DocService) AddBuildTrigger(docId uint) error {
 	return nil
 }
 
-func (service *DocService) BuildJob() {
+func (service *DocService) DeleteJob() {
 	var triggers []models.BuildTriggers
-	if err := service.DB.Where("triggered = ?", false).Find(&triggers).Error; err != nil {
-		logger.Error("Failed to fetch build triggers", zap.Error(err))
+
+	if err := service.DB.
+		Where("triggered = ? AND is_delete = ?", false, true).
+		Find(&triggers).Error; err != nil {
+		logger.Error("Failed to fetch delete triggers", zap.Error(err))
 		return
 	}
+
 	if len(triggers) == 0 {
 		return
 	}
 
-	triggerGroups := make(map[uint][]models.BuildTriggers)
+	skipSave := false
+
 	for _, trigger := range triggers {
+		docPath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data", "doc_"+strconv.Itoa(int(trigger.DocumentationID)))
+		if utils.PathExists(docPath) {
+			logger.Info("Deleting doc folder", zap.Uint("doc_id", trigger.DocumentationID))
+			err := service.RemoveDocFolder(trigger.DocumentationID)
+
+			if err != nil {
+				logger.Error("(DeleteJob) Failed to remove doc folder", zap.Error(err))
+				skipSave = true
+			}
+		}
+	}
+
+	if !skipSave {
+		for i := range triggers {
+			triggers[i].Triggered = true
+			triggers[i].CompletedAt = utils.TimePtr(time.Now())
+		}
+
+		if err := service.DB.Save(&triggers).Error; err != nil {
+			logger.Error("(DeleteJob) Failed to save delete triggers", zap.Error(err))
+		}
+	}
+}
+
+func (service *DocService) BuildJob() {
+	var triggers []models.BuildTriggers
+
+	if err := service.DB.
+		Where("triggered = ? AND is_delete = ?", false, false).
+		Find(&triggers).Error; err != nil {
+		logger.Error("Failed to fetch build triggers", zap.Error(err))
+		return
+	}
+
+	if len(triggers) == 0 {
+		return
+	}
+
+	validTriggers := triggers[:0]
+	for _, trigger := range triggers {
+		if service.IsDocIdValid(trigger.DocumentationID) {
+			validTriggers = append(validTriggers, trigger)
+		}
+	}
+
+	if len(validTriggers) == 0 {
+		return
+	}
+
+	triggerGroups := make(map[uint][]models.BuildTriggers)
+	for _, trigger := range validTriggers {
 		triggerGroups[trigger.DocumentationID] = append(triggerGroups[trigger.DocumentationID], trigger)
 	}
 

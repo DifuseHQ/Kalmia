@@ -55,9 +55,9 @@ func (service *DocService) CreatePage(page *models.Page) error {
 	parentDocId, _ := service.GetRootParentID(docId)
 
 	if parentDocId == 0 {
-		err = service.AddBuildTrigger(docId)
+		err = service.AddBuildTrigger(docId, false)
 	} else {
-		err = service.AddBuildTrigger(parentDocId)
+		err = service.AddBuildTrigger(parentDocId, false)
 	}
 
 	if err != nil {
@@ -122,9 +122,9 @@ func (service *DocService) EditPage(user models.User, id uint, title, slug, cont
 	parentDocId, _ := service.GetRootParentID(docId)
 
 	if parentDocId == 0 {
-		err = service.AddBuildTrigger(docId)
+		err = service.AddBuildTrigger(docId, false)
 	} else {
-		err = service.AddBuildTrigger(parentDocId)
+		err = service.AddBuildTrigger(parentDocId, false)
 	}
 
 	if err != nil {
@@ -172,9 +172,9 @@ func (service *DocService) DeletePage(id uint) error {
 	parentDocId, _ := service.GetRootParentID(docId)
 
 	if parentDocId == 0 {
-		err = service.AddBuildTrigger(docId)
+		err = service.AddBuildTrigger(docId, false)
 	} else {
-		err = service.AddBuildTrigger(parentDocId)
+		err = service.AddBuildTrigger(parentDocId, false)
 	}
 
 	if err != nil {
@@ -209,9 +209,9 @@ func (service *DocService) ReorderPage(id uint, pageGroupID *uint, order *uint) 
 	parentDocId, _ := service.GetRootParentID(docId)
 
 	if parentDocId == 0 {
-		err = service.AddBuildTrigger(docId)
+		err = service.AddBuildTrigger(docId, false)
 	} else {
-		err = service.AddBuildTrigger(parentDocId)
+		err = service.AddBuildTrigger(parentDocId, false)
 	}
 
 	if err != nil {

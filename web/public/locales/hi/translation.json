@@ -141,5 +141,7 @@
     "import": "आयात",
     "upload_markdown_file": "मार्कडाउन फ़ाइल अपलोड करें",
     "new_gitbook": "नया गिटबुक",
-    "import_gitbook": "गिटबुक आयात करें"
+    "import_gitbook": "गिटबुक आयात करें",
+    "gitbook_proccessing_failed": "गिटबुक प्रोसेसिंग विफल रहा",
+    "error_creating_documentation": "दस्तावेज़ बनाने में त्रुटि"
 }
