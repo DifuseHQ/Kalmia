@@ -121,12 +121,9 @@ export const List: React.FC<ListProps> = ({ rawJson }) => {
 
   for (let i = 0; i < rawJson.length; i++) {
     if (rawJson[i].type === "numberedListItem") {
-      console.log('row number list ',  rawJson[i]);
-      
       type = "kal-list-decimal";
       break;
     } else if (rawJson[i].type === "bulletListItem") {
-      console.log('row Bullet list ',  rawJson[i]);
       type = "kal-list-disc";
       break;
     }

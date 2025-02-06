@@ -5,6 +5,7 @@ go 1.23
 toolchain go1.23.2
 
 require (
+	github.com/PuerkitoBio/goquery v1.10.1
 	github.com/aws/aws-sdk-go v1.55.5
 	github.com/clarketm/json v1.17.1
 	github.com/gabriel-vasile/mimetype v1.4.5
@@ -14,10 +15,13 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.5.1
 	github.com/google/go-github/v39 v39.2.0
 	github.com/gorilla/mux v1.8.1
+	github.com/mangoumbrella/goldmark-figure v1.2.0
 	github.com/stretchr/testify v1.10.0
+	github.com/yuin/goldmark v1.7.8
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.31.0
 	golang.org/x/mod v0.21.0
+	golang.org/x/net v0.33.0
 	golang.org/x/oauth2 v0.22.0
 	golang.org/x/text v0.21.0
 	gorm.io/driver/postgres v1.5.9
@@ -29,6 +33,7 @@ require (
 	dario.cat/mergo v1.0.1 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ProtonMail/go-crypto v1.1.3 // indirect
+	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/cloudflare/circl v1.4.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.3.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -52,7 +57,6 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
-	github.com/mangoumbrella/goldmark-figure v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/ncruces/go-strftime v0.1.9 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
@@ -62,9 +66,7 @@ require (
 	github.com/skeema/knownhosts v1.3.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	github.com/yuin/goldmark v1.7.8 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/tools v0.24.0 // indirect

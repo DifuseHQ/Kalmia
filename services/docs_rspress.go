@@ -1313,6 +1313,7 @@ func (service *DocService) DeleteJob() {
 	for _, trigger := range triggers {
 		docPath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data", "doc_"+strconv.Itoa(int(trigger.DocumentationID)))
 		if utils.PathExists(docPath) {
+			logger.Info("Deleting doc folder", zap.Uint("doc_id", trigger.DocumentationID))
 			err := service.RemoveDocFolder(trigger.DocumentationID)
 
 			if err != nil {
