@@ -4,6 +4,7 @@
   "database": "postgres://user:password@postgres:5432/kalmia?sslmode=disable",
   "logLevel": "debug",
   "assetStorage": "local",
+  "maxFileSize": 10,
   "sessionSecret": "thisisaverysecretkeyhasalotoflengthandeverything!",
   "users": [
     {

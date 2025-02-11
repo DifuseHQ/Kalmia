@@ -146,20 +146,22 @@ func GetUser(authService *services.AuthService, w http.ResponseWriter, r *http.R
 }
 
 func UploadFile(db *gorm.DB, w http.ResponseWriter, r *http.Request, cfg *config.Config) {
-	err := r.ParseMultipartForm(10 << 20)
+	// Capped at MaxFileSize set by the user
+	err := r.ParseMultipartForm(cfg.MaxFileSize << 20)
 	if err != nil {
 		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "failed_to_parse_form"})
 		return
 	}
 
 	file, header, err := r.FormFile("upload")
+
 	if err != nil {
 		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "failed_to_get_file"})
 		return
 	}
 	defer file.Close()
 
-	if header.Size > 10<<20 {
+	if header.Size > cfg.MaxFileSize<<20 {
 		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "file_too_large"})
 		return
 	}

@@ -47,6 +47,7 @@ type Config struct {
 	Database       string         `json:"database"`
 	LogLevel       string         `json:"logLevel"`
 	AssetStorage   string         `json:"assetStorage"`
+	MaxFileSize    int64          `json:"maxFileSize"` // in MB
 	SessionSecret  string         `json:"sessionSecret"`
 	Admins         []User         `json:"users"`
 	DataPath       string         `json:"dataPath"`
@@ -79,6 +80,11 @@ func ParseConfig(path string) *Config {
 
 	if err != nil {
 		panic(err)
+	}
+	// INFO: Adds the default max file size of 10
+	// Added for backwards compatibility
+	if ParsedConfig.MaxFileSize == 0 {
+		ParsedConfig.MaxFileSize = 10
 	}
 
 	return ParsedConfig
