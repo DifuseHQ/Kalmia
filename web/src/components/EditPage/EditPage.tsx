@@ -113,13 +113,13 @@ const EditorWrapper: React.FC<EditorWrapperProps> = React.memo(
                 insertAlert(editor),
                 insertCode(editor),
               ],
-              query
+              query,
             )
           }
         />
       </BlockNoteView>
     );
-  }
+  },
 );
 
 EditorWrapper.displayName = "EditorWrapper";
@@ -206,11 +206,10 @@ export default function EditPage() {
         return {};
       }
     },
-    [t]
+    [t],
   );
 
   useEffect(() => {
-
     const fetchData = async () => {
       const result = await getPage(Number(pageId));
 
@@ -235,7 +234,7 @@ export default function EditPage() {
   }, [pageId, navigate, editor, t, parsedContent]);
 
   useEffect(() => {
-    if (editor && editorContent.length > 0) {  
+    if (editor && editorContent.length > 0) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       //@ts-ignore
       editor.replaceBlocks(editor.document, editorContent);
@@ -282,7 +281,7 @@ export default function EditPage() {
         navigate(`/dashboard/documentation?id=${docId}`);
       } else {
         navigate(
-          `/dashboard/documentation/page-group?id=${docId}&pageGroupId=${pageGroupId}&versionId=${versionID}&version=${version}`
+          `/dashboard/documentation/page-group?id=${docId}&pageGroupId=${pageGroupId}&versionId=${versionID}&version=${version}`,
         );
       }
     }
@@ -381,7 +380,7 @@ export default function EditPage() {
   };
 
   const handleImportFile = async (
-    e: ChangeEvent<HTMLInputElement>
+    e: ChangeEvent<HTMLInputElement>,
   ): Promise<void> => {
     const files = e.target.files;
 

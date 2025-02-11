@@ -102,7 +102,7 @@ func TestUploadToStorage(t *testing.T) {
 			mockS3.On("PutObject", mock.AnythingOfType("*s3.PutObjectInput")).Return(&s3.PutObjectOutput{}, tt.mockError)
 
 			file := bytes.NewReader([]byte(tt.fileContent))
-			url, err := UploadToStorage(file, tt.originalFilename, tt.contentType, testConfig)
+			url, err := UploadToS3Storage(file, tt.originalFilename, tt.contentType, testConfig)
 
 			if tt.mockError != nil {
 				assert.Error(t, err)
