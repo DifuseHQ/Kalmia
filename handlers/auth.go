@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 
 	"git.difuse.io/Difuse/kalmia/config"
 	"git.difuse.io/Difuse/kalmia/services"
@@ -17,6 +18,7 @@ import (
 	"golang.org/x/oauth2/microsoft"
 	"gorm.io/gorm"
 
+	"github.com/gabriel-vasile/mimetype"
 	githubClient "github.com/google/go-github/v39/github"
 )
 
@@ -170,10 +172,30 @@ func UploadFile(db *gorm.DB, w http.ResponseWriter, r *http.Request, cfg *config
 
 	contentType := http.DetectContentType(fileBytes)
 
-	fileURL, err := services.UploadToStorage(bytes.NewReader(fileBytes), header.Filename, contentType, cfg)
+	fmt.Println("Request URI: ", r.RequestURI)
+	reqUrl, err := url.ParseRequestURI(r.Referer())
 	if err != nil {
-		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "failed_to_upload_file"})
-		return
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "failed_to_upload_file\nERROR: Invalid referrer URI"})
+	}
+	urlQuery := reqUrl.Query()
+	fileData := services.UploadedFileData{
+		OriginalName:  header.Filename,
+		MimeType:      mimetype.Detect(fileBytes),
+		DocId:         urlQuery.Get("id"),
+		PageId:        urlQuery.Get("pageId"),
+		VersionId:     urlQuery.Get("versionId"),
+		VersionNumber: urlQuery.Get("version"),
+	}
+	var fileURL string
+
+	if cfg.AssetStorage == "local" {
+		fileURL, err = services.SaveToLocal(fileBytes, &fileData)
+	} else {
+		fileURL, err = services.UploadToS3Storage(bytes.NewReader(fileBytes), header.Filename, contentType, cfg)
+		if err != nil {
+			SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "failed_to_upload_file"})
+			return
+		}
 	}
 
 	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "file_uploaded", "file": fileURL})

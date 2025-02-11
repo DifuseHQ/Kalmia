@@ -16,7 +16,8 @@ import (
 	"github.com/gabriel-vasile/mimetype"
 )
 
-func UploadToStorage(file io.Reader, originalFilename, contentType string, parsedConfig *config.Config) (string, error) {
+// TODO: update the parameters to accept services.UploadedFileData{}
+func UploadToS3Storage(file io.Reader, originalFilename, contentType string, parsedConfig *config.Config) (string, error) {
 	sess, err := session.NewSession(&aws.Config{
 		Endpoint:         aws.String(parsedConfig.S3.Endpoint),
 		Region:           aws.String(parsedConfig.S3.Region),
@@ -36,6 +37,7 @@ func UploadToStorage(file io.Reader, originalFilename, contentType string, parse
 
 	ext := filepath.Ext(originalFilename)
 	if ext == "" {
+		// TODO: update this part to detect mimetype once on UploadFile()
 		detectedMIME := mimetype.Detect(fileBytes)
 		ext = detectedMIME.Extension()
 		if contentType == "" {

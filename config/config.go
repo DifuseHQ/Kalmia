@@ -46,6 +46,7 @@ type Config struct {
 	Port           int            `json:"port"`
 	Database       string         `json:"database"`
 	LogLevel       string         `json:"logLevel"`
+	AssetStorage   string         `json:"assetStorage"`
 	SessionSecret  string         `json:"sessionSecret"`
 	Admins         []User         `json:"users"`
 	DataPath       string         `json:"dataPath"`
