@@ -299,7 +299,7 @@
         "import": "Import",
         "upload_markdown_file":"Upload Markdown File",
         "new_gitbook":"New Gitbook",
-        "import_gitbook":"Import Gitbook",
+        "import_gitbook":"Import Gitbook (Beta)",
         "gitbook_proccessing_failed":"Gitbook proccessing failed",
         "error_creating_documentation":"Error creating documentation"
 }
