@@ -61,6 +61,11 @@ func main() {
 	r := mux.NewRouter()
 	kRouter := r.PathPrefix("/kal-api").Subrouter()
 
+	// INFO: files could be fetched without authentication
+	fileRouter := kRouter.PathPrefix("/file").Subrouter()
+
+	fileRouter.HandleFunc("/get", func(w http.ResponseWriter, r *http.Request) { handlers.GetFile(d, w, r, config.ParsedConfig) }).Methods("GET")
+
 	/* Health endpoints */
 	healthRouter := kRouter.PathPrefix("/health").Subrouter()
 	healthRouter.HandleFunc("/ping", handlers.HealthPing).Methods("GET")

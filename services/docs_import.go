@@ -61,7 +61,7 @@ func processMarkdown(content, dir string, cfg *config.Config) (string, error) {
 
 			mime := utils.GetContentType(absPath)
 
-			s3URL, err := UploadToStorage(file, filepath.Base(absPath), mime, cfg)
+			s3URL, err := UploadToS3Storage(file, filepath.Base(absPath), mime, cfg)
 			if err != nil {
 				return
 			}
