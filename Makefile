@@ -1,7 +1,7 @@
 .PHONY: all deps test build clean build-amd64-linux build-arm64-linux build-web
 
 APP_NAME=kalmia
-APP_VERSION=0.0.2
+APP_VERSION=0.1.0
 TEST_DIRS := $(shell find . -name '*_test.go' -exec dirname {} \; | sort -u)
 
 all: deps build

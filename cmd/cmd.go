@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-const Version = "0.0.2"
+const Version = "0.1.0"
 
 func AsciiArt() {
 	fmt.Println(" _   __      _           _")
@@ -15,7 +15,7 @@ func AsciiArt() {
 	fmt.Println("|    \\ / _` | | '_ ` _ \\| |/ _` |")
 	fmt.Println("| |\\  \\ (_| | | | | | | | | (_| |")
 	fmt.Println("\\_| \\_/\\__,_|_|_| |_| |_|_|\\__,_|")
-	fmt.Println(fmt.Sprintf("\t\t            v%s\n", Version))
+	fmt.Printf("\t\t            v%s\n", Version)
 }
 
 func ParseFlags() string {
