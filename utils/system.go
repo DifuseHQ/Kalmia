@@ -88,16 +88,7 @@ func NpmPing() bool {
 	const maxRetries = 3
 
 	for i := 0; i < maxRetries; i++ {
-		cmd := exec.Command("npm", "ping")
-		output, err := cmd.CombinedOutput()
-
-		if strings.Contains(string(output), "PONG") && err == nil {
-			return true
-		}
-	}
-
-	for i := 0; i < maxRetries; i++ {
-		cmd := exec.Command("pnpm", "ping")
+		cmd := exec.Command("/usr/local/bin/pnpm", "ping")
 		output, err := cmd.CombinedOutput()
 
 		if strings.Contains(string(output), "PONG") && err == nil {
