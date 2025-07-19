@@ -61,5 +61,6 @@ clean:
 	rm -rf dist
 
 docker-clean:
-	docker rm kalmia-postgres-1 kalmia-app-1 && docker rmi kalmia-app
+	sudo rm -rf ./postgres_data ./minio_data
+	docker rm kalmia-postgres-1 kalmia-app-1 kalmia-minio-1 kalmia-createbuckets-1 && docker rmi kalmia-app
 

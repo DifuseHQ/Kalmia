@@ -30,3 +30,29 @@ services:
       interval: 10s
       timeout: 10s
       retries: 10
+
+  minio:
+    image: minio/minio:latest
+    ports:
+      - "9000:9000" # S3 API port
+      - "9001:9001" # MinIO Console
+    volumes:
+      - ./minio_data:/data
+    environment:
+      MINIO_ROOT_USER: ${KAL_MINIO_ROOT_USER:-minio_kalmia_user}
+      MINIO_ROOT_PASSWORD: ${KAL_MINIO_ROOT_PASSWORD:-minio_kalmia_password}
+      MINIO_BUCKETS: "uploads"
+    command: server --console-address ":9001" /data
+
+  createbuckets:
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      mc alias set local http://minio:9000 minio_kalmia_user minio_kalmia_password;
+      mc mb local/uploads;
+      mc anonymous set download local/uploads;
+      exit 0;
+      "

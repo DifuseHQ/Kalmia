@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 
 	"git.difuse.io/Difuse/kalmia/config"
 	"git.difuse.io/Difuse/kalmia/services"
@@ -18,13 +17,14 @@ import (
 	"golang.org/x/oauth2/microsoft"
 	"gorm.io/gorm"
 
-	"github.com/gabriel-vasile/mimetype"
 	githubClient "github.com/google/go-github/v39/github"
 )
 
-var githubOauthConfig *oauth2.Config
-var microsoftOauthConfig *oauth2.Config
-var googleOAuthConfig *oauth2.Config
+var (
+	githubOauthConfig    *oauth2.Config
+	microsoftOauthConfig *oauth2.Config
+	googleOAuthConfig    *oauth2.Config
+)
 
 func CreateUser(authService *services.AuthService, w http.ResponseWriter, r *http.Request) {
 	type Request struct {
@@ -36,13 +36,11 @@ func CreateUser(authService *services.AuthService, w http.ResponseWriter, r *htt
 	}
 
 	req, err := ValidateRequest[Request](w, r)
-
 	if err != nil {
 		return
 	}
 
 	err = authService.CreateUser(req.Username, req.Email, req.Password, req.Admin, req.Permissions)
-
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error(), "error": err.Error()})
 		return
@@ -63,13 +61,11 @@ func EditUser(authService *services.AuthService, w http.ResponseWriter, r *http.
 	}
 
 	req, err := ValidateRequest[Request](w, r)
-
 	if err != nil {
 		return
 	}
 
 	err = authService.EditUser(req.ID, req.Username, req.Email, req.Password, req.Photo, req.Admin, req.Permissions)
-
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})
 		return
@@ -84,13 +80,11 @@ func DeleteUser(authService *services.AuthService, w http.ResponseWriter, r *htt
 	}
 
 	req, err := ValidateRequest[Request](w, r)
-
 	if err != nil {
 		return
 	}
 
 	err = authService.DeleteUser(req.Username)
-
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})
 		return
@@ -99,7 +93,6 @@ func DeleteUser(authService *services.AuthService, w http.ResponseWriter, r *htt
 
 func GetUsers(authService *services.AuthService, w http.ResponseWriter, r *http.Request) {
 	users, err := authService.GetUsers()
-
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})
 		return
@@ -114,13 +107,11 @@ func GetUser(authService *services.AuthService, w http.ResponseWriter, r *http.R
 	}
 
 	req, err := ValidateRequest[Request](w, r)
-
 	if err != nil {
 		return
 	}
 
 	token, err := GetTokenFromHeader(r)
-
 	if err != nil {
 		return
 	}
@@ -136,7 +127,6 @@ func GetUser(authService *services.AuthService, w http.ResponseWriter, r *http.R
 	}
 
 	user, err := authService.GetUser(req.Id)
-
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})
 		return
@@ -154,7 +144,6 @@ func UploadFile(db *gorm.DB, w http.ResponseWriter, r *http.Request, cfg *config
 	}
 
 	file, header, err := r.FormFile("upload")
-
 	if err != nil {
 		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "failed_to_get_file"})
 		return
@@ -175,31 +164,16 @@ func UploadFile(db *gorm.DB, w http.ResponseWriter, r *http.Request, cfg *config
 	contentType := http.DetectContentType(fileBytes)
 
 	fmt.Println("Request URI: ", r.RequestURI)
-	reqUrl, err := url.ParseRequestURI(r.Referer())
+
+	fileURL, err := services.UploadToS3Storage(bytes.NewReader(fileBytes), header.Filename, contentType, cfg)
 	if err != nil {
-		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "failed_to_upload_file\nERROR: Invalid referrer URI"})
-	}
-	urlQuery := reqUrl.Query()
-	fileData := services.UploadedFileData{
-		OriginalName:  header.Filename,
-		MimeType:      mimetype.Detect(fileBytes),
-		DocId:         urlQuery.Get("id"),
-		PageId:        urlQuery.Get("pageId"),
-		VersionId:     urlQuery.Get("versionId"),
-		VersionNumber: urlQuery.Get("version"),
-	}
-	var fileURL string
 
-	if cfg.AssetStorage == "local" {
-		fileURL, err = services.SaveToLocal(fileBytes, &fileData)
-	} else {
-		fileURL, err = services.UploadToS3Storage(bytes.NewReader(fileBytes), header.Filename, contentType, cfg)
-		if err != nil {
-			SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "failed_to_upload_file"})
-			return
-		}
+		fmt.Println(fmt.Errorf("ERROR uploading: %v", err))
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "failed_to_upload_file"})
+		return
 	}
 
+	fmt.Println("File URL: ", fileURL)
 	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "file_uploaded", "file": fileURL})
 }
 
@@ -210,13 +184,11 @@ func CreateJWT(authService *services.AuthService, w http.ResponseWriter, r *http
 	}
 
 	req, err := ValidateRequest[Request](w, r)
-
 	if err != nil {
 		return
 	}
 
 	tokenDetails, err := authService.CreateJWT(req.Username, req.Password)
-
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})
 		return
@@ -229,14 +201,12 @@ func CreateJWT(authService *services.AuthService, w http.ResponseWriter, r *http
 
 func RefreshJWT(authService *services.AuthService, w http.ResponseWriter, r *http.Request) {
 	headerToken, err := GetTokenFromHeader(r)
-
 	if err != nil {
 		SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"status": "error", "message": "invalid_request"})
 		return
 	}
 
 	token, err := authService.RefreshJWT(headerToken)
-
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})
 		return
@@ -247,14 +217,12 @@ func RefreshJWT(authService *services.AuthService, w http.ResponseWriter, r *htt
 
 func ValidateJWT(authService *services.AuthService, w http.ResponseWriter, r *http.Request) {
 	token, err := GetTokenFromHeader(r)
-
 	if err != nil {
 		SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"status": "error", "message": "invalid_request"})
 		return
 	}
 
 	tokenDetails, err := authService.ValidateJWT(token)
-
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})
 		return
@@ -267,14 +235,12 @@ func ValidateJWT(authService *services.AuthService, w http.ResponseWriter, r *ht
 
 func RevokeJWT(authService *services.AuthService, w http.ResponseWriter, r *http.Request) {
 	token, err := GetTokenFromHeader(r)
-
 	if err != nil {
 		SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"status": "error", "message": "invalid_request"})
 		return
 	}
 
 	err = authService.RevokeJWT(token)
-
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})
 		return

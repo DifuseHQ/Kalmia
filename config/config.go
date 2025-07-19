@@ -61,7 +61,6 @@ var ParsedConfig *Config
 
 func ParseConfig(path string) *Config {
 	file, err := os.Open(path)
-
 	if err != nil {
 		panic(err)
 	}
@@ -71,16 +70,19 @@ func ParseConfig(path string) *Config {
 	decoder := json.NewDecoder(file)
 	ParsedConfig = &Config{}
 	err = decoder.Decode(ParsedConfig)
-
 	if err != nil {
 		panic(err)
 	}
 
 	err = SetupDataPath()
-
 	if err != nil {
 		panic(err)
 	}
+
+	if ParsedConfig.AssetStorage == "local" {
+		SetupLocalS3Storage()
+	}
+
 	// INFO: Adds the default max file size of 10
 	// Added for backwards compatibility
 	if ParsedConfig.MaxFileSize == 0 {
@@ -110,4 +112,23 @@ func SetupDataPath() error {
 	}
 
 	return nil
+}
+
+func SetupLocalS3Storage() {
+	ParsedConfig.S3.Endpoint = "http://minio:9000"
+	envAccessKeyID := os.Getenv("KAL_MINIO_ROOT_USER")
+	envSecretAccessKey := os.Getenv("KAL_MINIO_ROOT_PASSWORD")
+	if len(envAccessKeyID) == 0 {
+		envAccessKeyID = "minio_kalmia_user"
+	}
+	if len(envSecretAccessKey) == 0 {
+		envSecretAccessKey = "minio_kalmia_password"
+	}
+	ParsedConfig.S3.AccessKeyId = envAccessKeyID
+	ParsedConfig.S3.SecretAccessKey = envSecretAccessKey
+	ParsedConfig.S3.Bucket = "uploads"
+	ParsedConfig.S3.UsePathStyle = true
+	ParsedConfig.S3.Region = "auto"
+	// TODO: change this to be something different/dynamic which could be fetched as per config
+	ParsedConfig.S3.PublicUrlFormat = "http://localhost:9000/%s/%s"
 }

@@ -62,7 +62,7 @@ func UploadToS3Storage(file io.Reader, originalFilename, contentType string, par
 		return "", fmt.Errorf("error uploading to S3-compatible storage: %v", err)
 	}
 
-	publicURL := fmt.Sprintf(parsedConfig.S3.PublicUrlFormat, filename)
+	publicURL := fmt.Sprintf(parsedConfig.S3.PublicUrlFormat, "uploads", filename)
 	return publicURL, nil
 }
 
