@@ -115,7 +115,11 @@ func SetupDataPath() error {
 }
 
 func SetupLocalS3Storage() {
-	ParsedConfig.S3.Endpoint = "http://minio:9000"
+	if ParsedConfig.Environment == "dev" {
+		ParsedConfig.S3.Endpoint = "http://localhost:9000"
+	} else {
+		ParsedConfig.S3.Endpoint = "http://minio:9000"
+	}
 	envAccessKeyID := os.Getenv("KAL_MINIO_ROOT_USER")
 	envSecretAccessKey := os.Getenv("KAL_MINIO_ROOT_PASSWORD")
 	if len(envAccessKeyID) == 0 {

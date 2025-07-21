@@ -62,7 +62,13 @@ func UploadToS3Storage(file io.Reader, originalFilename, contentType string, par
 		return "", fmt.Errorf("error uploading to S3-compatible storage: %v", err)
 	}
 
-	publicURL := fmt.Sprintf(parsedConfig.S3.PublicUrlFormat, "uploads", filename)
+	var publicURL string
+	if parsedConfig.AssetStorage == "local" {
+		publicURL = fmt.Sprintf("/kal-api/file/get/%s", filename)
+	} else {
+		publicURL = fmt.Sprintf(parsedConfig.S3.PublicUrlFormat, "uploads", filename)
+	}
+
 	return publicURL, nil
 }
 

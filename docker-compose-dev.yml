@@ -1,0 +1,58 @@
+services:
+  # app:
+  #   # build:
+  #   #   context: .
+  #   #   dockerfile: Dockerfile
+  #   ports:
+  #     - "${PORT:-2727}:2727"
+  #   volumes:
+  #     - ./config.json:/app/config.json
+  #   environment:
+  #     - DATABASE_TYPE=postgres
+  #     - DATABASE_HOST=postgres
+  #     - DATABASE_USER=${POSTGRES_USER:-user}
+  #     - DATABASE_NAME=kalmia
+  #     - DATABASE_PASSWORD=${POSTGRES_PASSWORD:-password}
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: kalmia
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-user} -d kalmia"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    ports:
+      - "9000:9000" # S3 API port
+      - "9001:9001" # MinIO Console
+    volumes:
+      - ./minio_data:/data
+    environment:
+      MINIO_ROOT_USER: ${KAL_MINIO_ROOT_USER:-minio_kalmia_user}
+      MINIO_ROOT_PASSWORD: ${KAL_MINIO_ROOT_PASSWORD:-minio_kalmia_password}
+      MINIO_BUCKETS: "uploads"
+    command: server --console-address ":9001" /data
+
+  createbuckets:
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      mc alias set local http://minio:9000 minio_kalmia_user minio_kalmia_password;
+      mc mb local/uploads;
+      mc anonymous set download local/uploads;
+      exit 0;
+      "

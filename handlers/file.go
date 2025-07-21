@@ -1,23 +1,25 @@
 package handlers
 
 import (
+	"bytes"
 	"io"
 	"net/http"
-	"path"
+	"time"
 
 	"git.difuse.io/Difuse/kalmia/config"
-	"git.difuse.io/Difuse/kalmia/services"
+	"git.difuse.io/Difuse/kalmia/logger"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/gabriel-vasile/mimetype"
+	"github.com/gorilla/mux"
 	"gorm.io/gorm"
 )
 
 func GetFile(service *gorm.DB, w http.ResponseWriter, r *http.Request, cfg *config.Config) {
-	urlQuery := r.URL.Query()
-	filename := urlQuery.Get("filename")
+	vars := mux.Vars(r)
+	filename := vars["filename"]
+
 	if len(filename) == 0 {
 		SendJSONResponse(http.StatusNotFound, w, map[string]string{"status": "error", "message": "empty filename"})
 		return
@@ -37,8 +39,11 @@ func GetFile(service *gorm.DB, w http.ResponseWriter, r *http.Request, cfg *conf
 	// create a new s3 client
 	svc := s3.New(sess)
 
+	// fileKey := strings.Split(strings.Split(filename, "-")[1], ".")[0]
+
 	result, err := svc.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String("uploads"),
+		Key:    aws.String(filename),
 	})
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "error getting object: " + err.Error()})
@@ -53,39 +58,13 @@ func GetFile(service *gorm.DB, w http.ResponseWriter, r *http.Request, cfg *conf
 		return
 	}
 
-	deletectedMime := mimetype.Detect(body)
-	ext := deletectedMime.Extension()
-	_ = ext
-}
+	http.ServeContent(w, r, filename, time.Now(), bytes.NewReader(body))
+	logger.Info("Successfully sent object file: " + filename)
 
-// func GetFile(service *gorm.DB, w http.ResponseWriter, r *http.Request, cfg *config.Config) {
-// 	q := r.URL.Query()
-//
-// 	fileData := services.UploadedFileData{
-// 		OriginalName:  q.Get("name"),
-// 		DocId:         q.Get("id"),
-// 		PageId:        q.Get("pageId"),
-// 		VersionId:     q.Get("versionId"),
-// 		VersionNumber: q.Get("version"),
-// 	}
-// 	dataPath := config.ParsedConfig.DataPath
-//
-// 	generatedFilePath := generateFilePath(&fileData, dataPath)
-//
-// 	_, err := os.Open(generatedFilePath)
-// 	if err != nil {
-// 		SendJSONResponse(http.StatusNotFound, w, map[string]string{"status": "error", "message": "File not found: " + err.Error()})
-// 		return
-// 	}
-//
-// 	http.ServeFile(w, r, generatedFilePath)
-// }
-
-func generateFilePath(fileData *services.UploadedFileData, dataPath string) string {
-	return path.Join(
-		dataPath,
-		"rspress_data",
-		"doc_"+fileData.DocId,
-		"assets",
-		fileData.OriginalName)
+	// INFO: use this if the above doesn't work
+	// deletectedMime := mimetype.Detect(body)
+	// w.Header().Set("Content-Disposition", "attachment; filename="+filename)
+	// w.Header().Set("Content-Type", deletectedMime.String())
+	// w.WriteHeader(http.StatusOK)
+	// w.Write(body)
 }

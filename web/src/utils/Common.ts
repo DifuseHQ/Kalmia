@@ -235,7 +235,7 @@ export function getClosestVersion(
       if (
         !closest ||
         timeDifference <
-          Math.abs(now.getTime() - new Date(closest.createdAt).getTime())
+        Math.abs(now.getTime() - new Date(closest.createdAt).getTime())
       ) {
         return {
           id: obj.id,
@@ -260,10 +260,10 @@ export function getVersion(
 
   return matchingObj
     ? {
-        id: matchingObj.id,
-        version: matchingObj.version,
-        createdAt: matchingObj.createdAt,
-      }
+      id: matchingObj.id,
+      version: matchingObj.version,
+      createdAt: matchingObj.createdAt,
+    }
     : null;
 }
 
