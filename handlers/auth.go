@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"git.difuse.io/Difuse/kalmia/config"
 	"git.difuse.io/Difuse/kalmia/services"
@@ -175,6 +176,54 @@ func UploadFile(db *gorm.DB, w http.ResponseWriter, r *http.Request, cfg *config
 
 	fmt.Println("File URL: ", fileURL)
 	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "file_uploaded", "file": fileURL})
+}
+
+func UploadAssetsFile(db *gorm.DB, w http.ResponseWriter, r *http.Request, cfg *config.Config) {
+	// Capped at MaxFileSize set by the user
+	err := r.ParseMultipartForm(cfg.MaxFileSize << 20)
+	if err != nil {
+		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "failed_to_parse_form"})
+		return
+	}
+
+	uploadTagName := r.FormValue("upload_tag_name")
+
+	file, header, err := r.FormFile(uploadTagName)
+	if err != nil {
+		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "failed_to_get_file"})
+		return
+	}
+	defer file.Close()
+
+	if header.Size > cfg.MaxFileSize<<20 {
+		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "file_too_large"})
+		return
+	}
+
+	fileBytes, err := io.ReadAll(file)
+	if err != nil {
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "failed_to_read_file"})
+		return
+	}
+
+	contentType := http.DetectContentType(fileBytes)
+
+	fmt.Println("Request URI: ", r.RequestURI)
+
+	fileURL, err := services.UploadToS3Storage(bytes.NewReader(fileBytes), header.Filename, contentType, cfg)
+	if err != nil {
+
+		fmt.Println(fmt.Errorf("ERROR uploading: %v", err))
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": "failed_to_upload_file"})
+		return
+	}
+
+	// strip file name from the bucket url and we will only need that here
+	filePathSlices := strings.Split(fileURL, "/")
+
+	bucketFileName := filePathSlices[len(filePathSlices)-1]
+
+	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "file_uploaded", "file": bucketFileName})
 }
 
 func CreateJWT(authService *services.AuthService, w http.ResponseWriter, r *http.Request) {

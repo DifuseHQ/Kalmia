@@ -36,7 +36,6 @@ func CopyEmbeddedFile(path string, to string) error {
 	}
 
 	embeddedHash, err := utils.FileHash(bytes.NewReader(content))
-
 	if err != nil {
 		return err
 	}

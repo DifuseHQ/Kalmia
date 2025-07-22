@@ -132,6 +132,27 @@ export interface FormFieldData {
   ref?: React.Ref<HTMLInputElement>;
 }
 
+export interface UploadFormField {
+  label: string;
+  placeholder: string;
+  value: string;
+  onChange: () => Promise<void>;
+  name: string;
+  type: string;
+  required: boolean;
+  ref: React.RefObject<HTMLInputElement>;
+}
+export interface UploadFormFieldData {
+  label: string;
+  placeholder: string;
+  value?: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  name: string;
+  required?: boolean;
+  uploaded?: boolean;
+  ref?: React.Ref<HTMLInputElement>;
+}
+
 export interface FormData {
   name: string;
   description: string;

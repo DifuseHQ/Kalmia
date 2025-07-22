@@ -3,11 +3,19 @@ package services
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"sort"
 
+	"git.difuse.io/Difuse/kalmia/config"
 	"git.difuse.io/Difuse/kalmia/db/models"
 	"git.difuse.io/Difuse/kalmia/logger"
 	"git.difuse.io/Difuse/kalmia/utils"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -125,7 +133,6 @@ func (service *DocService) GetDocIdFromBaseURL(baseUrl string) (uint, error) {
 
 func (service *DocService) GetChildrenOfDocumentation(id uint) ([]uint, error) {
 	docs, err := service.GetDocumentations()
-
 	if err != nil {
 		return nil, err
 	}
@@ -199,7 +206,14 @@ func (service *DocService) GetAllVersions(id uint) (string, []string, error) {
 	return latestVersion, versions, nil
 }
 
-func (service *DocService) CreateDocumentation(documentation *models.Documentation, user models.User) error {
+type BucketUploadMetadataFiles struct {
+	BucketFavicon      string `json:"bucketFavicon"`
+	BucketMetaImage    string `json:"bucketMetaImage"`
+	BucketNavImage     string `json:"bucketNavImage"`
+	BucketNavImageDark string `json:"bucketNavImageDark"`
+}
+
+func (service *DocService) CreateDocumentation(documentation *models.Documentation, user models.User, bucketUploadedFiles map[string]string) error {
 	db := service.DB
 
 	var count int64
@@ -240,7 +254,6 @@ func (service *DocService) CreateDocumentation(documentation *models.Documentati
 	}
 
 	err := service.InitRsPress(documentation.ID)
-
 	if err != nil {
 		logger.Error("failed_to_init_rspress", zap.Error(err))
 		db.Delete(&documentation)
@@ -249,9 +262,82 @@ func (service *DocService) CreateDocumentation(documentation *models.Documentati
 		return fmt.Errorf("failed_to_init_rspress")
 	}
 
-	err = service.AddBuildTrigger(documentation.ID, false)
-
+	sess, err := session.NewSession(&aws.Config{
+		Endpoint:         aws.String(config.ParsedConfig.S3.Endpoint),
+		Region:           aws.String(config.ParsedConfig.S3.Region),
+		Credentials:      credentials.NewStaticCredentials(config.ParsedConfig.S3.AccessKeyId, config.ParsedConfig.S3.SecretAccessKey, ""),
+		S3ForcePathStyle: aws.Bool(config.ParsedConfig.S3.UsePathStyle),
+	})
 	if err != nil {
+		return fmt.Errorf("error creating AWS session: %v", err)
+	}
+
+	docPath := utils.GetDocPathByID(documentation.ID, config.ParsedConfig)
+
+	publicAssetsDocPath := filepath.Join(docPath, "public")
+
+	if !utils.PathExists(publicAssetsDocPath) {
+		if err := utils.MakeDir(publicAssetsDocPath); err != nil {
+			logger.Error("error creating public folder in: " + publicAssetsDocPath)
+			logger.Error(err.Error())
+			return err
+		}
+	}
+
+	downloader := s3manager.NewDownloader(sess)
+
+	// get the uploaded files from s3/minio bucket
+	// map the favicon/metaImage, etc to the uploaded id
+	for key, bucketFileName := range bucketUploadedFiles {
+		// ignore empty ones to use default or previous values/files
+		if len(bucketFileName) == 0 {
+			continue
+		}
+
+		bucketFileExtension := utils.GetFileExtension(bucketFileName)
+
+		assetFilePath := filepath.Join(publicAssetsDocPath, key+"."+bucketFileExtension)
+
+		file, err := os.Create(assetFilePath)
+		if err != nil {
+			logger.Error(fmt.Sprintf("failed_to_create_file_at_path: %s", assetFilePath))
+			return fmt.Errorf("failed_to_create_file_at_path")
+		}
+
+		numBytes, err := downloader.Download(file, &s3.GetObjectInput{
+			Bucket: aws.String("uploads"),
+			Key:    aws.String(bucketFileName),
+		})
+		if err != nil {
+			logger.Error(fmt.Sprintf("failed_to_download_object_file: %s, %s\nERROR: %v", key, bucketFileName, err))
+			return fmt.Errorf("failed_to_set_uploaded_file")
+		}
+
+		logger.Debug(fmt.Sprintf("Wrote %d bytes into %s file", numBytes, assetFilePath))
+
+		switch key {
+		case "favicon":
+			documentation.Favicon = fmt.Sprintf("/favicon.%s", bucketFileExtension)
+		case "metaImage":
+			documentation.MetaImage = fmt.Sprintf("/metaImage.%s", bucketFileExtension)
+		case "navImage":
+			documentation.NavImage = fmt.Sprintf("/navImage.%s", bucketFileExtension)
+		case "navImageDark":
+			documentation.NavImageDark = fmt.Sprintf("/navImageDark.%s", bucketFileExtension)
+		default:
+			return fmt.Errorf("invalid_key_value_for_asset")
+		}
+	}
+
+	err = db.Save(documentation).Error
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed_to_update_documentation of doc_%d: %s", documentation.ID, err.Error()))
+		return err
+	}
+
+	err = service.AddBuildTrigger(documentation.ID, false)
+	if err != nil {
+		logger.Error("failed_to_add_build_trigger: " + err.Error())
 		return fmt.Errorf("failed_to_add_build_trigger")
 	}
 
@@ -261,7 +347,8 @@ func (service *DocService) CreateDocumentation(documentation *models.Documentati
 func (service *DocService) EditDocumentation(user models.User, id uint, name, description, version, favicon, metaImage, navImage,
 	navImageDark, customCSS, footerLabelLinks, moreLabelLinks, copyrightText, url,
 	organizationName, projectName, baseURL, landerDetails string, requireAuth bool,
-	gitRepo string, gitBranch string, gitUser string, gitPassword string, gitEmail string) error {
+	gitRepo string, gitBranch string, gitUser string, gitPassword string, gitEmail string,
+) error {
 	tx := service.DB.Begin()
 	if !utils.IsBaseURLValid(baseURL) {
 		return fmt.Errorf("invalid_base_url")
@@ -651,13 +738,11 @@ func (service *DocService) CreateDocumentationVersion(originalDocId uint, newVer
 
 		return nil
 	})
-
 	if err != nil {
 		return err
 	}
 
 	err = service.AddBuildTrigger(originalDocId, false)
-
 	if err != nil {
 		return fmt.Errorf("failed_to_add_build_trigger")
 	}
@@ -740,7 +825,8 @@ func (service *DocService) BulkReorderPageOrPageGroup(pageOrder []struct {
 	ParentID    *uint `json:"parentId"`
 	PageGroupID *uint `json:"pageGroupId"`
 	IsPageGroup bool  `json:"isPageGroup"`
-}) error {
+},
+) error {
 	var docId uint
 	var pageGroupUpdates []models.PageGroup
 	var pageUpdates []models.Page
@@ -798,7 +884,6 @@ func (service *DocService) BulkReorderPageOrPageGroup(pageOrder []struct {
 
 		return nil
 	})
-
 	if err != nil {
 		return err
 	}

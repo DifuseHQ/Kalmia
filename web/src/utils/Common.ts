@@ -601,3 +601,7 @@ export const setCookie = (name: string, value: string, days: number) => {
 export const b64ToString = (base64: string) => {
   return window.atob(base64);
 };
+
+export const capitalizeFirstLetter = (word: string) => {
+  return word.charAt(0).toUpperCase() + word.slice(1);
+}

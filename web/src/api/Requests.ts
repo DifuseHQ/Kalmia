@@ -45,6 +45,12 @@ export interface DocumentationPayload {
   gitEmail?: string;
   gitPassword?: string;
   gitBranch?: string;
+
+  // stored in bucket named
+  bucketFavicon: string;
+  bucketMetaImage: string;
+  bucketNavImage: string;
+  bucketNavImageDark: string;
 }
 
 interface CreateVersionPayload {
@@ -272,6 +278,9 @@ export const updateUser = (data: UpdateUserPayload) =>
 
 export const uploadFile = (data: FormData) =>
   makeRequest("/kal-api/auth/user/upload-file", "post", data);
+
+export const uploadAssetsFile = (data: FormData) =>
+  makeRequest("/kal-api/auth/user/assets/upload-file", "post", data);
 
 export const deleteUser = (username: string) =>
   makeRequest("/kal-api/auth/user/delete", "post", { username });

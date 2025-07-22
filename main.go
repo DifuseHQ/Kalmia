@@ -90,6 +90,7 @@ func main() {
 	authRouter.HandleFunc("/users", func(w http.ResponseWriter, r *http.Request) { handlers.GetUsers(aS, w, r) }).Methods("GET")
 	authRouter.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) { handlers.GetUser(aS, w, r) }).Methods("POST")
 	authRouter.HandleFunc("/user/upload-file", func(w http.ResponseWriter, r *http.Request) { handlers.UploadFile(d, w, r, config.ParsedConfig) }).Methods("POST")
+	authRouter.HandleFunc("/user/assets/upload-file", func(w http.ResponseWriter, r *http.Request) { handlers.UploadAssetsFile(d, w, r, config.ParsedConfig) }).Methods("POST")
 
 	authRouter.HandleFunc("/jwt/create", func(w http.ResponseWriter, r *http.Request) { handlers.CreateJWT(aS, w, r) }).Methods("POST")
 	authRouter.HandleFunc("/jwt/refresh", func(w http.ResponseWriter, r *http.Request) { handlers.RefreshJWT(aS, w, r) }).Methods("POST")

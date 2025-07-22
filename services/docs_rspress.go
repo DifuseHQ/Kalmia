@@ -73,13 +73,11 @@ type MetaData struct {
 func (service *DocService) GenerateHead(docID uint, pageId uint, pageType string) (string, error) {
 	var buffer bytes.Buffer
 	doc, err := service.GetDocumentation(docID)
-
 	if err != nil {
 		return "", err
 	}
 
 	latest, _, err := service.GetAllVersions(docID)
-
 	if err != nil {
 		return "", err
 	}
@@ -115,7 +113,6 @@ func (service *DocService) GenerateHead(docID uint, pageId uint, pageType string
 		}
 
 		metaJSON, err := json.Marshal(meta)
-
 		if err != nil {
 			return "", err
 		}
@@ -190,7 +187,6 @@ func (service *DocService) GenerateHead(docID uint, pageId uint, pageType string
 		}
 
 		metaJSON, err := json.Marshal(meta)
-
 		if err != nil {
 			return "", err
 		}
@@ -254,7 +250,6 @@ func (service *DocService) UpdateWriteBuild(docId uint) error {
 	}
 
 	configHash, err := service.StartUpdate(docId, rootParentId)
-
 	if err != nil {
 		return err
 	}
@@ -308,7 +303,6 @@ func (service *DocService) StartupCheck() error {
 	}
 
 	err = service.InitRsPressPackageCache()
-
 	if err != nil {
 		logger.Fatal("Initializing Package Cache Failed...", zap.Error(err))
 	}
@@ -329,7 +323,6 @@ func (service *DocService) StartupCheck() error {
 		}
 
 		err = service.AddBuildTrigger(doc.ID, false)
-
 		if err != nil {
 			logger.Error("Failed to add build trigger", zap.Uint("doc_id", doc.ID), zap.Error(err))
 		}
@@ -358,7 +351,6 @@ func (service *DocService) InitRsPressPackageCache() error {
 	installStart := time.Now()
 
 	err = utils.RunNpmCommand(packageCachePath, "install")
-
 	if err != nil {
 		return err
 	}
@@ -382,7 +374,6 @@ func (service *DocService) InitRsPress(docId uint) error {
 	}
 
 	err := embedded.CopyInitFiles(docPath)
-
 	if err != nil {
 		return err
 	}
@@ -394,7 +385,6 @@ func (service *DocService) InitRsPress(docId uint) error {
 	}
 
 	err = utils.RunNpmCommand(docPath, "install")
-
 	if err != nil {
 		return err
 	}
@@ -409,7 +399,6 @@ func (service *DocService) StartUpdate(docId uint, rootParentId uint) (string, e
 	}
 
 	docConfigTemplate, err := embedded.ReadEmbeddedFile("rspress.config.ts")
-
 	if err != nil {
 		return "", err
 	}
@@ -471,7 +460,6 @@ func (service *DocService) StartUpdate(docId uint, rootParentId uint) (string, e
 		var socialLinksRsPress []SocialLinkRsPress
 
 		err := json.Unmarshal([]byte(doc.FooterLabelLinks), &socialLinks)
-
 		if err != nil {
 			replacements["__SOCIAL_LINKS__"] = "[]"
 		}
@@ -481,7 +469,6 @@ func (service *DocService) StartUpdate(docId uint, rootParentId uint) (string, e
 		}
 
 		socialLinksJSON, err := json.Marshal(socialLinksRsPress)
-
 		if err != nil {
 			replacements["__SOCIAL_LINKS__"] = "[]"
 		}
@@ -522,14 +509,12 @@ func (service *DocService) StartUpdate(docId uint, rootParentId uint) (string, e
 	}
 
 	latest, versions, err := service.GetAllVersions(docId)
-
 	if err != nil {
 		return "", err
 	}
 
 	multiVersions := Versions{Default: latest, Versions: versions}
 	multiVersionsJSON, err := json.Marshal(multiVersions)
-
 	if err != nil {
 		return "", err
 	}
@@ -537,7 +522,6 @@ func (service *DocService) StartUpdate(docId uint, rootParentId uint) (string, e
 	replacements["__MULTI_VERSIONS__"] = "multiVersion: " + string(multiVersionsJSON)
 
 	err = utils.WriteToFile(docConfig, utils.ReplaceMany(string(docConfigTemplate), replacements))
-
 	if err != nil {
 		return "", err
 	}
@@ -546,13 +530,11 @@ func (service *DocService) StartUpdate(docId uint, rootParentId uint) (string, e
 	replacements["__OUT_DIR__"] = "gitbuild"
 
 	err = utils.WriteToFile(gitDocConfig, utils.ReplaceMany(string(docConfigTemplate), replacements))
-
 	if err != nil {
 		return "", err
 	}
 
 	configHash, err := utils.FileHash(docConfig)
-
 	if err != nil {
 		return "", err
 	}
@@ -807,7 +789,6 @@ func (service *DocService) buildVersionTree(docId uint) ([]VersionInfo, error) {
 func (service *DocService) WriteContents(docId uint, rootParentId uint, preHash string) error {
 	docIdPath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data", "doc_"+strconv.Itoa(int(rootParentId)))
 	_, err := service.GetDocumentation(docId)
-
 	if err != nil {
 		if err.Error() == "documentation_not_found" {
 			if err := utils.RemovePath(docIdPath); err != nil {
@@ -826,14 +807,12 @@ func (service *DocService) WriteContents(docId uint, rootParentId uint, preHash 
 	}
 
 	versionInfos, err := service.buildVersionTree(rootParentId)
-
 	if err != nil {
 		return err
 	}
 
 	for _, versionInfo := range versionInfos {
 		versionDoc, err := service.GetDocumentation(versionInfo.DocId)
-
 		if err != nil {
 			return err
 		}
@@ -954,20 +933,17 @@ func (service *DocService) WriteContents(docId uint, rootParentId uint, preHash 
 	}
 
 	newDocsHash, err := utils.DirHash(docsPath)
-
 	if err != nil {
 		return err
 	}
 
 	newConfigHash, err := utils.FileHash(filepath.Join(docIdPath, "rspress.config.ts"))
-
 	if err != nil {
 		return err
 	}
 
 	newHash := utils.HashStrings([]string{newDocsHash, newConfigHash})
 	deletionsOccurred, err := service.PreBuildCleanup(rootParentId)
-
 	if err != nil {
 		return err
 	}
@@ -1003,7 +979,6 @@ func (service *DocService) WriteHomePage(documentation models.Documentation, con
 		}
 
 		err := json.Unmarshal([]byte(documentation.LanderDetails), &landerDetails)
-
 		if err != nil {
 			return fmt.Errorf("error unmarshaling LanderDetails: %w", err)
 		}
@@ -1058,7 +1033,6 @@ func (service *DocService) WriteHomePage(documentation models.Documentation, con
 		}
 
 		metaJSON, err := json.Marshal(meta)
-
 		if err != nil {
 			return err
 		}
@@ -1069,7 +1043,6 @@ func (service *DocService) WriteHomePage(documentation models.Documentation, con
 		homePagePath = filepath.Join(contentPath, "../", "index.mdx")
 	} else {
 		head, err := service.GenerateHead(documentation.ID, math.MaxUint32, "doc")
-
 		if err != nil {
 			logger.Error("Failed to generate head for home page", zap.Error(err))
 		}
@@ -1155,6 +1128,11 @@ func (service *DocService) RsPressBuild(docId uint, rebuild bool) error {
 			return err
 		}
 
+		err = utils.CopyPublicAssetsToDocs(docPath)
+		if err != nil {
+			return err
+		}
+
 		err = utils.RunNpmCommand(docPath, "run", "build")
 		if err != nil {
 			return err
@@ -1212,13 +1190,11 @@ func (service *DocService) GetRsPress(urlPath string) (uint, string, string, boo
 				split := strings.Split(cacheKey, "|")
 				docID := strings.TrimPrefix("doc_", split[1])
 				reqAuth, err := strconv.ParseBool(split[2])
-
 				if err != nil {
 					continue
 				}
 
 				id, err := strconv.Atoi(docID)
-
 				if err != nil {
 					continue
 				}
@@ -1266,7 +1242,6 @@ func (service *DocService) GetRsPress(urlPath string) (uint, string, string, boo
 	}
 
 	files, err := os.ReadDir(docPath)
-
 	if err != nil {
 		return 0, "", "", false, fmt.Errorf("error_reading_rspress_directory")
 	}
@@ -1315,7 +1290,6 @@ func (service *DocService) DeleteJob() {
 		if utils.PathExists(docPath) {
 			logger.Info("Deleting doc folder", zap.Uint("doc_id", trigger.DocumentationID))
 			err := service.RemoveDocFolder(trigger.DocumentationID)
-
 			if err != nil {
 				logger.Error("(DeleteJob) Failed to remove doc folder", zap.Error(err))
 				skipSave = true
