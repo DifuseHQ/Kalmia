@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"git.difuse.io/Difuse/kalmia/config"
 	"git.difuse.io/Difuse/kalmia/db/models"
@@ -344,10 +345,33 @@ func (service *DocService) CreateDocumentation(documentation *models.Documentati
 	return nil
 }
 
-func (service *DocService) EditDocumentation(user models.User, id uint, name, description, version, favicon, metaImage, navImage,
-	navImageDark, customCSS, footerLabelLinks, moreLabelLinks, copyrightText, url,
-	organizationName, projectName, baseURL, landerDetails string, requireAuth bool,
-	gitRepo string, gitBranch string, gitUser string, gitPassword string, gitEmail string,
+func (service *DocService) EditDocumentation(
+	user models.User,
+	id uint,
+	name,
+	description,
+	version,
+	favicon,
+	metaImage,
+	navImage,
+	navImageDark,
+	customCSS,
+	footerLabelLinks,
+	moreLabelLinks,
+	copyrightText,
+	url,
+	organizationName,
+	projectName,
+	baseURL,
+	landerDetails string,
+	requireAuth bool,
+	gitRepo string,
+	gitBranch string,
+	gitUser string,
+	gitPassword string,
+	gitEmail string,
+
+	bucketUploadedFiles map[string]string,
 ) error {
 	tx := service.DB.Begin()
 	if !utils.IsBaseURLValid(baseURL) {
@@ -396,6 +420,85 @@ func (service *DocService) EditDocumentation(user models.User, id uint, name, de
 			return fmt.Errorf("failed_to_update_documentation")
 		}
 		return nil
+	}
+
+	docPath := utils.GetDocPathByID(id, config.ParsedConfig)
+	docPublicAssetPath := filepath.Join(docPath, "public")
+
+	sess, err := session.NewSession(&aws.Config{
+		Endpoint:         aws.String(config.ParsedConfig.S3.Endpoint),
+		Region:           aws.String(config.ParsedConfig.S3.Region),
+		Credentials:      credentials.NewStaticCredentials(config.ParsedConfig.S3.AccessKeyId, config.ParsedConfig.S3.SecretAccessKey, ""),
+		S3ForcePathStyle: aws.Bool(config.ParsedConfig.S3.UsePathStyle),
+	})
+	if err != nil {
+		return fmt.Errorf("error creating AWS session: %v", err)
+	}
+
+	downloader := s3manager.NewDownloader(sess)
+
+	for key, bucketFileName := range bucketUploadedFiles {
+		if len(bucketFileName) == 0 {
+			continue
+		}
+
+		publicAssetFs, err := os.ReadDir(docPublicAssetPath)
+		if err != nil {
+			return err
+		}
+
+		checkFileExists := func() (string, bool) {
+			for _, dirEntry := range publicAssetFs {
+				if strings.Contains(dirEntry.Name(), key) {
+					return dirEntry.Name(), true
+				}
+			}
+			return "", false
+		}
+
+		if filename, exists := checkFileExists(); exists {
+			// remove that
+			err = os.Remove(filepath.Join(docPublicAssetPath, filename))
+			if err != nil {
+				return err
+			}
+		}
+		// download the file into the new directory
+		// place the new file inside this
+		bucketFileExtension := utils.GetFileExtension(bucketFileName)
+
+		assetFilePath := filepath.Join(docPublicAssetPath, key+"."+bucketFileExtension)
+
+		file, err := os.Create(assetFilePath)
+		if err != nil {
+			logger.Error(fmt.Sprintf("failed_to_create_file_at_path: %s", assetFilePath))
+			return fmt.Errorf("failed_to_create_file_at_path")
+		}
+
+		numBytes, err := downloader.Download(file, &s3.GetObjectInput{
+			Bucket: aws.String("uploads"),
+			Key:    aws.String(bucketFileName),
+		})
+		if err != nil {
+			logger.Error(fmt.Sprintf("failed_to_download_object_file: %s, %s\nERROR: %v", key, bucketFileName, err))
+			return fmt.Errorf("failed_to_set_uploaded_file")
+		}
+
+		logger.Debug(fmt.Sprintf("Wrote %d bytes into %s file", numBytes, assetFilePath))
+
+		switch key {
+		case "favicon":
+			favicon = fmt.Sprintf("/favicon.%s", bucketFileExtension)
+		case "metaImage":
+			metaImage = fmt.Sprintf("/metaImage.%s", bucketFileExtension)
+		case "navImage":
+			navImage = fmt.Sprintf("/navImage.%s", bucketFileExtension)
+		case "navImageDark":
+			navImageDark = fmt.Sprintf("/navImageDark.%s", bucketFileExtension)
+		default:
+			return fmt.Errorf("invalid_key_value_for_asset")
+		}
+
 	}
 
 	var targetDoc models.Documentation

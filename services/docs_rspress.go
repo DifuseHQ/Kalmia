@@ -1128,7 +1128,7 @@ func (service *DocService) RsPressBuild(docId uint, rebuild bool) error {
 			return err
 		}
 
-		err = utils.CopyPublicAssetsToDocs(docPath)
+		err = utils.CopyPublicAssetsToDocsIfEmpty(docPath)
 		if err != nil {
 			return err
 		}
@@ -1364,6 +1364,18 @@ func (service *DocService) BuildJob() {
 				logger.Error("Failed to deploy to git", zap.Error(err))
 			} else {
 				logger.Info("Git Deploy completed", zap.Uint("doc_id", docID), zap.Duration("elapsed", gitElapsed), zap.Int("trigger_count", len(groupTriggers)))
+			}
+			logger.Info(fmt.Sprintf("moving static assets to docs in doc_%d", docID))
+
+			docPath := utils.GetDocPathByID(docID, config.ParsedConfig)
+			docPublicAssetPath := filepath.Join(docPath, "public")
+			docsInternalPublicAssetPath := filepath.Join(docPath, "docs", "public")
+			err = utils.CopyOrOveriteDir(docPublicAssetPath, docsInternalPublicAssetPath)
+
+			if err != nil {
+				logger.Error(fmt.Sprintf("error copying files from %s to %s", docPublicAssetPath, docsInternalPublicAssetPath), zap.Error(err))
+			} else {
+				logger.Info("successfully copied files to target", zap.Uint("doc_id", docID))
 			}
 		}
 

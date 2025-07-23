@@ -62,28 +62,29 @@ func CreateDocumentation(service *services.ServiceRegistry, w http.ResponseWrite
 	}
 
 	type Request struct {
-		Name               string `json:"name" validate:"required"`
-		Description        string `json:"description" validate:"required"`
-		Version            string `json:"version" validate:"required"`
-		URL                string `json:"url" validate:"required"`
-		OrganizationName   string `json:"organizationName" validate:"required"`
-		LanderDetails      string `json:"landerDetails"`
-		ProjectName        string `json:"projectName" validate:"required"`
-		BaseURL            string `json:"baseURL" validate:"required"`
-		Favicon            string `json:"favicon"`
-		MetaImage          string `json:"metaImage"`
-		NavImage           string `json:"navImage"`
-		NavImageDark       string `json:"navImageDark"`
-		CustomCSS          string `json:"customCSS" validate:"required"`
-		FooterLabelLinks   string `json:"footerLabelLinks"`
-		MoreLabelLinks     string `json:"moreLabelLinks"`
-		CopyrightText      string `json:"copyrightText" validate:"required"`
-		RequireAuth        bool   `json:"requireAuth"`
-		GitRepo            string `json:"gitRepo"`
-		GitBranch          string `json:"gitBranch"`
-		GitUser            string `json:"gitUser"`
-		GitPassword        string `json:"gitPassword"`
-		GitEmail           string `json:"gitEmail"`
+		Name             string `json:"name" validate:"required"`
+		Description      string `json:"description" validate:"required"`
+		Version          string `json:"version" validate:"required"`
+		URL              string `json:"url" validate:"required"`
+		OrganizationName string `json:"organizationName" validate:"required"`
+		LanderDetails    string `json:"landerDetails"`
+		ProjectName      string `json:"projectName" validate:"required"`
+		BaseURL          string `json:"baseURL" validate:"required"`
+		Favicon          string `json:"favicon"`
+		MetaImage        string `json:"metaImage"`
+		NavImage         string `json:"navImage"`
+		NavImageDark     string `json:"navImageDark"`
+		CustomCSS        string `json:"customCSS" validate:"required"`
+		FooterLabelLinks string `json:"footerLabelLinks"`
+		MoreLabelLinks   string `json:"moreLabelLinks"`
+		CopyrightText    string `json:"copyrightText" validate:"required"`
+		RequireAuth      bool   `json:"requireAuth"`
+		GitRepo          string `json:"gitRepo"`
+		GitBranch        string `json:"gitBranch"`
+		GitUser          string `json:"gitUser"`
+		GitPassword      string `json:"gitPassword"`
+		GitEmail         string `json:"gitEmail"`
+
 		BucketFavicon      string `json:"bucketFavicon"`
 		BucketMetaImage    string `json:"bucketMetaImage"`
 		BucketNavImage     string `json:"bucketNavImage"`
@@ -163,6 +164,11 @@ func EditDocumentation(services *services.ServiceRegistry, w http.ResponseWriter
 		GitEmail         string `json:"gitEmail"`
 		GitUser          string `json:"gitUser"`
 		GitPassword      string `json:"gitPassword"`
+
+		BucketFavicon      string `json:"bucketFavicon"`
+		BucketMetaImage    string `json:"bucketMetaImage"`
+		BucketNavImage     string `json:"bucketNavImage"`
+		BucketNavImageDark string `json:"bucketNavImageDark"`
 	}
 
 	req, err := ValidateRequest[Request](w, r)
@@ -182,10 +188,37 @@ func EditDocumentation(services *services.ServiceRegistry, w http.ResponseWriter
 		return
 	}
 
-	err = services.DocService.EditDocumentation(user, req.ID, req.Name, req.Description, req.Version, req.Favicon, req.MetaImage,
-		req.NavImage, req.NavImageDark, req.CustomCSS, req.FooterLabelLinks, req.MoreLabelLinks, req.CopyrightText,
-		req.URL, req.OrganizationName, req.ProjectName, req.BaseURL, req.LanderDetails, req.RequireAuth, req.GitRepo,
-		req.GitBranch, req.GitUser, req.GitPassword, req.GitEmail)
+	err = services.DocService.EditDocumentation(user,
+		req.ID,
+		req.Name,
+		req.Description,
+		req.Version,
+		req.Favicon,
+		req.MetaImage,
+		req.NavImage,
+		req.NavImageDark,
+		req.CustomCSS,
+		req.FooterLabelLinks,
+		req.MoreLabelLinks,
+		req.CopyrightText,
+		req.URL,
+		req.OrganizationName,
+		req.ProjectName,
+		req.BaseURL,
+		req.LanderDetails,
+		req.RequireAuth,
+		req.GitRepo,
+		req.GitBranch,
+		req.GitUser,
+		req.GitPassword,
+		req.GitEmail,
+		map[string]string{
+			"favicon":      req.BucketFavicon,
+			"metaImage":    req.BucketMetaImage,
+			"navImage":     req.BucketNavImage,
+			"navImageDark": req.BucketNavImageDark,
+		},
+	)
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})
 		return
