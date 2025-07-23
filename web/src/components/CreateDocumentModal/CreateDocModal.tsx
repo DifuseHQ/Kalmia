@@ -37,7 +37,6 @@ import {
   MoreLabelLinks,
 } from "../../types/doc";
 import {
-  capitalizeFirstLetter,
   convertToEmoji,
   handleError,
   landingPageValidate,
@@ -379,7 +378,6 @@ export default function CreateDocModal() {
 
     const file = files[0]
 
-
     const formData = new globalThis.FormData()
 
     formData.append("upload_tag_name", name)
@@ -404,6 +402,7 @@ export default function CreateDocModal() {
       ...prevData,
       [name]: { name: res.data?.file, uploaded: true }
     }))
+
     toastMessage("updated_file", "success")
     // DEBUG: remove after debug session
     console.log("Uploaded files: ", uploadedFiles)
@@ -748,13 +747,13 @@ export default function CreateDocModal() {
                     name="copyrightText"
                     required={true}
                   />
-                  <FormField
+
+                  <UploadFormField
                     label={t("social_card_image")}
                     placeholder={t("social_card_image_palceholder")}
-                    value={formData?.metaImage}
-                    onChange={handleChange}
+                    onChange={handleUploadAssetFile}
                     name="metaImage"
-                    type="url"
+                    uploaded={uploadedFiles.metaImage.uploaded}
                   />
                 </div>
 

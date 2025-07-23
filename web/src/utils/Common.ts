@@ -337,18 +337,18 @@ export const validateFormData = (
     }
   }
 
-  const urlFields: (keyof CreateDocumentFormData)[] = [
-    "favicon",
-    "navImageDark",
-    "navImage",
-    "metaImage",
-  ];
-
-  for (const field of urlFields) {
-    if (formData[field] && !isValidURL(formData[field])) {
-      return { status: true, message: `valid_${field}_url_required` };
-    }
-  }
+  // const urlFields: (keyof CreateDocumentFormData)[] = [
+  //   "favicon",
+  //   "navImageDark",
+  //   "navImage",
+  //   "metaImage",
+  // ];
+  //
+  // for (const field of urlFields) {
+  //   if (formData[field] && !isValidURL(formData[field])) {
+  //     return { status: true, message: `valid_${field}_url_required` };
+  //   }
+  // }
 
   if (!isValidBaseURL(formData.baseURL)) {
     return { status: true, message: "valid_base_url_required" };
