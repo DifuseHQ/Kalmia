@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"git.difuse.io/Difuse/kalmia/config"
 	"golang.org/x/mod/sumdb/dirhash"
 )
 
@@ -19,7 +20,6 @@ func PathExists(path string) bool {
 
 func CopyFile(src, dst string) error {
 	sourceFile, err := os.Open(src)
-
 	if err != nil {
 		return err
 	}
@@ -48,7 +48,6 @@ func TouchFile(path string) error {
 	}
 
 	_, err = file.WriteString("1")
-
 	if err != nil {
 		return err
 	}
@@ -171,4 +170,33 @@ func DirHash(dir string) (string, error) {
 		return "", err
 	}
 	return hash, nil
+}
+
+func GetFileExtension(filename string) string {
+	tmpStringSlice := strings.Split(filename, ".")
+
+	extension := tmpStringSlice[len(tmpStringSlice)-1]
+
+	return extension
+}
+
+func GetDocPathByID(docID uint, cfg *config.Config) string {
+	return filepath.Join(cfg.DataPath, "rspress_data", fmt.Sprintf("doc_%d", docID))
+}
+
+func IsEmptyDir(path string) (bool, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return false, err
+	}
+
+	defer f.Close()
+
+	_, err = f.Readdirnames(1)
+
+	if err == io.EOF {
+		return true, nil
+	}
+
+	return false, err
 }

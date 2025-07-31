@@ -15,7 +15,6 @@ import (
 
 func GetDocumentations(service *services.DocService, w http.ResponseWriter, r *http.Request) {
 	docs, err := service.GetDocumentations()
-
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{
 			"status":  "error",
@@ -33,13 +32,11 @@ func GetDocumentation(service *services.DocService, w http.ResponseWriter, r *ht
 	}
 
 	req, err := ValidateRequest[Request](w, r)
-
 	if err != nil {
 		return
 	}
 
 	doc, err := service.GetDocumentation(req.ID)
-
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{
 			"status":  "error",
@@ -51,16 +48,14 @@ func GetDocumentation(service *services.DocService, w http.ResponseWriter, r *ht
 	SendJSONResponse(http.StatusOK, w, doc)
 }
 
-func CreateDocumentation(services *services.ServiceRegistry, w http.ResponseWriter, r *http.Request) {
+func CreateDocumentation(service *services.ServiceRegistry, w http.ResponseWriter, r *http.Request) {
 	token, err := GetTokenFromHeader(r)
-
 	if err != nil {
 		SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"status": "error", "message": "invalid_token"})
 		return
 	}
 
-	user, err := services.AuthService.GetUserFromToken(token)
-
+	user, err := service.AuthService.GetUserFromToken(token)
 	if err != nil {
 		SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"status": "error", "message": "invalid_token"})
 		return
@@ -89,10 +84,14 @@ func CreateDocumentation(services *services.ServiceRegistry, w http.ResponseWrit
 		GitUser          string `json:"gitUser"`
 		GitPassword      string `json:"gitPassword"`
 		GitEmail         string `json:"gitEmail"`
+
+		BucketFavicon      string `json:"bucketFavicon"`
+		BucketMetaImage    string `json:"bucketMetaImage"`
+		BucketNavImage     string `json:"bucketNavImage"`
+		BucketNavImageDark string `json:"bucketNavImageDark"`
 	}
 
 	req, err := ValidateRequest[Request](w, r)
-
 	if err != nil {
 		return
 	}
@@ -126,8 +125,12 @@ func CreateDocumentation(services *services.ServiceRegistry, w http.ResponseWrit
 		GitEmail:         req.GitEmail,
 	}
 
-	err = services.DocService.CreateDocumentation(documentation, user)
-
+	err = service.DocService.CreateDocumentation(documentation, user, map[string]string{
+		"favicon":      req.BucketFavicon,
+		"metaImage":    req.BucketMetaImage,
+		"navImage":     req.BucketNavImage,
+		"navImageDark": req.BucketNavImageDark,
+	})
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})
 		return
@@ -161,10 +164,14 @@ func EditDocumentation(services *services.ServiceRegistry, w http.ResponseWriter
 		GitEmail         string `json:"gitEmail"`
 		GitUser          string `json:"gitUser"`
 		GitPassword      string `json:"gitPassword"`
+
+		BucketFavicon      string `json:"bucketFavicon"`
+		BucketMetaImage    string `json:"bucketMetaImage"`
+		BucketNavImage     string `json:"bucketNavImage"`
+		BucketNavImageDark string `json:"bucketNavImageDark"`
 	}
 
 	req, err := ValidateRequest[Request](w, r)
-
 	if err != nil {
 		return
 	}
@@ -181,11 +188,37 @@ func EditDocumentation(services *services.ServiceRegistry, w http.ResponseWriter
 		return
 	}
 
-	err = services.DocService.EditDocumentation(user, req.ID, req.Name, req.Description, req.Version, req.Favicon, req.MetaImage,
-		req.NavImage, req.NavImageDark, req.CustomCSS, req.FooterLabelLinks, req.MoreLabelLinks, req.CopyrightText,
-		req.URL, req.OrganizationName, req.ProjectName, req.BaseURL, req.LanderDetails, req.RequireAuth, req.GitRepo,
-		req.GitBranch, req.GitUser, req.GitPassword, req.GitEmail)
-
+	err = services.DocService.EditDocumentation(user,
+		req.ID,
+		req.Name,
+		req.Description,
+		req.Version,
+		req.Favicon,
+		req.MetaImage,
+		req.NavImage,
+		req.NavImageDark,
+		req.CustomCSS,
+		req.FooterLabelLinks,
+		req.MoreLabelLinks,
+		req.CopyrightText,
+		req.URL,
+		req.OrganizationName,
+		req.ProjectName,
+		req.BaseURL,
+		req.LanderDetails,
+		req.RequireAuth,
+		req.GitRepo,
+		req.GitBranch,
+		req.GitUser,
+		req.GitPassword,
+		req.GitEmail,
+		map[string]string{
+			"favicon":      req.BucketFavicon,
+			"metaImage":    req.BucketMetaImage,
+			"navImage":     req.BucketNavImage,
+			"navImageDark": req.BucketNavImageDark,
+		},
+	)
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})
 		return
@@ -200,13 +233,11 @@ func DeleteDocumentation(service *services.DocService, w http.ResponseWriter, r 
 	}
 
 	req, err := ValidateRequest[Request](w, r)
-
 	if err != nil {
 		return
 	}
 
 	err = service.DeleteDocumentation(req.ID)
-
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})
 		return
@@ -222,13 +253,11 @@ func CreateDocumentationVersion(service *services.DocService, w http.ResponseWri
 	}
 
 	req, err := ValidateRequest[Request](w, r)
-
 	if err != nil {
 		return
 	}
 
 	err = service.CreateDocumentationVersion(req.OriginalDocID, req.NewVersion)
-
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})
 		return
@@ -239,7 +268,6 @@ func CreateDocumentationVersion(service *services.DocService, w http.ResponseWri
 
 func GetPages(service *services.DocService, w http.ResponseWriter, r *http.Request) {
 	pages, err := service.GetPages()
-
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})
 		return
@@ -254,13 +282,11 @@ func GetPage(service *services.DocService, w http.ResponseWriter, r *http.Reques
 	}
 
 	req, err := ValidateRequest[Request](w, r)
-
 	if err != nil {
 		return
 	}
 
 	page, err := service.GetPage(req.ID)
-
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})
 		return
@@ -280,20 +306,17 @@ func CreatePage(services *services.ServiceRegistry, w http.ResponseWriter, r *ht
 	}
 
 	req, err := ValidateRequest[Request](w, r)
-
 	if err != nil {
 		return
 	}
 
 	token, err := GetTokenFromHeader(r)
-
 	if err != nil {
 		SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"status": "error", "message": "invalid_request"})
 		return
 	}
 
 	user, err := services.AuthService.GetUserFromToken(token)
-
 	if err != nil {
 		SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"status": "error", "message": "invalid_request"})
 		return
@@ -319,7 +342,6 @@ func CreatePage(services *services.ServiceRegistry, w http.ResponseWriter, r *ht
 	}
 
 	err = services.DocService.CreatePage(&page)
-
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})
 		return
@@ -434,20 +456,17 @@ func CreatePageGroup(services *services.ServiceRegistry, w http.ResponseWriter, 
 	}
 
 	req, err := ValidateRequest[Request](w, r)
-
 	if err != nil {
 		return
 	}
 
 	token, err := GetTokenFromHeader(r)
-
 	if err != nil {
 		SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"status": "error", "message": "invalid_request"})
 		return
 	}
 
 	user, err := services.AuthService.GetUserFromToken(token)
-
 	if err != nil {
 		SendJSONResponse(http.StatusUnauthorized, w, map[string]string{"status": "error", "message": "invalid_request"})
 		return
@@ -471,7 +490,6 @@ func CreatePageGroup(services *services.ServiceRegistry, w http.ResponseWriter, 
 	}
 
 	_, err = services.DocService.CreatePageGroup(&pageGroup)
-
 	if err != nil {
 		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})
 		return

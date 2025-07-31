@@ -15,10 +15,12 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import {
+  ApiResponse,
   createDocumentation,
   DocumentationPayload,
   getDocumentation,
   updateDocumentation,
+  uploadAssetsFile,
 } from "../../api/Requests";
 import { ModalContext } from "../../context/ModalContext";
 import { ThemeContext, ThemeContextType } from "../../context/ThemeContext";
@@ -45,6 +47,8 @@ import {
 import { toastMessage } from "../../utils/Toast";
 import { customCSSInitial, SocialLinkIcon } from "../../utils/Utils";
 import Breadcrumb from "../Breadcrumb/Breadcrumb";
+import { UploadFormField } from "./UploadFormField";
+import { AxiosError } from "axios";
 
 const FormField: React.FC<FormFieldData> = ({
   label,
@@ -339,6 +343,71 @@ export default function CreateDocModal() {
     }
   }, []);
 
+  const [uploadedFiles, setUploadedFiles] = useState<{ [name: string]: { name?: string, uploaded: boolean } }>({
+    favicon: {
+      name: "",
+      uploaded: false
+    },
+    navImageDark: {
+      name: "",
+      uploaded: false
+    },
+    navImage: {
+      name: "",
+      uploaded: false
+    },
+    metaImage: {
+      name: "",
+      uploaded: false
+    }
+  })
+
+  const handleUploadAssetFile = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const { name } = e.target
+
+    // check for files
+
+    const { files } = e.target
+
+    if (!files) {
+      toastMessage("no_files_selected", "warning")
+      return
+    }
+
+    const file = files[0]
+
+    const formData = new globalThis.FormData()
+
+    formData.append("upload_tag_name", name)
+    formData.append(name, file)
+
+    let res: ApiResponse<{ status: "error" | "success", message: string, file: string }>
+
+    try {
+      res = await uploadAssetsFile(formData)
+    } catch (error) {
+
+      const err = error as AxiosError
+      toastMessage(err.message, "error")
+      return
+    }
+    if (!res.data) {
+      toastMessage("no_response_from_server", "error")
+      return
+    }
+
+    setUploadedFiles((prevData) => ({
+      ...prevData,
+      [name]: { name: res.data?.file, uploaded: true }
+    }))
+
+    toastMessage("updated_file", "success")
+    // DEBUG: remove after debug session
+    console.log("Uploaded files: ", uploadedFiles)
+  }
+
   const handleChange = (
     e:
       | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -412,6 +481,10 @@ export default function CreateDocModal() {
       moreLabelLinks: moreField
         ? JSON.stringify(moreField)
         : [{ label: "", link: "" }],
+      bucketFavicon: uploadedFiles.favicon.name || "",
+      bucketMetaImage: uploadedFiles.metaImage.name || "",
+      bucketNavImage: uploadedFiles.navImage.name || "",
+      bucketNavImageDark: uploadedFiles.navImageDark.name || ""
     };
     let result;
 
@@ -614,31 +687,55 @@ export default function CreateDocModal() {
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-3">
-                  <FormField
+                  {/* <FormField */}
+                  {/*   label={t("favicon")} */}
+                  {/*   placeholder={t("favicon_placeholder")} */}
+                  {/*   value={formData?.favicon} */}
+                  {/*   onChange={handleChange} */}
+                  {/*   name="favicon" */}
+                  {/*   type="url" */}
+                  {/* /> */}
+                  {/* <FormField */}
+                  {/*   label={t("navbar_icon_dark")} */}
+                  {/*   placeholder={t("navbar_icon_placeholder")} */}
+                  {/*   value={formData?.navImageDark} */}
+                  {/*   onChange={handleChange} */}
+                  {/*   name="navImageDark" */}
+                  {/*   type="url" */}
+                  {/* /> */}
+                  {/* <FormField */}
+                  {/*   label={t("navbar_icon")} */}
+                  {/*   placeholder={t("navbar_icon_placeholder")} */}
+                  {/*   value={formData?.navImage} */}
+                  {/*   onChange={handleChange} */}
+                  {/*   name="navImage" */}
+                  {/*   type="url" */}
+                  {/* /> */}
+
+                  <UploadFormField
                     label={t("favicon")}
                     placeholder={t("favicon_placeholder")}
-                    value={formData?.favicon}
-                    onChange={handleChange}
+                    onChange={handleUploadAssetFile}
                     name="favicon"
-                    type="url"
+                    uploaded={uploadedFiles.favicon.uploaded}
                   />
 
-                  <FormField
+                  <UploadFormField
                     label={t("navbar_icon_dark")}
                     placeholder={t("navbar_icon_placeholder")}
-                    value={formData?.navImageDark}
-                    onChange={handleChange}
+                    onChange={handleUploadAssetFile}
                     name="navImageDark"
-                    type="url"
+                    uploaded={uploadedFiles.navImageDark.uploaded}
                   />
-                  <FormField
+
+                  <UploadFormField
                     label={t("navbar_icon")}
                     placeholder={t("navbar_icon_placeholder")}
-                    value={formData?.navImage}
-                    onChange={handleChange}
+                    onChange={handleUploadAssetFile}
                     name="navImage"
-                    type="url"
+                    uploaded={uploadedFiles.navImage.uploaded}
                   />
+
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -650,13 +747,13 @@ export default function CreateDocModal() {
                     name="copyrightText"
                     required={true}
                   />
-                  <FormField
+
+                  <UploadFormField
                     label={t("social_card_image")}
                     placeholder={t("social_card_image_palceholder")}
-                    value={formData?.metaImage}
-                    onChange={handleChange}
+                    onChange={handleUploadAssetFile}
                     name="metaImage"
-                    type="url"
+                    uploaded={uploadedFiles.metaImage.uploaded}
                   />
                 </div>
 

@@ -161,6 +161,11 @@ export default function GitBookModal() {
           "https://downloads-bucket.difuse.io/kalmia-sideways-white-final.png",
         customCSS: customCSSInitial(),
         copyrightText: "N/A",
+
+        bucketFavicon: "",
+        bucketMetaImage: "",
+        bucketNavImage: "",
+        bucketNavImageDark: ""
       };
 
       const createResponse = await createDocumentation(payload);

@@ -337,18 +337,18 @@ export const validateFormData = (
     }
   }
 
-  const urlFields: (keyof CreateDocumentFormData)[] = [
-    "favicon",
-    "navImageDark",
-    "navImage",
-    "metaImage",
-  ];
-
-  for (const field of urlFields) {
-    if (formData[field] && !isValidURL(formData[field])) {
-      return { status: true, message: `valid_${field}_url_required` };
-    }
-  }
+  // const urlFields: (keyof CreateDocumentFormData)[] = [
+  //   "favicon",
+  //   "navImageDark",
+  //   "navImage",
+  //   "metaImage",
+  // ];
+  //
+  // for (const field of urlFields) {
+  //   if (formData[field] && !isValidURL(formData[field])) {
+  //     return { status: true, message: `valid_${field}_url_required` };
+  //   }
+  // }
 
   if (!isValidBaseURL(formData.baseURL)) {
     return { status: true, message: "valid_base_url_required" };
@@ -601,3 +601,7 @@ export const setCookie = (name: string, value: string, days: number) => {
 export const b64ToString = (base64: string) => {
   return window.atob(base64);
 };
+
+export const capitalizeFirstLetter = (word: string) => {
+  return word.charAt(0).toUpperCase() + word.slice(1);
+}
