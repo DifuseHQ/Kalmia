@@ -64,7 +64,7 @@ func main() {
 	// INFO: files could be fetched without authentication
 	fileRouter := kRouter.PathPrefix("/file").Subrouter()
 
-	fileRouter.HandleFunc("/get", func(w http.ResponseWriter, r *http.Request) { handlers.GetFile(d, w, r, config.ParsedConfig) }).Methods("GET")
+	fileRouter.HandleFunc("/get/{filename}", func(w http.ResponseWriter, r *http.Request) { handlers.GetFile(d, w, r, config.ParsedConfig) }).Methods("GET")
 
 	/* Health endpoints */
 	healthRouter := kRouter.PathPrefix("/health").Subrouter()

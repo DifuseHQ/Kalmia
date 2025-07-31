@@ -9,7 +9,7 @@ import (
 	"github.com/gabriel-vasile/mimetype"
 )
 
-// Struct for saving assets
+// UploadedFileData Struct for saving assets
 type UploadedFileData struct {
 	OriginalName  string
 	DocId         string
@@ -22,7 +22,6 @@ type UploadedFileData struct {
 // Saves to local disk in it's corresponding file with it's saved route
 // TODO: Make this operation "atomic"
 func SaveToLocal(fileBytes []byte, fileData *UploadedFileData) (string, error) {
-
 	assetPath := path.Join(config.ParsedConfig.DataPath, "rspress_data")
 	assetPath = path.Join(assetPath, "doc_"+fileData.DocId, "assets")
 
@@ -35,7 +34,6 @@ func SaveToLocal(fileBytes []byte, fileData *UploadedFileData) (string, error) {
 	newFileName := path.Join(assetPath, generateFileName(fileData))
 
 	newFile, err := os.Create(newFileName)
-
 	if err != nil {
 		fmt.Printf("Error creating a new file %s\n", newFileName)
 		return "", err
@@ -44,7 +42,6 @@ func SaveToLocal(fileBytes []byte, fileData *UploadedFileData) (string, error) {
 	defer newFile.Close()
 
 	bytesWritten, err := newFile.Write(fileBytes)
-
 	if err != nil {
 		fmt.Println("Error writing to the file", newFileName)
 	}

@@ -380,12 +380,12 @@ export default function CreateDocModal() {
 
     const gitFields = gitDeployOn
       ? {
-          gitUser: formData.gitUser || "",
-          gitRepo: formData.gitRepo || "",
-          gitEmail: formData.gitEmail || "",
-          gitPassword: formData.gitPassword || "",
-          gitBranch: formData.gitBranch || "",
-        }
+        gitUser: formData.gitUser || "",
+        gitRepo: formData.gitRepo || "",
+        gitEmail: formData.gitEmail || "",
+        gitPassword: formData.gitPassword || "",
+        gitBranch: formData.gitBranch || "",
+      }
       : {};
 
     const payload: DocumentationPayload = {
@@ -622,6 +622,7 @@ export default function CreateDocModal() {
                     name="favicon"
                     type="url"
                   />
+
                   <FormField
                     label={t("navbar_icon_dark")}
                     placeholder={t("navbar_icon_placeholder")}

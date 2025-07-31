@@ -8,6 +8,7 @@ export default defineConfig({
   html: {
     template: "./public/index.html",
   },
+
   output: {
     legalComments: "none",
     polyfill: "usage",
@@ -20,7 +21,9 @@ export default defineConfig({
     },
     cleanDistPath: process.env.NODE_ENV === "production",
   },
+
   performance: {
+
     chunkSplit: {
       strategy: "split-by-size",
       minSize: 30000,

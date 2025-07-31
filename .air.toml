@@ -3,41 +3,54 @@ testdata_dir = "testdata"
 tmp_dir = "tmp"
 
 [build]
-  args_bin = []
-  bin = "./tmp/main"
-  cmd = "go build -o ./tmp/main main.go"
-  delay = 2000
-  exclude_dir = ["assets", "tmp", "vendor", "testdata", "views", "node_modules", "data", "web", "scripts", "utils/testdir"]
-  exclude_unchanged = false
-  follow_symlink = false
-  full_bin = ""
-  include_ext = ["go", "tpl", "tmpl"]
-  include_file = []
-  kill_delay = "1s"
-  log = "build-errors.log"
-  poll = false
-  poll_interval = 0
-  post_cmd = []
-  pre_cmd = []
-  rerun = false
-  rerun_delay = 50
-  send_interrupt = true
-  stop_on_error = true
+args_bin = []
+bin = "./tmp/main"
+cmd = "go build -o ./tmp/main main.go"
+delay = 2000
+exclude_dir = [
+  "assets",
+  "tmp",
+  "vendor",
+  "testdata",
+  "views",
+  "node_modules",
+  "data",
+  "web",
+  "scripts",
+  "utils/testdir",
+  "postgres_data",
+  "minio_data",
+]
+exclude_unchanged = false
+follow_symlink = false
+full_bin = ""
+include_ext = ["go", "tpl", "tmpl"]
+include_file = []
+kill_delay = "1s"
+log = "build-errors.log"
+poll = false
+poll_interval = 0
+post_cmd = []
+pre_cmd = []
+rerun = false
+rerun_delay = 50
+send_interrupt = true
+stop_on_error = true
 
 [color]
-  app = ""
-  build = "yellow"
-  main = "magenta"
-  runner = "green"
-  watcher = "cyan"
+app = ""
+build = "yellow"
+main = "magenta"
+runner = "green"
+watcher = "cyan"
 
 [log]
-  main_only = false
-  time = false
+main_only = false
+time = false
 
 [misc]
-  clean_on_exit = false
+clean_on_exit = false
 
 [screen]
-  clear_on_rebuild = false
-  keep_scroll = true
+clear_on_rebuild = false
+keep_scroll = true

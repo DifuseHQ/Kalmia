@@ -59,3 +59,8 @@ build: clean build-linux-amd64 build-linux-386 build-linux-arm build-linux-arm64
 
 clean:
 	rm -rf dist
+
+docker-clean:
+	sudo rm -rf ./postgres_data ./minio_data
+	docker rm kalmia-postgres-1 kalmia-app-1 kalmia-minio-1 kalmia-createbuckets-1 && docker rmi kalmia-app
+

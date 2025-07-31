@@ -1,10 +1,19 @@
 # Build stage for web assets
 FROM node:20 AS web-builder
+
+# pnpm setup
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
 WORKDIR /app/web
 COPY web/package*.json ./
-RUN npm install
+COPY web/pnpm*.yaml ./
+# RUN npm install
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 COPY web ./
-RUN npm run build
+# RUN npm run build
+RUN pnpm run build
 
 # Build stage for Go application
 FROM golang:1.23-bookworm AS go-builder
@@ -29,6 +38,12 @@ RUN chmod +x /build.sh && /build.sh
 # Final stage
 FROM node:20-slim
 WORKDIR /app
+
+# pnpm setup
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN which pnpm
 
 # Copy built artifacts
 COPY --from=go-builder /app/kalmia .

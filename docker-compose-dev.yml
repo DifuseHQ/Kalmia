@@ -1,21 +1,21 @@
 services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "${PORT:-2727}:2727"
-    volumes:
-      - ./config.json:/app/config.json
-    environment:
-      - DATABASE_TYPE=postgres
-      - DATABASE_HOST=postgres
-      - DATABASE_USER=${POSTGRES_USER:-user}
-      - DATABASE_NAME=kalmia
-      - DATABASE_PASSWORD=${POSTGRES_PASSWORD:-password}
-    depends_on:
-      postgres:
-        condition: service_healthy
+  # app:
+  #   # build:
+  #   #   context: .
+  #   #   dockerfile: Dockerfile
+  #   ports:
+  #     - "${PORT:-2727}:2727"
+  #   volumes:
+  #     - ./config.json:/app/config.json
+  #   environment:
+  #     - DATABASE_TYPE=postgres
+  #     - DATABASE_HOST=postgres
+  #     - DATABASE_USER=${POSTGRES_USER:-user}
+  #     - DATABASE_NAME=kalmia
+  #     - DATABASE_PASSWORD=${POSTGRES_PASSWORD:-password}
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
 
   postgres:
     image: postgres:15
