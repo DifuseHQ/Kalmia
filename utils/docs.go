@@ -26,6 +26,11 @@ func CopyPublicAssetsToDocsIfEmpty(docPath string) error {
 	}
 
 	if isEmptyDir {
+		// make sure destination exists
+		if err := MakeDir(publicAssetsDirPath); err != nil {
+			logger.Error("could not create dest dir: " + publicAssetsDirPath)
+			return err
+		}
 		err = os.CopyFS(innerDocPublicPath, os.DirFS(publicAssetsDirPath))
 		if err != nil {
 			return err

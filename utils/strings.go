@@ -40,7 +40,6 @@ func RemoveSpaces(input string) string {
 
 func StringToUint(input string) (uint, error) {
 	output, err := strconv.ParseUint(input, 10, 32)
-
 	if err != nil {
 		return 0, err
 	}
@@ -62,7 +61,17 @@ func StringToFileString(input string) string {
 	if input == "" {
 		return "unnamed-file"
 	}
-	return url.PathEscape(input)
+	return url.PathEscape(RemoveNonASCII(input))
+}
+
+func RemoveNonASCII(input string) string {
+	var result []rune
+	for _, r := range input {
+		if r <= 127 {
+			result = append(result, r)
+		}
+	}
+	return string(result)
 }
 
 func UintPtr(v uint) *uint {
