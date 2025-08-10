@@ -66,7 +66,7 @@ func UploadToS3Storage(file io.Reader, originalFilename, contentType string, par
 	if parsedConfig.AssetStorage == "local" {
 		publicURL = fmt.Sprintf("/kal-api/file/get/%s", filename)
 	} else {
-		publicURL = fmt.Sprintf(parsedConfig.S3.PublicUrlFormat, "uploads", filename)
+		publicURL = fmt.Sprintf(parsedConfig.S3.PublicUrlFormat, filename)
 	}
 
 	return publicURL, nil
