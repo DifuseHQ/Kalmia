@@ -1,6 +1,6 @@
 module git.difuse.io/Difuse/kalmia
 
-go 1.23
+go 1.23.0
 
 toolchain go1.23.2
 
@@ -22,7 +22,7 @@ require (
 	golang.org/x/crypto v0.31.0
 	golang.org/x/mod v0.21.0
 	golang.org/x/net v0.33.0
-	golang.org/x/oauth2 v0.22.0
+	golang.org/x/oauth2 v0.27.0
 	golang.org/x/text v0.21.0
 	gorm.io/driver/postgres v1.5.9
 	gorm.io/gorm v1.25.11
