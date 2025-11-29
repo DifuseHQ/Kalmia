@@ -32,11 +32,11 @@ func (service *AuthService) CreateJWT(username, password string) (map[string]int
 	var user models.User
 
 	if err := service.DB.Where("username = ?", username).First(&user).Error; err != nil {
-		return nil, fmt.Errorf("user_not_found")
+		return nil, fmt.Errorf("invalid_credentials")
 	}
 
 	if !utils.CheckPasswordHash(password, user.Password) {
-		return nil, fmt.Errorf("invalid_password")
+		return nil, fmt.Errorf("invalid_credentials")
 	}
 
 	tokenString, expiry, err := utils.GenerateJWTAccessToken(user.ID, user.Username, user.Email, user.Photo, user.Admin, user.Permissions)

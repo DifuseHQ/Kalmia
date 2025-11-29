@@ -357,7 +357,7 @@ func GithubCallback(aS *services.AuthService, w http.ResponseWriter, r *http.Req
 				break
 			}
 
-			if err.Error() == "user_not_found" {
+			if err.Error() == "invalid_credentials" {
 				continue
 			}
 

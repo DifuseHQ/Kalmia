@@ -88,15 +88,15 @@ func TestCreateJWT(t *testing.T) {
 
 	t.Run("Non-existent User", func(t *testing.T) {
 		_, err := TestAuthService.CreateJWT("nonexistent", "password")
-		if err == nil || err.Error() != "user_not_found" {
-			t.Errorf("Expected 'user_not_found' error, got %v", err)
+		if err == nil || err.Error() != "invalid_credentials" {
+			t.Errorf("Expected 'invalid_credentials' error, got %v", err)
 		}
 	})
 
 	t.Run("Incorrect Password", func(t *testing.T) {
 		_, err := TestAuthService.CreateJWT("admin", "wrongpassword")
-		if err == nil || err.Error() != "invalid_password" {
-			t.Errorf("Expected 'invalid_password' error, got %v", err)
+		if err == nil || err.Error() != "invalid_credentials" {
+			t.Errorf("Expected 'invalid_credentials' error, got %v", err)
 		}
 	})
 }
