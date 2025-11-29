@@ -2,7 +2,7 @@ import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
-import { ApiResponse, getUsers } from "../api/Requests";
+import { getUser } from "../api/Requests";
 import { handleError } from "../utils/Common";
 
 interface User {
@@ -32,16 +32,13 @@ export const useUserDetails = (
   useEffect(() => {
     const fetchUserDetails = async (user: User) => {
       try {
-        const result = await getUsers();
+        const result = await getUser(parseInt(user.userId));
 
         if (handleError(result, navigate, t)) return;
 
         if (result.status === "success") {
-          const data = (result as ApiResponse).data;
-          const filterUser = data?.find(
-            (obj: UserDetails) => obj?.id.toString() === user?.userId,
-          );
-          setUserDetails(filterUser || null);
+          const userData = result.data as UserDetails;
+          setUserDetails(userData || null);
         }
       } catch (error) {
         console.error("Error fetching user details:", error);

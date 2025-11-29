@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 
-import { ApiResponse, getUsers } from "../api/Requests";
+import { ApiResponse, getUser } from "../api/Requests";
 import Loading from "../components/Loading/Loading";
 import { UserPayload } from "../hooks/useUser";
 import { User } from "../types/auth";
@@ -18,7 +18,7 @@ export default function AdminAuth() {
 
   useEffect(() => {
     const fetchData = async () => {
-      let user: UserPayload;
+      let user: UserPayload | undefined;
 
       if (localStorage.getItem("accessToken")) {
         const accessTokenString = localStorage.getItem("accessToken");
@@ -29,18 +29,20 @@ export default function AdminAuth() {
         }
       }
 
-      const response: ApiResponse = await getUsers();
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
+      const response: ApiResponse = await getUser(parseInt(user.userId));
       if (handleError(response, navigate, t)) {
         setIsLoading(false);
         return;
       }
 
-      const users = response.data as User[];
+      const foundUser = response.data as User;
 
       if (response?.status === "success") {
-        const foundUser = users.find(
-          (obj: User) => obj.id === parseInt(user.userId),
-        );
 
         if (foundUser && foundUser?.admin === true) {
           setIsAdmin(true);
