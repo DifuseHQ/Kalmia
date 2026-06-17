@@ -301,5 +301,9 @@
         "new_gitbook": "Neues Gitbook",
         "import_gitbook": "GitBook importieren",
         "gitbook_proccessing_failed": "GitBook-Verarbeitung fehlgeschlagen",
-        "error_creating_documentation": "Fehler beim Erstellen der Dokumentation"
+        "error_creating_documentation": "Fehler beim Erstellen der Dokumentation",
+    "disable_auto_build": "Disable auto-build",
+    "enable_auto_build": "Enable auto-build",
+    "trigger_build": "Build now",
+    "build_triggered": "Build triggered"
 }

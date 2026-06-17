@@ -42,17 +42,11 @@ func CopyFile(src, dst string) error {
 }
 
 func TouchFile(path string) error {
-	file, err := os.Create(path)
+	err := os.WriteFile(path, []byte("1"), 0644)
 	if err != nil {
 		return err
 	}
-
-	_, err = file.WriteString("1")
-	if err != nil {
-		return err
-	}
-
-	return file.Close()
+	return nil
 }
 
 func MakeDir(path string) error {
@@ -199,4 +193,9 @@ func IsEmptyDir(path string) (bool, error) {
 	}
 
 	return false, err
+}
+
+func WritePnpmStoreConfig(projectDir, storeDir string) error {
+	content := fmt.Sprintf("store-dir=%s\n", filepath.ToSlash(storeDir))
+	return os.WriteFile(filepath.Join(projectDir, ".npmrc"), []byte(content), 0644)
 }

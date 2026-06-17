@@ -8,7 +8,7 @@ import React, {
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
-import { createJWT, refreshJWT, signOut, validateJWT } from "../api/Requests";
+import { createJWT, exchangeOAuthCode, refreshJWT, signOut, validateJWT } from "../api/Requests";
 import { useToken } from "../hooks/useToken";
 import { UpdateUserFunction, UserType, useUser } from "../hooks/useUser";
 import { UserDetails, useUserDetails } from "../hooks/useUserDetails";
@@ -89,10 +89,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const loginOAuth = async (code: string) => {
-    const response = await validateJWT(code);
+    const response = await exchangeOAuthCode(code);
     if (handleError(response, navigate, t)) return;
     if (response.status === "success") {
-      const data = response.data.token;
+      const data = response.data.data.token;
       setToken(data);
       setUser(data);
       localStorage.setItem("accessToken", JSON.stringify(response?.data));

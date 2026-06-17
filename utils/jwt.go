@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"git.difuse.io/Difuse/kalmia/config"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -35,7 +36,9 @@ func GenerateJWTAccessToken(dbUserId uint, userId string, email string, photo st
 
 	claims := JWTData{
 		RegisteredClaims: jwt.RegisteredClaims{
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
+			ID:        fmt.Sprintf("%d-%d", dbUserId, time.Now().UnixNano()),
 		},
 		CustomClaims: map[string]string{
 			"user_id": userId,
@@ -50,7 +53,7 @@ func GenerateJWTAccessToken(dbUserId uint, userId string, email string, photo st
 	}
 
 	tokenString := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	token, err := tokenString.SignedString(secretKey)
+	token, err := tokenString.SignedString([]byte(config.ParsedConfig.SessionSecret))
 
 	expiry := claims.ExpiresAt.Time.Unix()
 
@@ -60,7 +63,7 @@ func GenerateJWTAccessToken(dbUserId uint, userId string, email string, photo st
 func GetJWTExpirationTime(token string) (int64, error) {
 	claims := &JWTData{}
 	_, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
-		return secretKey, nil
+		return []byte(config.ParsedConfig.SessionSecret), nil
 	})
 
 	if err != nil {
@@ -73,7 +76,7 @@ func GetJWTExpirationTime(token string) (int64, error) {
 func ValidateJWT(token string) (*JWTData, error) {
 	claims := &JWTData{}
 	_, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
-		return secretKey, nil
+		return []byte(config.ParsedConfig.SessionSecret), nil
 	})
 
 	if err != nil {

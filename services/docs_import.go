@@ -16,12 +16,10 @@ import (
 	figure "github.com/mangoumbrella/goldmark-figure"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/parser"
-	"github.com/yuin/goldmark/renderer/html"
 )
 
 func processMarkdown(content, dir string, cfg *config.Config) (string, error) {
 	gm := goldmark.New(
-		goldmark.WithRendererOptions(html.WithUnsafe()),
 		goldmark.WithParserOptions(parser.WithAutoHeadingID()),
 		goldmark.WithExtensions(
 			figure.Figure,

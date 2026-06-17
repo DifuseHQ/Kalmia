@@ -618,3 +618,47 @@ func GetRootParentId(service *services.DocService, w http.ResponseWriter, r *htt
 
 	SendJSONResponse(http.StatusOK, w, map[string]uint{"rootParentId": rootParentID})
 }
+
+func ToggleAutoBuild(service *services.DocService, w http.ResponseWriter, r *http.Request) {
+	type Request struct {
+		ID uint `json:"id" validate:"required"`
+	}
+	req, err := ValidateRequest[Request](w, r)
+	if err != nil {
+		return
+	}
+
+	disabled, err := service.ToggleAutoBuild(req.ID)
+	if err != nil {
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})
+		return
+	}
+
+	SendJSONResponse(http.StatusOK, w, map[string]interface{}{
+		"status":           "success",
+		"disableAutoBuild": disabled,
+	})
+}
+
+func TriggerManualBuild(service *services.DocService, w http.ResponseWriter, r *http.Request) {
+	type Request struct {
+		ID uint `json:"id" validate:"required"`
+	}
+	req, err := ValidateRequest[Request](w, r)
+	if err != nil {
+		return
+	}
+
+	if !service.IsDocIdValid(req.ID) {
+		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": "invalid_documentation_id"})
+		return
+	}
+
+	err = service.AddBuildTrigger(req.ID, false, true)
+	if err != nil {
+		SendJSONResponse(http.StatusInternalServerError, w, map[string]string{"status": "error", "message": err.Error()})
+		return
+	}
+
+	SendJSONResponse(http.StatusOK, w, map[string]string{"status": "success", "message": "build_triggered"})
+}

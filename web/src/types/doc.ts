@@ -108,6 +108,7 @@ export interface Documentation {
   gitEmail: string;
   gitPassword: string;
   gitBranch: string;
+  disableAutoBuild?: boolean;
 }
 
 export interface FormField {

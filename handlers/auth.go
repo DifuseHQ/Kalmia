@@ -3,6 +3,8 @@ package handlers
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -318,15 +320,27 @@ func GithubLogin(aS *services.AuthService, w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	githubOauthCfg := getGithubOauthConfig()
+	state, err := generateOAuthState()
+	if err != nil {
+		http.Error(w, "Failed to generate state", http.StatusInternalServerError)
+		return
+	}
+	setOAuthStateCookie(w, state)
 
-	url := githubOauthCfg.AuthCodeURL("")
+	githubOauthCfg := getGithubOauthConfig()
+	url := githubOauthCfg.AuthCodeURL(state)
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
 
 func GithubCallback(aS *services.AuthService, w http.ResponseWriter, r *http.Request) {
 	if config.ParsedConfig.GithubOAuth.ClientID == "" || config.ParsedConfig.GithubOAuth.ClientSecret == "" {
 		http.Error(w, "Github OAuth not configured", http.StatusInternalServerError)
+		return
+	}
+
+	stateCookie, err := r.Cookie("oauth_state")
+	if err != nil || r.FormValue("state") == "" || stateCookie.Value != r.FormValue("state") {
+		http.Redirect(w, r, "/admin/error/401", http.StatusTemporaryRedirect)
 		return
 	}
 
@@ -377,7 +391,13 @@ func GithubCallback(aS *services.AuthService, w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/admin/login/gh?token=%s", tokenDetails), http.StatusTemporaryRedirect)
+	oauthCode, err := services.StoreOAuthToken(tokenDetails)
+	if err != nil {
+		http.Redirect(w, r, "/admin/error/401", http.StatusTemporaryRedirect)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/admin/login/gh?code=%s", oauthCode), http.StatusTemporaryRedirect)
 }
 
 func getMicrosoftOauthConfig() *oauth2.Config {
@@ -399,8 +419,16 @@ func MicrosoftLogin(aS *services.AuthService, w http.ResponseWriter, r *http.Req
 		http.Error(w, "Microsoft OAuth not configured", http.StatusInternalServerError)
 		return
 	}
+
+	state, err := generateOAuthState()
+	if err != nil {
+		http.Error(w, "Failed to generate state", http.StatusInternalServerError)
+		return
+	}
+	setOAuthStateCookie(w, state)
+
 	microsoftOauthCfg := getMicrosoftOauthConfig()
-	url := microsoftOauthCfg.AuthCodeURL("")
+	url := microsoftOauthCfg.AuthCodeURL(state)
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
 
@@ -409,6 +437,13 @@ func MicrosoftCallback(aS *services.AuthService, w http.ResponseWriter, r *http.
 		http.Error(w, "Microsoft OAuth not configured", http.StatusInternalServerError)
 		return
 	}
+
+	stateCookie, err := r.Cookie("oauth_state")
+	if err != nil || r.FormValue("state") == "" || stateCookie.Value != r.FormValue("state") {
+		http.Redirect(w, r, "/admin/error/401", http.StatusTemporaryRedirect)
+		return
+	}
+
 	microsoftOauthCfg := getMicrosoftOauthConfig()
 	code := r.FormValue("code")
 	token, err := microsoftOauthCfg.Exchange(context.Background(), code)
@@ -457,7 +492,13 @@ func MicrosoftCallback(aS *services.AuthService, w http.ResponseWriter, r *http.
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/admin/login/ms?token=%s", tokenDetails), http.StatusTemporaryRedirect)
+	oauthCode, err := services.StoreOAuthToken(tokenDetails)
+	if err != nil {
+		http.Redirect(w, r, "/admin/error/401", http.StatusTemporaryRedirect)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/admin/login/ms?code=%s", oauthCode), http.StatusTemporaryRedirect)
 }
 
 func getGoogleOAuthConfig() *oauth2.Config {
@@ -478,14 +519,28 @@ func GoogleLogin(aS *services.AuthService, w http.ResponseWriter, r *http.Reques
 		http.Error(w, "Google OAuth not configured", http.StatusInternalServerError)
 		return
 	}
+
+	state, err := generateOAuthState()
+	if err != nil {
+		http.Error(w, "Failed to generate state", http.StatusInternalServerError)
+		return
+	}
+	setOAuthStateCookie(w, state)
+
 	googleOAuthCfg := getGoogleOAuthConfig()
-	url := googleOAuthCfg.AuthCodeURL("state", oauth2.AccessTypeOffline)
+	url := googleOAuthCfg.AuthCodeURL(state, oauth2.AccessTypeOffline)
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
 
 func GoogleCallback(aS *services.AuthService, w http.ResponseWriter, r *http.Request) {
 	if config.ParsedConfig.GoogleOAuth.ClientID == "" || config.ParsedConfig.GoogleOAuth.ClientSecret == "" {
 		http.Error(w, "Google OAuth not configured", http.StatusInternalServerError)
+		return
+	}
+
+	stateCookie, err := r.Cookie("oauth_state")
+	if err != nil || r.FormValue("state") == "" || stateCookie.Value != r.FormValue("state") {
+		http.Redirect(w, r, "/admin/error/401", http.StatusTemporaryRedirect)
 		return
 	}
 
@@ -520,7 +575,13 @@ func GoogleCallback(aS *services.AuthService, w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/admin/login/gg?token=%s", tokenDetails), http.StatusTemporaryRedirect)
+	oauthCode, err := services.StoreOAuthToken(tokenDetails)
+	if err != nil {
+		http.Redirect(w, r, "/admin/error/401", http.StatusTemporaryRedirect)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/admin/login/gg?code=%s", oauthCode), http.StatusTemporaryRedirect)
 }
 
 func getGoogleUserEmail(accessToken string) (string, error) {
@@ -548,4 +609,44 @@ func getGoogleUserEmail(accessToken string) (string, error) {
 func GetOAuthProviders(aS *services.AuthService, w http.ResponseWriter, r *http.Request) {
 	providers := aS.OAuthProviders()
 	SendJSONResponse(http.StatusOK, w, providers)
+}
+
+func generateOAuthState() (string, error) {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
+}
+
+func setOAuthStateCookie(w http.ResponseWriter, state string) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "oauth_state",
+		Value:    state,
+		Path:     "/kal-api/oauth",
+		MaxAge:   600,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
+}
+
+func ExchangeOAuthCode(aS *services.AuthService, w http.ResponseWriter, r *http.Request) {
+	type Request struct {
+		Code string `json:"code" validate:"required"`
+	}
+	req, err := ValidateRequest[Request](w, r)
+	if err != nil {
+		return
+	}
+
+	token, err := services.ExchangeOAuthCode(req.Code)
+	if err != nil {
+		SendJSONResponse(http.StatusBadRequest, w, map[string]string{"status": "error", "message": err.Error()})
+		return
+	}
+
+	SendJSONResponse(http.StatusOK, w, map[string]interface{}{
+		"status": "success",
+		"data":   map[string]interface{}{"token": token},
+	})
 }

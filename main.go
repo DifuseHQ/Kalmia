@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -28,8 +29,16 @@ var startupWg sync.WaitGroup
 
 func main() {
 	cmd.AsciiArt()
-	cfgPath := cmd.ParseFlags()
+	cfgPath, clearEphemeral := cmd.ParseFlags()
 	cfg := config.ParseConfig(cfgPath)
+
+	if clearEphemeral {
+		fmt.Println("Clearing ephemeral directories...")
+		clearEphemeralDirs(cfg.DataPath)
+		fmt.Println("Done.")
+		os.Exit(0)
+	}
+
 	logger.InitializeLogger(cfg.Environment, cfg.LogLevel, cfg.DataPath)
 
 	/* Setup database */
@@ -79,6 +88,7 @@ func main() {
 	oAuthRouter.HandleFunc("/google", func(w http.ResponseWriter, r *http.Request) { handlers.GoogleLogin(aS, w, r) }).Methods("GET")
 	oAuthRouter.HandleFunc("/google/callback", func(w http.ResponseWriter, r *http.Request) { handlers.GoogleCallback(aS, w, r) }).Methods("GET")
 	oAuthRouter.HandleFunc("/providers", func(w http.ResponseWriter, r *http.Request) { handlers.GetOAuthProviders(aS, w, r) }).Methods("GET")
+	oAuthRouter.HandleFunc("/exchange", func(w http.ResponseWriter, r *http.Request) { handlers.ExchangeOAuthCode(aS, w, r) }).Methods("POST")
 
 	authRouter := kRouter.PathPrefix("/auth").Subrouter()
 	authRouter.Use(middleware.EnsureAuthenticated(aS))
@@ -107,6 +117,8 @@ func main() {
 	docsRouter.HandleFunc("/documentation/version", func(w http.ResponseWriter, r *http.Request) { handlers.CreateDocumentationVersion(dS, w, r) }).Methods("POST")
 	docsRouter.HandleFunc("/documentation/reorder-bulk", func(w http.ResponseWriter, r *http.Request) { handlers.BulkReorderPageOrPageGroup(dS, w, r) }).Methods("POST")
 	docsRouter.HandleFunc("/documentation/root-parent-id", func(w http.ResponseWriter, r *http.Request) { handlers.GetRootParentId(dS, w, r) }).Methods("GET")
+	docsRouter.HandleFunc("/documentation/toggle-auto-build", func(w http.ResponseWriter, r *http.Request) { handlers.ToggleAutoBuild(dS, w, r) }).Methods("POST")
+	docsRouter.HandleFunc("/documentation/trigger-build", func(w http.ResponseWriter, r *http.Request) { handlers.TriggerManualBuild(dS, w, r) }).Methods("POST")
 
 	importRouter := docsRouter.PathPrefix("/import").Subrouter()
 	importRouter.Use(middleware.EnsureAuthenticated(aS))
@@ -191,6 +203,37 @@ func createSPAHandler() http.HandlerFunc {
 			}
 
 			http.ServeFile(w, r, filePath)
+		}
+	}
+}
+
+func clearEphemeralDirs(dataPath string) {
+	dirsToRemove := []string{
+		filepath.Join(dataPath, "rspress_pc"),
+		filepath.Join(dataPath, "pnpm-store"),
+	}
+	for _, dir := range dirsToRemove {
+		if _, err := os.Stat(dir); err == nil {
+			fmt.Printf("  removing %s\n", dir)
+			os.RemoveAll(dir)
+		}
+	}
+
+	rspressData := filepath.Join(dataPath, "rspress_data")
+	entries, err := os.ReadDir(rspressData)
+	if err == nil {
+		for _, entry := range entries {
+			if entry.IsDir() {
+				docPath := filepath.Join(rspressData, entry.Name())
+				subsToRemove := []string{"node_modules", "build", "build_tmp", "build_backup", "docs", "styles", "src"}
+				for _, sub := range subsToRemove {
+					subPath := filepath.Join(docPath, sub)
+					if _, err := os.Stat(subPath); err == nil {
+						fmt.Printf("  removing %s\n", subPath)
+						os.RemoveAll(subPath)
+					}
+				}
+			}
 		}
 	}
 }

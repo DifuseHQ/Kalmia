@@ -290,5 +290,9 @@
         "upload_markdown_file": "上传Markdown文件",
         "import_gitbook": "导入GitBook",
         "gitbook_proccessing_failed": "GitBook处理失败",
-        "error_creating_documentation": "创建文档时出错"
+        "error_creating_documentation": "创建文档时出错",
+    "disable_auto_build": "Disable auto-build",
+    "enable_auto_build": "Enable auto-build",
+    "trigger_build": "Build now",
+    "build_triggered": "Build triggered"
 }

@@ -21,7 +21,6 @@ export default function Sidebar() {
   const PoweredByDifuse = () => {
     return (
       <div className="flex items-center justify-center space-x-1 text-sm dark:text-white">
-        <span className="font-semibold">{t("crafted_by")}</span>
         <a
           href="https://difuse.io"
           target="_blank"

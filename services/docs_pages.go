@@ -12,9 +12,9 @@ func (service *DocService) GetPages() ([]models.Page, error) {
 	var pages []models.Page
 
 	if err := service.DB.Preload("Author", func(db *gorm.DB) *gorm.DB {
-		return service.DB.Select("ID", "Username", "Email", "Photo")
+		return db.Select("ID", "Username", "Email", "Photo")
 	}).Preload("Editors", func(db *gorm.DB) *gorm.DB {
-		return service.DB.Select("users.ID", "users.Username", "users.Email", "users.Photo")
+		return db.Select("ID", "Username", "Email", "Photo")
 	}).Select("ID", "Title", "Slug", "DocumentationID", "PageGroupID", "Order", "CreatedAt", "UpdatedAt", "AuthorID", "LastEditorID", "IsIntroPage", "IsPage").
 		Find(&pages).Error; err != nil {
 		return nil, fmt.Errorf("failed_to_get_pages")
@@ -27,9 +27,9 @@ func (service *DocService) GetPage(id uint) (models.Page, error) {
 	var page models.Page
 
 	if err := service.DB.Preload("Author", func(db *gorm.DB) *gorm.DB {
-		return service.DB.Select("ID", "Username", "Email", "Photo")
+		return db.Select("ID", "Username", "Email", "Photo")
 	}).Preload("Editors", func(db *gorm.DB) *gorm.DB {
-		return service.DB.Select("users.ID", "users.Username", "users.Email", "users.Photo")
+		return db.Select("ID", "Username", "Email", "Photo")
 	}).First(&page, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return models.Page{}, fmt.Errorf("page_not_found")

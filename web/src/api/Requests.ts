@@ -178,6 +178,9 @@ async function makeRequest<T = any>(
 export const createJWT = (data: AuthCredentials): Promise<ApiResponse> =>
   makeRequest("/kal-api/auth/jwt/create", "post", data);
 
+export const exchangeOAuthCode = (code: string): Promise<ApiResponse> =>
+  makeRequest("/kal-api/oauth/exchange", "post", { code });
+
 export const refreshJWT = (token: string | null): Promise<ApiResponse> =>
   makeRequest("/kal-api/auth/jwt/refresh", "post", { token });
 
@@ -227,6 +230,12 @@ export const updateDocumentation = (data: DocumentationPayload) =>
 
 export const deleteDocumentation = (id: number) =>
   makeRequest("/kal-api/docs/documentation/delete", "post", { id });
+
+export const toggleAutoBuild = (id: number) =>
+  makeRequest("/kal-api/docs/documentation/toggle-auto-build", "post", { id });
+
+export const triggerManualBuild = (id: number) =>
+  makeRequest("/kal-api/docs/documentation/trigger-build", "post", { id });
 
 export const createDocumentationVersion = (data: CreateVersionPayload) =>
   makeRequest("/kal-api/docs/documentation/version", "post", data);

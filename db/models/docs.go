@@ -83,6 +83,7 @@ type Documentation struct {
 	GitUser          string      `json:"gitUser,omitempty"`
 	GitPassword      string      `json:"gitPassword,omitempty"`
 	GitBranch        string      `json:"gitBranch,omitempty"`
+	DisableAutoBuild bool        `json:"disableAutoBuild" gorm:"default:false"`
 }
 
 func (s Documentation) MarshalJSON() ([]byte, error) {

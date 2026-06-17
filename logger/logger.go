@@ -55,11 +55,14 @@ func InitializeLogger(env string, logLevel string, dataPath string) {
 		config.Level = zap.NewAtomicLevelAt(zapcore.ErrorLevel)
 	default:
 		config.Level = zap.NewAtomicLevelAt(zapcore.InfoLevel)
-		Logger.Warn("Invalid log level, defaulting to info.")
 	}
 
 	var err error
 	Logger, err = config.Build(zap.AddCallerSkip(1), zap.AddStacktrace(zapcore.ErrorLevel))
+
+	if logLevel != "debug" && logLevel != "info" && logLevel != "warn" && logLevel != "error" {
+		Logger.Warn("Invalid log level configured, defaulting to info.")
+	}
 	if err != nil {
 		panic(fmt.Errorf("failed to initialize logger: %v", err))
 	}

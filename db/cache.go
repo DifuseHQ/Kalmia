@@ -37,6 +37,13 @@ func GetValue(key []byte) (CacheEntry, error) {
 	return CacheEntry{}, ErrKeyNotFound
 }
 
+func ClearCache() {
+	Cache.Range(func(k, v interface{}) bool {
+		Cache.Delete(k)
+		return true
+	})
+}
+
 func ClearCacheByPrefix(prefix string) error {
 	Cache.Range(func(k, v interface{}) bool {
 		if strings.HasPrefix(k.(string), prefix) {

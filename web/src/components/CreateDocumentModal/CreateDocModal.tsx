@@ -604,15 +604,61 @@ export default function CreateDocModal() {
         className=" overflow-y-auto overflow-x-hidden  justify-center items-center w-full md:inset-0 md:h-full"
       >
         <div className="relative w-full h-full md:h-auto">
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-400">
-              {mode === "edit"
-                ? t("edit_documentation")
-                : t("new_documentation")}
-            </h3>
-          </div>
-
           <div className="relative bg-white rounded-lg shadow dark:bg-gray-800 sm:p-3">
+            <button
+              onClick={() => {
+                setFormData({
+                  name: "Test Documentation",
+                  description: "A test documentation site demonstrating all features",
+                  version: "1.0.0",
+                  baseURL: "/test-docs",
+                  url: "https://example.com",
+                  organizationName: "Test Org",
+                  projectName: "Test Project",
+                  customCSS: customCSSInitial(),
+                  favicon: "",
+                  navImageDark: "",
+                  navImage: "",
+                  copyrightText: "Copyright 2024",
+                  metaImage: "",
+                  gitUser: "",
+                  gitRepo: "",
+                  gitEmail: "",
+                  gitPassword: "",
+                  gitBranch: "",
+                });
+                setSocialPlatformField([
+                  { icon: "github", link: "https://github.com/example" },
+                  { icon: "discord", link: "https://discord.gg/example" },
+                ]);
+                setMoreField([
+                  { label: "About", link: "https://example.com/about" },
+                  { label: "Contact", link: "https://example.com/contact" },
+                ]);
+                SetIsToggleOn(true);
+                setLandingPage({
+                  ctaButtonText: {
+                    ctaButtonLinkLabel: "Get Started",
+                    ctaButtonLink: "/guides",
+                  },
+                  secondCtaButtonText: {
+                    ctaButtonLinkLabel: "Learn More",
+                    ctaButtonLink: "https://example.com/docs",
+                  },
+                  ctaImageLink: "https://picsum.photos/800/400",
+                  features: [
+                    { emoji: "1F680", title: "Fast", text: "Lightning fast documentation" },
+                    { emoji: "1F4DD", title: "Easy", text: "Write docs in markdown" },
+                    { emoji: "1F310", title: "Global", text: "Multi-language support" },
+                  ],
+                });
+              }}
+              type="button"
+              className="absolute top-2 right-2 text-[10px] text-gray-300 hover:text-blue-500 dark:text-gray-600 dark:hover:text-blue-400 transition-colors cursor-default px-1.5 py-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+              title="Fill with dummy data"
+            >
+              Fill demo
+            </button>
             <div className="overflow-auto p-1">
               <div className="space-y-6">
                 <div className="grid gap-4 sm:grid-cols-1">

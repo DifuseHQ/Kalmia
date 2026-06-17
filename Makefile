@@ -1,26 +1,18 @@
-.PHONY: all deps test build clean build-amd64-linux build-arm64-linux build-web
+.PHONY: all deps test build clean build-web
 
 APP_NAME=kalmia
 APP_VERSION=0.2.0
-TEST_DIRS := $(shell find . -name '*_test.go' -exec dirname {} \; | sort -u)
 
 all: deps build
 
-deps: build-web
+deps:
 	go mod download
 
 build-web:
-	cd web && npm install && rm -rf build/ && npm run build
+	cd web && pnpm install && npx rsbuild build
 
 test:
-ifeq ($(strip $(TEST_DIRS)),)
-	@echo "No test files found."
-else
-	@for dir in $(TEST_DIRS); do \
-		echo "Running tests in $$dir"; \
-		go test $$dir; \
-	done
-endif
+	go test ./...
 
 # Linux builds
 build-linux-amd64:
@@ -54,7 +46,7 @@ build-macos-amd64:
 build-macos-arm64:
 	GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w" -o dist/$(APP_NAME)_$(APP_VERSION)_macos_arm64 main.go
 
-build: clean build-linux-amd64 build-linux-386 build-linux-arm build-linux-arm64 build-linux-riscv64 build-windows-amd64 build-windows-386 build-windows-arm64 build-freebsd-amd64 build-freebsd-arm64 build-macos-amd64 build-macos-arm64
+build: clean build-web build-linux-amd64 build-linux-386 build-linux-arm build-linux-arm64 build-linux-riscv64 build-windows-amd64 build-windows-386 build-windows-arm64 build-freebsd-amd64 build-freebsd-arm64 build-macos-amd64 build-macos-arm64
 	mkdir -p dist
 
 clean:

@@ -32,6 +32,8 @@ import {
   getPageGroup,
   getPageGroups,
   getPages,
+  toggleAutoBuild,
+  triggerManualBuild,
   updatePageGroup,
 } from "../../api/Requests";
 import { AuthContext, AuthContextType } from "../../context/AuthContext";
@@ -639,6 +641,70 @@ export const Documentation = memo(function Documentation() {
                       />
                     </motion.button>
                   )}
+
+                  {userDetails?.admin === true && (
+                    <motion.button
+                      whileHover={{ scale: 1.3 }}
+                      onClick={async () => {
+                        if (!selectedVersion?.id) return;
+                        const res = await toggleAutoBuild(selectedVersion.id);
+                        if (res.status === "success") {
+                          setDocumentData((prev) =>
+                            prev.map((d) =>
+                              d.id === selectedVersion.id
+                                ? { ...d, disableAutoBuild: res.data.disableAutoBuild }
+                                : d,
+                            ),
+                          );
+                        } else {
+                          handleError(res, navigate, t);
+                        }
+                      }}
+                      key="toggle-auto-build-button"
+                      title={
+                        documentData.find((d) => d.id === selectedVersion?.id)
+                          ?.disableAutoBuild
+                          ? t("enable_auto_build")
+                          : t("disable_auto_build")
+                      }
+                    >
+                      <Icon
+                        icon={
+                          documentData.find((d) => d.id === selectedVersion?.id)
+                            ?.disableAutoBuild
+                            ? "material-symbols:play-circle-outline"
+                            : "material-symbols:pause-circle-outline"
+                        }
+                        className="w-6 h-6 text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-600"
+                      />
+                    </motion.button>
+                  )}
+
+                  {userDetails?.admin === true &&
+                    documentData.find((d) => d.id === selectedVersion?.id)
+                      ?.disableAutoBuild && (
+                      <motion.button
+                        whileHover={{ scale: 1.3 }}
+                        onClick={async () => {
+                          if (!selectedVersion?.id) return;
+                          const res = await triggerManualBuild(
+                            selectedVersion.id,
+                          );
+                          if (res.status === "success") {
+                            toastMessage(t("build_triggered"), "success");
+                          } else {
+                            handleError(res, navigate, t);
+                          }
+                        }}
+                        key="trigger-build-button"
+                        title={t("trigger_build")}
+                      >
+                        <Icon
+                          icon="material-symbols:bolt"
+                          className="w-6 h-6 text-orange-500 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-600"
+                        />
+                      </motion.button>
+                    )}
                 </motion.div>
 
                 <motion.div

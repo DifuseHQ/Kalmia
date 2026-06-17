@@ -42,6 +42,7 @@ func SetupDatabase(env string, database string, dataPath string) *gorm.DB {
 		db.Exec("PRAGMA foreign_keys = ON")
 		db.Exec("PRAGMA journal_mode = WAL")
 		db.Exec("PRAGMA synchronous = NORMAL")
+		db.Exec("PRAGMA busy_timeout = 5000")
 	}
 
 	err = db.AutoMigrate(

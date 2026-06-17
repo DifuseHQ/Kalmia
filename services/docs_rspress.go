@@ -336,6 +336,13 @@ func (service *DocService) StartupCheck() error {
 func (service *DocService) InitRsPressPackageCache() error {
 	cfg := config.ParsedConfig
 	packageCachePath := filepath.Join(cfg.DataPath, "rspress_pc")
+	storeDir := filepath.Join(cfg.DataPath, "pnpm-store")
+
+	if !utils.PathExists(storeDir) {
+		if err := utils.MakeDir(storeDir); err != nil {
+			return fmt.Errorf("failed to create pnpm store directory: %w", err)
+		}
+	}
 
 	if !utils.PathExists(packageCachePath) {
 		if err := utils.MakeDir(packageCachePath); err != nil {
@@ -344,6 +351,11 @@ func (service *DocService) InitRsPressPackageCache() error {
 	}
 
 	err := embedded.CopyInitFiles(packageCachePath)
+	if err != nil {
+		return err
+	}
+
+	err = utils.WritePnpmStoreConfig(packageCachePath, storeDir)
 	if err != nil {
 		return err
 	}
@@ -374,6 +386,12 @@ func (service *DocService) InitRsPress(docId uint) error {
 	}
 
 	err := embedded.CopyInitFiles(docPath)
+	if err != nil {
+		return err
+	}
+
+	storeDir := filepath.Join(cfg.DataPath, "pnpm-store")
+	err = utils.WritePnpmStoreConfig(docPath, storeDir)
 	if err != nil {
 		return err
 	}
@@ -1199,7 +1217,7 @@ func (service *DocService) GetRsPress(urlPath string) (uint, string, string, boo
 					continue
 				}
 
-				docPath := filepath.Join("data", "rspress_data", fmt.Sprintf("doc_%d", id), "build")
+				docPath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data", fmt.Sprintf("doc_%d", id), "build")
 				if _, err := os.Stat(docPath); os.IsNotExist(err) {
 					continue
 				}
@@ -1236,7 +1254,7 @@ func (service *DocService) GetRsPress(urlPath string) (uint, string, string, boo
 		return 0, "", "", false, fmt.Errorf("database_error: %v", err)
 	}
 
-	docPath := filepath.Join("data", "rspress_data", fmt.Sprintf("doc_%d", doc.ID), "build")
+	docPath := filepath.Join(config.ParsedConfig.DataPath, "rspress_data", fmt.Sprintf("doc_%d", doc.ID), "build")
 	if _, err := os.Stat(docPath); os.IsNotExist(err) {
 		return 0, "", "", false, fmt.Errorf("rspress_build_not_found")
 	}
@@ -1256,7 +1274,18 @@ func (service *DocService) GetRsPress(urlPath string) (uint, string, string, boo
 	return doc.ID, docPath, doc.BaseURL, doc.RequireAuth, nil
 }
 
-func (service *DocService) AddBuildTrigger(docId uint, isDelete bool) error {
+func (service *DocService) AddBuildTrigger(docId uint, isDelete bool, force ...bool) error {
+	if !isDelete && (len(force) == 0 || !force[0]) {
+		var disabled bool
+		service.DB.Model(&models.Documentation{}).
+			Select("disable_auto_build").
+			Where("id = ?", docId).
+			Pluck("disable_auto_build", &disabled)
+		if disabled {
+			return nil
+		}
+	}
+
 	trigger := models.BuildTriggers{
 		DocumentationID: docId,
 		Triggered:       false,

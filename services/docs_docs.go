@@ -52,7 +52,7 @@ func (service *DocService) GetDocumentations() ([]models.Documentation, error) {
 	}).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID", "Version", "ClonedFrom",
 		"LastEditorID", "Favicon", "MetaImage", "NavImage", "NavImageDark", "CustomCSS", "FooterLabelLinks", "MoreLabelLinks",
 		"URL", "OrganizationName", "LanderDetails", "ProjectName", "BaseURL", "RequireAuth",
-		"GitRepo", "GitEmail", "GitUser", "GitPassword", "GitBranch").
+		"GitRepo", "GitEmail", "GitUser", "GitPassword", "GitBranch", "DisableAutoBuild").
 		Find(&documentations).Error; err != nil {
 		return nil, fmt.Errorf("failed_to_get_documentations")
 	}
@@ -99,7 +99,7 @@ func (service *DocService) GetDocumentation(id uint) (models.Documentation, erro
 	}).Where("id = ?", id).Select("ID", "Name", "Description", "CreatedAt", "UpdatedAt", "AuthorID", "Version", "LastEditorID", "Favicon",
 		"MetaImage", "NavImage", "NavImageDark", "CustomCSS", "FooterLabelLinks", "MoreLabelLinks", "CopyrightText",
 		"BaseURL", "URL", "OrganizationName", "LanderDetails", "ProjectName", "ClonedFrom", "RequireAuth",
-		"GitRepo", "GitEmail", "GitUser", "GitPassword", "GitBranch").
+		"GitRepo", "GitEmail", "GitUser", "GitPassword", "GitBranch", "DisableAutoBuild").
 		Find(&documentation).Error; err != nil {
 		return models.Documentation{}, fmt.Errorf("failed_to_get_documentation")
 	}
@@ -1015,4 +1015,18 @@ func (service *DocService) GetDocIdByPageId(pageId uint) (uint, error) {
 	}
 
 	return page.DocumentationID, nil
+}
+
+func (service *DocService) ToggleAutoBuild(docID uint) (bool, error) {
+	var doc models.Documentation
+	if err := service.DB.Select("id", "disable_auto_build").First(&doc, docID).Error; err != nil {
+		return false, fmt.Errorf("documentation_not_found")
+	}
+
+	newValue := !doc.DisableAutoBuild
+	if err := service.DB.Model(&doc).Update("disable_auto_build", newValue).Error; err != nil {
+		return false, fmt.Errorf("failed_to_toggle_auto_build")
+	}
+
+	return newValue, nil
 }

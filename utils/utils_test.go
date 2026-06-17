@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+	"git.difuse.io/Difuse/kalmia/config"
 	"git.difuse.io/Difuse/kalmia/logger"
 )
 
@@ -19,6 +20,10 @@ func TestMain(m *testing.M) {
 	}
 
 	logger.InitializeLogger("dev", "debug", testDataPath)
+
+	config.ParsedConfig = &config.Config{
+		SessionSecret: "test-secret-key-for-jwt-signing",
+	}
 
 	code := m.Run()
 

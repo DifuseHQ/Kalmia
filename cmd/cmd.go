@@ -18,10 +18,11 @@ func AsciiArt() {
 	fmt.Printf("\t\t            v%s\n", Version)
 }
 
-func ParseFlags() string {
-	configPath := flag.String("config", "./config.json", "path to config file")
+func ParseFlags() (configPath string, clearEphemeral bool) {
+	configPathPtr := flag.String("config", "./config.json", "path to config file")
 	help := flag.Bool("help", false, "print help and exit")
 	version := flag.Bool("version", false, "print version and exit")
+	clearEphemeralPtr := flag.Bool("clear-ephemeral-dir", false, "remove ephemeral build/cache directories")
 
 	flag.Parse()
 
@@ -35,5 +36,5 @@ func ParseFlags() string {
 		os.Exit(0)
 	}
 
-	return *configPath
+	return *configPathPtr, *clearEphemeralPtr
 }

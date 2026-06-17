@@ -33,9 +33,16 @@ func RsPressMiddleware(dS *services.DocService) func(http.Handler) http.Handler 
 
 			fileKey := strings.TrimPrefix(urlPath, baseURL)
 			fullPath := filepath.Join(docPath, fileKey)
+			cleanRoot := filepath.Clean(docPath)
 
-			if strings.HasPrefix(fullPath, filepath.Join(docPath, "build")+string(filepath.Separator)) {
-				fileKey = strings.TrimPrefix(fullPath, filepath.Join(docPath, "build")+string(filepath.Separator))
+			if !strings.HasPrefix(filepath.Clean(fullPath), cleanRoot+string(filepath.Separator)) &&
+				filepath.Clean(fullPath) != cleanRoot {
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			if strings.HasPrefix(fullPath, docPath+string(filepath.Separator)) {
+				fileKey = strings.TrimPrefix(fullPath, docPath+string(filepath.Separator))
 			}
 
 			if strings.HasSuffix(fileKey, "guides.html") {
@@ -46,7 +53,7 @@ func RsPressMiddleware(dS *services.DocService) func(http.Handler) http.Handler 
 				fileKey = filepath.Join(fileKey, "index.html")
 			}
 
-			fileKey = fmt.Sprintf("rs|doc_%d|%s", docId, utils.TrimFirstRune(fileKey))
+			fileKey = fmt.Sprintf("rs|doc_%d|%s", docId, strings.TrimPrefix(fileKey, "/"))
 			value, err := db.GetValue([]byte(fileKey))
 			if err == nil {
 				if reqAuth && cookieToken == "" {
@@ -59,7 +66,7 @@ func RsPressMiddleware(dS *services.DocService) func(http.Handler) http.Handler 
 			}
 
 			if _, err := os.Stat(fullPath); os.IsNotExist(err) {
-				fullPath = filepath.Join(docPath, "build", "index.html")
+				fullPath = filepath.Join(docPath, "index.html")
 			}
 
 			if reqAuth && cookieToken == "" {

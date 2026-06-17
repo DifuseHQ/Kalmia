@@ -46,7 +46,7 @@ export default function LoginPage() {
       window.location.pathname.endsWith("login/ms") ||
       window.location.pathname.endsWith("login/gg")
     ) {
-      const code = new URLSearchParams(window.location.search).get("token");
+      const code = new URLSearchParams(window.location.search).get("code");
       if (code) {
         loginOAuth(code);
       }
