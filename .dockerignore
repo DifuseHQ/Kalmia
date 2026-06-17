@@ -1,0 +1,8 @@
+config.json
+data/
+kalmia
+.git/
+*.db
+*.db-shm
+*.db-wal
+node_modules/

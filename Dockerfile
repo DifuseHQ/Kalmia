@@ -1,54 +1,36 @@
 # Build stage for web assets
-FROM node:20 AS web-builder
+FROM node:24 AS web-builder
 
-# pnpm setup
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10 --activate
 
 WORKDIR /app/web
-COPY web/package*.json ./
-COPY web/pnpm*.yaml ./
-# RUN npm install
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+COPY web/package.json web/pnpm-lock.yaml ./
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --no-verify-store
 COPY web ./
-# RUN npm run build
 RUN pnpm run build
 
 # Build stage for Go application
-FROM golang:1.23-bookworm AS go-builder
+FROM golang:1.25-bookworm AS go-builder
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
 COPY --from=web-builder /app/web/build ./web/build
-
-# Use a shell script to determine the architecture and build accordingly
-COPY <<EOF /build.sh
-#!/bin/sh
-if [ "$(uname -m)" = "aarch64" ]; then
-    CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags "-s -w" -o kalmia main.go
-else
-    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o kalmia main.go
-fi
-EOF
-
-RUN chmod +x /build.sh && /build.sh
+RUN CGO_ENABLED=0 go build -ldflags "-s -w" -o kalmia .
 
 # Final stage
-FROM node:20-slim
+FROM node:24-slim
 WORKDIR /app
 
-# pnpm setup
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable && corepack prepare pnpm@latest --activate
-RUN which pnpm
+RUN corepack enable && corepack prepare pnpm@10 --activate
 
-# Copy built artifacts
 COPY --from=go-builder /app/kalmia .
 COPY --from=web-builder /app/web/build ./web/build
-COPY config.json .
 
+USER node
 EXPOSE 2727
 CMD ["./kalmia"]

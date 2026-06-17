@@ -174,7 +174,7 @@ export const CodeBlock = createReactBlockSpec(
 
       const languageExtension = isValidLanguage(language)
         ? langs[language]
-        : langs.shell;
+        : langs.bash;
 
       return (
         <div style={{ minHeight: "65px", width: "100%" }}>
