@@ -51,7 +51,7 @@ func hasPermissionForRoute(path string, permissions []string, isAdmin bool) bool
 
 	routePermissions := map[string]string{
 		"/kal-api/auth/user":                       "read",
-		"/kal-api/auth/users":                      "read",
+		"/kal-api/auth/users":                      "all",
 		"/kal-api/auth/user/edit":                  "read",
 		"/kal-api/auth/jwt/revoke":                 "read",
 		"/kal-api/auth/jwt/validate":               "read",

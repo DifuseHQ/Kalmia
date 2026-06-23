@@ -25,6 +25,10 @@ func (service *AuthService) GetUsers() ([]models.User, error) {
 		return nil, fmt.Errorf("failed_to_get_users")
 	}
 
+	for i := range users {
+		users[i].Password = ""
+	}
+
 	return users, nil
 }
 
@@ -32,11 +36,11 @@ func (service *AuthService) CreateJWT(username, password string) (map[string]int
 	var user models.User
 
 	if err := service.DB.Where("username = ?", username).First(&user).Error; err != nil {
-		return nil, fmt.Errorf("user_not_found")
+		return nil, fmt.Errorf("invalid_credentials")
 	}
 
 	if !utils.CheckPasswordHash(password, user.Password) {
-		return nil, fmt.Errorf("invalid_password")
+		return nil, fmt.Errorf("invalid_credentials")
 	}
 
 	tokenString, expiry, err := utils.GenerateJWTAccessToken(user.ID, user.Username, user.Email, user.Photo, user.Admin, user.Permissions)
@@ -117,7 +121,7 @@ func (service *AuthService) IsTokenAdmin(token string) bool {
 }
 
 func (service *AuthService) GetUserPermissions(token string) ([]string, error) {
-	user, err := service.GetUserFromToken(token)
+	user, err := service.getUserFromTokenInternal(token)
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +135,7 @@ func (service *AuthService) GetUserPermissions(token string) ([]string, error) {
 	return permissions, nil
 }
 
-func (service *AuthService) GetUserFromToken(token string) (models.User, error) {
+func (service *AuthService) getUserFromTokenInternal(token string) (models.User, error) {
 	var tokenRecord models.Token
 
 	query := service.DB.Where("token = ?", token).First(&tokenRecord)
@@ -144,6 +148,17 @@ func (service *AuthService) GetUserFromToken(token string) (models.User, error) 
 	if err := service.DB.Where("id = ?", tokenRecord.UserID).First(&user).Error; err != nil {
 		return models.User{}, err
 	}
+
+	return user, nil
+}
+
+func (service *AuthService) GetUserFromToken(token string) (models.User, error) {
+	user, err := service.getUserFromTokenInternal(token)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	user.Password = ""
 
 	return user, nil
 }
@@ -202,6 +217,10 @@ func (service *AuthService) EditUser(id uint, username, email, password, photo s
 		}
 
 		user.Password = hashedPassword
+		
+		if err := service.DB.Where("user_id = ?", id).Delete(&models.Token{}).Error; err != nil {
+			return fmt.Errorf("failed_to_invalidate_tokens")
+		}
 	}
 
 	if photo != "" {
@@ -245,12 +264,23 @@ func (service *AuthService) DeleteUser(username string) error {
 	return nil
 }
 
-func (service *AuthService) GetUser(id uint) (models.User, error) {
+func (service *AuthService) getUserInternal(id uint) (models.User, error) {
 	var user models.User
 
 	if err := service.DB.Where("id = ?", id).First(&user).Error; err != nil {
 		return models.User{}, fmt.Errorf("user_not_found")
 	}
+
+	return user, nil
+}
+
+func (service *AuthService) GetUser(id uint) (models.User, error) {
+	user, err := service.getUserInternal(id)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	user.Password = ""
 
 	return user, nil
 }
@@ -374,6 +404,8 @@ func (service *AuthService) FindUserByEmail(email string) (models.User, error) {
 	if err := service.DB.Where("email = ?", email).First(&user).Error; err != nil {
 		return models.User{}, fmt.Errorf("user_not_found")
 	}
+
+	user.Password = ""
 
 	return user, nil
 }
